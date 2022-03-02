@@ -1,3 +1,4 @@
+use crate::common::execution_history::RemoteCallEndpoint;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -5,8 +6,9 @@ use std::collections::{HashMap, HashSet};
 pub type PermissionId = u16;
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
-pub enum PermissionError {
+pub enum PermissionsError {
     PermissionDoesNotExist,
+    NotPermissionTarget,
 }
 
 #[derive(CandidType, Deserialize, Clone, Default, Debug)]
@@ -47,7 +49,7 @@ impl PermissionsState {
         new_name: Option<String>,
         new_targets: Option<Vec<PermissionTarget>>,
         new_scope: Option<PermissionScope>,
-    ) -> Result<(), PermissionError> {
+    ) -> Result<(), PermissionsError> {
         let permission = self.get_permission_mut(permission_id)?;
 
         if let Some(name) = new_name {
@@ -79,11 +81,11 @@ impl PermissionsState {
     pub fn remove_permission(
         &mut self,
         permission_id: &PermissionId,
-    ) -> Result<Permission, PermissionError> {
+    ) -> Result<Permission, PermissionsError> {
         let permission = self
             .permissions
             .remove(permission_id)
-            .ok_or(PermissionError::PermissionDoesNotExist)?;
+            .ok_or(PermissionsError::PermissionDoesNotExist)?;
 
         for target in &permission.targets {
             self.remove_permission_from_target_index(permission_id, target);
@@ -92,6 +94,21 @@ impl PermissionsState {
         Ok(permission)
     }
 
+    pub fn is_permission_target(&self, endpoint: RemoteCallEndpoint, permission_id: &PermissionId) -> Result<(), PermissionsError> {
+        let permission = self.get_permission(permission_id)?;
+        let target = PermissionTarget::Endpoint(endpoint);
+        
+        if permission.targets.contains(&target) {
+            return Ok(())
+        }
+        
+        if permission.targets.contains(&target.to_canister()) {
+            return Ok(())
+        }
+        
+        Err(PermissionsError::NotPermissionTarget)
+    }
+    
     fn get_permission_ids_cloned(&self) -> Vec<PermissionId> {
         self.permissions.keys().cloned().collect()
     }
@@ -111,19 +128,19 @@ impl PermissionsState {
     fn get_permission_mut(
         &mut self,
         permission_id: &PermissionId,
-    ) -> Result<&mut Permission, PermissionError> {
+    ) -> Result<&mut Permission, PermissionsError> {
         self.permissions
             .get_mut(permission_id)
-            .ok_or(PermissionError::PermissionDoesNotExist)
+            .ok_or(PermissionsError::PermissionDoesNotExist)
     }
 
     pub fn get_permission(
         &self,
         permission_id: &PermissionId,
-    ) -> Result<&Permission, PermissionError> {
+    ) -> Result<&Permission, PermissionsError> {
         self.permissions
             .get(permission_id)
-            .ok_or(PermissionError::PermissionDoesNotExist)
+            .ok_or(PermissionsError::PermissionDoesNotExist)
     }
 
     fn add_permission_to_target_index(&mut self, id: PermissionId, target: PermissionTarget) {
@@ -171,13 +188,22 @@ pub enum PermissionScope {
 
 #[derive(CandidType, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum PermissionTarget {
-    SelfReadOnly, // TODO: replace with exact permission preset
     Canister(Principal),
-    Method((Principal, String)),
+    Endpoint(RemoteCallEndpoint),
+}
+
+impl PermissionTarget {
+    pub fn to_canister(self) -> PermissionTarget {
+        match &self {
+            PermissionTarget::Canister(_) => self,
+            PermissionTarget::Endpoint(e) => PermissionTarget::Canister(e.canister_id),
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::common::execution_history::RemoteCallEndpoint;
     use crate::common::permissions::{PermissionScope, PermissionTarget, PermissionsState};
     use ic_cdk::export::Principal;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -195,8 +221,10 @@ mod tests {
     #[test]
     pub fn permission_crud_works_fine() {
         let mut permissions_state = PermissionsState::default();
-        let target_1 =
-            PermissionTarget::Method((random_principal_test(), String::from("test_method")));
+        let target_1 = PermissionTarget::Endpoint(RemoteCallEndpoint {
+            canister_id: random_principal_test(),
+            method_name: String::from("test_method"),
+        });
         let target_2 = PermissionTarget::Canister(random_principal_test());
 
         let permission_id_1 = permissions_state.create_permission(

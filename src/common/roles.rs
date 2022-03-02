@@ -1,3 +1,4 @@
+use crate::common::utils::{validate_f32, validate_str, validate_u16, ValidationError};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -6,13 +7,15 @@ pub type RoleId = u16;
 
 pub const PUBLIC_ROLE_ID: RoleId = 0;
 
-#[derive(Clone, Copy, Debug)]
-pub enum RoleError {
+#[derive(Clone, Debug)]
+pub enum RolesError {
     RoleNotFound,
     RoleHasNoOwners,
     UnableToCreateAnotherPublicRole,
     UnableToDeletePublicRole,
     UnableToEditPublicRole,
+    NotRoleOwner,
+    ValidationError(ValidationError),
 }
 
 #[derive(CandidType, Deserialize, Clone, Default, Debug)]
@@ -23,7 +26,7 @@ pub struct RolesState {
 }
 
 impl RolesState {
-    pub fn new(caller: Principal) -> Result<Self, RoleError> {
+    pub fn new() -> Result<Self, RolesError> {
         let mut state = RolesState::default();
 
         // create public role (non-deletable default role with id = 0)
@@ -37,16 +40,13 @@ impl RolesState {
         };
         state.roles.insert(public_role_id, public_role);
 
-        // TODO: move to higher abstraction level
-        state.create_role(
-            String::from("Wallet creator"),
-            RoleType::PrivateQuantity((1, vec![caller].into_iter().collect())),
-        )?;
-
         Ok(state)
     }
 
-    pub fn create_role(&mut self, name: String, role_type: RoleType) -> Result<RoleId, RoleError> {
+    pub fn create_role(&mut self, name: String, role_type: RoleType) -> Result<RoleId, RolesError> {
+        let name = validate_str(name, 1, 100, "Role name").map_err(RolesError::ValidationError)?;
+        role_type.validate()?;
+
         let id = self.generate_role_id();
         let role = Role {
             id,
@@ -65,12 +65,12 @@ impl RolesState {
         Ok(id)
     }
 
-    pub fn remove_role(&mut self, role_id: &RoleId) -> Result<Role, RoleError> {
+    pub fn remove_role(&mut self, role_id: &RoleId) -> Result<Role, RolesError> {
         if *role_id == PUBLIC_ROLE_ID {
-            return Err(RoleError::UnableToDeletePublicRole);
+            return Err(RolesError::UnableToDeletePublicRole);
         }
 
-        let role = self.roles.remove(role_id).ok_or(RoleError::RoleNotFound)?;
+        let role = self.roles.remove(role_id).ok_or(RolesError::RoleNotFound)?;
 
         let role_owners = role.role_type.get_role_owners()?;
 
@@ -86,21 +86,25 @@ impl RolesState {
         role_id: &RoleId,
         new_name: Option<String>,
         new_role_type: Option<RoleType>,
-    ) -> Result<(), RoleError> {
+    ) -> Result<(), RolesError> {
         if *role_id == PUBLIC_ROLE_ID {
-            return Err(RoleError::UnableToEditPublicRole);
+            return Err(RolesError::UnableToEditPublicRole);
         }
 
         let role = self.get_role_mut(role_id)?;
 
         if let Some(name) = new_name {
+            let name =
+                validate_str(name, 1, 100, "Role name").map_err(RolesError::ValidationError)?;
+
             role.name = name
         };
 
         if let Some(role_type) = new_role_type {
             if matches!(role_type, RoleType::Public) {
-                return Err(RoleError::UnableToCreateAnotherPublicRole);
+                return Err(RolesError::UnableToCreateAnotherPublicRole);
             }
+            role_type.validate()?;
 
             let old_role_owners = role.role_type.get_role_owners()?.clone();
             let new_role_owners = role_type.get_role_owners()?.clone();
@@ -123,9 +127,9 @@ impl RolesState {
         &mut self,
         role_id: RoleId,
         new_owners: Vec<Principal>,
-    ) -> Result<(), RoleError> {
+    ) -> Result<(), RolesError> {
         if role_id == PUBLIC_ROLE_ID {
-            return Err(RoleError::UnableToEditPublicRole);
+            return Err(RolesError::UnableToEditPublicRole);
         }
 
         let role = self.get_role_mut(&role_id)?;
@@ -134,6 +138,8 @@ impl RolesState {
         for new_owner in &new_owners {
             role_owners.insert(*new_owner);
         }
+
+        role.role_type.validate()?;
 
         for new_owner in new_owners {
             self.add_role_to_role_owners_index(role_id, new_owner);
@@ -146,9 +152,9 @@ impl RolesState {
         &mut self,
         role_id: RoleId,
         owners_to_remove: Vec<Principal>,
-    ) -> Result<(), RoleError> {
+    ) -> Result<(), RolesError> {
         if role_id == PUBLIC_ROLE_ID {
-            return Err(RoleError::UnableToEditPublicRole);
+            return Err(RolesError::UnableToEditPublicRole);
         }
 
         let role = self.get_role_mut(&role_id)?;
@@ -158,6 +164,8 @@ impl RolesState {
             role_owners.remove(owner_to_remove);
         }
 
+        role.role_type.validate()?;
+
         for owner_to_remove in owners_to_remove {
             self.remove_role_from_role_owners_index(&role_id, owner_to_remove);
         }
@@ -165,12 +173,23 @@ impl RolesState {
         Ok(())
     }
 
+    pub fn is_role_owner(&self, owner: &Principal, role_id: &RoleId) -> Result<(), RolesError> {
+        let role = self.get_role(role_id)?;
+        let owners = role.role_type.get_role_owners()?;
+
+        if !owners.contains(owner) {
+            Err(RolesError::NotRoleOwner)
+        } else {
+            Ok(())
+        }
+    }
+
     pub fn get_role_ids_cloned(&self) -> Vec<RoleId> {
         self.roles.keys().cloned().collect()
     }
-    
-    pub fn get_role(&self, role_id: &RoleId) -> Result<&Role, RoleError> {
-        self.roles.get(role_id).ok_or(RoleError::RoleNotFound)
+
+    pub fn get_role(&self, role_id: &RoleId) -> Result<&Role, RolesError> {
+        self.roles.get(role_id).ok_or(RolesError::RoleNotFound)
     }
 
     pub fn get_role_ids_by_role_owner_cloned(&self, role_owner: &Principal) -> Vec<RoleId> {
@@ -182,8 +201,8 @@ impl RolesState {
             .collect()
     }
 
-    fn get_role_mut(&mut self, role_id: &RoleId) -> Result<&mut Role, RoleError> {
-        self.roles.get_mut(role_id).ok_or(RoleError::RoleNotFound)
+    fn get_role_mut(&mut self, role_id: &RoleId) -> Result<&mut Role, RolesError> {
+        self.roles.get_mut(role_id).ok_or(RolesError::RoleNotFound)
     }
 
     fn add_role_to_role_owners_index(&mut self, id: RoleId, role_owner: Principal) {
@@ -229,17 +248,28 @@ pub enum RoleType {
 }
 
 impl RoleType {
-    pub fn get_role_owners(&self) -> Result<&HashSet<Principal>, RoleError> {
+    pub fn validate(&self) -> Result<(), RolesError> {
         match self {
-            RoleType::Public => Err(RoleError::RoleHasNoOwners),
+            RoleType::Public => Ok(()),
+            RoleType::PrivateFraction((fr, o)) => {
+                validate_f32(*fr, 0.001, 1.00, "Fraction").map_err(RolesError::ValidationError)
+            }
+            RoleType::PrivateQuantity((qt, o)) => validate_u16(*qt, 1, o.len() as u16, "Quantity")
+                .map_err(RolesError::ValidationError),
+        }
+    }
+
+    pub fn get_role_owners(&self) -> Result<&HashSet<Principal>, RolesError> {
+        match self {
+            RoleType::Public => Err(RolesError::RoleHasNoOwners),
             RoleType::PrivateFraction((_, o)) => Ok(o),
             RoleType::PrivateQuantity((_, o)) => Ok(o),
         }
     }
 
-    pub fn get_role_owners_mut(&mut self) -> Result<&mut HashSet<Principal>, RoleError> {
+    pub fn get_role_owners_mut(&mut self) -> Result<&mut HashSet<Principal>, RolesError> {
         match self {
-            RoleType::Public => Err(RoleError::RoleHasNoOwners),
+            RoleType::Public => Err(RolesError::RoleHasNoOwners),
             RoleType::PrivateFraction((_, o)) => Ok(o),
             RoleType::PrivateQuantity((_, o)) => Ok(o),
         }
@@ -264,10 +294,7 @@ mod tests {
 
     #[test]
     fn default_roles_state_is_fine() {
-        let wallet_creator = random_principal_test();
-
-        let roles_state = RolesState::new(wallet_creator).expect("Creation should work fine");
-        assert_eq!(roles_state.role_ids_counter, 2, "Role ids counter is wrong");
+        let roles_state = RolesState::new().expect("Creation should work fine");
 
         let public_role = roles_state.get_role(&0).expect("Public role should exist");
         assert_eq!(
@@ -279,48 +306,11 @@ mod tests {
             matches!(public_role.role_type, RoleType::Public),
             "Public role type is invalid"
         );
-
-        let wallet_creator_role = roles_state
-            .get_role(&1)
-            .expect("Wallet creator role should exist");
-        assert_eq!(
-            wallet_creator_role.name,
-            String::from("Wallet creator"),
-            "Wallet creator role name is invalid"
-        );
-
-        match &wallet_creator_role.role_type {
-            RoleType::PrivateQuantity((qty, owners)) => {
-                assert_eq!(
-                    *qty, 1,
-                    "There should be only one wallet creator to activate the role"
-                );
-                assert!(
-                    owners.contains(&wallet_creator),
-                    "Wallet creator should be in the list"
-                );
-            }
-            _ => unreachable!("Wallet creator role type should be PrivateQuantity"),
-        }
-
-        let wallet_creator_roles = roles_state.get_role_ids_by_role_owner_cloned(&wallet_creator);
-        assert_eq!(
-            wallet_creator_roles.len(),
-            1,
-            "Wallet creator should only have a single role"
-        );
-        let wallet_creator_role_id = wallet_creator_roles[0];
-        assert_eq!(
-            wallet_creator_role_id, 1,
-            "Wallet creator should have a role with correct id"
-        );
     }
 
     #[test]
     fn default_public_role_is_immutable_and_unique() {
-        let wallet_creator = random_principal_test();
-        let mut roles_state =
-            RolesState::new(wallet_creator).expect("Roles state should be created");
+        let mut roles_state = RolesState::new().expect("Roles state should be created");
 
         roles_state
             .create_role(String::from("Test role 1"), RoleType::Public)
@@ -340,28 +330,27 @@ mod tests {
                 None,
                 Some(RoleType::PrivateQuantity((
                     1,
-                    vec![wallet_creator].into_iter().collect(),
+                    vec![random_principal_test()].into_iter().collect(),
                 ))),
             )
             .expect_err("It should be impossible to update default public role");
 
         roles_state
-            .add_role_owners(0, vec![wallet_creator])
+            .add_role_owners(0, vec![random_principal_test()])
             .expect_err("It should be impossible to add role owners to default public role");
 
         roles_state
-            .subtract_role_owners(0, vec![wallet_creator])
+            .subtract_role_owners(0, vec![random_principal_test()])
             .expect_err("It should be impossible to subtract role owners from default public role");
     }
 
     #[test]
     fn role_crud_works_fine() {
-        let wallet_creator = random_principal_test();
-        let mut roles_state =
-            RolesState::new(wallet_creator).expect("Roles state should be created");
+        let mut roles_state = RolesState::new().expect("Roles state should be created");
 
         let user1 = random_principal_test();
         let user2 = random_principal_test();
+        let user3 = random_principal_test();
 
         let role_id_1 = roles_state
             .create_role(
@@ -380,7 +369,7 @@ mod tests {
                 Some(String::from("Role #1")),
                 Some(RoleType::PrivateQuantity((
                     3,
-                    vec![user1, user2, wallet_creator].into_iter().collect(),
+                    vec![user1, user2, user3].into_iter().collect(),
                 ))),
             )
             .expect("It should be possible to update a role");
@@ -395,18 +384,14 @@ mod tests {
             "Role 1 name should've changed"
         );
 
-        let wallet_creator_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&wallet_creator);
+        let user3_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user3);
         assert_eq!(
-            wallet_creator_role_ids.len(),
-            2,
+            user3_role_ids.len(),
+            1,
             "Wallet creator should have only two roles"
         );
         assert!(
-            wallet_creator_role_ids.contains(&1),
-            "Wallet creator should have wallet creator role"
-        );
-        assert!(
-            wallet_creator_role_ids.contains(&role_id_1),
+            user3_role_ids.contains(&role_id_1),
             "Wallet creator should have Role #1"
         );
 
@@ -414,39 +399,30 @@ mod tests {
             .remove_role(&role_id_1)
             .expect("It should be possible to delete a role");
 
-        let wallet_creator_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&wallet_creator);
-        assert_eq!(
-            wallet_creator_role_ids.len(),
-            1,
+        let user3_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user3);
+        assert!(
+            user3_role_ids.is_empty(),
             "Wallet creator should have only one role"
-        );
-        assert!(
-            wallet_creator_role_ids.contains(&1),
-            "Wallet creator should have wallet creator role"
-        );
-
-        let wallet_creator_role = roles_state
-            .remove_role(&1)
-            .expect("It should be possible to delete the wallet creator role");
-
-        let wallet_creator_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&wallet_creator);
-        assert!(
-            wallet_creator_role_ids.is_empty(),
-            "Wallet creator shouldn't have any role"
         );
     }
 
     #[test]
     fn role_owners_add_remove_work_fine() {
-        let wallet_creator = random_principal_test();
-        let mut roles_state =
-            RolesState::new(wallet_creator).expect("Roles state should be created");
+        let mut roles_state = RolesState::new().expect("Roles state should be created");
 
         let user1 = random_principal_test();
         let user2 = random_principal_test();
+        let user3 = random_principal_test();
+
+        let role_id = roles_state
+            .create_role(
+                String::from("Role 1"),
+                RoleType::PrivateQuantity((1, vec![user3].into_iter().collect())),
+            )
+            .expect("It should be possible to create a new role");
 
         roles_state
-            .add_role_owners(1, vec![user1, user2])
+            .add_role_owners(role_id, vec![user1, user2])
             .expect("It should be possible to add role owners");
 
         let user1_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user1);
@@ -456,7 +432,7 @@ mod tests {
             "There should be only a single role for user1"
         );
         assert!(
-            user1_role_ids.contains(&1),
+            user1_role_ids.contains(&role_id),
             "User1 should have the wallet creator role"
         );
 
@@ -467,12 +443,12 @@ mod tests {
             "There should be only a single role for user2"
         );
         assert!(
-            user2_role_ids.contains(&1),
+            user2_role_ids.contains(&role_id),
             "User2 should have the wallet creator role"
         );
 
         roles_state
-            .subtract_role_owners(1, vec![user1, user2])
+            .subtract_role_owners(role_id, vec![user1, user2])
             .expect("It should be possible to subtract role owners");
 
         let user1_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user1);
