@@ -1,4 +1,5 @@
 use crate::common::execution_history::RemoteCallEndpoint;
+use crate::Program;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -9,6 +10,7 @@ pub type PermissionId = u16;
 pub enum PermissionsError {
     PermissionDoesNotExist,
     NotPermissionTarget,
+    ThereShouldBeAtLeastOnePermission,
 }
 
 #[derive(CandidType, Deserialize, Clone, Default, Debug)]
@@ -82,6 +84,10 @@ impl PermissionsState {
         &mut self,
         permission_id: &PermissionId,
     ) -> Result<Permission, PermissionsError> {
+        if self.permissions.len() == 1 {
+            return Err(PermissionsError::ThereShouldBeAtLeastOnePermission);
+        }
+
         let permission = self
             .permissions
             .remove(permission_id)
@@ -94,21 +100,61 @@ impl PermissionsState {
         Ok(permission)
     }
 
-    pub fn is_permission_target(&self, endpoint: RemoteCallEndpoint, permission_id: &PermissionId) -> Result<(), PermissionsError> {
-        let permission = self.get_permission(permission_id)?;
-        let target = PermissionTarget::Endpoint(endpoint);
-        
-        if permission.targets.contains(&target) {
-            return Ok(())
-        }
-        
-        if permission.targets.contains(&target.to_canister()) {
-            return Ok(())
-        }
-        
-        Err(PermissionsError::NotPermissionTarget)
+    pub fn is_program_allowed_by_permission(
+        &self,
+        program: &Program,
+        permission_id: &PermissionId,
+    ) -> Result<(), PermissionsError> {
+        match program {
+            Program::RemoteCallSequence(sequence) => {
+                for call in sequence {
+                    self.is_permission_target(Some(call.endpoint.clone()), permission_id)?;
+                }
+            }
+            Program::Empty => {
+                self.is_permission_target(None, permission_id)?;
+            }
+        };
+
+        Ok(())
     }
-    
+
+    pub fn is_permission_target(
+        &self,
+        endpoint_opt: Option<RemoteCallEndpoint>,
+        permission_id: &PermissionId,
+    ) -> Result<(), PermissionsError> {
+        let permission = self.get_permission(permission_id)?;
+
+        match endpoint_opt {
+            Some(endpoint) => {
+                let target = PermissionTarget::Endpoint(endpoint);
+
+                if permission.targets.contains(&target) {
+                    return Ok(());
+                }
+
+                let canister_target = target.to_canister().unwrap();
+
+                if permission.targets.contains(&canister_target) {
+                    return Ok(());
+                }
+
+                Err(PermissionsError::NotPermissionTarget)
+            }
+            None => {
+                if permission
+                    .targets
+                    .contains(&PermissionTarget::SelfEmptyProgram)
+                {
+                    Ok(())
+                } else {
+                    Err(PermissionsError::NotPermissionTarget)
+                }
+            }
+        }
+    }
+
     fn get_permission_ids_cloned(&self) -> Vec<PermissionId> {
         self.permissions.keys().cloned().collect()
     }
@@ -188,15 +234,17 @@ pub enum PermissionScope {
 
 #[derive(CandidType, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum PermissionTarget {
+    SelfEmptyProgram,
     Canister(Principal),
     Endpoint(RemoteCallEndpoint),
 }
 
 impl PermissionTarget {
-    pub fn to_canister(self) -> PermissionTarget {
+    pub fn to_canister(self) -> Option<PermissionTarget> {
         match &self {
-            PermissionTarget::Canister(_) => self,
-            PermissionTarget::Endpoint(e) => PermissionTarget::Canister(e.canister_id),
+            PermissionTarget::SelfEmptyProgram => None,
+            PermissionTarget::Canister(_) => Some(self),
+            PermissionTarget::Endpoint(e) => Some(PermissionTarget::Canister(e.canister_id)),
         }
     }
 }

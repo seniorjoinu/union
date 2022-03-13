@@ -1,5 +1,6 @@
 use crate::common::permissions::PermissionId;
 use crate::common::roles::RoleId;
+use crate::CandidCallResult;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -21,27 +22,38 @@ pub struct ExecutionHistoryState {
 }
 
 impl ExecutionHistoryState {
-    pub fn add_entry(
+    pub fn create_pending_entry(
         &mut self,
+        title: String,
+        description: String,
         program: Program,
         timestamp: u64,
         role_id: RoleId,
         permission_id: PermissionId,
         authorized_by: Vec<Principal>,
-    ) {
+    ) -> HistoryEntry {
         let id = self.generate_entry_id();
-        let entry = HistoryEntry {
+
+        HistoryEntry {
             id,
+            entry_type: HistoryEntryType::Pending,
+            title,
+            description,
             program,
             timestamp,
             role_id,
             permission_id,
             authorized_by,
-        };
+        }
+    }
+
+    pub fn add_executed_entry(&mut self, entry: HistoryEntry) {
+        if matches!(entry.entry_type, HistoryEntryType::Pending) {
+            unreachable!("Invalid history entry for execution");
+        }
 
         self.add_entry_to_indexes(&entry);
-
-        self.entries.insert(id, entry);
+        self.entries.insert(entry.id, entry);
     }
 
     pub fn get_entry_ids_cloned(&self) -> Vec<HistoryEntryId> {
@@ -106,9 +118,12 @@ impl ExecutionHistoryState {
     }
 }
 
-#[derive(CandidType, Deserialize, Debug)]
+#[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct HistoryEntry {
     pub id: HistoryEntryId,
+    pub entry_type: HistoryEntryType,
+    pub title: String,
+    pub description: String,
     pub program: Program,
     pub timestamp: u64,
     pub role_id: RoleId,
@@ -116,9 +131,36 @@ pub struct HistoryEntry {
     pub authorized_by: Vec<Principal>,
 }
 
-#[derive(CandidType, Deserialize, Debug)]
+impl HistoryEntry {
+    pub fn set_authorized(&mut self, timestamp: u64, result: Vec<CandidCallResult<Vec<u8>>>) {
+        match &mut self.entry_type {
+            HistoryEntryType::Pending => {
+                self.entry_type = HistoryEntryType::Authorized((timestamp, result));
+            }
+            _ => unreachable!("Only pending history entry can be authorized"),
+        };
+    }
+
+    pub fn set_declined(&mut self, timestamp: u64, error: String) {
+        match &mut self.entry_type {
+            HistoryEntryType::Pending => {
+                self.entry_type = HistoryEntryType::Declined((timestamp, error));
+            }
+            _ => unreachable!("Only pending history entry can be declined"),
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub enum HistoryEntryType {
+    Pending,
+    Authorized((u64, Vec<CandidCallResult<Vec<u8>>>)),
+    Declined((u64, String)),
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
 pub enum Program {
-    Empty(Vec<u8>),
+    Empty,
     RemoteCallSequence(Vec<RemoteCallPayload>),
 }
 
@@ -128,7 +170,7 @@ pub struct RemoteCallEndpoint {
     pub method_name: String,
 }
 
-#[derive(CandidType, Deserialize, Debug)]
+#[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct RemoteCallPayload {
     pub endpoint: RemoteCallEndpoint,
     pub args_raw: Vec<u8>,

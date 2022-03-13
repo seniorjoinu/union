@@ -1,4 +1,4 @@
-use crate::common::utils::{validate_f32, validate_str, validate_u16, ValidationError};
+use crate::common::utils::{validate_and_trim_str, validate_f32, validate_u16, ValidationError};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -6,15 +6,17 @@ use std::collections::{HashMap, HashSet};
 pub type RoleId = u16;
 
 pub const PUBLIC_ROLE_ID: RoleId = 0;
+pub const HAS_PROFILE_ROLE_ID: RoleId = 1;
 
 #[derive(Clone, Debug)]
 pub enum RolesError {
     RoleNotFound,
     RoleHasNoOwners,
-    UnableToCreateAnotherPublicRole,
-    UnableToDeletePublicRole,
-    UnableToEditPublicRole,
+    UnableToCreateAnotherDefaultRole,
+    UnableToDeleteDefaultRole,
+    UnableToEditDefaultRole,
     NotRoleOwner,
+    NotEnoughAuthorizations,
     ValidationError(ValidationError),
 }
 
@@ -40,11 +42,23 @@ impl RolesState {
         };
         state.roles.insert(public_role_id, public_role);
 
+        // create has_profile role (non-deletable default role with id = 1)
+        let has_profile_role_id = state.generate_role_id();
+        assert_eq!(has_profile_role_id, HAS_PROFILE_ROLE_ID);
+
+        let has_profile_role = Role {
+            id: has_profile_role_id,
+            name: String::from("Has profile"),
+            role_type: RoleType::HasProfile(HashSet::new()),
+        };
+        state.roles.insert(has_profile_role_id, has_profile_role);
+
         Ok(state)
     }
 
     pub fn create_role(&mut self, name: String, role_type: RoleType) -> Result<RoleId, RolesError> {
-        let name = validate_str(name, 1, 100, "Role name").map_err(RolesError::ValidationError)?;
+        let name = validate_and_trim_str(name, 1, 100, "Role name")
+            .map_err(RolesError::ValidationError)?;
         role_type.validate()?;
 
         let id = self.generate_role_id();
@@ -66,8 +80,8 @@ impl RolesState {
     }
 
     pub fn remove_role(&mut self, role_id: &RoleId) -> Result<Role, RolesError> {
-        if *role_id == PUBLIC_ROLE_ID {
-            return Err(RolesError::UnableToDeletePublicRole);
+        if *role_id == PUBLIC_ROLE_ID || *role_id == HAS_PROFILE_ROLE_ID {
+            return Err(RolesError::UnableToDeleteDefaultRole);
         }
 
         let role = self.roles.remove(role_id).ok_or(RolesError::RoleNotFound)?;
@@ -87,22 +101,22 @@ impl RolesState {
         new_name: Option<String>,
         new_role_type: Option<RoleType>,
     ) -> Result<(), RolesError> {
-        if *role_id == PUBLIC_ROLE_ID {
-            return Err(RolesError::UnableToEditPublicRole);
+        if *role_id == PUBLIC_ROLE_ID || *role_id == HAS_PROFILE_ROLE_ID {
+            return Err(RolesError::UnableToEditDefaultRole);
         }
 
         let role = self.get_role_mut(role_id)?;
 
         if let Some(name) = new_name {
-            let name =
-                validate_str(name, 1, 100, "Role name").map_err(RolesError::ValidationError)?;
+            let name = validate_and_trim_str(name, 1, 100, "Role name")
+                .map_err(RolesError::ValidationError)?;
 
             role.name = name
         };
 
         if let Some(role_type) = new_role_type {
             if matches!(role_type, RoleType::Public) {
-                return Err(RolesError::UnableToCreateAnotherPublicRole);
+                return Err(RolesError::UnableToCreateAnotherDefaultRole);
             }
             role_type.validate()?;
 
@@ -128,8 +142,20 @@ impl RolesState {
         role_id: RoleId,
         new_owners: Vec<Principal>,
     ) -> Result<(), RolesError> {
+        if role_id == HAS_PROFILE_ROLE_ID {
+            return Err(RolesError::UnableToEditDefaultRole);
+        }
+
+        self._add_role_owners(role_id, new_owners)
+    }
+
+    pub fn _add_role_owners(
+        &mut self,
+        role_id: RoleId,
+        new_owners: Vec<Principal>,
+    ) -> Result<(), RolesError> {
         if role_id == PUBLIC_ROLE_ID {
-            return Err(RolesError::UnableToEditPublicRole);
+            return Err(RolesError::UnableToEditDefaultRole);
         }
 
         let role = self.get_role_mut(&role_id)?;
@@ -153,8 +179,20 @@ impl RolesState {
         role_id: RoleId,
         owners_to_remove: Vec<Principal>,
     ) -> Result<(), RolesError> {
+        if role_id == HAS_PROFILE_ROLE_ID {
+            return Err(RolesError::UnableToEditDefaultRole);
+        }
+
+        self._subtract_role_owners(role_id, owners_to_remove)
+    }
+
+    pub fn _subtract_role_owners(
+        &mut self,
+        role_id: RoleId,
+        owners_to_remove: Vec<Principal>,
+    ) -> Result<(), RolesError> {
         if role_id == PUBLIC_ROLE_ID {
-            return Err(RolesError::UnableToEditPublicRole);
+            return Err(RolesError::UnableToEditDefaultRole);
         }
 
         let role = self.get_role_mut(&role_id)?;
@@ -171,6 +209,54 @@ impl RolesState {
         }
 
         Ok(())
+    }
+
+    pub fn is_role_fulfilled(&self, role_id: &RoleId, authorized_by: &[Principal]) -> bool {
+        let role = self.get_role(role_id);
+        if role.is_err() {
+            return false;
+        }
+
+        let role = role.unwrap();
+
+        match &role.role_type {
+            RoleType::Public => true,
+            RoleType::HasProfile(owners) => {
+                for authority in authorized_by {
+                    if owners.contains(authority) {
+                        return true;
+                    }
+                }
+
+                false
+            }
+            RoleType::PrivateQuantity((qty, owners)) => {
+                for authority in authorized_by {
+                    if !owners.contains(authority) {
+                        return false;
+                    }
+                }
+
+                if authorized_by.len() < (*qty) as usize {
+                    false
+                } else {
+                    true
+                }
+            }
+            RoleType::PrivateFraction((fr, owners)) => {
+                for authority in authorized_by {
+                    if !owners.contains(authority) {
+                        return false;
+                    }
+                }
+
+                if (authorized_by.len() as f32 / owners.len() as f32) < (*fr) {
+                    false
+                } else {
+                    true
+                }
+            }
+        }
     }
 
     pub fn is_role_owner(&self, owner: &Principal, role_id: &RoleId) -> Result<(), RolesError> {
@@ -245,12 +331,14 @@ pub enum RoleType {
     PrivateQuantity((u16, HashSet<Principal>)),
     PrivateFraction((f32, HashSet<Principal>)),
     Public,
+    HasProfile(HashSet<Principal>),
 }
 
 impl RoleType {
     pub fn validate(&self) -> Result<(), RolesError> {
         match self {
             RoleType::Public => Ok(()),
+            RoleType::HasProfile(_) => Ok(()),
             RoleType::PrivateFraction((fr, o)) => {
                 validate_f32(*fr, 0.001, 1.00, "Fraction").map_err(RolesError::ValidationError)
             }
@@ -262,6 +350,7 @@ impl RoleType {
     pub fn get_role_owners(&self) -> Result<&HashSet<Principal>, RolesError> {
         match self {
             RoleType::Public => Err(RolesError::RoleHasNoOwners),
+            RoleType::HasProfile(o) => Ok(o),
             RoleType::PrivateFraction((_, o)) => Ok(o),
             RoleType::PrivateQuantity((_, o)) => Ok(o),
         }
@@ -270,6 +359,7 @@ impl RoleType {
     pub fn get_role_owners_mut(&mut self) -> Result<&mut HashSet<Principal>, RolesError> {
         match self {
             RoleType::Public => Err(RolesError::RoleHasNoOwners),
+            RoleType::HasProfile(o) => Ok(o),
             RoleType::PrivateFraction((_, o)) => Ok(o),
             RoleType::PrivateQuantity((_, o)) => Ok(o),
         }

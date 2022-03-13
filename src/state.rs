@@ -1,8 +1,9 @@
 use crate::common::execution_history::ExecutionHistoryState;
 use crate::common::permissions::{PermissionScope, PermissionsError, PermissionsState};
 use crate::common::profiles::ProfilesState;
-use crate::common::roles::{RoleType, RolesError, RolesState};
-use crate::{PermissionId, RoleId};
+use crate::common::roles::{RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
+use crate::common::utils::{validate_and_trim_str, ValidationError};
+use crate::{ExecuteRequest, HistoryEntry, PermissionId, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -11,6 +12,7 @@ use std::collections::{HashMap, HashSet};
 pub enum Error {
     RolesError(RolesError),
     PermissionsError(PermissionsError),
+    ValidationError(ValidationError),
     RoleIsNotAttachedToPermission,
 }
 
@@ -27,13 +29,9 @@ pub struct State {
 impl State {
     pub fn new(caller: Principal) -> Result<Self, Error> {
         let mut roles_state = RolesState::new().map_err(Error::RolesError)?;
-
-        let wallet_creator_role_id = roles_state
-            .create_role(
-                String::from("Wallet creator"),
-                RoleType::PrivateQuantity((1, vec![caller].into_iter().collect())),
-            )
-            .map_err(Error::RolesError)?;
+        roles_state
+            ._add_role_owners(HAS_PROFILE_ROLE_ID, vec![caller])
+            .unwrap();
 
         let mut permissions_state = PermissionsState::default();
 
@@ -53,9 +51,39 @@ impl State {
             permissions_by_role: HashMap::default(),
         };
 
-        state.attach_role_to_permission(wallet_creator_role_id, default_permission_id)?;
+        state.attach_role_to_permission(HAS_PROFILE_ROLE_ID, default_permission_id)?;
 
         Ok(state)
+    }
+
+    pub fn validate_execute_request(
+        &self,
+        mut req: ExecuteRequest,
+        caller: &Principal,
+    ) -> Result<ExecuteRequest, Error> {
+        // validate inputs
+        let title =
+            validate_and_trim_str(req.title, 3, 100, "Title").map_err(Error::ValidationError)?;
+        let description = validate_and_trim_str(req.description, 3, 100, "Description")
+            .map_err(Error::ValidationError)?;
+
+        req.title = title;
+        req.description = description;
+
+        // if the caller has the provided role
+        self.roles
+            .is_role_owner(caller, &req.role_id)
+            .map_err(Error::RolesError)?;
+
+        // if the role has the permission
+        self.is_role_attached_to_permission(&req.role_id, &req.permission_id)?;
+
+        // if the program is a call sequence and each call in the sequence is compliant with the provided permission
+        self.permissions
+            .is_program_allowed_by_permission(&req.program, &req.permission_id)
+            .map_err(Error::PermissionsError)?;
+
+        Ok(req)
     }
 
     pub fn attach_role_to_permission(
@@ -144,4 +172,9 @@ impl State {
             Ok(())
         }
     }
+}
+
+#[derive(CandidType, Deserialize)]
+pub enum TaskType {
+    CallAuthorization(HistoryEntry),
 }
