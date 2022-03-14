@@ -6,6 +6,17 @@ use ic_cdk::export::candid::{CandidType, Deserialize};
 use ic_cdk::export::Principal;
 use ic_cron::types::TaskId;
 
+#[derive(CandidType, Deserialize)]
+pub struct RoleAndPermission {
+    pub role_id: RoleId,
+    pub permission_id: PermissionId,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct AuthorizedRequest {
+    pub rnp: RoleAndPermission,
+}
+
 // ------------ EXECUTION & HISTORY -------------
 
 #[derive(CandidType, Deserialize)]
@@ -13,9 +24,8 @@ pub struct ExecuteRequest {
     pub title: String,
     pub description: String,
     pub program: Program,
-    pub role_id: RoleId,
-    pub permission_id: PermissionId,
     pub authorization_delay_nano: u64,
+    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -39,6 +49,7 @@ pub struct GetHistoryEntryIdsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetHistoryEntriesRequest {
     pub ids: Vec<HistoryEntryId>,
+    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -63,12 +74,6 @@ pub struct UpdateProfileRequest {
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct UpdateMyProfileRequest {
-    pub new_name: Option<String>,
-    pub new_description: Option<String>,
-}
-
-#[derive(CandidType, Deserialize)]
 pub struct RemoveProfileRequest {
     pub principal_id: Principal,
 }
@@ -86,6 +91,7 @@ pub struct GetMyProfileResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetProfilesRequest {
     pub principal_ids: Vec<Principal>,
+    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]

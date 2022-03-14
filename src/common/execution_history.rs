@@ -2,6 +2,7 @@ use crate::common::permissions::PermissionId;
 use crate::common::roles::RoleId;
 use crate::CandidCallResult;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use ic_cdk::id;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
@@ -170,9 +171,28 @@ pub struct RemoteCallEndpoint {
     pub method_name: String,
 }
 
+impl RemoteCallEndpoint {
+    pub fn this(method_name: &str) -> Self {
+        Self {
+            canister_id: id(),
+            method_name: String::from(method_name),
+        }
+    }
+}
+
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct RemoteCallPayload {
     pub endpoint: RemoteCallEndpoint,
     pub args_raw: Vec<u8>,
     pub cycles: u64,
+}
+
+impl RemoteCallPayload {
+    pub fn this(method_name: &str) -> Self {
+        Self {
+            endpoint: RemoteCallEndpoint::this(method_name),
+            args_raw: vec![],
+            cycles: 0,
+        }
+    }
 }

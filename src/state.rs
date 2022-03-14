@@ -3,7 +3,7 @@ use crate::common::permissions::{PermissionScope, PermissionsError, PermissionsS
 use crate::common::profiles::ProfilesState;
 use crate::common::roles::{RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
 use crate::common::utils::{validate_and_trim_str, ValidationError};
-use crate::{ExecuteRequest, HistoryEntry, PermissionId, RoleId};
+use crate::{ExecuteRequest, HistoryEntry, PermissionId, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -69,21 +69,25 @@ impl State {
 
         req.title = title;
         req.description = description;
-
+        
+        Ok(req)
+    }
+    
+    pub fn validate_authorized_request(&self, caller: &Principal, role_id: &RoleId, permission_id: &PermissionId, program: &Program) -> Result<(), Error> {
         // if the caller has the provided role
         self.roles
-            .is_role_owner(caller, &req.role_id)
+            .is_role_owner(caller, role_id)
             .map_err(Error::RolesError)?;
 
         // if the role has the permission
-        self.is_role_attached_to_permission(&req.role_id, &req.permission_id)?;
+        self.is_role_attached_to_permission(role_id, permission_id)?;
 
         // if the program is a call sequence and each call in the sequence is compliant with the provided permission
         self.permissions
-            .is_program_allowed_by_permission(&req.program, &req.permission_id)
+            .is_program_allowed_by_permission(program, permission_id)
             .map_err(Error::PermissionsError)?;
-
-        Ok(req)
+        
+        Ok(())
     }
 
     pub fn attach_role_to_permission(

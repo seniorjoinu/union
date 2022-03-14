@@ -1,14 +1,17 @@
 use crate::api::{
-    AuthorizeExecutionRequest, AuthorizeExecutionResponse, CreateProfileRequest, ExecuteRequest,
-    ExecuteResponse, GetHistoryEntriesRequest, GetHistoryEntriesResponse,
+    AuthorizeExecutionRequest, AuthorizeExecutionResponse, AuthorizedRequest, CreateProfileRequest,
+    ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest, GetHistoryEntriesResponse,
     GetHistoryEntryIdsResponse, GetMyPermissionsResponse, GetMyProfileResponse, GetMyRolesResponse,
     GetProfileIdsResponse, GetProfilesRequest, GetProfilesResponse, RemoveProfileRequest,
     UpdateMyProfileRequest, UpdateProfileRequest,
 };
-use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program};
+use crate::common::execution_history::{
+    HistoryEntry, HistoryEntryId, Program, RemoteCallEndpoint, RemoteCallPayload,
+};
 use crate::common::permissions::PermissionId;
 use crate::common::roles::{RoleId, HAS_PROFILE_ROLE_ID};
 use crate::common::utils::{CandidCallResult, ToCandidType};
+use crate::guards::only_self_guard;
 use crate::helpers::execute_program_and_log;
 use crate::state::{State, TaskType};
 use ic_cdk::api::time;
@@ -20,6 +23,7 @@ use ic_cron::types::{Iterations, ScheduledTask, SchedulingOptions};
 
 pub mod api;
 pub mod common;
+pub mod guards;
 pub mod helpers;
 pub mod state;
 
@@ -30,13 +34,24 @@ fn execute(req: ExecuteRequest) -> ExecuteResponse {
     let caller = caller();
     let state = get_state();
 
+    state
+        .validate_authorized_request(
+            &caller,
+            &req.rnp.role_id,
+            &req.rnp.permission_id,
+            &req.program,
+        )
+        .expect("Access denied");
+
     let req = state
         .validate_execute_request(req, &caller)
         .expect("Request validation failed");
 
     // if the role is fulfilled - execute immediately, otherwise - put in the authorization queue
     let authorized_by = vec![caller];
-    let is_role_fulfilled = state.roles.is_role_fulfilled(&req.role_id, &authorized_by);
+    let is_role_fulfilled = state
+        .roles
+        .is_role_fulfilled(&req.rnp.role_id, &authorized_by);
 
     let timestamp_before = time();
     let entry = state.execution_history.create_pending_entry(
@@ -44,8 +59,8 @@ fn execute(req: ExecuteRequest) -> ExecuteResponse {
         req.description,
         req.program,
         timestamp_before,
-        req.role_id,
-        req.permission_id,
+        req.rnp.role_id,
+        req.rnp.permission_id,
         authorized_by,
     );
 
@@ -116,7 +131,7 @@ fn authorize_execution(req: AuthorizeExecutionRequest) -> AuthorizeExecutionResp
 // TODO: make all methods checked for permission
 
 #[query]
-fn get_scheduled_for_authorization_executions() -> Vec<ScheduledTask> {
+fn get_scheduled_for_authorization_executions(req: AuthorizedRequest) -> Vec<ScheduledTask> {
     get_cron_state().get_tasks_cloned()
 }
 
@@ -150,21 +165,43 @@ fn tick() {
 }
 
 #[query]
-pub fn get_history_entry_ids() -> GetHistoryEntryIdsResponse {
-    let ids = get_state().execution_history.get_entry_ids_cloned();
+pub fn get_history_entry_ids(req: AuthorizedRequest) -> GetHistoryEntryIdsResponse {
+    let state = get_state();
+
+    state
+        .validate_authorized_request(
+            &caller(),
+            &req.rnp.role_id,
+            &req.rnp.permission_id,
+            &Program::RemoteCallSequence(vec![RemoteCallPayload::this("get_history_entry_ids")]),
+        )
+        .expect("Access denied");
+
+    let ids = state.execution_history.get_entry_ids_cloned();
 
     GetHistoryEntryIdsResponse { ids }
 }
 
 #[query]
 pub fn get_history_entries(req: GetHistoryEntriesRequest) -> GetHistoryEntriesResponse {
+    let state = get_state();
+
+    state
+        .validate_authorized_request(
+            &caller(),
+            &req.rnp.role_id,
+            &req.rnp.permission_id,
+            &Program::RemoteCallSequence(vec![RemoteCallPayload::this("get_history_entries")]),
+        )
+        .expect("Access denied");
+
     let mut entries = vec![];
 
     for id in &req.ids {
-        let entry = get_state()
+        let entry = state
             .execution_history
             .get_entry_by_id(id)
-            .expect(format!("Unable to get entry with id {}", id).as_str());
+            .unwrap_or_else(|_| panic!("Unable to get entry with id {}", id));
 
         entries.push(entry.clone());
     }
@@ -173,7 +210,7 @@ pub fn get_history_entries(req: GetHistoryEntriesRequest) -> GetHistoryEntriesRe
 }
 
 // --------------------- PROFILES ----------------------
-#[update]
+#[update(guard = "only_self_guard")]
 pub fn create_profile(req: CreateProfileRequest) {
     get_state()
         .profiles
@@ -186,7 +223,7 @@ pub fn create_profile(req: CreateProfileRequest) {
         .unwrap();
 }
 
-#[update]
+#[update(guard = "only_self_guard")]
 pub fn update_profile(req: UpdateProfileRequest) {
     get_state()
         .profiles
@@ -194,17 +231,7 @@ pub fn update_profile(req: UpdateProfileRequest) {
         .expect("Unable to update a profile");
 }
 
-#[update]
-pub fn update_my_profile(req: UpdateMyProfileRequest) {
-    let id = caller();
-
-    get_state()
-        .profiles
-        .update_profile(id, req.new_name, req.new_description)
-        .expect("Unable to update my profile");
-}
-
-#[update]
+#[update(guard = "only_self_guard")]
 pub fn remove_profile(req: RemoveProfileRequest) {
     get_state()
         .profiles
@@ -218,8 +245,19 @@ pub fn remove_profile(req: RemoveProfileRequest) {
 }
 
 #[query]
-pub fn get_profile_ids() -> GetProfileIdsResponse {
-    let principal_ids = get_state().profiles.get_profile_ids_cloned();
+pub fn get_profile_ids(req: AuthorizedRequest) -> GetProfileIdsResponse {
+    let state = get_state();
+
+    state
+        .validate_authorized_request(
+            &caller(),
+            &req.rnp.role_id,
+            &req.rnp.permission_id,
+            &Program::RemoteCallSequence(vec![RemoteCallPayload::this("get_profile_ids")]),
+        )
+        .expect("Access denied");
+
+    let principal_ids = state.profiles.get_profile_ids_cloned();
 
     GetProfileIdsResponse { principal_ids }
 }
@@ -231,7 +269,7 @@ pub fn get_my_profile() -> GetMyProfileResponse {
     let profile = get_state()
         .profiles
         .get_profile(&id)
-        .expect(format!("Unable to get profile with id {}", id).as_str())
+        .unwrap_or_else(|_| panic!("Unable to get profile with id {}", id))
         .clone();
 
     GetMyProfileResponse { profile }
@@ -239,13 +277,24 @@ pub fn get_my_profile() -> GetMyProfileResponse {
 
 #[query]
 pub fn get_profiles(req: GetProfilesRequest) -> GetProfilesResponse {
+    let state = get_state();
+
+    state
+        .validate_authorized_request(
+            &caller(),
+            &req.rnp.role_id,
+            &req.rnp.permission_id,
+            &Program::RemoteCallSequence(vec![RemoteCallPayload::this("get_profiles")]),
+        )
+        .expect("Access denied");
+
     let mut profiles = vec![];
 
     for id in &req.principal_ids {
-        let profile = get_state()
+        let profile = state
             .profiles
             .get_profile(id)
-            .expect(format!("Unable to get profile with id {}", id).as_str());
+            .unwrap_or_else(|_| panic!("Unable to get profile with id {}", id));
 
         profiles.push(profile.clone());
     }
@@ -258,11 +307,13 @@ pub fn get_profiles(req: GetProfilesRequest) -> GetProfilesResponse {
 #[query]
 pub fn get_my_roles() -> GetMyRolesResponse {
     let id = caller();
-    let role_ids = get_state().roles.get_role_ids_by_role_owner_cloned(&id);
+    let state = get_state();
+
+    let role_ids = state.roles.get_role_ids_by_role_owner_cloned(&id);
     let mut roles = vec![];
 
     for role_id in &role_ids {
-        let role = get_state().roles.get_role(role_id).unwrap();
+        let role = state.roles.get_role(role_id).unwrap();
         roles.push(role.clone());
     }
 
@@ -274,20 +325,18 @@ pub fn get_my_roles() -> GetMyRolesResponse {
 #[query]
 pub fn get_my_permissions() -> GetMyPermissionsResponse {
     let id = caller();
-    let role_ids = get_state().roles.get_role_ids_by_role_owner_cloned(&id);
+    let state = get_state();
+    let role_ids = state.roles.get_role_ids_by_role_owner_cloned(&id);
     let mut permission_ids = vec![];
 
     for role_id in &role_ids {
-        let mut some_permission_ids = get_state().get_permission_ids_of_role_cloned(role_id);
+        let mut some_permission_ids = state.get_permission_ids_of_role_cloned(role_id);
         permission_ids.append(&mut some_permission_ids);
     }
 
     let mut permissions = vec![];
     for permission_id in &permission_ids {
-        let permission = get_state()
-            .permissions
-            .get_permission(permission_id)
-            .unwrap();
+        let permission = state.permissions.get_permission(permission_id).unwrap();
 
         permissions.push(permission.clone());
     }

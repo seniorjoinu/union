@@ -1,3 +1,8 @@
+type RoleId = nat16;
+type PermissionId = nat16;
+type HistoryEntryId = nat64;
+type TaskId = nat64;
+
 type RemoteCallEndpoint = record {
     canister_id : principal;
     method_name : text;
@@ -14,18 +19,21 @@ type Program = variant {
     RemoteCallSequence : vec RemoteCallPayload;
 };
 
-type RoleId = nat16;
-type PermissionId = nat16;
-type HistoryEntryId = nat64;
-type TaskId = nat64;
+type RoleAndPermission = record {
+    role_id : RoleId;
+    permission_id : PermissionId;
+};
+
+type AuthorizedRequest = record {
+    rnp : RoleAndPermission;
+};
 
 type ExecuteRequest = record {
     title : text;
     description : text;
     program : Program;
-    role_id : RoleId;
-    permission_id : PermissionId;
     authorization_delay_nano : nat64;
+    rnp : RoleAndPermission;
 };
 
 type ExecuteResponse = variant {
@@ -69,6 +77,7 @@ type GetHistoryEntryIdsResponse = record {
 
 type GetHistoryEntriesRequest = record {
     ids : vec HistoryEntryId;
+    rnp : RoleAndPermission;
 };
 
 type GetHistoryEntriesResponse = record {
@@ -122,11 +131,6 @@ type UpdateProfileRequest = record {
     new_description : opt text;
 };
 
-type UpdateMyProfileRequest = record {
-    new_name : opt text;
-    new_description : opt text;
-};
-
 type RemoveProfileRequest = record {
     principal_id : principal;
 };
@@ -147,6 +151,7 @@ type Profile = record {
 
 type GetProfilesRequest = record {
     principal_ids : vec principal;
+    rnp : RoleAndPermission;
 };
 
 type GetProfilesResponse = record {
@@ -195,15 +200,14 @@ type PermissionScope = variant {
 service : {
     "execute" : (ExecuteRequest) -> (ExecuteResponse);
     "authorize_execution" : (AuthorizeExecutionRequest) -> (AuthorizeExecutionResponse);
-    "get_scheduled_for_authorization_executions" : () -> (vec ScheduledTask) query;
-    "get_history_entry_ids" : () -> (GetHistoryEntryIdsResponse) query;
+    "get_scheduled_for_authorization_executions" : (AuthorizedRequest) -> (vec ScheduledTask) query;
+    "get_history_entry_ids" : (AuthorizedRequest) -> (GetHistoryEntryIdsResponse) query;
     "get_history_entries" : (GetHistoryEntriesRequest) -> (GetHistoryEntriesResponse) query;
 
     "create_profile" : (CreateProfileRequest) -> ();
     "update_profile" : (UpdateProfileRequest) -> ();
-    "update_my_profile" : (UpdateMyProfileRequest) -> ();
     "remove_profile" : (RemoveProfileRequest) -> ();
-    "get_profile_ids" : () -> (GetProfileIdsResponse) query;
+    "get_profile_ids" : (AuthorizedRequest) -> (GetProfileIdsResponse) query;
     "get_my_profile" : () -> (GetMyProfileResponse) query;
     "get_profiles" : (GetProfilesRequest) -> (GetProfilesResponse) query;
 
