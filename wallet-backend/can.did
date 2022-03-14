@@ -119,6 +119,12 @@ type RejectionCode = variant {
     Unknown;
 };
 
+type GetScheduledForAuthorizationExecutionsResponse = record {
+    entries : vec HistoryEntry;
+};
+
+// ------------- PROFILES ---------------
+
 type CreateProfileRequest = record {
     principal_id : principal;
     name : text;
@@ -158,6 +164,54 @@ type GetProfilesResponse = record {
     profiles : vec Profile;
 };
 
+// ---------------- ROLES -------------------
+
+type CreateRoleRequest = record {
+    name : text;
+    role_type : RoleType;
+};
+
+type CreateRoleResponse = record {
+    role_id : RoleId;
+};
+
+type UpdateRoleRequest = record {
+    role_id : RoleId;
+    new_name : opt text;
+    new_role_type : opt RoleType;
+};
+
+type RemoveRoleRequest = record {
+    role_id : RoleId;
+};
+
+type RemoveRoleResponse = record {
+    role : Role;
+};
+
+type AddRoleOwnersRequest = record {
+    role_id : RoleId;
+    new_owners : vec principal;
+};
+
+type SubtractRoleOwnersRequest = record {
+    role_id : RoleId;
+    owners_to_subtract : vec principal;
+};
+
+type GetRoleIdsResponse = record {
+    ids : vec RoleId;
+};
+
+type GetRolesRequest = record {
+    ids : vec RoleId;
+    rnp : RoleAndPermission;
+};
+
+type GetRolesResponse = record {
+    roles : vec Role;
+};
+
 type GetMyRolesResponse = record {
     roles : vec Role;
 };
@@ -173,6 +227,55 @@ type RoleType = variant {
     PrivateFraction : record { 0 : float32; 1 : vec principal };
     Public;
     HasProfile : vec principal;
+};
+
+// ------------------ PERMISSIONS -----------------
+
+type CreatePermissionRequest = record {
+    name : text;
+    targets : vec PermissionTarget;
+    scope : PermissionScope;
+};
+
+type CreatePermissionResponse = record {
+    permission_id : PermissionId;
+};
+
+type UpdatePermissionRequest = record {
+    permission_id : PermissionId;
+    new_name : opt text;
+    new_targets : opt vec PermissionTarget;
+    new_scope : opt PermissionScope;
+};
+
+type RemovePermissionRequest = record {
+    permission_id : PermissionId;
+};
+
+type RemovePermissionResponse = record {
+    permission : Permission;
+};
+
+type GetPermissionIdsResponse = record {
+    ids : vec PermissionId;
+};
+
+type GetPermissionsRequest = record {
+    ids : vec PermissionId;
+    rnp : RoleAndPermission;
+};
+
+type GetPermissionsResponse = record {
+    permissions : vec Permission;
+};
+
+type GetPermissionsByPermissionTargetRequest = record {
+    target : PermissionTarget;
+    rnp : RoleAndPermission;
+};
+
+type GetPermissionsByPermissionTargetResponse = record {
+    ids : vec PermissionId;
 };
 
 type GetMyPermissionsResponse = record {
@@ -197,10 +300,40 @@ type PermissionScope = variant {
     Blacklist;
 };
 
+// ------------------ ROLES & PERMISSIONS ----------------
+
+type AttachRoleToPermissionRequest = record {
+    role_id : RoleId;
+    permission_id : PermissionId;
+};
+
+type DetachRoleFromPermissionRequest = record {
+    role_id : RoleId;
+    permission_id : PermissionId;
+};
+
+type GetRolesAttachedToPermissionsRequest = record {
+    permission_ids : vec PermissionId;
+    rnp : RoleAndPermission;
+};
+
+type GetRolesAttachedToPermissionsResponse = record {
+    result : vec record { 0 : PermissionId; 1 : RoleId };
+};
+
+type GetPermissionsAttachedToRolesRequest = record {
+    role_ids : vec RoleId;
+    rnp : RoleAndPermission;
+};
+
+type GetPermissionsAttachedToRolesResponse = record {
+    result : vec record { 0 : RoleId; 1 : PermissionId };
+};
+
 service : {
     "execute" : (ExecuteRequest) -> (ExecuteResponse);
     "authorize_execution" : (AuthorizeExecutionRequest) -> (AuthorizeExecutionResponse);
-    "get_scheduled_for_authorization_executions" : (AuthorizedRequest) -> (vec ScheduledTask) query;
+    "get_scheduled_for_authorization_executions" : (AuthorizedRequest) -> (GetScheduledForAuthorizationExecutionsResponse) query;
     "get_history_entry_ids" : (AuthorizedRequest) -> (GetHistoryEntryIdsResponse) query;
     "get_history_entries" : (GetHistoryEntriesRequest) -> (GetHistoryEntriesResponse) query;
 
@@ -211,6 +344,25 @@ service : {
     "get_my_profile" : () -> (GetMyProfileResponse) query;
     "get_profiles" : (GetProfilesRequest) -> (GetProfilesResponse) query;
 
+    "create_role" : (CreateRoleRequest) -> (CreateRoleResponse);
+    "update_role" : (UpdateRoleRequest) -> ();
+    "remove_role" : (RemoveRoleRequest) -> (RemoveRoleResponse);
+    "add_role_owners" : (AddRoleOwnersRequest) -> ();
+    "subtract_role_owners" : (SubtractRoleOwnersRequest) -> ();
+    "get_role_ids" : (AuthorizedRequest) -> (GetRoleIdsResponse) query;
+    "get_roles" : (GetRolesRequest) -> (GetRolesResponse) query;
     "get_my_roles" : () -> (GetMyRolesResponse) query;
+
+    "create_permission" : (CreatePermissionRequest) -> (CreatePermissionResponse);
+    "update_permission" : (UpdatePermissionRequest) -> ();
+    "remove_permission" : (RemovePermissionRequest) -> (RemovePermissionResponse);
+    "get_permission_ids" : (AuthorizedRequest) -> (GetPermissionIdsResponse) query;
+    "get_permissions" : (GetPermissionsRequest) -> (GetPermissionsResponse) query;
     "get_my_permissions" : () -> (GetMyPermissionsResponse) query;
+    "get_permissions_by_permission_target" : (GetPermissionsByPermissionTargetRequest) -> (GetPermissionsByPermissionTargetResponse) query;
+
+    "attach_role_to_permission" : (AttachRoleToPermissionRequest) -> ();
+    "detach_role_from_permission" : (DetachRoleFromPermissionRequest) -> ();
+    "get_roles_attached_to_permissions" : (GetRolesAttachedToPermissionsRequest) -> (GetRolesAttachedToPermissionsResponse) query;
+    "get_permissions_attached_to_roles" : (GetPermissionsAttachedToRolesRequest) -> (GetPermissionsAttachedToRolesResponse) query;
 }

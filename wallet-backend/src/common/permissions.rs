@@ -155,11 +155,11 @@ impl PermissionsState {
         }
     }
 
-    fn get_permission_ids_cloned(&self) -> Vec<PermissionId> {
+    pub fn get_permission_ids_cloned(&self) -> Vec<PermissionId> {
         self.permissions.keys().cloned().collect()
     }
 
-    fn get_permission_ids_by_permission_target_cloned(
+    pub fn get_permission_ids_by_permission_target_cloned(
         &self,
         permission_target: &PermissionTarget,
     ) -> Vec<PermissionId> {

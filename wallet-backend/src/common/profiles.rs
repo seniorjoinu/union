@@ -99,4 +99,12 @@ impl ProfilesState {
             .get(principal_id)
             .ok_or(ProfilesError::ProfileNotFound)
     }
+
+    pub fn has_profile(&self, principal_id: &Principal) -> Result<(), ProfilesError> {
+        if self.profiles.contains_key(principal_id) {
+            Ok(())
+        } else {
+            Err(ProfilesError::ProfileNotFound)
+        }
+    }
 }

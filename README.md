@@ -1,1 +1,2 @@
-# Union-wallet
+# Union
+Sovereign organizations software

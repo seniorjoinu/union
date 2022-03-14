@@ -1,7 +1,7 @@
 use crate::common::execution_history::ExecutionHistoryState;
-use crate::common::permissions::{PermissionScope, PermissionsError, PermissionsState};
+use crate::common::permissions::{Permission, PermissionScope, PermissionsError, PermissionsState};
 use crate::common::profiles::ProfilesState;
-use crate::common::roles::{RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
+use crate::common::roles::{Role, RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
 use crate::common::utils::{validate_and_trim_str, ValidationError};
 use crate::{ExecuteRequest, HistoryEntry, PermissionId, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
@@ -56,24 +56,13 @@ impl State {
         Ok(state)
     }
 
-    pub fn validate_execute_request(
+    pub fn validate_authorized_request(
         &self,
-        mut req: ExecuteRequest,
         caller: &Principal,
-    ) -> Result<ExecuteRequest, Error> {
-        // validate inputs
-        let title =
-            validate_and_trim_str(req.title, 3, 100, "Title").map_err(Error::ValidationError)?;
-        let description = validate_and_trim_str(req.description, 3, 100, "Description")
-            .map_err(Error::ValidationError)?;
-
-        req.title = title;
-        req.description = description;
-        
-        Ok(req)
-    }
-    
-    pub fn validate_authorized_request(&self, caller: &Principal, role_id: &RoleId, permission_id: &PermissionId, program: &Program) -> Result<(), Error> {
+        role_id: &RoleId,
+        permission_id: &PermissionId,
+        program: &Program,
+    ) -> Result<(), Error> {
         // if the caller has the provided role
         self.roles
             .is_role_owner(caller, role_id)
@@ -86,7 +75,7 @@ impl State {
         self.permissions
             .is_program_allowed_by_permission(program, permission_id)
             .map_err(Error::PermissionsError)?;
-        
+
         Ok(())
     }
 
@@ -158,6 +147,33 @@ impl State {
             .unwrap_or_default()
             .into_iter()
             .collect()
+    }
+
+    pub fn remove_role(&mut self, role_id: &RoleId) -> Result<Role, Error> {
+        let role = self.roles.remove_role(role_id).map_err(Error::RolesError)?;
+        let permission_ids = self.permissions_by_role.remove(role_id).unwrap();
+
+        for permission_id in &permission_ids {
+            let roles_of_permission = self.roles_by_permission.get_mut(permission_id).unwrap();
+            roles_of_permission.remove(role_id);
+        }
+
+        Ok(role)
+    }
+
+    pub fn remove_permission(&mut self, permission_id: &PermissionId) -> Result<Permission, Error> {
+        let permission = self
+            .permissions
+            .remove_permission(permission_id)
+            .map_err(Error::PermissionsError)?;
+        let role_ids = self.roles_by_permission.remove(permission_id).unwrap();
+
+        for role_id in &role_ids {
+            let permissions_of_role = self.permissions_by_role.get_mut(role_id).unwrap();
+            permissions_of_role.remove(permission_id);
+        }
+
+        Ok(permission)
     }
 
     pub fn is_role_attached_to_permission(

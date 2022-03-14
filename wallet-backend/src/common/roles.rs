@@ -237,11 +237,7 @@ impl RolesState {
                     }
                 }
 
-                if authorized_by.len() < (*qty) as usize {
-                    false
-                } else {
-                    true
-                }
+                !(authorized_by.len() < (*qty) as usize)
             }
             RoleType::PrivateFraction((fr, owners)) => {
                 for authority in authorized_by {
@@ -250,23 +246,25 @@ impl RolesState {
                     }
                 }
 
-                if (authorized_by.len() as f32 / owners.len() as f32) < (*fr) {
-                    false
-                } else {
-                    true
-                }
+                !((authorized_by.len() as f32 / owners.len() as f32) < (*fr))
             }
         }
     }
 
     pub fn is_role_owner(&self, owner: &Principal, role_id: &RoleId) -> Result<(), RolesError> {
         let role = self.get_role(role_id)?;
-        let owners = role.role_type.get_role_owners()?;
 
-        if !owners.contains(owner) {
-            Err(RolesError::NotRoleOwner)
-        } else {
-            Ok(())
+        match role.role_type {
+            RoleType::Public => Ok(()),
+            _ => {
+                let owners = role.role_type.get_role_owners()?;
+
+                if !owners.contains(owner) {
+                    Err(RolesError::NotRoleOwner)
+                } else {
+                    Ok(())
+                }
+            }
         }
     }
 
@@ -279,12 +277,16 @@ impl RolesState {
     }
 
     pub fn get_role_ids_by_role_owner_cloned(&self, role_owner: &Principal) -> Vec<RoleId> {
-        self.role_owners_index
+        let mut roles: Vec<_> = self.role_owners_index
             .get(role_owner)
             .cloned()
             .unwrap_or_default()
             .into_iter()
-            .collect()
+            .collect();
+        
+        roles.push(PUBLIC_ROLE_ID);
+        
+        roles
     }
 
     fn get_role_mut(&mut self, role_id: &RoleId) -> Result<&mut Role, RolesError> {

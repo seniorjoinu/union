@@ -188,7 +188,7 @@ pub struct RemoteCallPayload {
 }
 
 impl RemoteCallPayload {
-    pub fn this(method_name: &str) -> Self {
+    pub fn this_empty(method_name: &str) -> Self {
         Self {
             endpoint: RemoteCallEndpoint::this(method_name),
             args_raw: vec![],
