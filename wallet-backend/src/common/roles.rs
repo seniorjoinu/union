@@ -94,8 +94,6 @@ impl RolesState {
                 let enumerated_roles = role_type.get_enumerated_role_ids()?;
                 let mut role_owners = vec![];
 
-                let id = self.generate_role_id();
-
                 for role_id in enumerated_roles {
                     if !self.roles.contains_key(role_id) {
                         return Err(RolesError::RoleNotFound(*role_id));
@@ -651,6 +649,7 @@ mod tests {
                 Some(vec![user_1_role_id, user_2_role_id]),
             )))
             .expect("Unable to create A role");
+
         let role_id_b = roles_state
             .create_role(RoleType::QuantityOf(QuantityOf::new(
                 "B",
