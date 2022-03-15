@@ -107,5 +107,5 @@ macro_rules! gen_validate_num {
     };
 }
 
-gen_validate_num!(validate_u16, u16);
+gen_validate_num!(validate_u32, u32);
 gen_validate_num!(validate_f32, f32);

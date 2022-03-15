@@ -1,9 +1,8 @@
 use crate::common::execution_history::ExecutionHistoryState;
 use crate::common::permissions::{Permission, PermissionScope, PermissionsError, PermissionsState};
-use crate::common::profiles::ProfilesState;
-use crate::common::roles::{Role, RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
-use crate::common::utils::{validate_and_trim_str, ValidationError};
-use crate::{ExecuteRequest, HistoryEntry, PermissionId, Program, RoleId};
+use crate::common::roles::{Profile, Role, RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
+use crate::common::utils::ValidationError;
+use crate::{HistoryEntry, PermissionId, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -17,7 +16,6 @@ pub enum Error {
 }
 
 pub struct State {
-    pub profiles: ProfilesState,
     pub execution_history: ExecutionHistoryState,
     pub roles: RolesState,
     pub permissions: PermissionsState,
@@ -30,8 +28,12 @@ impl State {
     pub fn new(caller: Principal) -> Result<Self, Error> {
         let mut roles_state = RolesState::new().map_err(Error::RolesError)?;
         roles_state
-            ._add_role_owners(HAS_PROFILE_ROLE_ID, vec![caller])
-            .unwrap();
+            .create_role(RoleType::Profile(Profile::new(
+                caller,
+                "Wallet creator",
+                "The person who created the wallet",
+            )))
+            .map_err(Error::RolesError)?;
 
         let mut permissions_state = PermissionsState::default();
 
@@ -42,7 +44,6 @@ impl State {
         );
 
         let mut state = State {
-            profiles: ProfilesState::default(),
             execution_history: ExecutionHistoryState::default(),
             roles: roles_state,
             permissions: permissions_state,

@@ -1,5 +1,4 @@
 use crate::common::permissions::{Permission, PermissionScope, PermissionTarget};
-use crate::common::profiles::Profile;
 use crate::common::roles::{Role, RoleType};
 use crate::{HistoryEntry, HistoryEntryId, PermissionId, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize};
@@ -62,53 +61,10 @@ pub struct GetScheduledForAuthorizationExecutionsResponse {
     pub entries: Vec<HistoryEntry>,
 }
 
-// ----------------------- PROFILES --------------------
-
-#[derive(CandidType, Deserialize)]
-pub struct CreateProfileRequest {
-    pub principal_id: Principal,
-    pub name: String,
-    pub description: String,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct UpdateProfileRequest {
-    pub principal_id: Principal,
-    pub new_name: Option<String>,
-    pub new_description: Option<String>,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct RemoveProfileRequest {
-    pub principal_id: Principal,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct GetProfileIdsResponse {
-    pub principal_ids: Vec<Principal>,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct GetMyProfileResponse {
-    pub profile: Profile,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct GetProfilesRequest {
-    pub principal_ids: Vec<Principal>,
-    pub rnp: RoleAndPermission,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct GetProfilesResponse {
-    pub profiles: Vec<Profile>,
-}
-
 // ---------------------- ROLES -----------------------
 
 #[derive(CandidType, Deserialize)]
 pub struct CreateRoleRequest {
-    pub name: String,
     pub role_type: RoleType,
 }
 
@@ -120,8 +76,7 @@ pub struct CreateRoleResponse {
 #[derive(CandidType, Deserialize)]
 pub struct UpdateRoleRequest {
     pub role_id: RoleId,
-    pub new_name: Option<String>,
-    pub new_role_type: Option<RoleType>,
+    pub new_role_type: RoleType,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -135,15 +90,15 @@ pub struct RemoveRoleResponse {
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct AddRoleOwnersRequest {
+pub struct AddEnumeratedRolesRequest {
     pub role_id: RoleId,
-    pub new_owners: Vec<Principal>,
+    pub enumerated_roles_to_add: Vec<RoleId>,
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct SubtractRoleOwnersRequest {
+pub struct SubtractEnumeratedRolesRequest {
     pub role_id: RoleId,
-    pub owners_to_subtract: Vec<Principal>,
+    pub enumerated_roles_to_subtract: Vec<RoleId>,
 }
 
 #[derive(CandidType, Deserialize)]

@@ -1,22 +1,22 @@
-use crate::common::utils::{validate_and_trim_str, validate_f32, validate_u16, ValidationError};
+use crate::common::utils::{validate_and_trim_str, validate_f32, validate_u32, ValidationError};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 
-pub type RoleId = u16;
+pub type RoleId = u32;
 
-pub const PUBLIC_ROLE_ID: RoleId = 0;
+pub const EVERYONE_ROLE_ID: RoleId = 0;
 pub const HAS_PROFILE_ROLE_ID: RoleId = 1;
 
 #[derive(Clone, Debug)]
 pub enum RolesError {
-    RoleNotFound,
-    RoleHasNoOwners,
+    RoleNotFound(RoleId),
     UnableToCreateAnotherDefaultRole,
-    UnableToDeleteDefaultRole,
     UnableToEditDefaultRole,
     NotRoleOwner,
-    NotEnoughAuthorizations,
+    ProfileAlreadyExists,
+    InvalidRoleType,
+    RelatedRoleExists(Vec<RoleId>),
     ValidationError(ValidationError),
 }
 
@@ -25,6 +25,8 @@ pub struct RolesState {
     pub roles: HashMap<RoleId, Role>,
     pub role_ids_counter: RoleId,
     pub role_owners_index: HashMap<Principal, HashSet<RoleId>>,
+    pub profiles_index: HashMap<Principal, RoleId>,
+    pub related_roles_index: HashMap<RoleId, HashSet<RoleId>>,
 }
 
 impl RolesState {
@@ -32,15 +34,14 @@ impl RolesState {
         let mut state = RolesState::default();
 
         // create public role (non-deletable default role with id = 0)
-        let public_role_id = state.generate_role_id();
-        assert_eq!(public_role_id, PUBLIC_ROLE_ID);
+        let everyone_role_id = state.generate_role_id();
+        assert_eq!(everyone_role_id, EVERYONE_ROLE_ID);
 
         let public_role = Role {
-            id: public_role_id,
-            name: String::from("Public"),
-            role_type: RoleType::Public,
+            id: everyone_role_id,
+            role_type: RoleType::Everyone,
         };
-        state.roles.insert(public_role_id, public_role);
+        state.roles.insert(everyone_role_id, public_role);
 
         // create has_profile role (non-deletable default role with id = 1)
         let has_profile_role_id = state.generate_role_id();
@@ -48,49 +49,117 @@ impl RolesState {
 
         let has_profile_role = Role {
             id: has_profile_role_id,
-            name: String::from("Has profile"),
-            role_type: RoleType::HasProfile(HashSet::new()),
+            role_type: RoleType::QuantityOf(QuantityOf {
+                name: String::from("Has profile"),
+                description: String::from("[Default] Defines a user, who has an active profile. In case of attaching this role to any permission, this permission could be used by any user with a profile."),
+                quantity: 1,
+                enumerated: HashSet::new(),
+            }),
         };
         state.roles.insert(has_profile_role_id, has_profile_role);
 
         Ok(state)
     }
 
-    pub fn create_role(&mut self, name: String, role_type: RoleType) -> Result<RoleId, RolesError> {
-        let name = validate_and_trim_str(name, 1, 100, "Role name")
-            .map_err(RolesError::ValidationError)?;
-        role_type.validate()?;
-
+    pub fn create_role(&mut self, role_type: RoleType) -> Result<RoleId, RolesError> {
         let id = self.generate_role_id();
-        let role = Role {
-            id,
-            name,
-            role_type: role_type.clone(),
-        };
 
-        let role_owners = role_type.get_role_owners()?;
-
-        for role_owner in role_owners {
-            self.add_role_to_role_owners_index(id, *role_owner);
-        }
-
-        self.roles.insert(id, role);
+        self._create_role(id, role_type)?;
 
         Ok(id)
     }
 
+    fn _create_role(&mut self, id: RoleId, mut role_type: RoleType) -> Result<(), RolesError> {
+        role_type.validate()?;
+
+        match &role_type {
+            RoleType::Everyone => Err(RolesError::UnableToCreateAnotherDefaultRole),
+            RoleType::Profile(profile) => {
+                if self.profiles_index.contains_key(&profile.principal_id) {
+                    return Err(RolesError::ProfileAlreadyExists);
+                }
+
+                self.role_owners_index
+                    .insert(profile.principal_id, vec![id].into_iter().collect());
+
+                self.profiles_index.insert(profile.principal_id, id);
+                self.get_has_profile_role_mut().enumerated.insert(id);
+
+                let role = Role { id, role_type };
+                self.roles.insert(id, role);
+
+                Ok(())
+            }
+            _ => {
+                let enumerated_roles = role_type.get_enumerated_role_ids()?;
+                let mut role_owners = vec![];
+
+                let id = self.generate_role_id();
+
+                for role_id in enumerated_roles {
+                    if !self.roles.contains_key(role_id) {
+                        return Err(RolesError::RoleNotFound(*role_id));
+                    }
+                }
+
+                for role_id in enumerated_roles {
+                    self.relate_role(*role_id, id);
+                    self.retrace_role_owners(role_id, &mut role_owners);
+                }
+
+                for role_owner in role_owners {
+                    self.role_owners_index
+                        .get_mut(&role_owner)
+                        .unwrap()
+                        .insert(id);
+                }
+
+                let role = Role { id, role_type };
+                self.roles.insert(id, role);
+
+                Ok(())
+            }
+        }
+    }
+
     pub fn remove_role(&mut self, role_id: &RoleId) -> Result<Role, RolesError> {
-        if *role_id == PUBLIC_ROLE_ID || *role_id == HAS_PROFILE_ROLE_ID {
-            return Err(RolesError::UnableToDeleteDefaultRole);
+        if *role_id == EVERYONE_ROLE_ID || *role_id == HAS_PROFILE_ROLE_ID {
+            return Err(RolesError::UnableToEditDefaultRole);
         }
 
-        let role = self.roles.remove(role_id).ok_or(RolesError::RoleNotFound)?;
+        self.has_no_related_roles(role_id)?;
 
-        let role_owners = role.role_type.get_role_owners()?;
+        let role = self
+            .roles
+            .remove(role_id)
+            .ok_or(RolesError::RoleNotFound(*role_id))?;
 
-        for role_owner in role_owners {
-            self.remove_role_from_role_owners_index(role_id, *role_owner);
-        }
+        match &role.role_type {
+            RoleType::Everyone => unreachable!("Impossible to delete public role"),
+            RoleType::Profile(profile) => {
+                self.role_owners_index
+                    .remove(&profile.principal_id)
+                    .unwrap();
+                self.profiles_index.remove(&profile.principal_id).unwrap();
+                self.get_has_profile_role_mut().enumerated.remove(role_id);
+            }
+            _ => {
+                let enumerated_roles = role.role_type.get_enumerated_role_ids()?;
+                let mut role_owners = vec![];
+
+                for enumerated_role_id in enumerated_roles {
+                    self.unrelate_role(*enumerated_role_id, role_id);
+                    self.retrace_role_owners(enumerated_role_id, &mut role_owners);
+                }
+
+                for role_owner in role_owners {
+                    self.role_owners_index
+                        .get_mut(&role_owner)
+                        .unwrap()
+                        .remove(role_id);
+                }
+            }
+        };
 
         Ok(role)
     }
@@ -98,114 +167,59 @@ impl RolesState {
     pub fn update_role(
         &mut self,
         role_id: &RoleId,
-        new_name: Option<String>,
-        new_role_type: Option<RoleType>,
+        new_role_type: RoleType,
+    ) -> Result<Role, RolesError> {
+        let role = self.remove_role(role_id)?;
+        self._create_role(*role_id, new_role_type)?;
+
+        Ok(role)
+    }
+
+    pub fn add_enumerated_roles(
+        &mut self,
+        role_id: &RoleId,
+        role_ids_to_add: Vec<RoleId>,
     ) -> Result<(), RolesError> {
-        if *role_id == PUBLIC_ROLE_ID || *role_id == HAS_PROFILE_ROLE_ID {
-            return Err(RolesError::UnableToEditDefaultRole);
+        for role_id_to_add in &role_ids_to_add {
+            if !self.roles.contains_key(role_id_to_add) {
+                return Err(RolesError::RoleNotFound(*role_id_to_add));
+            }
         }
 
         let role = self.get_role_mut(role_id)?;
+        let enumerated_roles = role.role_type.get_enumerated_role_ids_mut()?;
 
-        if let Some(name) = new_name {
-            let name = validate_and_trim_str(name, 1, 100, "Role name")
-                .map_err(RolesError::ValidationError)?;
-
-            role.name = name
-        };
-
-        if let Some(role_type) = new_role_type {
-            if matches!(role_type, RoleType::Public) {
-                return Err(RolesError::UnableToCreateAnotherDefaultRole);
-            }
-            role_type.validate()?;
-
-            let old_role_owners = role.role_type.get_role_owners()?.clone();
-            let new_role_owners = role_type.get_role_owners()?.clone();
-
-            role.role_type = role_type;
-
-            for old_owner in old_role_owners {
-                self.remove_role_from_role_owners_index(role_id, old_owner);
-            }
-
-            for new_owner in new_role_owners {
-                self.add_role_to_role_owners_index(*role_id, new_owner);
-            }
-        };
-
-        Ok(())
-    }
-
-    pub fn add_role_owners(
-        &mut self,
-        role_id: RoleId,
-        new_owners: Vec<Principal>,
-    ) -> Result<(), RolesError> {
-        if role_id == HAS_PROFILE_ROLE_ID {
-            return Err(RolesError::UnableToEditDefaultRole);
+        for role_id_to_add in &role_ids_to_add {
+            enumerated_roles.insert(*role_id_to_add);
         }
 
-        self._add_role_owners(role_id, new_owners)
-    }
-
-    pub fn _add_role_owners(
-        &mut self,
-        role_id: RoleId,
-        new_owners: Vec<Principal>,
-    ) -> Result<(), RolesError> {
-        if role_id == PUBLIC_ROLE_ID {
-            return Err(RolesError::UnableToEditDefaultRole);
-        }
-
-        let role = self.get_role_mut(&role_id)?;
-        let role_owners = role.role_type.get_role_owners_mut()?;
-
-        for new_owner in &new_owners {
-            role_owners.insert(*new_owner);
-        }
-
-        role.role_type.validate()?;
-
-        for new_owner in new_owners {
-            self.add_role_to_role_owners_index(role_id, new_owner);
+        for role_id_to_add in role_ids_to_add {
+            self.relate_role(role_id_to_add, *role_id);
         }
 
         Ok(())
     }
 
-    pub fn subtract_role_owners(
+    pub fn subtract_enumerated_roles(
         &mut self,
-        role_id: RoleId,
-        owners_to_remove: Vec<Principal>,
+        role_id: &RoleId,
+        role_ids_to_subtract: Vec<RoleId>,
     ) -> Result<(), RolesError> {
-        if role_id == HAS_PROFILE_ROLE_ID {
-            return Err(RolesError::UnableToEditDefaultRole);
+        for role_id_to_subtract in &role_ids_to_subtract {
+            if !self.roles.contains_key(role_id_to_subtract) {
+                return Err(RolesError::RoleNotFound(*role_id_to_subtract));
+            }
         }
 
-        self._subtract_role_owners(role_id, owners_to_remove)
-    }
+        let role = self.get_role_mut(role_id)?;
+        let enumerated_roles = role.role_type.get_enumerated_role_ids_mut()?;
 
-    pub fn _subtract_role_owners(
-        &mut self,
-        role_id: RoleId,
-        owners_to_remove: Vec<Principal>,
-    ) -> Result<(), RolesError> {
-        if role_id == PUBLIC_ROLE_ID {
-            return Err(RolesError::UnableToEditDefaultRole);
+        for role_id_to_subtract in &role_ids_to_subtract {
+            enumerated_roles.remove(role_id_to_subtract);
         }
 
-        let role = self.get_role_mut(&role_id)?;
-        let role_owners = role.role_type.get_role_owners_mut()?;
-
-        for owner_to_remove in owners_to_remove.iter() {
-            role_owners.remove(owner_to_remove);
-        }
-
-        role.role_type.validate()?;
-
-        for owner_to_remove in owners_to_remove {
-            self.remove_role_from_role_owners_index(&role_id, owner_to_remove);
+        for role_id_to_subtract in role_ids_to_subtract {
+            self.unrelate_role(role_id_to_subtract, role_id);
         }
 
         Ok(())
@@ -213,6 +227,7 @@ impl RolesState {
 
     pub fn is_role_fulfilled(&self, role_id: &RoleId, authorized_by: &[Principal]) -> bool {
         let role = self.get_role(role_id);
+
         if role.is_err() {
             return false;
         }
@@ -220,51 +235,48 @@ impl RolesState {
         let role = role.unwrap();
 
         match &role.role_type {
-            RoleType::Public => true,
-            RoleType::HasProfile(owners) => {
-                for authority in authorized_by {
-                    if owners.contains(authority) {
-                        return true;
+            RoleType::Everyone => true,
+            RoleType::Profile(p) => authorized_by.contains(&p.principal_id),
+            RoleType::QuantityOf(qty_of_params) => {
+                let mut counter = 0u32;
+
+                for required_role_id in &qty_of_params.enumerated {
+                    let res = self.is_role_fulfilled(required_role_id, authorized_by);
+
+                    if res {
+                        counter += 1;
                     }
                 }
 
-                false
+                counter >= qty_of_params.quantity
             }
-            RoleType::PrivateQuantity((qty, owners)) => {
-                for authority in authorized_by {
-                    if !owners.contains(authority) {
-                        return false;
+            RoleType::FractionOf(fr_of_params) => {
+                let mut counter = 0f32;
+
+                for required_role_id in &fr_of_params.enumerated {
+                    let res = self.is_role_fulfilled(required_role_id, authorized_by);
+
+                    if res {
+                        counter += 1.0;
                     }
                 }
 
-                !(authorized_by.len() < (*qty) as usize)
-            }
-            RoleType::PrivateFraction((fr, owners)) => {
-                for authority in authorized_by {
-                    if !owners.contains(authority) {
-                        return false;
-                    }
-                }
-
-                !((authorized_by.len() as f32 / owners.len() as f32) < (*fr))
+                (fr_of_params.enumerated.len() as f32) / counter >= fr_of_params.fraction
             }
         }
     }
 
     pub fn is_role_owner(&self, owner: &Principal, role_id: &RoleId) -> Result<(), RolesError> {
-        let role = self.get_role(role_id)?;
+        let is_role_owner = self
+            .role_owners_index
+            .get(owner)
+            .ok_or(RolesError::NotRoleOwner)?
+            .contains(role_id);
 
-        match role.role_type {
-            RoleType::Public => Ok(()),
-            _ => {
-                let owners = role.role_type.get_role_owners()?;
-
-                if !owners.contains(owner) {
-                    Err(RolesError::NotRoleOwner)
-                } else {
-                    Ok(())
-                }
-            }
+        if is_role_owner {
+            Ok(())
+        } else {
+            Err(RolesError::NotRoleOwner)
         }
     }
 
@@ -272,45 +284,95 @@ impl RolesState {
         self.roles.keys().cloned().collect()
     }
 
-    pub fn get_role(&self, role_id: &RoleId) -> Result<&Role, RolesError> {
-        self.roles.get(role_id).ok_or(RolesError::RoleNotFound)
-    }
-
     pub fn get_role_ids_by_role_owner_cloned(&self, role_owner: &Principal) -> Vec<RoleId> {
-        let mut roles: Vec<_> = self.role_owners_index
+        let mut roles: Vec<_> = self
+            .role_owners_index
             .get(role_owner)
             .cloned()
             .unwrap_or_default()
             .into_iter()
             .collect();
-        
-        roles.push(PUBLIC_ROLE_ID);
-        
+
+        roles.push(EVERYONE_ROLE_ID);
+
         roles
     }
 
-    fn get_role_mut(&mut self, role_id: &RoleId) -> Result<&mut Role, RolesError> {
-        self.roles.get_mut(role_id).ok_or(RolesError::RoleNotFound)
+    pub fn get_role(&self, role_id: &RoleId) -> Result<&Role, RolesError> {
+        self.roles
+            .get(role_id)
+            .ok_or(RolesError::RoleNotFound(*role_id))
     }
 
-    fn add_role_to_role_owners_index(&mut self, id: RoleId, role_owner: Principal) {
-        match self.role_owners_index.entry(role_owner) {
+    fn get_role_mut(&mut self, role_id: &RoleId) -> Result<&mut Role, RolesError> {
+        self.roles
+            .get_mut(role_id)
+            .ok_or(RolesError::RoleNotFound(*role_id))
+    }
+
+    fn relate_role(&mut self, role_id: RoleId, related_role_id: RoleId) {
+        match self.related_roles_index.entry(role_id) {
             Entry::Occupied(mut e) => {
-                e.get_mut().insert(id);
+                e.get_mut().insert(related_role_id);
             }
             Entry::Vacant(e) => {
-                e.insert(vec![id].into_iter().collect());
+                e.insert(vec![related_role_id].into_iter().collect());
             }
         };
     }
 
-    fn remove_role_from_role_owners_index(&mut self, id: &RoleId, role_owner: Principal) {
-        match self.role_owners_index.entry(role_owner) {
+    fn unrelate_role(&mut self, role_id: RoleId, related_role_id: &RoleId) {
+        match self.related_roles_index.entry(role_id) {
             Entry::Occupied(mut e) => {
-                e.get_mut().remove(id);
+                e.get_mut().remove(related_role_id);
             }
-            Entry::Vacant(_) => {}
+            Entry::Vacant(e) => {}
         };
+    }
+
+    fn has_no_related_roles(&mut self, role_id: &RoleId) -> Result<(), RolesError> {
+        if let Some(related_roles) = self.related_roles_index.get(role_id) {
+            if related_roles.is_empty() {
+                Ok(())
+            } else {
+                Err(RolesError::RelatedRoleExists(
+                    related_roles.clone().into_iter().collect(),
+                ))
+            }
+        } else {
+            Ok(())
+        }
+    }
+
+    fn retrace_role_owners(&self, existing_role_id: &RoleId, result: &mut Vec<Principal>) {
+        let role = self.roles.get(existing_role_id).unwrap();
+
+        match &role.role_type {
+            RoleType::Everyone => {
+                // TODO: возможно, здесь стоит бросать ошибку
+            }
+            RoleType::Profile(p) => {
+                result.push(p.principal_id);
+            }
+            RoleType::QuantityOf(qty_of) => {
+                for role_id in &qty_of.enumerated {
+                    self.retrace_role_owners(role_id, result);
+                }
+            }
+            RoleType::FractionOf(fr_of) => {
+                for role_id in &fr_of.enumerated {
+                    self.retrace_role_owners(role_id, result);
+                }
+            }
+        };
+    }
+
+    fn get_has_profile_role_mut(&mut self) -> &mut QuantityOf {
+        self.roles
+            .get_mut(&HAS_PROFILE_ROLE_ID)
+            .unwrap()
+            .role_type
+            .get_quantity_of_mut()
     }
 
     fn generate_role_id(&mut self) -> RoleId {
@@ -322,55 +384,171 @@ impl RolesState {
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct Profile {
+    pub principal_id: Principal,
+    pub name: String,
+    pub description: String,
+}
+
+impl Profile {
+    pub fn new(principal_id: Principal, name: &str, description: &str) -> Self {
+        Self {
+            principal_id,
+            name: String::from(name),
+            description: String::from(description),
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct QuantityOf {
+    pub name: String,
+    pub description: String,
+    pub quantity: u32,
+    pub enumerated: HashSet<RoleId>,
+}
+
+impl QuantityOf {
+    pub fn new(
+        name: &str,
+        description: &str,
+        quantity: u32,
+        enumerated_opt: Option<Vec<RoleId>>,
+    ) -> Self {
+        let of = if let Some(of_vec) = enumerated_opt {
+            of_vec.into_iter().collect()
+        } else {
+            HashSet::new()
+        };
+
+        Self {
+            name: String::from(name),
+            description: String::from(description),
+            quantity,
+            enumerated: of,
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
+pub struct FractionOf {
+    pub name: String,
+    pub description: String,
+    pub fraction: f32,
+    pub enumerated: HashSet<RoleId>,
+}
+
+impl FractionOf {
+    pub fn new(
+        name: &str,
+        description: &str,
+        fraction: f32,
+        enumerated_opt: Option<Vec<RoleId>>,
+    ) -> Self {
+        let of = if let Some(of_vec) = enumerated_opt {
+            of_vec.into_iter().collect()
+        } else {
+            HashSet::new()
+        };
+
+        Self {
+            name: String::from(name),
+            description: String::from(description),
+            fraction,
+            enumerated: of,
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct Role {
     pub id: RoleId,
-    pub name: String,
     pub role_type: RoleType,
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub enum RoleType {
-    PrivateQuantity((u16, HashSet<Principal>)),
-    PrivateFraction((f32, HashSet<Principal>)),
-    Public,
-    HasProfile(HashSet<Principal>),
+    Everyone,
+    Profile(Profile),
+    QuantityOf(QuantityOf),
+    FractionOf(FractionOf),
 }
 
 impl RoleType {
-    pub fn validate(&self) -> Result<(), RolesError> {
+    pub fn validate(&mut self) -> Result<(), RolesError> {
         match self {
-            RoleType::Public => Ok(()),
-            RoleType::HasProfile(_) => Ok(()),
-            RoleType::PrivateFraction((fr, o)) => {
-                validate_f32(*fr, 0.001, 1.00, "Fraction").map_err(RolesError::ValidationError)
+            RoleType::Everyone => Ok(()),
+            RoleType::Profile(profile) => {
+                let name = validate_and_trim_str(profile.name.clone(), 1, 100, "Name")
+                    .map_err(RolesError::ValidationError)?;
+
+                let description =
+                    validate_and_trim_str(profile.description.clone(), 0, 300, "Description")
+                        .map_err(RolesError::ValidationError)?;
+
+                profile.name = name;
+                profile.description = description;
+
+                Ok(())
             }
-            RoleType::PrivateQuantity((qt, o)) => validate_u16(*qt, 1, o.len() as u16, "Quantity")
-                .map_err(RolesError::ValidationError),
+            RoleType::FractionOf(fraction_of) => {
+                validate_f32(fraction_of.fraction, 0.0001, 1.00, "Fraction")
+                    .map_err(RolesError::ValidationError)
+            }
+            RoleType::QuantityOf(quantity_of) => validate_u32(
+                quantity_of.quantity,
+                1,
+                quantity_of.enumerated.len() as u32,
+                "Quantity",
+            )
+            .map_err(RolesError::ValidationError),
         }
     }
 
-    pub fn get_role_owners(&self) -> Result<&HashSet<Principal>, RolesError> {
+    pub fn get_profile_mut(&mut self) -> &mut Profile {
         match self {
-            RoleType::Public => Err(RolesError::RoleHasNoOwners),
-            RoleType::HasProfile(o) => Ok(o),
-            RoleType::PrivateFraction((_, o)) => Ok(o),
-            RoleType::PrivateQuantity((_, o)) => Ok(o),
+            RoleType::Profile(p) => p,
+            _ => unreachable!("Not a profile role"),
         }
     }
 
-    pub fn get_role_owners_mut(&mut self) -> Result<&mut HashSet<Principal>, RolesError> {
+    pub fn get_fraction_of_mut(&mut self) -> &mut FractionOf {
         match self {
-            RoleType::Public => Err(RolesError::RoleHasNoOwners),
-            RoleType::HasProfile(o) => Ok(o),
-            RoleType::PrivateFraction((_, o)) => Ok(o),
-            RoleType::PrivateQuantity((_, o)) => Ok(o),
+            RoleType::FractionOf(fr) => fr,
+            _ => unreachable!("Not a fraction-of role"),
+        }
+    }
+
+    pub fn get_quantity_of_mut(&mut self) -> &mut QuantityOf {
+        match self {
+            RoleType::QuantityOf(qty) => qty,
+            _ => unreachable!("Not a quantity-of role"),
+        }
+    }
+
+    pub fn get_enumerated_role_ids(&self) -> Result<&HashSet<RoleId>, RolesError> {
+        match self {
+            RoleType::QuantityOf(qty_of) => Ok(&qty_of.enumerated),
+            RoleType::FractionOf(fr_of) => Ok(&fr_of.enumerated),
+            _ => Err(RolesError::InvalidRoleType),
+        }
+    }
+
+    pub fn get_enumerated_role_ids_mut(&mut self) -> Result<&mut HashSet<RoleId>, RolesError> {
+        match self {
+            RoleType::QuantityOf(qty_of) => Ok(&mut qty_of.enumerated),
+            RoleType::FractionOf(fr_of) => Ok(&mut fr_of.enumerated),
+            _ => Err(RolesError::InvalidRoleType),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::common::roles::{RoleType, RolesState};
+    use crate::common::roles::{
+        FractionOf, Profile, QuantityOf, RoleType, RolesState, EVERYONE_ROLE_ID,
+    };
+    use crate::HAS_PROFILE_ROLE_ID;
     use ic_cdk::export::Principal;
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -388,52 +566,51 @@ mod tests {
     fn default_roles_state_is_fine() {
         let roles_state = RolesState::new().expect("Creation should work fine");
 
-        let public_role = roles_state.get_role(&0).expect("Public role should exist");
-        assert_eq!(
-            public_role.name,
-            String::from("Public"),
-            "Public role name is invalid"
-        );
+        let everyone_role = roles_state
+            .get_role(&EVERYONE_ROLE_ID)
+            .expect("Public role should exist");
         assert!(
-            matches!(public_role.role_type, RoleType::Public),
-            "Public role type is invalid"
+            matches!(everyone_role.role_type, RoleType::Everyone),
+            "Everyone role has invalid type"
         );
+
+        let has_profile_role = roles_state
+            .get_role(&HAS_PROFILE_ROLE_ID)
+            .expect("Has profile role should exist");
+        match &has_profile_role.role_type {
+            RoleType::QuantityOf(qty_of_params) => {
+                assert_eq!(qty_of_params.quantity, 1);
+                assert_eq!(qty_of_params.name, "Has profile");
+            }
+            _ => unreachable!("Has profile role has invalid type"),
+        };
     }
 
     #[test]
-    fn default_public_role_is_immutable_and_unique() {
+    fn default_roles_are_immutable_and_unique() {
         let mut roles_state = RolesState::new().expect("Roles state should be created");
 
         roles_state
-            .create_role(String::from("Test role 1"), RoleType::Public)
-            .expect_err("It should be impossible to create another public role");
+            .create_role(RoleType::Everyone)
+            .expect_err("It should be impossible to create another Everyone role");
 
         roles_state
-            .remove_role(&0)
-            .expect_err("It should be impossible to remove default public role");
+            .remove_role(&EVERYONE_ROLE_ID)
+            .expect_err("It should be impossible to remove Everyone role");
 
         roles_state
-            .update_role(&0, Some(String::from("Public 1")), None)
-            .expect_err("It should be impossible to update default public role");
+            .remove_role(&HAS_PROFILE_ROLE_ID)
+            .expect_err("It should be impossible to remove Has profile role");
+
+        let new_profile = Profile::new(random_principal_test(), "Test", "Test");
 
         roles_state
-            .update_role(
-                &0,
-                None,
-                Some(RoleType::PrivateQuantity((
-                    1,
-                    vec![random_principal_test()].into_iter().collect(),
-                ))),
-            )
-            .expect_err("It should be impossible to update default public role");
+            .update_role(&EVERYONE_ROLE_ID, RoleType::Profile(new_profile.clone()))
+            .expect_err("It should be impossible to update Everyone role");
 
         roles_state
-            .add_role_owners(0, vec![random_principal_test()])
-            .expect_err("It should be impossible to add role owners to default public role");
-
-        roles_state
-            .subtract_role_owners(0, vec![random_principal_test()])
-            .expect_err("It should be impossible to subtract role owners from default public role");
+            .update_role(&HAS_PROFILE_ROLE_ID, RoleType::Profile(new_profile))
+            .expect_err("It should be impossible to update Has profile role");
     }
 
     #[test]
@@ -444,115 +621,100 @@ mod tests {
         let user2 = random_principal_test();
         let user3 = random_principal_test();
 
-        let role_id_1 = roles_state
-            .create_role(
-                String::from("Role 1"),
-                RoleType::PrivateQuantity((2, vec![user1, user2].into_iter().collect())),
-            )
-            .expect("Role 1 should be created");
+        let user_1_role_id = roles_state
+            .create_role(RoleType::Profile(Profile::new(
+                user1,
+                "User1",
+                "User1 desc",
+            )))
+            .expect("Unable to create user1 role");
+        let user_2_role_id = roles_state
+            .create_role(RoleType::Profile(Profile::new(
+                user2,
+                "User2",
+                "User2 desc",
+            )))
+            .expect("Unable to create user1 role");
+        let user_3_role_id = roles_state
+            .create_role(RoleType::Profile(Profile::new(
+                user3,
+                "User3",
+                "User3 desc",
+            )))
+            .expect("Unable to create user1 role");
 
-        let role_1 = roles_state
-            .get_role(&role_id_1)
-            .expect("Role 1 should be possible to get");
+        let role_id_a = roles_state
+            .create_role(RoleType::FractionOf(FractionOf::new(
+                "A",
+                "100% of User1 + User2",
+                1.00,
+                Some(vec![user_1_role_id, user_2_role_id]),
+            )))
+            .expect("Unable to create A role");
+        let role_id_b = roles_state
+            .create_role(RoleType::QuantityOf(QuantityOf::new(
+                "B",
+                "1 of A or User3",
+                1,
+                Some(vec![role_id_a, user_3_role_id]),
+            )))
+            .expect("Unable to create B role");
+
+        roles_state.remove_role(&user_1_role_id).expect_err(
+            "It should be impossible to remove User1 profile, until there are related roles exist",
+        );
+
+        roles_state.remove_role(&user_3_role_id).expect_err(
+            "It should be impossible to remove User3 profile, until there are related roles exist",
+        );
+
+        roles_state.remove_role(&role_id_a).expect_err(
+            "It should be impossible to remove A role, until there are related roles exist",
+        );
+
+        let has_profile_role = roles_state.get_has_profile_role_mut();
+        assert_eq!(has_profile_role.enumerated.len(), 3);
+        assert!(has_profile_role.enumerated.contains(&user_1_role_id));
+        assert!(has_profile_role.enumerated.contains(&user_2_role_id));
+        assert!(has_profile_role.enumerated.contains(&user_3_role_id));
+
+        roles_state
+            .subtract_enumerated_roles(&role_id_b, vec![role_id_a])
+            .expect("It should be possible to subtract role A from role B");
+
+        roles_state
+            .remove_role(&role_id_a)
+            .expect("It should be possible to remove role A now");
 
         roles_state
             .update_role(
-                &role_id_1,
-                Some(String::from("Role #1")),
-                Some(RoleType::PrivateQuantity((
-                    3,
-                    vec![user1, user2, user3].into_iter().collect(),
-                ))),
+                &role_id_b,
+                RoleType::QuantityOf(QuantityOf::new(
+                    "B",
+                    "2 of User1, User2 or User3",
+                    2,
+                    Some(vec![user_1_role_id, user_2_role_id, user_3_role_id]),
+                )),
             )
-            .expect("It should be possible to update a role");
-
-        let role_1 = roles_state
-            .get_role(&role_id_1)
-            .expect("Role 1 should be still possible to get");
-
-        assert_eq!(
-            role_1.name,
-            String::from("Role #1"),
-            "Role 1 name should've changed"
-        );
-
-        let user3_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user3);
-        assert_eq!(
-            user3_role_ids.len(),
-            1,
-            "Wallet creator should have only two roles"
-        );
-        assert!(
-            user3_role_ids.contains(&role_id_1),
-            "Wallet creator should have Role #1"
-        );
-
-        let role_1 = roles_state
-            .remove_role(&role_id_1)
-            .expect("It should be possible to delete a role");
-
-        let user3_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user3);
-        assert!(
-            user3_role_ids.is_empty(),
-            "Wallet creator should have only one role"
-        );
-    }
-
-    #[test]
-    fn role_owners_add_remove_work_fine() {
-        let mut roles_state = RolesState::new().expect("Roles state should be created");
-
-        let user1 = random_principal_test();
-        let user2 = random_principal_test();
-        let user3 = random_principal_test();
-
-        let role_id = roles_state
-            .create_role(
-                String::from("Role 1"),
-                RoleType::PrivateQuantity((1, vec![user3].into_iter().collect())),
-            )
-            .expect("It should be possible to create a new role");
+            .expect("It should be possible to update role B now");
 
         roles_state
-            .add_role_owners(role_id, vec![user1, user2])
-            .expect("It should be possible to add role owners");
-
-        let user1_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user1);
-        assert_eq!(
-            user1_role_ids.len(),
-            1,
-            "There should be only a single role for user1"
-        );
-        assert!(
-            user1_role_ids.contains(&role_id),
-            "User1 should have the wallet creator role"
-        );
-
-        let user2_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user2);
-        assert_eq!(
-            user2_role_ids.len(),
-            1,
-            "There should be only a single role for user2"
-        );
-        assert!(
-            user2_role_ids.contains(&role_id),
-            "User2 should have the wallet creator role"
-        );
+            .remove_role(&role_id_b)
+            .expect("It should be possible to remove role B now");
 
         roles_state
-            .subtract_role_owners(role_id, vec![user1, user2])
-            .expect("It should be possible to subtract role owners");
+            .remove_role(&user_1_role_id)
+            .expect("It should be possible to remove User1 role now");
 
-        let user1_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user1);
-        assert!(
-            user1_role_ids.is_empty(),
-            "There shouldn't be any role for user1"
-        );
+        roles_state
+            .remove_role(&user_2_role_id)
+            .expect("It should be possible to remove User2 role now");
 
-        let user2_role_ids = roles_state.get_role_ids_by_role_owner_cloned(&user2);
-        assert!(
-            user2_role_ids.is_empty(),
-            "There shouldn't be any role for user2"
-        );
+        roles_state
+            .remove_role(&user_3_role_id)
+            .expect("It should be possible to remove User3 role now");
+
+        let has_profile_role = roles_state.get_has_profile_role_mut();
+        assert!(has_profile_role.enumerated.is_empty());
     }
 }

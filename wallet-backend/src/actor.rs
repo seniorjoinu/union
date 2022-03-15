@@ -1,18 +1,17 @@
 use crate::api::{
-    AddRoleOwnersRequest, AttachRoleToPermissionRequest, AuthorizeExecutionRequest,
+    AddEnumeratedRolesRequest, AttachRoleToPermissionRequest, AuthorizeExecutionRequest,
     AuthorizeExecutionResponse, AuthorizedRequest, CreatePermissionRequest,
-    CreatePermissionResponse, CreateProfileRequest, CreateRoleRequest, CreateRoleResponse,
+    CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse,
     DetachRoleFromPermissionRequest, ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest,
     GetHistoryEntriesResponse, GetHistoryEntryIdsResponse, GetMyPermissionsResponse,
-    GetMyProfileResponse, GetMyRolesResponse, GetPermissionIdsResponse,
-    GetPermissionsAttachedToRolesRequest, GetPermissionsAttachedToRolesResponse,
-    GetPermissionsByPermissionTargetRequest, GetPermissionsByPermissionTargetResponse,
-    GetPermissionsRequest, GetPermissionsResponse, GetProfileIdsResponse, GetProfilesRequest,
-    GetProfilesResponse, GetRoleIdsResponse, GetRolesAttachedToPermissionsRequest,
+    GetMyRolesResponse, GetPermissionIdsResponse, GetPermissionsAttachedToRolesRequest,
+    GetPermissionsAttachedToRolesResponse, GetPermissionsByPermissionTargetRequest,
+    GetPermissionsByPermissionTargetResponse, GetPermissionsRequest, GetPermissionsResponse,
+    GetRoleIdsResponse, GetRolesAttachedToPermissionsRequest,
     GetRolesAttachedToPermissionsResponse, GetRolesRequest, GetRolesResponse,
     GetScheduledForAuthorizationExecutionsResponse, RemovePermissionRequest,
-    RemovePermissionResponse, RemoveProfileRequest, RemoveRoleRequest, RemoveRoleResponse,
-    SubtractRoleOwnersRequest, UpdatePermissionRequest, UpdateProfileRequest, UpdateRoleRequest,
+    RemovePermissionResponse, RemoveRoleRequest, RemoveRoleResponse,
+    SubtractEnumeratedRolesRequest, UpdatePermissionRequest, UpdateRoleRequest,
 };
 use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallPayload};
 use crate::common::permissions::PermissionId;
@@ -248,119 +247,15 @@ pub fn get_history_entries(req: GetHistoryEntriesRequest) -> GetHistoryEntriesRe
     GetHistoryEntriesResponse { entries }
 }
 
-// --------------------- PROFILES ----------------------
-#[update(guard = "only_self_guard")]
-pub fn create_profile(req: CreateProfileRequest) {
-    get_state()
-        .profiles
-        .create_profile(req.principal_id, req.name, req.description)
-        .expect("Unable to create a profile");
-
-    get_state()
-        .roles
-        ._add_role_owners(HAS_PROFILE_ROLE_ID, vec![req.principal_id])
-        .unwrap();
-}
-
-#[update(guard = "only_self_guard")]
-pub fn update_profile(req: UpdateProfileRequest) {
-    get_state()
-        .profiles
-        .update_profile(req.principal_id, req.new_name, req.new_description)
-        .expect("Unable to update a profile");
-}
-
-#[update(guard = "only_self_guard")]
-pub fn remove_profile(req: RemoveProfileRequest) {
-    get_state()
-        .profiles
-        .remove_profile(&req.principal_id)
-        .expect("Unable to remove a profile");
-
-    get_state()
-        .roles
-        ._subtract_role_owners(HAS_PROFILE_ROLE_ID, vec![req.principal_id])
-        .unwrap();
-}
-
-#[query]
-pub fn get_profile_ids(req: AuthorizedRequest) -> GetProfileIdsResponse {
-    let state = get_state();
-
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty("get_profile_ids")]),
-        )
-        .expect("Access denied");
-
-    let principal_ids = state.profiles.get_profile_ids_cloned();
-
-    GetProfileIdsResponse { principal_ids }
-}
-
-#[query]
-pub fn get_my_profile() -> GetMyProfileResponse {
-    let id = caller();
-
-    let profile = get_state()
-        .profiles
-        .get_profile(&id)
-        .unwrap_or_else(|_| panic!("Unable to get profile with id {}", id))
-        .clone();
-
-    GetMyProfileResponse { profile }
-}
-
-#[query]
-pub fn get_profiles(req: GetProfilesRequest) -> GetProfilesResponse {
-    let state = get_state();
-
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty("get_profiles")]),
-        )
-        .expect("Access denied");
-
-    let mut profiles = vec![];
-
-    for id in &req.principal_ids {
-        let profile = state
-            .profiles
-            .get_profile(id)
-            .unwrap_or_else(|_| panic!("Unable to get profile with id {}", id));
-
-        profiles.push(profile.clone());
-    }
-
-    GetProfilesResponse { profiles }
-}
-
 // ------------------ ROLES --------------------
 
 #[update(guard = "only_self_guard")]
 pub fn create_role(req: CreateRoleRequest) -> CreateRoleResponse {
     let state = get_state();
 
-    let new_role_type = &req.role_type;
-    let new_role_owners = new_role_type
-        .get_role_owners()
-        .expect("Unable to get role owners");
-    for owner in new_role_owners {
-        state
-            .profiles
-            .has_profile(owner)
-            .unwrap_or_else(|_| panic!("Unable to add role owner with id {}", owner));
-    }
-
     let role_id = state
         .roles
-        .create_role(req.name, req.role_type)
+        .create_role(req.role_type)
         .expect("Unable to create a role");
 
     CreateRoleResponse { role_id }
@@ -370,21 +265,9 @@ pub fn create_role(req: CreateRoleRequest) -> CreateRoleResponse {
 pub fn update_role(req: UpdateRoleRequest) {
     let state = get_state();
 
-    if let Some(new_role_type) = &req.new_role_type {
-        let new_role_owners = new_role_type
-            .get_role_owners()
-            .expect("Unable to get role owners");
-        for owner in new_role_owners {
-            state
-                .profiles
-                .has_profile(owner)
-                .unwrap_or_else(|_| panic!("Unable to add role owner with id {}", owner));
-        }
-    }
-
     state
         .roles
-        .update_role(&req.role_id, req.new_name, req.new_role_type)
+        .update_role(&req.role_id, req.new_role_type)
         .expect("Unable to update a role");
 }
 
@@ -400,30 +283,23 @@ pub fn remove_role(req: RemoveRoleRequest) -> RemoveRoleResponse {
 }
 
 #[update(guard = "only_self_guard")]
-pub fn add_role_owners(req: AddRoleOwnersRequest) {
+pub fn add_enumerated_roles(req: AddEnumeratedRolesRequest) {
     let state = get_state();
-
-    for owner in &req.new_owners {
-        state
-            .profiles
-            .has_profile(owner)
-            .unwrap_or_else(|_| panic!("Unable to add role owner with id {}", owner));
-    }
 
     state
         .roles
-        .add_role_owners(req.role_id, req.new_owners)
-        .expect("Unable to add role owners");
+        .add_enumerated_roles(&req.role_id, req.enumerated_roles_to_add)
+        .expect("Unable to add enumerated roles");
 }
 
 #[update(guard = "only_self_guard")]
-pub fn subtract_role_owners(req: SubtractRoleOwnersRequest) {
+pub fn subtract_enumerated_roles(req: SubtractEnumeratedRolesRequest) {
     let state = get_state();
 
     state
         .roles
-        .subtract_role_owners(req.role_id, req.owners_to_subtract)
-        .expect("Unable to subtract role owners");
+        .subtract_enumerated_roles(&req.role_id, req.enumerated_roles_to_subtract)
+        .expect("Unable to subtract enumerated roles");
 }
 
 #[query]
@@ -463,7 +339,7 @@ pub fn get_roles(req: GetRolesRequest) -> GetRolesResponse {
         let role = state
             .roles
             .get_role(id)
-            .expect(format!("Unable to get role with id {}", id).as_str());
+            .unwrap_or_else(|_| panic!("Unable to get role with id {}", id));
         roles.push(role.clone());
     }
 
@@ -562,7 +438,7 @@ pub fn get_permissions(req: GetPermissionsRequest) -> GetPermissionsResponse {
         let permission = state
             .permissions
             .get_permission(id)
-            .expect(format!("Unable to get a permission with id {}", id).as_str());
+            .unwrap_or_else(|_| panic!("Unable to get a permission with id {}", id));
 
         permissions.push(permission.clone());
     }

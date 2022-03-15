@@ -1,4 +1,4 @@
-type RoleId = nat16;
+type RoleId = nat32;
 type PermissionId = nat16;
 type HistoryEntryId = nat64;
 type TaskId = nat64;
@@ -123,51 +123,9 @@ type GetScheduledForAuthorizationExecutionsResponse = record {
     entries : vec HistoryEntry;
 };
 
-// ------------- PROFILES ---------------
-
-type CreateProfileRequest = record {
-    principal_id : principal;
-    name : text;
-    description : text;
-};
-
-type UpdateProfileRequest = record {
-    principal_id : principal;
-    new_name : opt text;
-    new_description : opt text;
-};
-
-type RemoveProfileRequest = record {
-    principal_id : principal;
-};
-
-type GetProfileIdsResponse = record {
-    principal_ids : vec principal;
-};
-
-type GetMyProfileResponse = record {
-    profile : Profile;
-};
-
-type Profile = record {
-    principal_id : principal;
-    name : text;
-    description : text;
-};
-
-type GetProfilesRequest = record {
-    principal_ids : vec principal;
-    rnp : RoleAndPermission;
-};
-
-type GetProfilesResponse = record {
-    profiles : vec Profile;
-};
-
 // ---------------- ROLES -------------------
 
 type CreateRoleRequest = record {
-    name : text;
     role_type : RoleType;
 };
 
@@ -177,8 +135,7 @@ type CreateRoleResponse = record {
 
 type UpdateRoleRequest = record {
     role_id : RoleId;
-    new_name : opt text;
-    new_role_type : opt RoleType;
+    new_role_type : RoleType;
 };
 
 type RemoveRoleRequest = record {
@@ -189,14 +146,14 @@ type RemoveRoleResponse = record {
     role : Role;
 };
 
-type AddRoleOwnersRequest = record {
+type AddEnumeratedRolesRequest = record {
     role_id : RoleId;
-    new_owners : vec principal;
+    enumerated_roles_to_add : vec RoleId;
 };
 
-type SubtractRoleOwnersRequest = record {
+type SubtractEnumeratedRolesRequest = record {
     role_id : RoleId;
-    owners_to_subtract : vec principal;
+    enumerated_roles_to_subtract : vec RoleId;
 };
 
 type GetRoleIdsResponse = record {
@@ -218,15 +175,34 @@ type GetMyRolesResponse = record {
 
 type Role = record {
     id : RoleId;
-    name : text;
     role_type : RoleType;
 };
 
+type Profile = record {
+    principal_id : principal;
+    name : text;
+    description : text;
+};
+
+type QuantityOf = record {
+    name : text;
+    description : text;
+    quantity : nat32;
+    enumerated : vec RoleId;
+};
+
+type FractionOf = record {
+    name : text;
+    description : text;
+    fraction : float32;
+    enumerated : vec RoleId;
+};
+
 type RoleType = variant {
-    PrivateQuantity : record { 0 : nat16; 1 : vec principal };
-    PrivateFraction : record { 0 : float32; 1 : vec principal };
-    Public;
-    HasProfile : vec principal;
+    Everyone;
+    Profile : Profile;
+    QuantityOf : QuantityOf;
+    FractionOf : FractionOf;
 };
 
 // ------------------ PERMISSIONS -----------------
@@ -337,18 +313,11 @@ service : {
     "get_history_entry_ids" : (AuthorizedRequest) -> (GetHistoryEntryIdsResponse) query;
     "get_history_entries" : (GetHistoryEntriesRequest) -> (GetHistoryEntriesResponse) query;
 
-    "create_profile" : (CreateProfileRequest) -> ();
-    "update_profile" : (UpdateProfileRequest) -> ();
-    "remove_profile" : (RemoveProfileRequest) -> ();
-    "get_profile_ids" : (AuthorizedRequest) -> (GetProfileIdsResponse) query;
-    "get_my_profile" : () -> (GetMyProfileResponse) query;
-    "get_profiles" : (GetProfilesRequest) -> (GetProfilesResponse) query;
-
     "create_role" : (CreateRoleRequest) -> (CreateRoleResponse);
     "update_role" : (UpdateRoleRequest) -> ();
     "remove_role" : (RemoveRoleRequest) -> (RemoveRoleResponse);
-    "add_role_owners" : (AddRoleOwnersRequest) -> ();
-    "subtract_role_owners" : (SubtractRoleOwnersRequest) -> ();
+    "add_role_owners" : (AddEnumeratedRolesRequest) -> ();
+    "subtract_role_owners" : (SubtractEnumeratedRolesRequest) -> ();
     "get_role_ids" : (AuthorizedRequest) -> (GetRoleIdsResponse) query;
     "get_roles" : (GetRolesRequest) -> (GetRolesResponse) query;
     "get_my_roles" : () -> (GetMyRolesResponse) query;
