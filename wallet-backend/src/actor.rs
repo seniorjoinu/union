@@ -15,17 +15,17 @@ use crate::api::{
 };
 use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallPayload};
 use crate::common::permissions::PermissionId;
-use crate::common::roles::{RoleId, RoleType, HAS_PROFILE_ROLE_ID};
+use crate::common::roles::RoleId;
 use crate::common::utils::{validate_and_trim_str, CandidCallResult, ToCandidType};
 use crate::guards::only_self_guard;
 use crate::helpers::execute_program_and_log;
-use crate::state::{Error, State, TaskType};
+use crate::state::{State, TaskType};
 use ic_cdk::api::time;
 use ic_cdk::caller;
 use ic_cdk::export::Principal;
 use ic_cdk_macros::{heartbeat, init, query, update};
 use ic_cron::implement_cron;
-use ic_cron::types::{Iterations, ScheduledTask, SchedulingOptions};
+use ic_cron::types::{Iterations, SchedulingOptions};
 
 pub mod api;
 pub mod common;
@@ -573,8 +573,8 @@ pub fn get_state() -> &'static mut State {
 }
 
 #[init]
-fn init(wallet_owner: Principal) {
-    let state = State::new(wallet_owner).expect("Unable to create state");
+fn init(wallet_creator: Principal) {
+    let state = State::new(wallet_creator).expect("Unable to create state");
 
     unsafe {
         STATE = Some(state);

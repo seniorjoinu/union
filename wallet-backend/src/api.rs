@@ -2,7 +2,6 @@ use crate::common::permissions::{Permission, PermissionScope, PermissionTarget};
 use crate::common::roles::{Role, RoleType};
 use crate::{HistoryEntry, HistoryEntryId, PermissionId, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize};
-use ic_cdk::export::Principal;
 use ic_cron::types::TaskId;
 
 #[derive(CandidType, Deserialize)]

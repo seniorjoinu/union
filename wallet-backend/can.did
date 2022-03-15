@@ -306,7 +306,7 @@ type GetPermissionsAttachedToRolesResponse = record {
     result : vec record { 0 : RoleId; 1 : PermissionId };
 };
 
-service : {
+service : (principal) -> {
     "execute" : (ExecuteRequest) -> (ExecuteResponse);
     "authorize_execution" : (AuthorizeExecutionRequest) -> (AuthorizeExecutionResponse);
     "get_scheduled_for_authorization_executions" : (AuthorizedRequest) -> (GetScheduledForAuthorizationExecutionsResponse) query;

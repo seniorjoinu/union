@@ -324,7 +324,7 @@ impl RolesState {
             Entry::Occupied(mut e) => {
                 e.get_mut().remove(related_role_id);
             }
-            Entry::Vacant(e) => {}
+            Entry::Vacant(_) => {}
         };
     }
 
