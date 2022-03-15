@@ -1,4 +1,4 @@
-use crate::common::execution_history::ExecutionHistoryState;
+use crate::common::execution_history::{ExecutionHistoryError, ExecutionHistoryState};
 use crate::common::permissions::{Permission, PermissionScope, PermissionsError, PermissionsState};
 use crate::common::roles::{Profile, Role, RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
 use crate::common::utils::ValidationError;
@@ -12,6 +12,7 @@ pub enum Error {
     RolesError(RolesError),
     PermissionsError(PermissionsError),
     ValidationError(ValidationError),
+    ExecutionHistoryError(ExecutionHistoryError),
     RoleIsNotAttachedToPermission,
 }
 
@@ -64,6 +65,9 @@ impl State {
         permission_id: &PermissionId,
         program: &Program,
     ) -> Result<(), Error> {
+        // validate program
+        program.validate().map_err(Error::ExecutionHistoryError)?;
+
         // if the caller has the provided role
         self.roles
             .is_role_owner(caller, role_id)

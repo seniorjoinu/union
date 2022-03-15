@@ -126,32 +126,36 @@ impl PermissionsState {
     ) -> Result<(), PermissionsError> {
         let permission = self.get_permission(permission_id)?;
 
-        match endpoint_opt {
+        let mut is_target = match endpoint_opt {
             Some(endpoint) => {
                 let target = PermissionTarget::Endpoint(endpoint);
+                let mut is_target = false;
 
                 if permission.targets.contains(&target) {
-                    return Ok(());
+                    is_target = true;
                 }
 
                 let canister_target = target.to_canister().unwrap();
 
                 if permission.targets.contains(&canister_target) {
-                    return Ok(());
+                    is_target = true;
                 }
 
-                Err(PermissionsError::NotPermissionTarget)
+                is_target
             }
-            None => {
-                if permission
-                    .targets
-                    .contains(&PermissionTarget::SelfEmptyProgram)
-                {
-                    Ok(())
-                } else {
-                    Err(PermissionsError::NotPermissionTarget)
-                }
-            }
+            None => permission
+                .targets
+                .contains(&PermissionTarget::SelfEmptyProgram),
+        };
+
+        if matches!(permission.scope, PermissionScope::Blacklist) {
+            is_target = !is_target;
+        }
+
+        if is_target {
+            Ok(())
+        } else {
+            Err(PermissionsError::NotPermissionTarget)
         }
     }
 

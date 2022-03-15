@@ -1,6 +1,8 @@
 use crate::common::permissions::PermissionId;
 use crate::common::roles::RoleId;
 use crate::CandidCallResult;
+use candid::parser::value::IDLValue;
+use candid::ser::IDLBuilder;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use ic_cdk::id;
 use std::collections::hash_map::Entry;
@@ -11,6 +13,7 @@ pub type HistoryEntryId = u64;
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub enum ExecutionHistoryError {
     EntryNotFound,
+    CandidError(String),
 }
 
 #[derive(CandidType, Deserialize, Debug, Default)]
@@ -133,12 +136,12 @@ pub struct HistoryEntry {
 }
 
 impl HistoryEntry {
-    pub fn set_authorized(&mut self, timestamp: u64, result: Vec<CandidCallResult<Vec<u8>>>) {
+    pub fn set_executed(&mut self, timestamp: u64, result: Vec<CandidCallResult<String>>) {
         match &mut self.entry_type {
             HistoryEntryType::Pending => {
-                self.entry_type = HistoryEntryType::Authorized((timestamp, result));
+                self.entry_type = HistoryEntryType::Executed((timestamp, result));
             }
-            _ => unreachable!("Only pending history entry can be authorized"),
+            _ => unreachable!("Only pending history entry can become executed"),
         };
     }
 
@@ -147,7 +150,7 @@ impl HistoryEntry {
             HistoryEntryType::Pending => {
                 self.entry_type = HistoryEntryType::Declined((timestamp, error));
             }
-            _ => unreachable!("Only pending history entry can be declined"),
+            _ => unreachable!("Only pending history entry can become declined"),
         }
     }
 }
@@ -155,7 +158,7 @@ impl HistoryEntry {
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub enum HistoryEntryType {
     Pending,
-    Authorized((u64, Vec<CandidCallResult<Vec<u8>>>)),
+    Executed((u64, Vec<CandidCallResult<String>>)),
     Declined((u64, String)),
 }
 
@@ -163,6 +166,21 @@ pub enum HistoryEntryType {
 pub enum Program {
     Empty,
     RemoteCallSequence(Vec<RemoteCallPayload>),
+}
+
+impl Program {
+    pub fn validate(&self) -> Result<(), ExecutionHistoryError> {
+        match self {
+            Program::Empty => Ok(()),
+            Program::RemoteCallSequence(seq) => {
+                for call in seq {
+                    call.validate()?;
+                }
+
+                Ok(())
+            }
+        }
+    }
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
@@ -183,7 +201,7 @@ impl RemoteCallEndpoint {
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct RemoteCallPayload {
     pub endpoint: RemoteCallEndpoint,
-    pub args_raw: Vec<u8>,
+    pub args_candid: Vec<String>,
     pub cycles: u64,
 }
 
@@ -191,8 +209,78 @@ impl RemoteCallPayload {
     pub fn this_empty(method_name: &str) -> Self {
         Self {
             endpoint: RemoteCallEndpoint::this(method_name),
-            args_raw: vec![],
+            args_candid: vec![],
             cycles: 0,
         }
+    }
+
+    pub fn validate(&self) -> Result<(), ExecutionHistoryError> {
+        for (i, arg) in self.args_candid.iter().enumerate() {
+            arg.parse::<IDLValue>().map_err(|e| {
+                ExecutionHistoryError::CandidError(format!("Invalid argument #{}: {:?}", i, e))
+            })?;
+        }
+
+        Ok(())
+    }
+
+    pub fn serialize_args(&self) -> Result<Vec<u8>, ExecutionHistoryError> {
+        let mut builder = IDLBuilder::new();
+
+        for (i, arg) in self.args_candid.iter().enumerate() {
+            let idl_arg = arg.parse::<IDLValue>().map_err(|e| {
+                ExecutionHistoryError::CandidError(format!("Invalid argument #{}: {:?}", i, e))
+            })?;
+            builder.value_arg(&idl_arg).map_err(|e| {
+                ExecutionHistoryError::CandidError(format!(
+                    "Builder error on argument #{}: {:?}",
+                    i, e
+                ))
+            })?;
+        }
+
+        builder.serialize_to_vec().map_err(|e| {
+            ExecutionHistoryError::CandidError(format!("Arguments serialization failed {:?}", e))
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use candid::parser::value::IDLValue;
+    use candid::ser::IDLBuilder;
+    use candid::{encode_args, pretty_parse, CandidType, Deserialize, Nat, Principal};
+
+    #[derive(CandidType, Deserialize)]
+    pub struct Test {
+        pub a: Nat,
+        pub b: String,
+        pub c: f32,
+    }
+
+    #[test]
+    fn can_encode_and_decode_str_params() {
+        let v1: IDLValue = "(principal \"aaaaa-aa\")".parse::<IDLValue>().unwrap();
+
+        let v2 = "record { a = 10 : nat; b = \"test\"; c = 1.23 : float32 }"
+            .parse::<IDLValue>()
+            .unwrap();
+
+        let mut builder = IDLBuilder::new();
+        builder.value_arg(&v1).unwrap();
+        builder.value_arg(&v2).unwrap();
+        let res1 = builder.serialize_to_vec().unwrap();
+
+        let args = (
+            Principal::from_text("aaaaa-aa").unwrap(),
+            Test {
+                a: Nat::from(10),
+                b: String::from("test"),
+                c: 1.23,
+            },
+        );
+        let res2 = encode_args(args).unwrap();
+
+        assert_eq!(res1, res2);
     }
 }

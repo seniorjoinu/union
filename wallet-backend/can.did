@@ -10,7 +10,7 @@ type RemoteCallEndpoint = record {
 
 type RemoteCallPayload = record {
     endpoint : RemoteCallEndpoint;
-    args_raw : blob;
+    args_candid : vec text;
     cycles : nat64;
 };
 
@@ -98,12 +98,12 @@ type HistoryEntry = record {
 
 type HistoryEntryType = variant {
     Pending;
-    Authorized : record { 0 : nat64; 1 : vec CallResult };
+    Executed : record { 0 : nat64; 1 : vec CallResult };
     Declined : record { 0 : nat64; 1 : text };
 };
 
 type CallResult = variant {
-    Ok : blob;
+    Ok : text;
     Err : record { 0 : RejectionCode; 1 : text };
 };
 

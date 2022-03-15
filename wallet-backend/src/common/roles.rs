@@ -79,8 +79,10 @@ impl RolesState {
                     return Err(RolesError::ProfileAlreadyExists);
                 }
 
-                self.role_owners_index
-                    .insert(profile.principal_id, vec![id].into_iter().collect());
+                self.role_owners_index.insert(
+                    profile.principal_id,
+                    vec![id, HAS_PROFILE_ROLE_ID].into_iter().collect(),
+                );
 
                 self.profiles_index.insert(profile.principal_id, id);
                 self.get_has_profile_role_mut().enumerated.insert(id);
@@ -545,8 +547,8 @@ impl RoleType {
 mod tests {
     use crate::common::roles::{
         FractionOf, Profile, QuantityOf, RoleType, RolesState, EVERYONE_ROLE_ID,
+        HAS_PROFILE_ROLE_ID,
     };
-    use crate::HAS_PROFILE_ROLE_ID;
     use ic_cdk::export::Principal;
     use std::time::{SystemTime, UNIX_EPOCH};
 
