@@ -89,6 +89,13 @@ pub struct RemoveRoleResponse {
 }
 
 #[derive(CandidType, Deserialize)]
+pub struct EditProfileRequest {
+    pub role_id: RoleId,
+    pub new_name: Option<String>,
+    pub new_description: Option<String>,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct AddEnumeratedRolesRequest {
     pub role_id: RoleId,
     pub enumerated_roles_to_add: Vec<RoleId>,

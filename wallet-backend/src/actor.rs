@@ -2,14 +2,14 @@ use crate::api::{
     AddEnumeratedRolesRequest, AttachRoleToPermissionRequest, AuthorizeExecutionRequest,
     AuthorizeExecutionResponse, AuthorizedRequest, CreatePermissionRequest,
     CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse,
-    DetachRoleFromPermissionRequest, ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest,
-    GetHistoryEntriesResponse, GetHistoryEntryIdsResponse, GetMyPermissionsResponse,
-    GetMyRolesResponse, GetPermissionIdsResponse, GetPermissionsAttachedToRolesRequest,
-    GetPermissionsAttachedToRolesResponse, GetPermissionsByPermissionTargetRequest,
-    GetPermissionsByPermissionTargetResponse, GetPermissionsRequest, GetPermissionsResponse,
-    GetRoleIdsResponse, GetRolesAttachedToPermissionsRequest,
-    GetRolesAttachedToPermissionsResponse, GetRolesRequest, GetRolesResponse,
-    GetScheduledForAuthorizationExecutionsResponse, RemovePermissionRequest,
+    DetachRoleFromPermissionRequest, EditProfileRequest, ExecuteRequest, ExecuteResponse,
+    GetHistoryEntriesRequest, GetHistoryEntriesResponse, GetHistoryEntryIdsResponse,
+    GetMyPermissionsResponse, GetMyRolesResponse, GetPermissionIdsResponse,
+    GetPermissionsAttachedToRolesRequest, GetPermissionsAttachedToRolesResponse,
+    GetPermissionsByPermissionTargetRequest, GetPermissionsByPermissionTargetResponse,
+    GetPermissionsRequest, GetPermissionsResponse, GetRoleIdsResponse,
+    GetRolesAttachedToPermissionsRequest, GetRolesAttachedToPermissionsResponse, GetRolesRequest,
+    GetRolesResponse, GetScheduledForAuthorizationExecutionsResponse, RemovePermissionRequest,
     RemovePermissionResponse, RemoveRoleRequest, RemoveRoleResponse,
     SubtractEnumeratedRolesRequest, UpdatePermissionRequest, UpdateRoleRequest,
 };
@@ -280,6 +280,16 @@ pub fn remove_role(req: RemoveRoleRequest) -> RemoveRoleResponse {
         .expect("Unable to remove a role");
 
     RemoveRoleResponse { role }
+}
+
+#[update(guard = "only_self_guard")]
+pub fn edit_profile(req: EditProfileRequest) {
+    let state = get_state();
+
+    state
+        .roles
+        .edit_profile(&req.role_id, req.new_name, req.new_description)
+        .expect("Unable to edit profile");
 }
 
 #[update(guard = "only_self_guard")]

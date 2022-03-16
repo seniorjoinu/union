@@ -1,4 +1,6 @@
 /*/**/target
 /*/**/.dfx
 /*/**/Cargo.lock
+/*/**/node_modules
+/*/**/dist
 /.idea
