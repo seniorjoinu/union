@@ -1,0 +1,31 @@
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import { createGlobalStyle, ThemeProvider } from 'styled-components';
+import { RouterPage } from './RouterPage';
+import { theme } from 'components';
+import { ProvideAuth } from '../services';
+
+const GlobalStyle = createGlobalStyle`
+  html, body, #root {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+
+    * {
+      box-sizing: border-box;
+    }
+  }
+`;
+
+ReactDOM.render(
+  <React.StrictMode>
+    <GlobalStyle />
+    <ThemeProvider theme={theme}>
+      <ProvideAuth>
+        <RouterPage />
+      </ProvideAuth>
+    </ThemeProvider>
+  </React.StrictMode>,
+  document.getElementById('root'),
+);
+
