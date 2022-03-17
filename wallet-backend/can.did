@@ -146,6 +146,12 @@ type RemoveRoleResponse = record {
     role : Role;
 };
 
+type EditProfileRequest = record {
+    role_id : RoleId;
+    new_name : opt text;
+    new_description : opt text;
+};
+
 type AddEnumeratedRolesRequest = record {
     role_id : RoleId;
     enumerated_roles_to_add : vec RoleId;
@@ -316,8 +322,9 @@ service : (principal) -> {
     "create_role" : (CreateRoleRequest) -> (CreateRoleResponse);
     "update_role" : (UpdateRoleRequest) -> ();
     "remove_role" : (RemoveRoleRequest) -> (RemoveRoleResponse);
-    "add_role_owners" : (AddEnumeratedRolesRequest) -> ();
-    "subtract_role_owners" : (SubtractEnumeratedRolesRequest) -> ();
+    "edit_profile" : (EditProfileRequest) -> ();
+    "add_enumerated_roles" : (AddEnumeratedRolesRequest) -> ();
+    "subtract_enumerated_roles" : (SubtractEnumeratedRolesRequest) -> ();
     "get_role_ids" : (AuthorizedRequest) -> (GetRoleIdsResponse) query;
     "get_roles" : (GetRolesRequest) -> (GetRolesResponse) query;
     "get_my_roles" : () -> (GetMyRolesResponse) query;

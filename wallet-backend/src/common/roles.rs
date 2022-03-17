@@ -85,7 +85,7 @@ impl RolesState {
                 );
 
                 self.profiles_index.insert(profile.principal_id, id);
-                self.get_has_profile_role_mut().enumerated.insert(id);
+                self.get_has_profile_role_mut()?.enumerated.insert(id);
 
                 let role = Role { id, role_type };
                 self.roles.insert(id, role);
@@ -140,8 +140,10 @@ impl RolesState {
                 self.role_owners_index
                     .remove(&profile.principal_id)
                     .unwrap();
+
                 self.profiles_index.remove(&profile.principal_id).unwrap();
-                self.get_has_profile_role_mut().enumerated.remove(role_id);
+
+                self.get_has_profile_role_mut()?.enumerated.remove(role_id);
             }
             _ => {
                 let enumerated_roles = role.role_type.get_enumerated_role_ids()?;
@@ -173,6 +175,26 @@ impl RolesState {
         self._create_role(*role_id, new_role_type)?;
 
         Ok(role)
+    }
+
+    pub fn edit_profile(
+        &mut self,
+        role_id: &RoleId,
+        new_name: Option<String>,
+        new_description: Option<String>,
+    ) -> Result<(), RolesError> {
+        let role = self.get_role_mut(role_id)?;
+        let profile = role.role_type.get_profile_mut()?;
+
+        if let Some(name) = new_name {
+            profile.name = name;
+        }
+
+        if let Some(desc) = new_description {
+            profile.description = desc;
+        }
+
+        role.role_type.validate()
     }
 
     pub fn add_enumerated_roles(
@@ -367,10 +389,8 @@ impl RolesState {
         };
     }
 
-    fn get_has_profile_role_mut(&mut self) -> &mut QuantityOf {
-        self.roles
-            .get_mut(&HAS_PROFILE_ROLE_ID)
-            .unwrap()
+    fn get_has_profile_role_mut(&mut self) -> Result<&mut QuantityOf, RolesError> {
+        self.get_role_mut(&HAS_PROFILE_ROLE_ID)?
             .role_type
             .get_quantity_of_mut()
     }
@@ -505,24 +525,24 @@ impl RoleType {
         }
     }
 
-    pub fn get_profile_mut(&mut self) -> &mut Profile {
+    pub fn get_profile_mut(&mut self) -> Result<&mut Profile, RolesError> {
         match self {
-            RoleType::Profile(p) => p,
-            _ => unreachable!("Not a profile role"),
+            RoleType::Profile(p) => Ok(p),
+            _ => Err(RolesError::InvalidRoleType),
         }
     }
 
-    pub fn get_fraction_of_mut(&mut self) -> &mut FractionOf {
+    pub fn get_fraction_of_mut(&mut self) -> Result<&mut FractionOf, RolesError> {
         match self {
-            RoleType::FractionOf(fr) => fr,
-            _ => unreachable!("Not a fraction-of role"),
+            RoleType::FractionOf(fr) => Ok(fr),
+            _ => Err(RolesError::InvalidRoleType),
         }
     }
 
-    pub fn get_quantity_of_mut(&mut self) -> &mut QuantityOf {
+    pub fn get_quantity_of_mut(&mut self) -> Result<&mut QuantityOf, RolesError> {
         match self {
-            RoleType::QuantityOf(qty) => qty,
-            _ => unreachable!("Not a quantity-of role"),
+            RoleType::QuantityOf(qty) => Ok(qty),
+            _ => Err(RolesError::InvalidRoleType),
         }
     }
 
