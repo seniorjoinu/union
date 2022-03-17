@@ -1,6 +1,16 @@
 # Union wallet general frontend
 
+## Quick start
+- `dfx start --clean`
+- `dfx build --all --check` for `wallet-backend`
+- `dfx deploy` for `wallet-deployer`
+- `dfx deploy` here
+- `yarn dev` here
+
 ## Target case
+
+Here is described the target infrastructure deployment option as it should be in production. This case is to be implemented.
+
 ### Start infrastructure
 - deploy root union-wallet `dfx deploy union-wallet --argument '(principal "$(dfx identity get-principal)")'`
 - *setup roles
@@ -38,6 +48,11 @@ NOTE: every facade operation might be simplified by deployer canister implementa
 - Setup and run facade execution #3
 	- execute `clear` call to `frontend` and get `batch_id`
 	- execute commands from `facade execution #2`
+
+### Deploy your personal union
+`wallet-deployer` must be deployed by root union and will be blackholed. May be `wallet-deployer` will have your separated wallet canister for accepting payments and union deployment.
+
+TODO
 
 
 ## Development case only

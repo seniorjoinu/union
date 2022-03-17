@@ -27,5 +27,5 @@ export function AuthPage(p: AuthPageProps) {
     <Container>
       <Auth {...p} />
     </Container>
-  )
+  );
 }

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { createGlobalStyle, ThemeProvider } from 'styled-components';
-import { RouterPage } from './RouterPage';
 import { theme } from 'components';
 import { ProvideAuth } from '../services';
+import { RouterPage } from './RouterPage';
 
 const GlobalStyle = createGlobalStyle`
   html, body, #root {
@@ -28,4 +28,3 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root'),
 );
-

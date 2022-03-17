@@ -1,11 +1,17 @@
 import { HttpAgent, HttpAgentOptions, Identity } from '@dfinity/agent';
-import { DigitalIdentityClient } from './digital-identity';
 import * as mobx from 'mobx';
+import { Principal } from '@dfinity/principal';
+import { DigitalIdentityClient } from './digital-identity';
 import { getAgent, getHttpAgentOptions } from './agent';
+/**
+ * @dfinity/agent requires this. Can be removed once it's fixed
+ // FIXME КОСТЫЛИ
+ */
+import './polyfill';
 
 export class AuthClientWrapper {
-  private _principal: Principal | null = null;
   private options: HttpAgentOptions = getHttpAgentOptions();
+  public principal: Principal | null = null;
   public authClient?: DigitalIdentityClient;
   public agent: HttpAgent = new HttpAgent(this.options);
   public ready = false;
@@ -16,20 +22,14 @@ export class AuthClientWrapper {
       agent: mobx.observable,
       ready: mobx.observable,
       authentificated: mobx.observable,
-      // @ts-expect-error
-      _principal: mobx.observable,
-      principal: mobx.computed,
+      principal: mobx.observable,
       create: mobx.action,
       login: mobx.action,
       logout: mobx.action,
     });
 
     console.warn('CREATE AGENT', this.options, this.agent);
-    this.initializeAgent(); 
-  }
-
-  get principal() {
-    return this._principal;
+    this.initializeAgent();
   }
 
   // Create a new auth client and update it's ready state
@@ -37,7 +37,7 @@ export class AuthClientWrapper {
     this.authClient = new DigitalIdentityClient();
     await this.initializeAgent();
     this.authentificated = this.authClient?.isAuthenticated();
-    this._principal = this.authClient?.getIdentity().getPrincipal() || null;
+    this.principal = this.authClient?.getIdentity().getPrincipal() || null;
     this.ready = true;
   }
 
@@ -46,29 +46,27 @@ export class AuthClientWrapper {
     this.authClient?.login(mnemonic);
 
     const identity = this.authClient?.getIdentity();
-    this._principal = identity?.getPrincipal() || null;
-    await this.initializeAgent(); 
+
+    this.principal = identity?.getPrincipal() || null;
+    await this.initializeAgent();
     return identity;
-  }
+  };
 
   logout = async () => {
     console.log('[AuthClientWrapper] logout');
     await this.authClient?.logout();
     // await this.authClient?.logout({ returnTo: '/' });
-    this._principal = this.authClient?.getIdentity().getPrincipal() || null;
-    await this.initializeAgent(); 
-  }
+    this.principal = this.authClient?.getIdentity().getPrincipal() || null;
+    await this.initializeAgent();
+  };
 
-  getIdentity = async () => {
-    return this.authClient?.getIdentity();
-  }
+  getIdentity = async () => this.authClient?.getIdentity();
 
-  isAuthentificated = async () => {
-    return this.authClient?.isAuthenticated();
-  }
+  isAuthentificated = async () => this.authClient?.isAuthenticated();
 
   private initializeAgent = async () => {
     const identity = await this.authClient?.getIdentity();
+
     this.agent = await getAgent({ identity });
   };
 }
@@ -76,12 +74,6 @@ export class AuthClientWrapper {
 // TODO пока что это синглтон, наверно это неправильно
 // На изменения в этом инстансе завязан canister/controller, он реагирует на авторизацию
 // FIXME придумать более изящное решение
-export const authClient = (window as any).authClient = new AuthClientWrapper();
+export const authClient = ((window as any).authClient = new AuthClientWrapper());
 
-/**
- * @dfinity/agent requires this. Can be removed once it's fixed
- // FIXME КОСТЫЛИ
- */
-import {Principal} from '@dfinity/principal';
-import './polyfill';
 (window as any).ic = authClient;

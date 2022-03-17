@@ -1,7 +1,8 @@
 import React from 'react';
-import {Switch, Route} from 'react-router-dom';
+import { Switch, Route } from 'react-router-dom';
 import styled from 'styled-components';
 import { Header } from '../features/Header';
+import { Instances } from '../features/Instances';
 
 const Container = styled.main`
   display: flex;
@@ -14,11 +15,8 @@ export function App() {
     <Container>
       <Header />
       <Switch>
-        <Route
-          path='/profile'
-          render={({match: {params}}) => <span>profile workspace</span>}
-        />
+        <Route path='/instances' component={Instances} />
       </Switch>
     </Container>
-  )
+  );
 }

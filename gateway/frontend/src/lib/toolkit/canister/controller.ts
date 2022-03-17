@@ -3,53 +3,59 @@ import * as mobx from 'mobx';
 import { Canister, CanisterProps } from './canister';
 
 export interface CanisterControllerProps extends Omit<CanisterProps, 'agent'> {
-	agent: HttpAgent | null;
+  agent: HttpAgent | null;
 }
 
 export class CanisterController<T, Children = T> extends Canister<T> {
-	public children: Record<string, CanisterController<Children>> = {};
+  public children: Record<string, CanisterController<Children>> = {};
 
   constructor(props: CanisterControllerProps) {
-		super({...props, agent: props.agent || new HttpAgent()});
+    super({ ...props, agent: props.agent || new HttpAgent() });
 
-		mobx.makeObservable(this, {
-			children: mobx.observable,
-			childrenArr: mobx.computed,
-			createChild: mobx.action,
-		});
-		
-		const { agent } = props;
-		if (agent) {
-			this.initialize(agent);
-		}
+    mobx.makeObservable(this, {
+      children: mobx.observable,
+      childrenArr: mobx.computed,
+      createChild: mobx.action,
+    });
+
+    const { agent } = props;
+
+    if (agent) {
+      this.initialize(agent);
+    }
 
     mobx.reaction(
       () => agent,
-			(agent) => {
-				agent && this.initialize(agent);
-			}
-    )
+      (agent) => {
+        if (!agent) {
+          return;
+        }
+
+        this.initialize(agent);
+      },
+    );
   }
 
-	get childrenArr() {
-		return Object.values(this.children);
-	}
+  get childrenArr() {
+    return Object.values(this.children);
+  }
 
-	createChild = (props: CanisterControllerProps) => {
-		const canister = new CanisterController<Children>(props);
-		this.children = {
-			...this.children,
-			[props.canisterId]: canister,
-		};
+  createChild = (props: CanisterControllerProps) => {
+    const canister = new CanisterController<Children>(props);
 
-		return canister;
-	};
+    this.children = {
+      ...this.children,
+      [props.canisterId]: canister,
+    };
 
-	removeChild = (canisterId: string) => {
-		const {[canisterId]: omitted, ...children} = this.children;
-		this.children = children;
+    return canister;
+  };
 
-		return omitted;
-	};
+  removeChild = (canisterId: string) => {
+    const { [canisterId]: omitted, ...children } = this.children;
+
+    this.children = children;
+
+    return omitted;
+  };
 }
-

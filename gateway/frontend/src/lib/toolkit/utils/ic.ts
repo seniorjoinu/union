@@ -1,16 +1,17 @@
-import {Principal} from '@dfinity/principal';
+import { Principal } from '@dfinity/principal';
 
 export const checkPrincipal = (canisterId: string): Principal | null => {
-	let principal: Principal;
-	try {
-		principal = Principal.fromText(canisterId);
-	} catch(e) {
-		return null;
-	}
+  let principal: Principal;
 
-	if (!principal._isPrincipal || principal.isAnonymous()) {
-		return null;
-	}
+  try {
+    principal = Principal.fromText(canisterId);
+  } catch (e) {
+    return null;
+  }
 
-	return principal;
+  if (!principal._isPrincipal || principal.isAnonymous()) {
+    return null;
+  }
+
+  return principal;
 };

@@ -13,17 +13,16 @@ export interface LoginProps {
   buttonProps?: Partial<LoginButtonProps>;
 }
 
-const mnemonics: {id: string, mnemonic: string}[] = [
+const mnemonics: { id: string; mnemonic: string }[] = [
   { id: 'User 1', mnemonic: 'some test mnemonic 1' },
   { id: 'User 2', mnemonic: 'some test mnemonic 2' },
 ];
 
-export function Login(p: LoginProps) {
+export function Login({ buttonProps, ...p }: LoginProps) {
   const { isAuthentificated, isAuthReady } = useAuth();
   const [selected, setSelected] = React.useState(mnemonics[0]);
 
   const authorized = isAuthentificated && isAuthReady == AuthReadyState.READY;
-  const options = mnemonics.map((mnemonic) => ({ id: mnemonic.id, label: mnemonic.id}));
 
   return (
     <Container {...p}>
@@ -33,20 +32,14 @@ export function Login(p: LoginProps) {
         onChange={(e) => setSelected(mnemonics.find((mnemonic) => mnemonic.id == e.target.value)!)}
         value={selected.id}
       >
-        {
-          mnemonics.map(m =>
-            <option
-              key={m.id}
-              id={m.id}
-              value={m.id}
-            >
-              {m.id}
-            </option>
-          )
-        }
+        {mnemonics.map((m) => (
+          <option key={m.id} id={m.id} value={m.id}>
+            {m.id}
+          </option>
+        ))}
       </select>
       <LoginButton
-        {...p.buttonProps}
+        {...buttonProps}
         mnemonic={selected.mnemonic}
         size='L'
         variant='outlined'
@@ -57,5 +50,5 @@ export function Login(p: LoginProps) {
         }}
       />
     </Container>
-  )
+  );
 }

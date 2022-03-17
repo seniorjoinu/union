@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import {Text} from 'components';
+import { Text } from 'components';
 import { LoginButton } from '../LoginButton';
 
 const Items = styled(Text)`
@@ -15,7 +15,7 @@ const Container = styled.div`
   flex-direction: row;
   justify-content: space-between;
   padding: 8px 16px;
-  border-bottom: 1px solid ${({theme}) => theme.colors.dark[900]};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark[900]};
 
   ${Items} {
     margin-left: 24px;
@@ -25,10 +25,9 @@ const Container = styled.div`
 export function Header() {
   return (
     <Container>
-      <Items variant="h5" >
-      </Items>
+      <Items variant='h5' />
       {/* TODO frontend костыль */}
       <LoginButton mnemonic='' />
     </Container>
-  )
+  );
 }

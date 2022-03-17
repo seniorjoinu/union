@@ -1,64 +1,66 @@
 import { AnonymousIdentity } from '@dfinity/agent';
-import {Ed25519KeyIdentity} from '@dfinity/identity';
+import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { generateIdentity } from './ed25519';
 import { Identity, JsonnableEd25519KeyIdentity } from './types';
 
 const IDENTITY_LOCAL_STORAGE_KEY = 'digital-identity';
 
 export class DigitalIdentityClient {
-	private identity: Identity = new AnonymousIdentity();
+  private identity: Identity = new AnonymousIdentity();
 
-	constructor(identity?: Ed25519KeyIdentity) {
-		if (identity) {
-			this.setIdentity(identity);
-		} else {
-			this.restoreIdentity();
-		}
-	}
+  constructor(identity?: Ed25519KeyIdentity) {
+    if (identity) {
+      this.setIdentity(identity);
+    } else {
+      this.restoreIdentity();
+    }
+  }
 
-	public getIdentity = (): Identity => this.identity;
-	
-	public isAuthenticated = () => !this.identity.getPrincipal().isAnonymous();
+  public getIdentity = (): Identity => this.identity;
 
-	public login = (mnemonic: string) => {
-		const identity = generateIdentity(mnemonic);
-		this.setIdentity(identity);
-	};
+  public isAuthenticated = () => !this.identity.getPrincipal().isAnonymous();
 
-	public logout = () => {
-		this.identity = new AnonymousIdentity();
-		localStorage.removeItem(IDENTITY_LOCAL_STORAGE_KEY);
-	};
+  public login = (mnemonic: string) => {
+    const identity = generateIdentity(mnemonic);
 
-	private setIdentity = (identity: Ed25519KeyIdentity) => {
-		this.identity = identity;
+    this.setIdentity(identity);
+  };
 
-		const serializedIdentity = JSON.stringify(identity.toJSON());
-		localStorage.setItem(IDENTITY_LOCAL_STORAGE_KEY, serializedIdentity);
-	};
+  public logout = () => {
+    this.identity = new AnonymousIdentity();
+    localStorage.removeItem(IDENTITY_LOCAL_STORAGE_KEY);
+  };
 
-	private restoreIdentity = () => {
-		const str = localStorage.getItem(IDENTITY_LOCAL_STORAGE_KEY) || '';
+  private setIdentity = (identity: Ed25519KeyIdentity) => {
+    this.identity = identity;
 
-		if (!str) {
-			return;
-		}
+    const serializedIdentity = JSON.stringify(identity.toJSON());
 
-		let jsonIdentity: JsonnableEd25519KeyIdentity | null = null;
+    localStorage.setItem(IDENTITY_LOCAL_STORAGE_KEY, serializedIdentity);
+  };
 
-		try {
-			jsonIdentity = JSON.parse(str);
+  private restoreIdentity = () => {
+    const str = localStorage.getItem(IDENTITY_LOCAL_STORAGE_KEY) || '';
 
-			if (!Array.isArray(jsonIdentity)) {
-				console.warn('Saved identity from localStorage is not Array');
-				return;
-			}
+    if (!str) {
+      return;
+    }
 
-			const identity = Ed25519KeyIdentity.fromParsedJson(jsonIdentity);
+    let jsonIdentity: JsonnableEd25519KeyIdentity | null = null;
 
-			this.identity = identity;
-		} catch(e) {
-			console.log('Unable to parse identity from localStorage', e);
-		}
-	};
+    try {
+      jsonIdentity = JSON.parse(str);
+
+      if (!Array.isArray(jsonIdentity)) {
+        console.warn('Saved identity from localStorage is not Array');
+        return;
+      }
+
+      const identity = Ed25519KeyIdentity.fromParsedJson(jsonIdentity);
+
+      this.identity = identity;
+    } catch (e) {
+      console.log('Unable to parse identity from localStorage', e);
+    }
+  };
 }

@@ -27,5 +27,5 @@ export function EmbedPage(p: EmbedPageProps) {
     <Container>
       <Embed {...p} />
     </Container>
-  )
+  );
 }

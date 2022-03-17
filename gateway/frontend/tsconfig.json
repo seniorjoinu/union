@@ -25,10 +25,10 @@
     "paths": {
       "components": ["src/lib/components/index.ts"],
       "toolkit": ["src/lib/toolkit/index.ts"],
-      "deployer-ts": ["../../wallet-deployer/.dfx/local/canisters/union-deployer/union-deployer.did.d.ts"],
-      "deployer-idl": ["../../wallet-deployer/.dfx/local/canisters/union-deployer/union-deployer.did.js"],
-      "wallet-ts": ["../../wallet-backend/.dfx/local/canisters/union-wallet/union-wallet.did.d.ts"],
-      "wallet-idl": ["../../wallet-backend/.dfx/local/canisters/union-wallet/union-wallet.did.js"]
+      "deployer-ts": ["src/assets/union-deployer.did.d.ts"],
+      "deployer-idl": ["src/assets/union-deployer.did.js"],
+      "wallet-ts": ["src/assets/union-wallet.did.d.ts"],
+      "wallet-idl": ["src/assets/union-wallet.did.js"]
     }
   },
   "include": [

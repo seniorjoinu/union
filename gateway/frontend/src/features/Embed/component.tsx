@@ -31,15 +31,16 @@ export interface EmbedProps {
 
 export function Embed({ canisterId, query }: EmbedProps) {
   const { isAuthReady, isAuthentificated } = useAuth();
-  const {path} = useRouteMatch();
+  const { path } = useRouteMatch();
 
   const authorized = isAuthReady == AuthReadyState.READY && isAuthentificated;
-  
+
   if (!canisterId || !checkPrincipal(canisterId)) {
     throw new Error(`Wrong principal "${canisterId}"`);
   }
 
   let decodedQuery = {};
+
   if (query) {
     try {
       decodedQuery = JSON.parse(unescape(query));
@@ -48,15 +49,14 @@ export function Embed({ canisterId, query }: EmbedProps) {
     }
   }
 
-  // TODO send ready message to opener 
+  console.log(decodedQuery);
+  // TODO send ready message to opener
 
   return (
     <Container>
       <Text variant='h3'>MIDHUB</Text>
-      <Login buttonProps={{backUrl: path}} />
-      {
-        authorized && <Text>Successfull opened</Text>
-      }
+      <Login buttonProps={{ backUrl: path }} />
+      {authorized && <Text>Successfull opened</Text>}
     </Container>
-  )
+  );
 }

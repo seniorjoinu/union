@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import path from 'path';
 import { defineConfig } from 'vite';
 import reactRefresh from '@vitejs/plugin-react-refresh';
@@ -7,21 +8,18 @@ import config from './tsconfig.json';
 
 const envs = {
   ...getCanisterIds(__dirname),
-  ...getCanisterIds(path.resolve('../wallet-deployer')),
+  ...getCanisterIds(path.resolve('../../wallet-deployer/canister')),
 };
-// const packages = Object.keys(packageJson.dependencies);
-// FIXME пусть сборщик сам ищет айдишники канистеров
-
-const network = process.env.DFX_NETWORK || 'local';
 
 export default defineConfig({
   server: {
     port: 3000,
     strictPort: true,
     proxy: {
-      '/api': 'http://localhost:8000'
-    }
+      '/api': 'http://localhost:8000',
+    },
   },
+  publicDir: './public',
   resolve: {
     alias: Object.entries(config.compilerOptions.paths)
       .reduce((acc, [k, v]) => ({
@@ -37,28 +35,25 @@ export default defineConfig({
         { src: './src/assets/*.html', dest: 'dist' },
       ],
       hook: 'writeBundle',
-    })
+    }),
   ],
   define: {
     'process.env': {
       ...process.env,
       ...envs,
     },
-    global: "window", // that is fix for packages that support both node and browser
+    global: 'window', // that is fix for packages that support both node and browser
   },
   build: {
     minify: false, // FIXME для прода нужен minify: true
     chunkSizeWarningLimit: 200,
     rollupOptions: {
       output: {
-        manualChunks: (path) => {
-          return defaultManualChunks(path, __dirname);
-        }
-      }
+        manualChunks: (path) => defaultManualChunks(path, __dirname),
+      },
     },
     commonjsOptions: {
-      include: []
-    }
+      include: [],
+    },
   },
-  
-})
+});
