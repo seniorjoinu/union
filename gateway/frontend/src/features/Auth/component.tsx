@@ -20,14 +20,14 @@ export interface AuthProps extends IClassName {
   to: string;
 }
 
-export function Auth(p: AuthProps) {
+export function Auth({ to, ...p }: AuthProps) {
   const { isAuthentificated, authClient } = useAuth();
 
   return (
     <Container {...p}>
       <Text variant='h3'>{isAuthentificated ? 'Select workspace' : 'Login'}</Text>
       {!isAuthentificated && <Login />}
-      {isAuthentificated && authClient.principal && <Redirect to='/instances' />}
+      {isAuthentificated && authClient.principal && <Redirect to={to} />}
     </Container>
   );
 }

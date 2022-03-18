@@ -1,6 +1,4 @@
-import { DefaultTheme } from 'styled-components';
-
-export const theme: DefaultTheme = {
+export const theme: ComponentsTheme = {
   colors: {
     dark: {
       900: 'black',
@@ -11,6 +9,37 @@ export const theme: DefaultTheme = {
       90: 'grey',
       100: 'grey',
     },
+    primary: {
+      master: {
+        color: 'black',
+        darker: 'black',
+      },
+    },
   },
-  borderRadius: 4,
+  common: {
+    borderRadius: '4px',
+  },
 };
+
+export interface ComponentsTheme {
+  colors: {
+    dark: {
+      900: string;
+      800: string;
+    };
+    grey: {
+      10: string;
+      90: string;
+      100: string;
+    };
+    primary: {
+      master: {
+        color: string;
+        darker: string;
+      };
+    };
+  };
+  common: {
+    borderRadius: string;
+  };
+}

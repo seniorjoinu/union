@@ -1,10 +1,17 @@
 import React from 'react';
 import styled from 'styled-components';
+import { NavLink } from 'react-router-dom';
 import { Text } from 'components';
 import { LoginButton } from '../LoginButton';
 
 const Items = styled(Text)`
+  display: flex;
+  flex-direction: row;
   flex-grow: 1;
+
+  & > *:not(:last-child) {
+    margin-right: 16px;
+  }
 `;
 
 const Container = styled.div`
@@ -25,7 +32,14 @@ const Container = styled.div`
 export function Header() {
   return (
     <Container>
-      <Items variant='h5' />
+      <Items variant='h5'>
+        <Text as={NavLink} to='/wallet'>
+          Home
+        </Text>
+        <Text as={NavLink} to='/wallets'>
+          Wallets
+        </Text>
+      </Items>
       {/* TODO frontend костыль */}
       <LoginButton mnemonic='' />
     </Container>
