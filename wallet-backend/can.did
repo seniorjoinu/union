@@ -341,4 +341,6 @@ service : (principal) -> {
     "detach_role_from_permission" : (DetachRoleFromPermissionRequest) -> ();
     "get_roles_attached_to_permissions" : (GetRolesAttachedToPermissionsRequest) -> (GetRolesAttachedToPermissionsResponse) query;
     "get_permissions_attached_to_roles" : (GetPermissionsAttachedToRolesRequest) -> (GetPermissionsAttachedToRolesResponse) query;
+
+    "export_candid" : () -> (text) query;
 }

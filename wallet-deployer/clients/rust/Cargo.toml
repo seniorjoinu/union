@@ -1,0 +1,10 @@
+[package]
+name = "union-deployer-client"
+version = "0.1.0"
+authors = ["Александр Втюрин <senior.joinu@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+ic-cdk = "0.3.2"
+serde = "1.0.126"
+async-trait = "0.1.51"

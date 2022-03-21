@@ -23,6 +23,7 @@ use crate::state::{State, TaskType};
 use ic_cdk::api::time;
 use ic_cdk::caller;
 use ic_cdk::export::Principal;
+use ic_cdk::export::candid::{export_service};
 use ic_cdk_macros::{heartbeat, init, query, update};
 use ic_cron::implement_cron;
 use ic_cron::types::{Iterations, SchedulingOptions};
@@ -574,6 +575,13 @@ pub fn get_permissions_attached_to_roles(
     }
 
     GetPermissionsAttachedToRolesResponse { result }
+}
+
+export_service!();
+
+#[query(name = "__get_candid_interface_tmp_hack")]
+fn export_candid() -> String {
+    __export_service()
 }
 
 static mut STATE: Option<State> = None;

@@ -1,0 +1,22 @@
+[package]
+name = "union-deployer"
+version = "0.1.0"
+authors = ["Александр Втюрин <senior.joinu@gmail.com>"]
+edition = "2018"
+
+[profile.release]
+lto = true
+opt-level = 'z'
+panic = 'abort'
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/actor.rs"
+
+[dependencies]
+async-trait = "0.1.51"
+chrono = "0.4.19"
+ic-cdk = "0.3.2"
+ic-cdk-macros = "0.3.2"
+serde = "1.0.126"
+union-deployer-client = { path = "../clients/rust" }
