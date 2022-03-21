@@ -28,11 +28,8 @@ const Container = styled.div`
 export function Header() {
   return (
     <Container>
-      <Items variant='h5'>
-        <Text as={NavLink} to='/wallet'>
-          Home
-        </Text>
-        <Text as={NavLink} to='/wallets'>
+      <Items>
+        <Text variant='p1' as={NavLink} to='/wallets'>
           Wallets
         </Text>
       </Items>

@@ -35,7 +35,10 @@ export function Provider({ principal, children }: ProviderProps) {
   const { permissions } = data.get_my_permissions || { permissions: [] };
 
   const value: CurrentWalletContext = useMemo(() => {
-    const roleId = roles.find((r) => 'Everyone' in r.role_type)?.id;
+    const roleId = roles.find(
+      (r) =>
+        'QuantityOf' in r.role_type && r.role_type.QuantityOf.name.toLowerCase() == 'has profile',
+    )?.id;
     const permissionId = permissions.find((p) => p.name.toLowerCase() == 'default')?.id;
     const rnpExist = typeof roleId !== 'undefined' && typeof permissionId !== 'undefined';
 

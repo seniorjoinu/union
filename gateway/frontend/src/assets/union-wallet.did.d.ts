@@ -24,6 +24,11 @@ export interface DetachRoleFromPermissionRequest {
   'role_id' : RoleId,
   'permission_id' : PermissionId,
 }
+export interface EditProfileRequest {
+  'new_description' : [] | [string],
+  'role_id' : RoleId,
+  'new_name' : [] | [string],
+}
 export interface ExecuteRequest {
   'rnp' : RoleAndPermission,
   'title' : string,
@@ -53,7 +58,7 @@ export interface GetPermissionsAttachedToRolesRequest {
   'role_ids' : Array<RoleId>,
 }
 export interface GetPermissionsAttachedToRolesResponse {
-  'result' : Array<[RoleId, PermissionId]>,
+  'result' : Array<[RoleId, Array<PermissionId>]>,
 }
 export interface GetPermissionsByPermissionTargetRequest {
   'rnp' : RoleAndPermission,
@@ -73,7 +78,7 @@ export interface GetRolesAttachedToPermissionsRequest {
   'permission_ids' : Array<PermissionId>,
 }
 export interface GetRolesAttachedToPermissionsResponse {
-  'result' : Array<[PermissionId, RoleId]>,
+  'result' : Array<[PermissionId, Array<RoleId>]>,
 }
 export interface GetRolesRequest {
   'ids' : Array<RoleId>,
@@ -185,7 +190,9 @@ export interface UpdateRoleRequest {
   'new_role_type' : RoleType,
 }
 export interface _SERVICE {
-  'add_role_owners' : (arg_0: AddEnumeratedRolesRequest) => Promise<undefined>,
+  'add_enumerated_roles' : (arg_0: AddEnumeratedRolesRequest) => Promise<
+      undefined
+    >,
   'attach_role_to_permission' : (
       arg_0: AttachRoleToPermissionRequest,
     ) => Promise<undefined>,
@@ -199,6 +206,7 @@ export interface _SERVICE {
   'detach_role_from_permission' : (
       arg_0: DetachRoleFromPermissionRequest,
     ) => Promise<undefined>,
+  'edit_profile' : (arg_0: EditProfileRequest) => Promise<undefined>,
   'execute' : (arg_0: ExecuteRequest) => Promise<ExecuteResponse>,
   'export_candid' : () => Promise<string>,
   'get_history_entries' : (arg_0: GetHistoryEntriesRequest) => Promise<
@@ -233,9 +241,9 @@ export interface _SERVICE {
       RemovePermissionResponse
     >,
   'remove_role' : (arg_0: RemoveRoleRequest) => Promise<RemoveRoleResponse>,
-  'subtract_role_owners' : (arg_0: SubtractEnumeratedRolesRequest) => Promise<
-      undefined
-    >,
+  'subtract_enumerated_roles' : (
+      arg_0: SubtractEnumeratedRolesRequest,
+    ) => Promise<undefined>,
   'update_permission' : (arg_0: UpdatePermissionRequest) => Promise<undefined>,
   'update_role' : (arg_0: UpdateRoleRequest) => Promise<undefined>,
 }

@@ -67,6 +67,11 @@ export const idlFactory = ({ IDL }) => {
     'role_id' : RoleId,
     'permission_id' : PermissionId,
   });
+  const EditProfileRequest = IDL.Record({
+    'new_description' : IDL.Opt(IDL.Text),
+    'role_id' : RoleId,
+    'new_name' : IDL.Opt(IDL.Text),
+  });
   const RoleAndPermission = IDL.Record({
     'role_id' : RoleId,
     'permission_id' : PermissionId,
@@ -153,7 +158,7 @@ export const idlFactory = ({ IDL }) => {
     'role_ids' : IDL.Vec(RoleId),
   });
   const GetPermissionsAttachedToRolesResponse = IDL.Record({
-    'result' : IDL.Vec(IDL.Tuple(RoleId, PermissionId)),
+    'result' : IDL.Vec(IDL.Tuple(RoleId, IDL.Vec(PermissionId))),
   });
   const GetPermissionsByPermissionTargetRequest = IDL.Record({
     'rnp' : RoleAndPermission,
@@ -173,7 +178,7 @@ export const idlFactory = ({ IDL }) => {
     'permission_ids' : IDL.Vec(PermissionId),
   });
   const GetRolesAttachedToPermissionsResponse = IDL.Record({
-    'result' : IDL.Vec(IDL.Tuple(PermissionId, RoleId)),
+    'result' : IDL.Vec(IDL.Tuple(PermissionId, IDL.Vec(RoleId))),
   });
   const GetScheduledForAuthorizationExecutionsResponse = IDL.Record({
     'entries' : IDL.Vec(HistoryEntry),
@@ -199,7 +204,7 @@ export const idlFactory = ({ IDL }) => {
     'new_role_type' : RoleType,
   });
   return IDL.Service({
-    'add_role_owners' : IDL.Func([AddEnumeratedRolesRequest], [], []),
+    'add_enumerated_roles' : IDL.Func([AddEnumeratedRolesRequest], [], []),
     'attach_role_to_permission' : IDL.Func(
         [AttachRoleToPermissionRequest],
         [],
@@ -221,6 +226,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'edit_profile' : IDL.Func([EditProfileRequest], [], []),
     'execute' : IDL.Func([ExecuteRequest], [ExecuteResponse], []),
     'export_candid' : IDL.Func([], [IDL.Text], ['query']),
     'get_history_entries' : IDL.Func(
@@ -277,7 +283,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'remove_role' : IDL.Func([RemoveRoleRequest], [RemoveRoleResponse], []),
-    'subtract_role_owners' : IDL.Func([SubtractEnumeratedRolesRequest], [], []),
+    'subtract_enumerated_roles' : IDL.Func(
+        [SubtractEnumeratedRolesRequest],
+        [],
+        [],
+      ),
     'update_permission' : IDL.Func([UpdatePermissionRequest], [], []),
     'update_role' : IDL.Func([UpdateRoleRequest], [], []),
   });

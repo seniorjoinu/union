@@ -84,14 +84,14 @@ export class Canister<T> {
               response = await element.call(actor, ...args);
               this.onSuccess(key, response);
               console.log(
-                `\x1b[33m[${this.context.name}] [response] [${this.canisterId}]`,
+                `\x1b[33m[${this.context.name}] [response] [${this.canisterId}] ${key}`,
                 response,
                 args,
               );
             } catch (e) {
               this.onError(key, e);
               console.log(
-                `\x1b[33m[${this.context.name}] [error_response] [${this.canisterId}]`,
+                `\x1b[33m[${this.context.name}] [error_response] [${this.canisterId}] ${key}`,
                 response,
                 args,
                 e,
