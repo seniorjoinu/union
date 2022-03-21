@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Text } from 'components';
-import { Role, RoleType } from 'wallet-ts';
+import { Role, RoleType, Permission } from 'wallet-ts';
 import { useWallet } from '../../services/controllers';
+import { useCurrentWallet } from './context';
 
 const Title = styled(Text)``;
 
@@ -21,17 +22,33 @@ export interface RoleInfoProps {
 }
 
 export const RoleInfo = ({ principal, role }: RoleInfoProps) => {
-  // const [roles, setRoles] = useState<Role[]>([]);
-  const { canister, fetching } = useWallet(principal);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const { data, canister, fetching } = useWallet(principal);
+  const { rnp } = useCurrentWallet();
 
   useEffect(() => {
-    canister.get_permissions_attached_to_roles;
-  }, []);
+    if (!rnp) {
+      return;
+    }
+
+    if (!data.get_permissions_attached_to_roles) {
+      return canister.get_permissions_attached_to_roles({ rnp, role_ids: [role.id] });
+    }
+
+    const { result } = data.get_permissions_attached_to_roles;
+    const ids = result.map(([_, permissionId]) => permissionId);
+
+    canister.get_permissions({ rnp, ids });
+  }, [rnp, data.get_permissions_attached_to_roles, setPermissions]);
+
+  const progress = !!fetching.get_permissions_attached_to_roles || !!fetching.get_permissions;
 
   return (
     <Container>
       <Title variant='p1'>{parseRole(role.role_type).title}</Title>
       <span>{JSON.stringify(role)}</span>
+      {progress && <span>fetching</span>}
+      <span>{JSON.stringify(permissions)}</span>
     </Container>
   );
 };

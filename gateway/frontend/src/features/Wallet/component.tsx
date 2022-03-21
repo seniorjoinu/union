@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useParams, Routes, Route, Navigate } from 'react-router-dom';
+import { Provider } from './context';
 import { WalletInfo } from './WalletInfo';
 import { CreateRole } from './CreateRole';
 
@@ -18,11 +19,13 @@ export const Wallet = () => {
   }
 
   return (
-    <Container>
-      <Routes>
-        <Route path='/*' element={<WalletInfo principal={principal} />} />
-        <Route path='/create-role' element={<CreateRole principal={principal} />} />
-      </Routes>
-    </Container>
+    <Provider principal={principal}>
+      <Container>
+        <Routes>
+          <Route path='/*' element={<WalletInfo principal={principal} />} />
+          <Route path='/create-role' element={<CreateRole principal={principal} />} />
+        </Routes>
+      </Container>
+    </Provider>
   );
 };

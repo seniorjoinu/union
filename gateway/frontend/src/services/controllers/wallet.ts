@@ -20,8 +20,16 @@ export const initWalletController = (
   return canister;
 };
 
+type Unpromise<T extends Promise<any>> = T extends Promise<infer U> ? U : never;
+export type Fetching = { [key in keyof _SERVICE]?: boolean };
+
 export const useWallet = (canisterId: string) => {
-  const [fetching, setFetching] = useState<{ [key in keyof _SERVICE]?: boolean }>({});
+  const [data, setData] = useState<
+    {
+      [key in keyof _SERVICE]?: Unpromise<ReturnType<_SERVICE[key]>>;
+    }
+  >({});
+  const [fetching, setFetching] = useState<Fetching>({});
   const [error, setError] = useState<Error | null>(null);
 
   const canister = useMemo(
@@ -31,7 +39,8 @@ export const useWallet = (canisterId: string) => {
           setFetching((v) => ({ ...v, [methodName]: true }));
           setError(null);
         },
-        onSuccess: (methodName) => {
+        onSuccess: (methodName, response) => {
+          setData((data) => ({ ...data, [methodName]: response }));
           setFetching((v) => ({ ...v, [methodName]: false }));
         },
         onError: (methodName, e) => {
@@ -45,6 +54,7 @@ export const useWallet = (canisterId: string) => {
   return {
     fetching,
     error,
+    data,
     canister: canister.canister,
   };
 };
