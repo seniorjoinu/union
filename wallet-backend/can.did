@@ -300,7 +300,7 @@ type GetRolesAttachedToPermissionsRequest = record {
 };
 
 type GetRolesAttachedToPermissionsResponse = record {
-    result : vec record { 0 : PermissionId; 1 : RoleId };
+    result : vec record { 0 : PermissionId; 1 : vec RoleId };
 };
 
 type GetPermissionsAttachedToRolesRequest = record {
@@ -309,7 +309,7 @@ type GetPermissionsAttachedToRolesRequest = record {
 };
 
 type GetPermissionsAttachedToRolesResponse = record {
-    result : vec record { 0 : RoleId; 1 : PermissionId };
+    result : vec record { 0 : RoleId; 1 : vec PermissionId };
 };
 
 service : (principal) -> {
