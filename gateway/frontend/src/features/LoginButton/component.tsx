@@ -1,10 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
 import * as mobxReactLite from 'mobx-react-lite';
-import * as ReactRouterDOM from 'react-router-dom';
-import { CroppedString, Button, ButtonProps } from 'components';
+import { useNavigate } from 'react-router-dom';
+import { CroppedString as CS, Button, ButtonProps } from 'components';
 import logo from '../../assets/logo.svg';
 import { useAuth } from '../../services';
+
+const CroppedString = styled(CS)``;
 
 const Principal = styled.span`
   white-space: nowrap;
@@ -26,6 +28,10 @@ const Container = styled.div`
   ${Principal} {
     margin-right: 16px;
   }
+
+  ${CroppedString} {
+    margin-right: 8px;
+  }
 `;
 
 export interface LoginButtonProps extends Omit<ButtonProps, 'id'> {
@@ -38,7 +44,7 @@ export interface LoginButtonProps extends Omit<ButtonProps, 'id'> {
 
 export const LoginButton = mobxReactLite.observer(
   ({ mnemonic, backUrl, children, onLogin, height = 16, ...props }: LoginButtonProps) => {
-    const history = ReactRouterDOM.useHistory();
+    const navigate = useNavigate();
     const { authClient, login, logout } = useAuth();
 
     if (!authClient.principal) {
@@ -74,7 +80,7 @@ export const LoginButton = mobxReactLite.observer(
           variant='text'
           size='M'
           color='grey'
-          onClick={() => logout().then(() => backUrl && history.replace(backUrl))}
+          onClick={() => logout().then(() => backUrl && navigate(backUrl, { replace: true }))}
         >
           Logout
         </Button>

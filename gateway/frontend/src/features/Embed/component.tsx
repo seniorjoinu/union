@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useRouteMatch } from 'react-router-dom';
+import { useMatch } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
 import { Text as T } from 'components';
 import { Login as L } from '../Auth/Login';
@@ -31,7 +31,7 @@ export interface EmbedProps {
 
 export function Embed({ canisterId, query }: EmbedProps) {
   const { isAuthReady, isAuthentificated } = useAuth();
-  const { path } = useRouteMatch();
+  const { path } = useMatch();
 
   const authorized = isAuthReady == AuthReadyState.READY && isAuthentificated;
 

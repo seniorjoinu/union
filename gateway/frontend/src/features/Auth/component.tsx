@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Text } from 'components';
-import { Redirect } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../services';
 import { Login } from './Login';
 
@@ -27,7 +27,7 @@ export function Auth({ to, ...p }: AuthProps) {
     <Container {...p}>
       <Text variant='h3'>{isAuthentificated ? 'Select workspace' : 'Login'}</Text>
       {!isAuthentificated && <Login />}
-      {isAuthentificated && authClient.principal && <Redirect to={to} />}
+      {isAuthentificated && authClient.principal && <Navigate to={to} replace />}
     </Container>
   );
 }

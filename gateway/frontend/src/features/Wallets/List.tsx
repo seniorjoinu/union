@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Text, Button as B, SimpleListItem, CroppedString } from 'components';
 import { useDeployer } from '../../services';
 
@@ -30,8 +31,8 @@ const Container = styled.div`
   }
 `;
 
-export const Wallets = () => {
-  const [spawning, setSpawning] = useState<boolean>(false);
+export const WalletsList = () => {
+  const nav = useNavigate();
   const [wallets, setWallets] = useState<Principal[]>([]);
   const { canister, fetching } = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
 
@@ -39,29 +40,11 @@ export const Wallets = () => {
     canister.get_spawned_instances().then(setWallets);
   }, []);
 
-  const onCreate = useCallback(async () => {
-    setSpawning(true);
-
-    try {
-      const res = await fetch('/union-wallet.wasm');
-      const buffer = await res.arrayBuffer();
-      const module = [...new Uint8Array(buffer)];
-
-      await canister.spawn({ wasm_module: module });
-      const wallets = await canister.get_spawned_instances();
-
-      setWallets(wallets);
-    } catch (e) {
-      console.error(e);
-    }
-    setSpawning(false);
-  }, [setWallets, setSpawning]);
-
   return (
     <Container>
       <Panel>
         <Text>Spawned wallets {fetching.get_spawned_instances ? 'fetching' : ''}</Text>
-        <Button disabled={spawning} onClick={onCreate}>
+        <Button forwardedAs={NavLink} to='/wallets/create'>
           Create wallet
         </Button>
       </Panel>
@@ -78,9 +61,7 @@ export const Wallets = () => {
               ),
             }}
             order={[{ key: 'principal', basis: '30%' }]}
-            // onClick={() => {
-            //   h.push(`company/${d.canisterId}`);
-            // }}
+            onClick={() => nav(`/wallet/${wallet.toString()}`)}
           />
         ))}
         {!wallets.length && !fetching.get_spawned_instances && (

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Router, Switch, Redirect, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Navigate, Route } from 'react-router-dom';
 import { Progress } from 'components';
-import { useAuth, AuthReadyState, history } from '../services';
+import { useAuth, AuthReadyState } from '../services';
 import { Wallets } from '../features/Wallets';
+import { Wallet } from '../features/Wallet';
 import { App } from './App';
 import { EmbedPage } from './EmbedPage';
 import { AuthPage } from './AuthPage';
@@ -17,23 +18,24 @@ export function RouterPage() {
   const { mode } = queryParams;
 
   return (
-    <Router history={history}>
-      <Switch>
-        <Route path='/auth' render={() => <AuthPage to='/wallets' />} />
-        <Route path={['/embed']} render={() => <EmbedPage />} />
-        {mode == 'embed' && <Redirect to='/embed' />}
-        {!isAuthentificated && <Redirect to='/auth' />}
+    <BrowserRouter>
+      <Routes>
+        <Route path='/auth' element={<AuthPage to='/wallets' />} />
+        <Route path='/embed' element={<EmbedPage />} />
+        {mode == 'embed' && <Navigate to='/embed' replace />}
+        {!isAuthentificated && <Navigate to='/auth' replace />}
         <Route
-          path=''
-          render={() =>
+          path='/*'
+          element={
             <App>
-              <Switch>
-                <Route path='/wallets' component={Wallets} />
-              </Switch>
+              <Routes>
+                <Route path='/wallets/*' element={<Wallets />} />
+                <Route path='/wallet/*' element={<Wallet />} />
+              </Routes>
             </App>
           }
         />
-      </Switch>
-    </Router>
+      </Routes>
+    </BrowserRouter>
   );
 }
