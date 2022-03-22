@@ -25,7 +25,7 @@ export function Auth({ to, ...p }: AuthProps) {
 
   return (
     <Container {...p}>
-      <Text variant='h3'>{isAuthentificated ? 'Select workspace' : 'Login'}</Text>
+      <Text variant='h3'>Login</Text>
       {!isAuthentificated && <Login />}
       {isAuthentificated && authClient.principal && <Navigate to={to} replace />}
     </Container>

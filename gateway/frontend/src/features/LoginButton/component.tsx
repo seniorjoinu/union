@@ -17,9 +17,7 @@ const Principal = styled.span`
   cursor: pointer;
 `;
 
-const Logo = styled.img`
-  margin-left: 8px;
-`;
+const Logo = styled.img``;
 
 const Container = styled.div`
   display: flex;
@@ -35,7 +33,6 @@ const Container = styled.div`
 `;
 
 export interface LoginButtonProps extends Omit<ButtonProps, 'id'> {
-  backUrl?: string;
   height?: number;
   mnemonic: string;
   children?: JSX.Element | string;
@@ -43,7 +40,7 @@ export interface LoginButtonProps extends Omit<ButtonProps, 'id'> {
 }
 
 export const LoginButton = mobxReactLite.observer(
-  ({ mnemonic, backUrl, children, onLogin, height = 16, ...props }: LoginButtonProps) => {
+  ({ mnemonic, children, onLogin, height = 16, ...props }: LoginButtonProps) => {
     const navigate = useNavigate();
     const { authClient, login, logout } = useAuth();
 
@@ -80,7 +77,7 @@ export const LoginButton = mobxReactLite.observer(
           variant='text'
           size='M'
           color='grey'
-          onClick={() => logout().then(() => backUrl && navigate(backUrl, { replace: true }))}
+          onClick={() => logout().then(() => navigate('/', { replace: true }))}
         >
           Logout
         </Button>

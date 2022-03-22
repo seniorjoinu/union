@@ -1,41 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
-import { Text, Chips } from 'components';
 import { Permission, Role } from 'wallet-ts';
 import { useWallet } from '../../../services/controllers';
 import { useCurrentWallet } from '../context';
-import { parseRole } from './utils';
-
-const Title = styled(Text)``;
-
-const Items = styled.div`
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-
-  & > *:not(:last-child) {
-    margin-right: 16px;
-  }
-`;
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 8px;
-  }
-`;
+import { parseRole } from '../utils';
+import { Info } from './Info';
 
 export interface PermissionInfoProps extends IClassName {
+  editable?: boolean;
   permission: Permission;
-  principal: string;
 }
 
-export const PermissionInfo = ({ principal, permission, ...p }: PermissionInfoProps) => {
+export const PermissionInfo = ({ permission, editable, ...p }: PermissionInfoProps) => {
   const [roles, setRoles] = useState<Role[]>([]);
+  const { rnp, principal } = useCurrentWallet();
   const { data, canister, fetching } = useWallet(principal);
-  const { rnp } = useCurrentWallet();
 
   useEffect(() => {
     if (!rnp) {
@@ -65,14 +43,12 @@ export const PermissionInfo = ({ principal, permission, ...p }: PermissionInfoPr
   const progress = !!fetching.get_roles_attached_to_permissions || !!fetching.get_roles;
 
   return (
-    <Container {...p}>
-      <Title variant='h5'>{permission.name}</Title>
-      {progress && <span>fetching</span>}
-      <Items>
-        {roles.map((r) => (
-          <Chips key={r.id}>{parseRole(r.role_type).title}</Chips>
-        ))}
-      </Items>
-    </Container>
+    <Info
+      title={permission.name}
+      editLink={editable ? `permission/edit/${permission.id}` : undefined}
+      fetching={progress}
+      items={roles.map((r) => ({ id: r.id, children: parseRole(r.role_type).title }))}
+      {...p}
+    />
   );
 };

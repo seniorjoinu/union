@@ -14,8 +14,6 @@ const Container = styled.main`
     transform: translate(-50%, -50%);
     height: 700px;
     width: 500px;
-    border: 1px solid grey;
-    border-radius: 4px;
     padding: 24px;
   }
 `;

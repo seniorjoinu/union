@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Text, Button as B, SimpleListItem, CroppedString } from 'components';
+import { Text, Button as B, SimpleListItem } from 'components';
 import { useDeployer } from '../../services';
 
 const List = styled.div`
@@ -54,11 +54,7 @@ export const WalletsList = () => {
             key={wallet.toString()}
             item={{
               id: wallet.toString(),
-              principal: (
-                <CroppedString variant='p1' startLen={9} endLen={4}>
-                  {wallet.toString()}
-                </CroppedString>
-              ),
+              principal: <Text variant='p1'>{wallet.toString()}</Text>,
             }}
             order={[{ key: 'principal', basis: '30%' }]}
             onClick={() => nav(`/wallet/${wallet.toString()}`)}

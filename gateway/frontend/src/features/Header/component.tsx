@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { Text } from 'components';
 import { LoginButton } from '../LoginButton';
 
@@ -26,12 +26,34 @@ const Container = styled.div`
 `;
 
 export function Header() {
+  const param = useParams();
+  const location = param['*'] || '';
+
+  const isInsideWallet = location.startsWith('wallet/');
+  const walletId = location.split('wallet/')[1]?.split('/')[0];
+
   return (
     <Container>
       <Items>
         <Text variant='p1' as={NavLink} to='/wallets'>
           Wallets
         </Text>
+        {isInsideWallet && walletId && (
+          <>
+            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/participants`}>
+              Participants
+            </Text>
+            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/my-rnp`}>
+              My roles
+            </Text>
+            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/rnp`}>
+              Roles and Permissions
+            </Text>
+            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/invite`}>
+              Invite
+            </Text>
+          </>
+        )}
       </Items>
       {/* TODO frontend костыль */}
       <LoginButton mnemonic='' />

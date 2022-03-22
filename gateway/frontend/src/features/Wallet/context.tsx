@@ -3,6 +3,7 @@ import { RoleAndPermission, Role, Permission } from 'wallet-ts';
 import { useWallet, Fetching } from '../../services';
 
 export interface CurrentWalletContext {
+  principal: string;
   rnp: RoleAndPermission | null;
   roles: Role[];
   permissions: Permission[];
@@ -11,6 +12,7 @@ export interface CurrentWalletContext {
 }
 
 const context = createContext<CurrentWalletContext>({
+  principal: '',
   rnp: null,
   roles: [],
   permissions: [],
@@ -43,13 +45,14 @@ export function Provider({ principal, children }: ProviderProps) {
     const rnpExist = typeof roleId !== 'undefined' && typeof permissionId !== 'undefined';
 
     return {
+      principal,
       rnp: rnpExist ? { role_id: roleId, permission_id: permissionId } : null,
       roles,
       permissions,
       fetching,
       error,
     };
-  }, [roles, permissions, fetching, error]);
+  }, [principal, roles, permissions, fetching, error]);
 
   return <context.Provider value={value}>{children}</context.Provider>;
 }

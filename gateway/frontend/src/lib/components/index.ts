@@ -3,5 +3,8 @@ export * from './SimpleListItem';
 export * from './Text';
 export * from './CroppedString';
 export * from './Button';
+export * from './Select';
+export * from './TextField';
+export * from './MultiSelect';
 export * from './Chips';
 export * from './theme';

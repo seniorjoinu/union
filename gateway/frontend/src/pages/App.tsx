@@ -2,13 +2,22 @@ import React from 'react';
 import styled from 'styled-components';
 import { Header } from '../features/Header';
 
-const Container = styled.main`
+const Content = styled.section`
   display: flex;
   flex-direction: column;
   height: 100%;
+`;
 
-  & > * {
-    padding: 16px 24px;
+const Container = styled.main`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+
+  ${Content} {
+    padding: 32px 64px;
+    align-self: center;
+    min-width: 700px;
   }
 `;
 
@@ -19,6 +28,6 @@ export interface AppProps {
 export const App = ({ children }: AppProps) => (
   <Container>
     <Header />
-    {children}
+    <Content>{children}</Content>
   </Container>
 );

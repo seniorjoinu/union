@@ -15,22 +15,19 @@ export function RouterPage() {
     return <Progress absolute size={48} />;
   }
 
-  const { mode } = queryParams;
-
   return (
     <BrowserRouter>
       <Routes>
         <Route path='/auth' element={<AuthPage to='/wallets' />} />
         <Route path='/embed' element={<EmbedPage />} />
-        {mode == 'embed' && <Navigate to='/embed' replace />}
-        {!isAuthentificated && <Navigate to='/auth' replace />}
+        {!isAuthentificated && <Route path='/*' element={<Navigate to='/auth' replace />} />}
         <Route
           path='/*'
           element={
             <App>
               <Routes>
                 <Route path='/wallets/*' element={<Wallets />} />
-                <Route path='/wallet/*' element={<Wallet />} />
+                <Route path='/wallet/:id/*' element={<Wallet />} />
               </Routes>
             </App>
           }

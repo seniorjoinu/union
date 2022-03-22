@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { Text } from '../Text';
 
 const Container = styled.button`
@@ -13,6 +13,21 @@ const Container = styled.button`
   padding: 4px 8px;
   text-decoration: none;
   cursor: pointer;
+  color: #373737;
+
+  ${({ disabled }) =>
+    (disabled
+      ? css`
+          pointer-events: none;
+          border-color: lightgrey;
+          color: grey;
+        `
+      : '')}
+
+  &:hover {
+    color: grey;
+    border-color: lightgrey;
+  }
 `;
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

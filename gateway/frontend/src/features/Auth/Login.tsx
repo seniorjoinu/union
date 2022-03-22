@@ -1,12 +1,18 @@
 import * as React from 'react';
 import styled from 'styled-components';
+import { Select as S, Option } from 'components';
 import { LoginButton, LoginButtonProps } from '../LoginButton';
 import { useAuth, AuthReadyState } from '../../services';
 
+const Select = styled(S)``;
 const Container = styled.section`
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  & > ${Select} {
+    margin-bottom: 16px;
+  }
 `;
 
 export interface LoginProps {
@@ -16,6 +22,8 @@ export interface LoginProps {
 const mnemonics: { id: string; mnemonic: string }[] = [
   { id: 'User 1', mnemonic: 'some test mnemonic 1' },
   { id: 'User 2', mnemonic: 'some test mnemonic 2' },
+  { id: 'User 3', mnemonic: 'some test mnemonic 3' },
+  { id: 'User 4', mnemonic: 'some test mnemonic 4' },
 ];
 
 export function Login({ buttonProps, ...p }: LoginProps) {
@@ -26,18 +34,18 @@ export function Login({ buttonProps, ...p }: LoginProps) {
 
   return (
     <Container {...p}>
-      <select
+      <Select
         title='Select identity'
         disabled={authorized}
         onChange={(e) => setSelected(mnemonics.find((mnemonic) => mnemonic.id == e.target.value)!)}
         value={selected.id}
       >
         {mnemonics.map((m) => (
-          <option key={m.id} id={m.id} value={m.id}>
+          <Option key={m.id} id={m.id} value={m.id}>
             {m.id}
-          </option>
+          </Option>
         ))}
-      </select>
+      </Select>
       <LoginButton
         {...buttonProps}
         mnemonic={selected.mnemonic}

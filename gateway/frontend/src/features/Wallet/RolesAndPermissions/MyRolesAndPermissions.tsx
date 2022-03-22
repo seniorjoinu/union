@@ -10,6 +10,15 @@ const Title = styled(Text)``;
 const RoleInfo = styled(R)``;
 const PermissionInfo = styled(P)``;
 
+const Controls = styled.div`
+  display: flex;
+  flex-direction: row;
+
+  & > *:not(:last-child) {
+    margin-right: 16px;
+  }
+`;
+
 const Items = styled.div`
   display: flex;
   flex-direction: column;
@@ -23,36 +32,37 @@ const Container = styled.div`
     margin-bottom: 16px;
   }
 
+  ${Controls} {
+    margin-bottom: 32px;
+  }
+
   ${Items} {
     margin-bottom: 32px;
   }
 
-  ${RoleInfo} {
+  ${RoleInfo}, ${PermissionInfo} {
     margin-bottom: 32px;
   }
 `;
 
-export interface WalletInfoProps {
-  principal: string;
-}
-
-export const WalletInfo = ({ principal }: WalletInfoProps) => {
+export const MyRolesAndPermissions = () => {
   const { roles, permissions, fetching } = useCurrentWallet();
 
   return (
     <Container>
+      <Title variant='h2'>Мои роли и пермиссии</Title>
       <Title variant='h4'>Роли</Title>
       <Items>
         {fetching.get_my_roles && <Text>fetching</Text>}
         {roles.map((role) => (
-          <RoleInfo key={role.id} role={role} principal={principal} />
+          <RoleInfo key={role.id} role={role} />
         ))}
       </Items>
       <Title variant='h4'>Пермиссии</Title>
       <Items>
         {fetching.get_my_permissions && <Text>fetching</Text>}
         {permissions.map((permission) => (
-          <PermissionInfo key={permission.id} permission={permission} principal={principal} />
+          <PermissionInfo key={permission.id} permission={permission} />
         ))}
       </Items>
     </Container>

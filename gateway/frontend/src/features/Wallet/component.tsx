@@ -2,8 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 import { useParams, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from './context';
-import { WalletInfo } from './WalletInfo';
-import { CreateRole } from './CreateRole';
+import { RolesAndPermissions, MyRolesAndPermissions } from './RolesAndPermissions';
+import { RoleForm } from './RoleForm';
+import { PermissionForm } from './PermissionForm';
+import { Participants } from './Participants';
+import { Invite } from './Invite';
 
 const Container = styled.div`
   display: flex;
@@ -12,7 +15,7 @@ const Container = styled.div`
 
 export const Wallet = () => {
   const params = useParams();
-  const principal = params['*'];
+  const principal = params.id;
 
   if (!principal) {
     return <Navigate to='/wallets' replace />;
@@ -22,8 +25,15 @@ export const Wallet = () => {
     <Provider principal={principal}>
       <Container>
         <Routes>
-          <Route path='/*' element={<WalletInfo principal={principal} />} />
-          <Route path='/create-role' element={<CreateRole principal={principal} />} />
+          <Route path='/role/create' element={<RoleForm create />} />
+          <Route path='/role/edit/:roleId' element={<RoleForm />} />
+          <Route path='/permission/create' element={<PermissionForm create />} />
+          <Route path='/permission/edit/:permissionId' element={<PermissionForm />} />
+          <Route path='/my-rnp' element={<MyRolesAndPermissions />} />
+          <Route path='/rnp' element={<RolesAndPermissions />} />
+          <Route path='/invite' element={<Invite />} />
+          <Route path='/participants' element={<Participants />} />
+          <Route path='' element={<Navigate to='my-rnp' />} />
         </Routes>
       </Container>
     </Provider>
