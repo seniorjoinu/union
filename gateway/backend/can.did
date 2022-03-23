@@ -1,0 +1,20 @@
+type TransferControlRequest = record {
+    new_controller : principal;
+};
+
+type AttachToUnionWalletRequest = record {
+    union_wallet_id : principal;
+};
+
+type DetachFromUnionWalletRequest = AttachToUnionWalletRequest;
+
+type GetAttachedUnionWalletsResponse = record {
+    wallet_ids : vec principal;
+};
+
+service : (principal) -> {
+    "transfer_control" : (TransferControlRequest) -> ();
+    "attach_to_union_wallet" : (AttachToUnionWalletRequest) -> ();
+    "detach_from_union_wallet" : (DetachFromUnionWalletRequest) -> ();
+    "get_attached_union_wallets" : () -> (GetAttachedUnionWalletsResponse) query;
+}
