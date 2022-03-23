@@ -1,10 +1,10 @@
-mod deployer;
+mod common;
 
 use ic_cdk::export::candid::{encode_args, export_service};
 use ic_cdk::export::Principal;
 use ic_cdk::{caller, id};
 use ic_cdk_macros::{query, update};
-use deployer::deploy_canister_install_code_update_settings;
+use common::deploy_canister_install_code_update_settings;
 use union_deployer_client::types::{SpawnRequest, UpdateCodeRequest};
 
 const ANONYMOUS_SUFFIX: u8 = 4;
