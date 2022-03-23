@@ -1,6 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Header } from '../features/Header';
+import { Header as H } from '../features/Header';
+
+const Header = styled(H)``;
 
 const Content = styled.section`
   display: flex;
@@ -14,8 +16,18 @@ const Container = styled.main`
   justify-content: center;
   height: 100%;
 
+  ${Header} {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    background: white;
+  }
+
   ${Content} {
-    padding: 32px 64px;
+    z-index: 1;
+    padding: 64px 64px 32px 64px;
     align-self: center;
     min-width: 700px;
   }

@@ -1,99 +1,94 @@
 {
-	"env": {
-		"browser": true,
-		"es2020": true
-	},
-	"ignorePatterns": ["**/assets/*.*s"],
-	"extends": [
-    "plugin:@typescript-eslint/recommended",
-		"plugin:react/recommended",
-		"airbnb"
-	],
-	"parser": "@typescript-eslint/parser",
-	"parserOptions": {
-		"ecmaFeatures": {
-			"jsx": true
-		},
-		"ecmaVersion": 11,
-		"sourceType": "module"
-	},
-	"plugins": [
-		"react",
-		"@typescript-eslint"
-	],
-	"rules": {
-		"consistent-return": 0,
-		"implicit-arrow-linebreak": 0,
-		"object-curly-newline": 0,
-		"react/no-unused-prop-types": "off",
-		"react/static-property-placement": "off",
-		"react/require-default-props": "off",
-		"react/sort-comp": "off",
-		"react/no-unescaped-entities": "off",
-		"react/jsx-curly-newline": "off",
-		"@typescript-eslint/no-empty-interface": "off",
-		"jsx-a11y/anchor-is-valid": "off",
-		"lines-between-class-members": "off",
-		"@typescript-eslint/explicit-module-boundary-types": "off",
-		"react/jsx-one-expression-per-line": 0,
-		"react/jsx-wrap-multilines": 0,
-		"@typescript-eslint/no-explicit-any": 0,
-		"no-plusplus": 0,
-		"react/state-in-constructor": 0,
-		"no-shadow": 0,
-		"react/jsx-props-no-spreading": 0,
-		"import/no-unresolved": 0,
-		"import/extensions": 0,
-		"no-tabs": 0,
-		"react/no-typos": 0,
-		"react/prop-types": 0,
-		"no-undef": 0,
-		"import/prefer-default-export": 0,
-		"no-use-before-define": 0,
-		"react/jsx-indent": [1, 2],
-		"react/jsx-indent-props": [1, 2],
-		"indent": 0,
-		"jsx-quotes": [1, "prefer-single"],
-		"react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx", ".ts", ".tsx"] }],
+  "env": {
+    "browser": true,
+    "es2020": true
+  },
+  "ignorePatterns": ["**/assets/*.*s"],
+  "extends": ["plugin:@typescript-eslint/recommended", "plugin:react/recommended", "airbnb"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 11,
+    "sourceType": "module"
+  },
+  "plugins": ["react", "@typescript-eslint"],
+  "rules": {
+    "consistent-return": 0,
+    "implicit-arrow-linebreak": 0,
+    "object-curly-newline": 0,
+    "react/no-unused-prop-types": "off",
+    "react/static-property-placement": "off",
+    "react/require-default-props": "off",
+    "react/sort-comp": "off",
+    "react/no-unescaped-entities": "off",
+    "react/jsx-curly-newline": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    "jsx-a11y/anchor-is-valid": "off",
+    "lines-between-class-members": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "react/jsx-one-expression-per-line": 0,
+    "react/jsx-wrap-multilines": 0,
+    "@typescript-eslint/no-explicit-any": 0,
+    "no-plusplus": 0,
+    "react/state-in-constructor": 0,
+    "no-shadow": 0,
+    "react/jsx-props-no-spreading": 0,
+    "import/no-unresolved": 0,
+    "import/extensions": 0,
+    "no-tabs": 0,
+    "react/no-typos": 0,
+    "react/prop-types": 0,
+    "no-undef": 0,
+    "import/prefer-default-export": 0,
+    "no-use-before-define": 0,
+    "react/jsx-indent": [1, 2],
+    "react/jsx-indent-props": [1, 2],
+    "indent": 0,
+    "jsx-quotes": [1, "prefer-single"],
+    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx", ".ts", ".tsx"] }],
 
-		"no-underscore-dangle": 0,
-		"react/button-has-type": 0,
-		"no-restricted-syntax": 0,
-		"guard-for-in": 0,
-		"eqeqeq": 0,
-		"no-multi-assign": 0,
-		"@typescript-eslint/no-non-null-assertion": 0,
-		"@typescript-eslint/ban-ts-comment": 0,
-		"@typescript-eslint/indent": 0,
-		"@typescript-eslint/no-use-before-define": 0,
-		"@typescript-eslint/explicit-function-return-type": 0,
-		"@typescript-eslint/no-unused-vars": 2,
-		"@typescript-eslint/semi": 2,
-		"@typescript-eslint/no-unnecessary-type-assertion": 0,
-		"@typescript-eslint/explicit-member-accessibility": 0,
-		"import/newline-after-import": [2, { "count": 1 }],
-		"import/no-duplicates": 2,
-		"import/order": [
-			2,
-			{
-				"groups": ["builtin", ["external", "internal"], "parent", ["sibling", "index"]]
-			}
-		],
-		"import/named": 0,
-		"import/namespace": 0,
-		"no-multi-spaces": 2,
-		"no-multi-str": 2,
-		"no-console": [1, { "allow": ["warn", "error"] }],
-		"no-debugger": 1,
-		"no-alert": 2,
-		"comma-spacing": 2,
-		"func-call-spacing": 2,
-		"key-spacing": [2, { "mode": "strict" }],
-		"padding-line-between-statements": [
-			2,
-			{ "blankLine": "always", "prev": ["const", "let", "var"], "next": "*" },
-			{ "blankLine": "never", "prev": "import", "next": "import" },
-			{ "blankLine": "any", "prev": ["const", "let", "var"], "next": ["const", "let", "var"] }
-		]
-	}
+    "no-return-assign": 0,
+    "no-param-reassign": 0,
+    "no-underscore-dangle": 0,
+    "react/button-has-type": 0,
+    "no-restricted-syntax": 0,
+    "guard-for-in": 0,
+    "eqeqeq": 0,
+    "no-multi-assign": 0,
+    "@typescript-eslint/no-non-null-assertion": 0,
+    "@typescript-eslint/ban-ts-comment": 0,
+    "@typescript-eslint/indent": 0,
+    "@typescript-eslint/no-use-before-define": 0,
+    "@typescript-eslint/explicit-function-return-type": 0,
+    "@typescript-eslint/no-unused-vars": 2,
+    "@typescript-eslint/semi": 2,
+    "@typescript-eslint/no-unnecessary-type-assertion": 0,
+    "@typescript-eslint/explicit-member-accessibility": 0,
+    "import/newline-after-import": [2, { "count": 1 }],
+    "import/no-duplicates": 2,
+    "import/order": [
+      2,
+      {
+        "groups": ["builtin", ["external", "internal"], "parent", ["sibling", "index"]]
+      }
+    ],
+    "import/named": 0,
+    "import/namespace": 0,
+    "no-multi-spaces": 2,
+    "no-multi-str": 2,
+    "no-console": [1, { "allow": ["warn", "error"] }],
+    "no-debugger": 1,
+    "no-alert": 2,
+    "comma-spacing": 2,
+    "func-call-spacing": 2,
+    "key-spacing": [2, { "mode": "strict" }],
+    "padding-line-between-statements": [
+      2,
+      { "blankLine": "always", "prev": ["const", "let", "var"], "next": "*" },
+      { "blankLine": "never", "prev": "import", "next": "import" },
+      { "blankLine": "any", "prev": ["const", "let", "var"], "next": ["const", "let", "var"] }
+    ]
+  }
 }

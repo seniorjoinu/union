@@ -17,7 +17,7 @@ const Container = styled.div`
   }
 `;
 
-export interface TextFieldProps extends React.ButtonHTMLAttributes<HTMLInputElement> {
+export interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
 }
 

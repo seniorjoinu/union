@@ -4,6 +4,7 @@ import { IDL } from '@dfinity/candid';
 import { _SERVICE } from 'wallet-ts';
 // @ts-expect-error
 import { idlFactory as idl } from 'wallet-idl';
+import './idl-monkey-patching';
 
 export type IWalletController = AuthCanisterController<_SERVICE>;
 
@@ -61,6 +62,9 @@ export const useWallet = (canisterId: string) => {
 };
 
 const idlFactory = idl({ IDL }) as IDL.ServiceClass;
+
+// @ts-expect-error
+window.idl = idlFactory;
 
 export const walletSerializer = idlFactory._fields.reduce((acc, next) => {
   const func = next[1] as IDL.FuncClass;

@@ -4,6 +4,7 @@ import { useParams, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from './context';
 import { RolesAndPermissions, MyRolesAndPermissions } from './RolesAndPermissions';
 import { RoleForm } from './RoleForm';
+import { RoleDetails } from './RoleDetails';
 import { PermissionForm } from './PermissionForm';
 import { Participants } from './Participants';
 import { Invite } from './Invite';
@@ -27,6 +28,7 @@ export const Wallet = () => {
         <Routes>
           <Route path='/role/create' element={<RoleForm create />} />
           <Route path='/role/edit/:roleId' element={<RoleForm />} />
+          <Route path='/role/:roleId' element={<RoleDetails />} />
           <Route path='/permission/create' element={<PermissionForm create />} />
           <Route path='/permission/edit/:permissionId' element={<PermissionForm />} />
           <Route path='/my-rnp' element={<MyRolesAndPermissions />} />

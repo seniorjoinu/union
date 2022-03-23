@@ -6,5 +6,6 @@ export * from './Button';
 export * from './Select';
 export * from './TextField';
 export * from './MultiSelect';
+export * from './ListSelect';
 export * from './Chips';
 export * from './theme';

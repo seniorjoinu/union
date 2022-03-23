@@ -71,10 +71,10 @@ export const RolesAndPermissions = () => {
     <Container>
       <Title variant='h2'>Роли и пермиссии</Title>
       <Controls>
-        <Button forwardedAs={NavLink} to='role/create'>
+        <Button forwardedAs={NavLink} to='../role/create'>
           Создать новую роль
         </Button>
-        <Button forwardedAs={NavLink} to='permission/create'>
+        <Button forwardedAs={NavLink} to='../permission/create'>
           Создать новую пермиссию
         </Button>
       </Controls>
@@ -82,14 +82,19 @@ export const RolesAndPermissions = () => {
       <Items>
         {(fetching.get_role_ids || fetching.get_roles) && <Text>fetching</Text>}
         {roles.map((role) => (
-          <RoleInfo key={role.id} role={role} editable />
+          <RoleInfo key={role.id} role={role} href={`../role/${role.id}`} editable />
         ))}
       </Items>
       <Title variant='h4'>Пермиссии</Title>
       <Items>
         {(fetching.get_permission_ids || fetching.get_permissions) && <Text>fetching</Text>}
         {permissions.map((permission) => (
-          <PermissionInfo key={permission.id} permission={permission} editable />
+          <PermissionInfo
+            key={permission.id}
+            permission={permission}
+            href={`../permission/${permission.id}`}
+            editable
+          />
         ))}
       </Items>
     </Container>

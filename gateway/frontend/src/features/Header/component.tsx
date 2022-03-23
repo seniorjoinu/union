@@ -25,7 +25,7 @@ const Container = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.dark[900]};
 `;
 
-export function Header() {
+export function Header(p: IClassName) {
   const param = useParams();
   const location = param['*'] || '';
 
@@ -33,7 +33,7 @@ export function Header() {
   const walletId = location.split('wallet/')[1]?.split('/')[0];
 
   return (
-    <Container>
+    <Container {...p}>
       <Items>
         <Text variant='p1' as={NavLink} to='/wallets'>
           Wallets

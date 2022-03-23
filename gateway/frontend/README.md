@@ -1,6 +1,7 @@
 # Union wallet general frontend
 
 ## Quick start
+
 - `dfx start --clean`
 - `dfx build --all --check` for `wallet-backend`
 - `dfx deploy` for `wallet-deployer`
@@ -12,61 +13,67 @@
 Here is described the target infrastructure deployment option as it should be in production. This case is to be implemented.
 
 ### Start infrastructure
+
 - deploy root union-wallet `dfx deploy union-wallet --argument '(principal "$(dfx identity get-principal)")'`
-- *setup roles
+- \*setup roles
 - get `certified_assets` canister wasm.
 - Setup and run facade execution #1
-	- execute `create canister` call to management canister throught union-wallet. Now, principal of `union-wallet` is controller.
-	- execute `install code` call to management canister throught union-wallet with `certified_assets` wasm. Pass `union-wallet` principal to init args (this will authorize `union-wallet` principal for assets upload).
+  - execute `create canister` call to management canister throught union-wallet. Now, principal of `union-wallet` is controller.
+  - execute `install code` call to management canister throught union-wallet with `certified_assets` wasm. Pass `union-wallet` principal to init args (this will authorize `union-wallet` principal for assets upload).
 - Now, we are have `frontend` canister with `union-wallet` principal as single controller and single authorized uploader.
 
 NOTE: every facade operation might be simplified by deployer canister implementation
 
-
 ### First upload assets
+
 - Build frontend and get assets folder. Assets must me less than 2mb (for simplicity first)
 - Setup and run facade execution #2 (first deloy only)
-	- execute `create_batch` call to `frontend` and get `batch_id`
-	- execute `create_chunk` call to `frontend` with recieved `batch_id` and content (as byte array) of every file
-	- ... make previous step for every asset from dist
-	- execute `commit_batch` call to `frontend` with recieved `batch_id` and chunk_ids like this
-		```
-		commit_batch({
-			batch_id,
-			operations: [
-				{ CreateAsset: { key: FILE_1_PATH, content_type: FILE_1_CONTENT_TYPE } },
-				{ SetAssetContent: { key: FILE_1_PATH, sha256: [], chunk_ids: [FILE_1_CHUNK_ID], content_encoding: 'identity' } },
-				... repeat for all uploaded files
-			]
-		});
-		```
+  - execute `create_batch` call to `frontend` and get `batch_id`
+  - execute `create_chunk` call to `frontend` with recieved `batch_id` and content (as byte array) of every file
+  - ... make previous step for every asset from dist
+  - execute `commit_batch` call to `frontend` with recieved `batch_id` and chunk_ids like this
+    ```
+    commit_batch({
+    	batch_id,
+    	operations: [
+    		{ CreateAsset: { key: FILE_1_PATH, content_type: FILE_1_CONTENT_TYPE } },
+    		{ SetAssetContent: { key: FILE_1_PATH, sha256: [], chunk_ids: [FILE_1_CHUNK_ID], content_encoding: 'identity' } },
+    		... repeat for all uploaded files
+    	]
+    });
+    ```
 - Now, frontend canister is ready and controlled by root `union wallet`
 
-
 ### Upgrade assets
+
 - Build frontend and get assets folder. Assets must me less than 2mb (for simplicity first)
 - Setup and run facade execution #3
-	- execute `clear` call to `frontend` and get `batch_id`
-	- execute commands from `facade execution #2`
+  - execute `clear` call to `frontend` and get `batch_id`
+  - execute commands from `facade execution #2`
 
 ### Deploy your personal union
+
 `wallet-deployer` must be deployed by root union and will be blackholed. May be `wallet-deployer` will have your separated wallet canister for accepting payments and union deployment.
 
 TODO
 
-
 ## Development case only
+
 - deploy root union-wallet `dfx deploy union-wallet --argument '(principal "$(dfx identity get-principal)")'`
-- *setup roles
+- \*setup roles
 - manually deploy frontend canister
 - authorize `union-wallet` principal for frontend canister
 - add `union-wallet` principal to frontend canister controllers
 - now, we are have a target scheme with additional local controller and able to upload assets and execute votings on `union-wallet`
 
+## Code assumptions
+
+- Used monkey-patching of @dfinity/candid in file `./src/services/controllers/idl-monkey-patching.ts`
 
 ## Troubleshooting
 
 ### Address in use
+
 ```
 ~/.cache/dfinity/uninstall.sh
 lsof -i:8000

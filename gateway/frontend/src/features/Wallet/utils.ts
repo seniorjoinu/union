@@ -1,11 +1,11 @@
-import { RoleType } from 'wallet-ts';
+import { RoleType, Permission } from 'wallet-ts';
 
 export type ParsedRoleType = {
   title: string;
   description: string;
   enumerated: number[];
   threshold: number;
-  type: '' | 'FractionOf' | 'QuantityOf';
+  type: '' | 'Profile' | 'Everyone' | 'FractionOf' | 'QuantityOf';
   principal: string;
 };
 
@@ -25,6 +25,7 @@ export const parseRole = (type: RoleType): ParsedRoleType => {
       title: type.Profile.name,
       description: type.Profile.description,
       principal: type.Profile.principal_id.toString(),
+      type: 'Profile',
     };
   }
   if ('FractionOf' in type) {
@@ -41,6 +42,7 @@ export const parseRole = (type: RoleType): ParsedRoleType => {
     return {
       ...defaultRole,
       title: 'Everyone',
+      type: 'Everyone',
     };
   }
   if ('QuantityOf' in type) {
@@ -55,4 +57,45 @@ export const parseRole = (type: RoleType): ParsedRoleType => {
   }
 
   return defaultRole;
+};
+
+export type ParsedTarget = {
+  type: 'Canister' | 'SelfEmptyProgram' | 'Endpoint';
+  principal?: string;
+  canisterId?: string;
+  method?: string;
+};
+
+export type ParsedPermission = {
+  name: string;
+  scope: string;
+  targets: ParsedTarget[];
+};
+
+export const parsePermission = (permission: Permission): ParsedPermission => {
+  const targets = permission.targets.map((target) => {
+    if ('Canister' in target) {
+      return {
+        principal: target.Canister.toString(),
+        type: 'Canister' as ParsedTarget['type'],
+      };
+    }
+    if ('SelfEmptyProgram' in target) {
+      return {
+        type: 'SelfEmptyProgram' as ParsedTarget['type'],
+      };
+    }
+
+    return {
+      type: 'Endpoint' as ParsedTarget['type'],
+      canisterId: target.Endpoint.canister_id.toString(),
+      method: target.Endpoint.method_name,
+    };
+  });
+
+  return {
+    name: permission.name,
+    scope: Object.keys(permission.scope)[0] || '',
+    targets,
+  };
 };

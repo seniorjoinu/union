@@ -1,6 +1,6 @@
 import { Principal } from '@dfinity/principal';
 import { useCallback } from 'react';
-import { RoleType } from 'wallet-ts';
+import { PermissionScope, PermissionTarget } from 'wallet-ts';
 import { useWallet, walletSerializer } from '../../../services';
 import { useCurrentWallet } from '../context';
 import { UseSubmitProps } from './types';
@@ -21,32 +21,22 @@ export const useCreate = ({ create, getValues }: UseCreateProps) => {
 
     const values = getValues();
 
-    let roleType: RoleType = { Everyone: null };
-
-    if (values.type == 'FractionOf') {
-      roleType = {
-        FractionOf: {
-          name: values.name,
-          description: values.description,
-          fraction: values.threshold,
-          enumerated: values.owners.map((e) => Number(e)),
-        },
+    const scope = { [values.scope]: null } as PermissionScope;
+    const targets: PermissionTarget[] = values.targets.map((t) => {
+      if (!t.canisterId) {
+        return { SelfEmptyProgram: null };
+      }
+      if (t.canisterId && !t.methodName) {
+        return { Canister: Principal.fromText(t.canisterId) };
+      }
+      return {
+        Endpoint: { canister_id: Principal.fromText(t.canisterId), method_name: t.methodName },
       };
-    } else {
-      roleType = {
-        QuantityOf: {
-          name: values.name,
-          description: values.description,
-          // @ts-expect-error
-          quantity: BigInt(values.threshold),
-          enumerated: values.owners.map((e) => Number(e)),
-        },
-      };
-    }
+    });
 
     const result = await canister.execute({
-      title: 'Create new role',
-      description: 'Create new role through interface',
+      title: 'Create new permission',
+      description: 'Create new permission through interface',
       rnp,
       authorization_delay_nano: BigInt(100),
       program: {
@@ -54,11 +44,13 @@ export const useCreate = ({ create, getValues }: UseCreateProps) => {
           {
             endpoint: {
               canister_id: Principal.fromText(principal),
-              method_name: 'create_role',
+              method_name: 'create_permission',
             },
             cycles: BigInt(0),
-            args_candid: walletSerializer.create_role({
-              role_type: roleType,
+            args_candid: walletSerializer.create_permission({
+              name: values.name,
+              scope,
+              targets,
             }),
           },
         ],

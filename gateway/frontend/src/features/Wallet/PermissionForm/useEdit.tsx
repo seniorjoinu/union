@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTrigger } from 'toolkit';
 import { useWallet } from '../../../services';
-import { parseRole } from '../utils';
+import { parsePermission } from '../utils';
 import { useCurrentWallet } from '../context';
 import { UseSubmitProps } from './types';
 
@@ -13,38 +13,39 @@ export interface UseEditProps {
 }
 
 export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
-  const { roleId } = useParams();
+  const { permissionId } = useParams();
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
   useTrigger(
     async (rnp) => {
-      if (create || !roleId) {
+      if (create || !permissionId) {
         return;
       }
 
-      canister.get_roles({ rnp, ids: [Number(roleId)] });
+      canister.get_permissions({ rnp, ids: [Number(permissionId)] });
     },
     rnp,
-    [setValue, roleId],
+    [setValue, permissionId],
   );
 
   useTrigger(
-    ({ roles }) => {
-      if (!roles.length) {
+    ({ permissions }) => {
+      if (!permissions.length) {
         return;
       }
 
-      const roleType = parseRole(roles[0].role_type);
+      const parsed = parsePermission(permissions[0]);
 
-      setValue('name', roleType.title);
-      setValue('threshold', roleType.threshold);
-      if (roleType.type) {
-        setValue('type', roleType.type);
-      }
+      setValue('name', parsed.name);
+      setValue('scope', parsed.scope);
+      setValue(
+        'targets',
+        parsed.targets.map((t) => ({ canisterId: t.canisterId || '', methodName: t.method || '' })),
+      );
     },
-    data.get_roles,
-    [data.get_roles, setValue],
+    data.get_permissions,
+    [data.get_permissions, setValue],
   );
 
   const onEdit = useCallback(async () => {
@@ -57,23 +58,16 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
     return { fallback, onEdit };
   }
 
-  if (!roleId) {
-    fallback = <span>RoleId is empty</span>;
+  if (!permissionId) {
+    fallback = <span>PermissionId is empty</span>;
   }
 
-  if (fetching.get_roles) {
+  if (fetching.get_permissions) {
     fallback = <span>fetching</span>;
   }
 
-  if (!data.get_roles?.roles.length) {
-    fallback = <span>Role does not found</span>;
-  }
-
-  const roleType = data.get_roles?.roles[0]?.role_type || {};
-  const validRole = 'QuantityOf' in roleType || 'FractionOf' in roleType;
-
-  if (!validRole) {
-    fallback = <span>Role does not support</span>;
+  if (!data.get_permissions?.permissions.length) {
+    fallback = <span>Permission does not found</span>;
   }
 
   return {

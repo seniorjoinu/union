@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import {
   Text,
@@ -7,12 +8,14 @@ import {
   Option,
   TextField as TF,
   Button as B,
-  MultiSelect as MS,
+  ListSelect as LS,
 } from 'components';
-import { checkPrincipal } from 'toolkit';
-import { useEdit } from './useEdit';
+import { useRoles } from '../Participants';
+import { parseRole } from '../utils';
+import { useSubmit } from './useSubmit';
+import { FormData } from './types';
 
-const MultiSelect = styled(MS)``;
+const ListSelect = styled(LS)``;
 const Select = styled(S)``;
 const Button = styled(B)``;
 const Title = styled(Text)``;
@@ -35,7 +38,7 @@ const Container = styled.div`
     margin-bottom: 64px;
   }
 
-  ${TextField}, ${Select} {
+  ${TextField}, ${Select}, ${ListSelect} {
     margin-bottom: 24px;
   }
 
@@ -45,13 +48,6 @@ const Container = styled.div`
   }
 `;
 
-interface FormData {
-  name: string;
-  threshold: number;
-  type: 'FractionOf' | 'QuantityOf';
-  owners: string[];
-}
-
 export interface RoleFormProps {
   create?: boolean;
 }
@@ -59,20 +55,30 @@ export interface RoleFormProps {
 export const RoleForm = ({ create }: RoleFormProps) => {
   const {
     control,
-    getValues,
     setValue,
+    getValues,
     formState: { isValid },
   } = useForm<FormData>({
-    defaultValues: { name: '', threshold: 1, type: 'QuantityOf', owners: [] },
+    defaultValues: {
+      name: '',
+      description: '',
+      threshold: 1,
+      type: 'QuantityOf',
+      owners: [],
+    },
     mode: 'onTouched',
   });
-  const { fallback } = useEdit({ create, setValue });
+  const nav = useNavigate();
+  const { fallback, submitting, onSubmit } = useSubmit({ create, setValue, getValues });
+  const { roles } = useRoles();
+
+  const submit = useCallback(() => {
+    onSubmit().then(() => nav(-1));
+  }, [onSubmit, nav]);
 
   if (fallback) {
     return fallback;
   }
-
-  console.log('!!!', isValid, getValues());
 
   return (
     <Container>
@@ -82,6 +88,12 @@ export const RoleForm = ({ create }: RoleFormProps) => {
         control={control}
         rules={{ required: 'Обязательное поле' }}
         render={({ field }) => <TextField {...field} label='Наименование роли' />}
+      />
+      <Controller
+        name='description'
+        control={control}
+        rules={{ required: 'Обязательное поле' }}
+        render={({ field }) => <TextField {...field} label='Описание роли' />}
       />
       <Thresholds>
         <Controller
@@ -107,14 +119,23 @@ export const RoleForm = ({ create }: RoleFormProps) => {
         control={control}
         rules={{
           required: 'Обязательное поле',
-          validate: {
-            isPrincipal: (value) =>
-              value.reduce((acc, next) => acc && checkPrincipal(next) !== null, true as boolean),
-          },
         }}
-        render={({ field }) => <MultiSelect {...field} label='Обладатели роли' />}
+        render={({ field }) => (
+          <ListSelect
+            {...field}
+            label='Обладатели роли'
+            from={roles.map((r) => {
+              const parsed = parseRole(r.role_type);
+
+              return {
+                id: r.id.toString(),
+                content: `${r.id} ${parsed.title} ${parsed.principal}`.trim(),
+              };
+            })}
+          />
+        )}
       />
-      <Button type='submit' disabled={!isValid}>
+      <Button type='submit' disabled={!isValid || submitting} onClick={submit}>
         {create ? 'Создать' : 'Обновить'}
       </Button>
     </Container>

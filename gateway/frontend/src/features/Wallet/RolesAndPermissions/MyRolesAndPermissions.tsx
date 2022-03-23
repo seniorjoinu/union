@@ -55,14 +55,18 @@ export const MyRolesAndPermissions = () => {
       <Items>
         {fetching.get_my_roles && <Text>fetching</Text>}
         {roles.map((role) => (
-          <RoleInfo key={role.id} role={role} />
+          <RoleInfo key={role.id} role={role} href={`../role/${role.id}`} />
         ))}
       </Items>
       <Title variant='h4'>Пермиссии</Title>
       <Items>
         {fetching.get_my_permissions && <Text>fetching</Text>}
         {permissions.map((permission) => (
-          <PermissionInfo key={permission.id} permission={permission} />
+          <PermissionInfo
+            key={permission.id}
+            permission={permission}
+            href={`../permission/${permission.id}`}
+          />
         ))}
       </Items>
     </Container>
