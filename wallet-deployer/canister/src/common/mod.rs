@@ -1,16 +1,18 @@
 pub mod deployer;
+pub mod guards;
 pub mod management_canister_client;
 pub mod types;
 pub mod utils;
 
+use crate::common::types::Blob;
 use crate::common::utils::ToCandidType;
 use ic_cdk::export::candid::Principal;
 use management_canister_client::*;
 
 pub async fn deploy_canister_install_code_update_settings(
     this: Principal,
-    args_raw: Vec<u8>,
-    wasm: Vec<u8>,
+    args_raw: Blob,
+    wasm: Blob,
 ) -> Principal {
     let cycles = 1_000_000_000_000u64;
     let management_canister = Principal::management_canister();
@@ -44,4 +46,17 @@ pub async fn deploy_canister_install_code_update_settings(
         .expect("Unable to update settings");
 
     resp.canister_id
+}
+
+pub async fn upgrade_canister(canister_id: Principal, wasm: Blob) {
+    Principal::management_canister()
+        .install_code(InstallCodeRequest {
+            wasm_module: wasm,
+            canister_id,
+            mode: CanisterInstallMode::upgrade,
+            arg: vec![],
+        })
+        .await
+        .to_candid_type()
+        .expect("Unable to install code");
 }

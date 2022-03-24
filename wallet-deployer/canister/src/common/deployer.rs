@@ -1,19 +1,33 @@
 use crate::common::types::{
-    Blob, DeployerError, UnionWalletBinary, UnionWalletBinaryStatus, UnionWalletInstance,
+    BinaryInstance, BinaryVersionInfo, BinaryVersionStatus, Blob, DeployerError,
 };
 use crate::common::utils::validate_and_trim_str;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
-#[derive(Default, CandidType, Deserialize)]
+#[derive(CandidType, Deserialize)]
 pub struct State {
-    pub instances: HashMap<Principal, UnionWalletInstance>,
-    pub binaries: HashMap<String, UnionWalletBinary>,
+    pub controller: Principal,
+    pub instances: HashMap<Principal, BinaryInstance>,
+    pub binary_version_infos: HashMap<String, BinaryVersionInfo>,
     pub latest_version: Option<String>,
 }
 
 impl State {
+    pub fn new(controller: Principal) -> Self {
+        Self {
+            controller,
+            instances: HashMap::default(),
+            binary_version_infos: HashMap::default(),
+            latest_version: None,
+        }
+    }
+
+    pub fn transfer_control(&mut self, new_controller: Principal) {
+        self.controller = new_controller;
+    }
+
     pub fn create_binary_version(
         &mut self,
         mut version: String,
@@ -26,13 +40,13 @@ impl State {
         description = validate_and_trim_str(description, 10, 5000, "Description")
             .map_err(DeployerError::ValidationError)?;
 
-        if self.binaries.contains_key(&version) {
+        if self.binary_version_infos.contains_key(&version) {
             return Err(DeployerError::BinaryVersionAlreadyExists);
         }
 
-        let binary_version = UnionWalletBinary::new(version.clone(), description, timestamp);
+        let binary_version = BinaryVersionInfo::new(version.clone(), description, timestamp);
 
-        self.binaries.insert(version, binary_version);
+        self.binary_version_infos.insert(version, binary_version);
 
         Ok(())
     }
@@ -40,21 +54,18 @@ impl State {
     pub fn update_binary_version_description(
         &mut self,
         version: &str,
-        new_description: Option<String>,
+        mut new_description: String,
         timestamp: u64,
     ) -> Result<(), DeployerError> {
         let binary_version = self
-            .binaries
+            .binary_version_infos
             .get_mut(version)
             .ok_or(DeployerError::BinaryVersionNotFound)?;
 
-        if let Some(mut new_description) = new_description {
-            new_description = validate_and_trim_str(new_description, 10, 5000, "Description")
-                .map_err(DeployerError::ValidationError)?;
+        new_description = validate_and_trim_str(new_description, 10, 5000, "Description")
+            .map_err(DeployerError::ValidationError)?;
 
-            binary_version.description = new_description;
-        }
-
+        binary_version.description = new_description;
         binary_version.updated_at = timestamp;
 
         Ok(())
@@ -66,17 +77,17 @@ impl State {
         timestamp: u64,
     ) -> Result<(), DeployerError> {
         let binary_version = self
-            .binaries
+            .binary_version_infos
             .get_mut(version)
             .ok_or(DeployerError::BinaryVersionNotFound)?;
 
         match binary_version.status {
-            UnionWalletBinaryStatus::Created => {
+            BinaryVersionStatus::Created => {
                 if binary_version.binary.is_none() {
                     return Err(DeployerError::MissingBinary);
                 }
 
-                binary_version.status = UnionWalletBinaryStatus::Released;
+                binary_version.status = BinaryVersionStatus::Released;
                 binary_version.updated_at = timestamp;
                 self.latest_version = Some(String::from(version));
 
@@ -92,12 +103,12 @@ impl State {
         timestamp: u64,
     ) -> Result<(), DeployerError> {
         let binary_version = self
-            .binaries
+            .binary_version_infos
             .get_mut(version)
             .ok_or(DeployerError::BinaryVersionNotFound)?;
 
         match binary_version.status {
-            UnionWalletBinaryStatus::Deleted => Err(DeployerError::BinaryVersionHasWrongStatus),
+            BinaryVersionStatus::Deleted => Err(DeployerError::BinaryVersionHasWrongStatus),
             _ => {
                 if let Some(latest) = &self.latest_version {
                     if latest == version {
@@ -105,7 +116,7 @@ impl State {
                     }
                 }
 
-                binary_version.status = UnionWalletBinaryStatus::Deleted;
+                binary_version.status = BinaryVersionStatus::Deleted;
                 binary_version.updated_at = timestamp;
                 binary_version.binary = None;
 
@@ -121,7 +132,7 @@ impl State {
         timestamp: u64,
     ) -> Result<(), DeployerError> {
         let binary_version = self
-            .binaries
+            .binary_version_infos
             .get_mut(version)
             .ok_or(DeployerError::BinaryVersionNotFound)?;
 
@@ -137,16 +148,20 @@ impl State {
     }
 
     pub fn get_binary_versions(&self) -> Vec<String> {
-        self.binaries.keys().cloned().into_iter().collect()
+        self.binary_version_infos
+            .keys()
+            .cloned()
+            .into_iter()
+            .collect()
     }
 
-    pub fn get_binary_version(&self, version: &str) -> Result<UnionWalletBinary, DeployerError> {
+    pub fn get_binary_version(&self, version: &str) -> Result<BinaryVersionInfo, DeployerError> {
         let binary_version = self
-            .binaries
+            .binary_version_infos
             .get(version)
             .ok_or(DeployerError::BinaryVersionNotFound)?;
 
-        Ok(UnionWalletBinary {
+        Ok(BinaryVersionInfo {
             version: binary_version.version.clone(),
             description: binary_version.description.clone(),
             status: binary_version.status,
@@ -162,11 +177,21 @@ impl State {
 
     pub fn download_binary(&self, version: &str) -> Result<Option<Blob>, DeployerError> {
         let binary_version = self
-            .binaries
+            .binary_version_infos
             .get(version)
             .ok_or(DeployerError::BinaryVersionNotFound)?;
 
         Ok(binary_version.binary.clone())
+    }
+
+    pub fn get_non_deleted_binary(&self, version: &str) -> Result<Blob, DeployerError> {
+        self.get_binary_version(version)?.check_not_deleted()?;
+
+        let binary = self
+            .download_binary(version)?
+            .ok_or(DeployerError::MissingBinary)?;
+
+        Ok(binary)
     }
 
     pub fn set_instance_version(
@@ -183,7 +208,7 @@ impl State {
                 instance.upgraded_at = timestamp;
             }
             Entry::Vacant(e) => {
-                let instance = UnionWalletInstance {
+                let instance = BinaryInstance {
                     binary_version: version,
                     canister_id: instance_id,
                     created_at: timestamp,
@@ -199,13 +224,16 @@ impl State {
         self.instances.keys().cloned().collect()
     }
 
-    pub fn get_instance(
-        &self,
-        instance_id: &Principal,
-    ) -> Result<UnionWalletInstance, DeployerError> {
+    pub fn get_instance(&self, instance_id: &Principal) -> Result<BinaryInstance, DeployerError> {
         self.instances
             .get(instance_id)
             .cloned()
             .ok_or(DeployerError::InstanceNotFound)
+    }
+
+    pub fn get_latest_version(&self) -> Result<String, DeployerError> {
+        self.latest_version
+            .clone()
+            .ok_or(DeployerError::LatestVersionDoesNotExist)
     }
 }

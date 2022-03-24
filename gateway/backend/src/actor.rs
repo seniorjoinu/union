@@ -59,14 +59,14 @@ fn init(controller: Principal) {
 
 #[pre_upgrade]
 fn pre_upgrade_hook() {
-    let state = unsafe { STATE.clone().unwrap() };
+    let state = unsafe { STATE.take() };
 
     stable_save((state,)).expect("Unable to save the state")
 }
 
 #[post_upgrade]
 fn post_update_hook() {
-    let (state,): (State,) = stable_restore().expect("Unable to restore the state");
+    let (state,): (Option<State>,) = stable_restore().expect("Unable to restore the state");
 
-    unsafe { STATE = Some(state) }
+    unsafe { STATE = state }
 }

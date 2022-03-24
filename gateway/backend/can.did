@@ -17,4 +17,6 @@ service : (principal) -> {
     "attach_to_union_wallet" : (AttachToUnionWalletRequest) -> ();
     "detach_from_union_wallet" : (DetachFromUnionWalletRequest) -> ();
     "get_attached_union_wallets" : () -> (GetAttachedUnionWalletsResponse) query;
+
+    "export_candid" : () -> (text) query;
 }

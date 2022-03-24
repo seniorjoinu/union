@@ -78,5 +78,31 @@ describe('wallet works fine', () => {
             return profile && profile.name == "Test";
         });
         assert(newRole);
+
+        const result1 = await s.walletClient.execute({
+            title: "Create new permission",
+            description: "Test permission",
+            rnp,
+            authorization_delay_nano: 100n,
+            program: {
+                RemoteCallSequence: [{
+                    endpoint: {
+                        canister_id: s.canister_id,
+                        method_name: "create_permission"
+                    },
+                    cycles: 0n,
+                    args_candid: [`record { name = "Test permission"; targets = vec {} : vec variant { SelfEmptyProgram; Canister : principal; Endpoint : record { canister_id : principal; method_name : text } }; scope = variant { Blacklist } }`]
+                }]
+            }
+        }) as {Executed: HistoryEntryId};
+
+
+        const {entries: entries1} = await s.walletClient.get_history_entries({ids: [result1.Executed], rnp});
+
+        console.log(JSON.stringify(entries1, (key, value) =>
+            typeof value === 'bigint'
+                ? value.toString()
+                : value // return everything else unchanged
+        ), 2);
     });
 });

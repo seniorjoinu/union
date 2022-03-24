@@ -1,15 +1,119 @@
-type SpawnRequest = record {
-    wasm_module : blob;
+type BinaryVersionStatus = variant {
+    Created;
+    Released;
+    Deleted;
 };
 
-type UpdateCodeRequest = record {
-    wasm_module : blob;
+type BinaryVersionInfo = record {
+    version : text;
+    description : text;
+    binary : opt blob;
+    status : BinaryVersionStatus;
+
+    created_at : nat64;
+    updated_at : nat64;
 };
 
-service: {
-    "spawn" : (SpawnRequest) -> (principal);
-    "update_code" : (UpdateCodeRequest) -> (principal);
-    "get_spawned_instances" : () -> (vec principal) query;
+type BinaryInstance = record {
+    canister_id : principal;
+    binary_version : text;
+
+    created_at : nat64;
+    upgraded_at : nat64;
+};
+
+type SpawnWalletRequest = record {
+    version : text;
+    wallet_creator : principal;
+};
+
+type SpawnWalletResponse = record {
+    canister_id : principal;
+};
+
+type UpgradeWalletVersionRequest = record {
+    canister_id : principal;
+    new_version : text;
+};
+
+type CreateBinaryVersionRequest = record {
+    version : text;
+    description : text;
+};
+
+type UpdateBinaryVersionDescriptionRequest = record {
+    version : text;
+    new_description : text;
+};
+
+type ReleaseBinaryVersionRequest = record {
+    version : text;
+};
+
+type DeleteBinaryVersionRequest = record {
+    version : text;
+};
+
+type UploadBinaryRequest = record {
+    version : text;
+    binary : blob;
+};
+
+type DownloadBinaryRequest = record {
+    version : text;
+};
+
+type DownloadBinaryResponse = record {
+    binary : opt blob;
+};
+
+type GetBinaryVersionsResponse = record {
+    versions : vec text;
+};
+
+type GetBinaryVersionInfosRequest = record {
+    versions : vec text;
+};
+
+type GetBinaryVersionInfosResponse = record {
+    infos : vec BinaryVersionInfo;
+};
+
+type GetInstanceIdsResponse = record {
+    ids : vec principal;
+};
+
+type GetInstancesRequest = record {
+    ids : vec principal;
+};
+
+type GetInstancesResponse = record {
+    instances : vec BinaryInstance;
+};
+
+type TransferControlRequest = record {
+    new_controller : principal;
+};
+
+type GetLatestVersionResponse = record {
+    version : text;
+};
+
+service : (principal) -> {
+    "transfer_control" : (TransferControlRequest) -> ();
+    "spawn_wallet" : (SpawnWalletRequest) -> (SpawnWalletResponse);
+    "upgrade_wallet_version" : (UpgradeWalletVersionRequest) -> ();
+    "create_binary_version" : (CreateBinaryVersionRequest) -> ();
+    "update_binary_version_description" : (UpdateBinaryVersionDescriptionRequest) -> ();
+    "release_binary_version" : (ReleaseBinaryVersionRequest) -> ();
+    "delete_binary_version" : (DeleteBinaryVersionRequest) -> ();
+    "upload_binary" : (UploadBinaryRequest) -> ();
+    "download_binary" : (DownloadBinaryRequest) -> (DownloadBinaryResponse) query;
+    "get_binary_versions" : () -> (GetBinaryVersionsResponse) query;
+    "get_binary_version_infos" : (GetBinaryVersionInfosRequest) -> (GetBinaryVersionInfosResponse) query;
+    "get_instance_ids" : () -> (GetInstanceIdsResponse) query;
+    "get_instances" : (GetInstancesRequest) -> (GetInstancesResponse) query;
+    "get_latest_version" : () -> (GetLatestVersionResponse) query;
 
     "export_candid" : () -> (text) query;
 }

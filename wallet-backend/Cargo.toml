@@ -3,6 +3,11 @@ name = "union-wallet"
 version = "0.1.0"
 edition = "2018"
 
+[profile.release]
+lto = true
+opt-level = 'z'
+panic = 'abort'
+
 [lib]
 path = "src/actor.rs"
 crate-type = ["cdylib"]

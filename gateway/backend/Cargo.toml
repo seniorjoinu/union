@@ -3,6 +3,11 @@ name = "union-gateway"
 version = "0.1.0"
 edition = "2018"
 
+[profile.release]
+lto = true
+opt-level = 'z'
+panic = 'abort'
+
 [lib]
 path = "src/actor.rs"
 crate-type = ["cdylib"]
@@ -12,4 +17,3 @@ ic-cdk = "0.4.0"
 ic-cdk-macros = "0.4.0"
 serde = "1.0"
 candid = "0.7.11"
-ic-cron = "0.6.1"
