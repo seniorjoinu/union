@@ -1,3 +1,4 @@
+use crate::common::api::{GatewayError, Invoice, InvoiceId, InvoiceStatus, InvoiceType};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -7,15 +8,63 @@ pub struct State {
     pub controller: Principal,
     pub users_by_union_wallet_index: HashMap<Principal, HashSet<Principal>>,
     pub union_wallets_by_user_index: HashMap<Principal, HashSet<Principal>>,
+
+    pub deployer_canister_id: Principal,
+    pub invoices: HashMap<InvoiceId, Invoice>,
+    pub invoice_id_counter: InvoiceId,
 }
 
 impl State {
-    pub fn new(controller: Principal) -> Self {
+    pub fn new(controller: Principal, deployer_canister_id: Principal) -> Self {
         Self {
             controller,
             users_by_union_wallet_index: HashMap::default(),
             union_wallets_by_user_index: HashMap::default(),
+
+            deployer_canister_id,
+            invoices: HashMap::default(),
+            invoice_id_counter: 0,
         }
+    }
+
+    pub fn create_invoice(
+        &mut self,
+        invoice_type: InvoiceType,
+        to: Principal,
+        timestamp: u64,
+    ) -> InvoiceId {
+        let id = self.generate_invoice_id();
+        let invoice = Invoice {
+            id,
+            invoice_type,
+            to,
+            status: InvoiceStatus::Created,
+            created_at: timestamp,
+        };
+
+        self.invoices.insert(id, invoice);
+
+        id
+    }
+
+    pub fn set_invoice_paid(&mut self, id: InvoiceId) -> Result<(), GatewayError> {
+        let invoice = self
+            .invoices
+            .get_mut(&id)
+            .ok_or(GatewayError::InvoiceNotFound)?;
+        
+        match invoice.status {
+            InvoiceStatus::Paid => Err(GatewayError::InvoiceAlreadyPaid),
+            InvoiceStatus::Created => {
+                invoice.status = InvoiceStatus::Paid;
+                
+                Ok(())
+            }
+        }
+    }
+    
+    pub fn remove_invoice(&mut self, id: InvoiceId) {
+        self.invoices.remove(&id);
     }
 
     pub fn update_controller(&mut self, new_controller: Principal) {
@@ -68,5 +117,12 @@ impl State {
             .unwrap_or_default()
             .into_iter()
             .collect()
+    }
+
+    fn generate_invoice_id(&mut self) -> InvoiceId {
+        let id = self.invoice_id_counter;
+        self.invoice_id_counter += 1;
+
+        id
     }
 }

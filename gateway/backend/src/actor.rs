@@ -1,13 +1,16 @@
 use crate::common::api::{
     AttachToUnionWalletRequest, DetachFromUnionWalletRequest, GetAttachedUnionWalletsResponse,
+    InvoiceId, InvoiceType, SpawnUnionWalletRequest, SpawnUnionWalletResponse,
     TransferControlRequest,
 };
 use crate::common::gateway::State;
 use crate::guards::{not_anonymous, only_controller};
-use ic_cdk::caller;
+use ic_cdk::api::call::call_with_payment;
+use ic_cdk::api::time;
 use ic_cdk::export::candid::export_service;
 use ic_cdk::export::Principal;
 use ic_cdk::storage::{stable_restore, stable_save};
+use ic_cdk::{call, caller};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
 
 pub mod common;
@@ -35,6 +38,38 @@ pub fn get_attached_union_wallets() -> GetAttachedUnionWalletsResponse {
     GetAttachedUnionWalletsResponse { wallet_ids }
 }
 
+#[update(guard = "not_anonymous")]
+pub fn spawn_union_wallet(req: SpawnUnionWalletRequest) -> SpawnUnionWalletResponse {
+    let invoice_id =
+        get_state().create_invoice(InvoiceType::SpawnUnionWallet(req), caller(), time());
+
+    SpawnUnionWalletResponse { invoice_id }
+}
+
+async fn process_paid_invoice(id: InvoiceId) {
+    get_state()
+        .set_invoice_paid(id)
+        .expect("Unable to process paid invoice");
+
+    let invoice = get_state().invoices.get(&id).unwrap();
+
+    // TODO: add deployer client and use it
+    // TODO: spawn a wallet
+
+    match invoice.invoice_type {
+        InvoiceType::SpawnUnionWallet(req) => {
+            call_with_payment(
+                get_state().deployer_canister_id,
+                "spawn_wallet",
+                (req,),
+                1_000_000_000_000,
+            )
+            .await
+            .expect("Unable to call deployer.spawn_wallet");
+        }
+    }
+}
+
 export_service!();
 
 #[query(name = "__get_candid_interface_tmp_hack")]
@@ -49,8 +84,8 @@ pub fn get_state() -> &'static mut State {
 }
 
 #[init]
-fn init(controller: Principal) {
-    let state = State::new(controller);
+fn init(controller: Principal, deployer_canister_id: Principal) {
+    let state = State::new(controller, deployer_canister_id);
 
     unsafe {
         STATE = Some(state);

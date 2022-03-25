@@ -12,7 +12,7 @@ type GetAttachedUnionWalletsResponse = record {
     wallet_ids : vec principal;
 };
 
-service : (principal) -> {
+service : (principal, principal) -> {
     "transfer_control" : (TransferControlRequest) -> ();
     "attach_to_union_wallet" : (AttachToUnionWalletRequest) -> ();
     "detach_from_union_wallet" : (DetachFromUnionWalletRequest) -> ();
