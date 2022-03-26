@@ -1,16 +1,24 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import { Text } from 'components';
 import { useTrigger } from 'toolkit';
+import styled from 'styled-components';
 import { useWallet } from '../../../services';
 import { useCurrentWallet } from '../context';
 import { parseRole } from '../utils';
+import { useAttachedPermissions } from '../RolesAndPermissions/useAttachedPermissions';
 import { RoleDetailsView } from './RoleDetailsView';
+
+const Title = styled(Text)`
+  margin-bottom: 24px;
+`;
 
 export const RoleDetails = () => {
   const { roleId } = useParams();
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
   const forEnumeratedCanister = useWallet(principal);
+  const { permissions } = useAttachedPermissions({ roleId });
 
   useTrigger(
     (rnp) => {
@@ -49,5 +57,10 @@ export const RoleDetails = () => {
     return <span>Role not found</span>;
   }
 
-  return <RoleDetailsView role={role} enumerated={enumerated} />;
+  return (
+    <>
+      <Title variant='h2'>{parsedRole.title}</Title>
+      <RoleDetailsView role={role} permissions={permissions} enumerated={enumerated} />
+    </>
+  );
 };

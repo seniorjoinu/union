@@ -21,6 +21,7 @@ export function RouterPage() {
         <Route path='/auth' element={<AuthPage to='/wallets' />} />
         <Route path='/embed' element={<EmbedPage />} />
         {!isAuthentificated && <Route path='/*' element={<Navigate to='/auth' replace />} />}
+        <Route path='/' element={<Navigate to='/walets' replace />} />
         <Route
           path='/*'
           element={

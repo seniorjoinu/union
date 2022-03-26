@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Permission, Role } from 'wallet-ts';
-import { useWallet } from '../../../services/controllers';
-import { useCurrentWallet } from '../context';
+import React from 'react';
+import { Permission } from 'wallet-ts';
 import { parseRole } from '../utils';
 import { Info } from './Info';
+import { useAttachedRoles } from './useAttachedRoles';
 
 export interface PermissionInfoProps extends IClassName {
   editable?: boolean;
@@ -12,42 +11,13 @@ export interface PermissionInfoProps extends IClassName {
 }
 
 export const PermissionInfo = ({ permission, editable, ...p }: PermissionInfoProps) => {
-  const [roles, setRoles] = useState<Role[]>([]);
-  const { rnp, principal } = useCurrentWallet();
-  const { data, canister, fetching } = useWallet(principal);
-
-  useEffect(() => {
-    if (!rnp) {
-      return;
-    }
-
-    if (!!fetching.get_roles_attached_to_permissions || !!data.get_roles_attached_to_permissions) {
-      return;
-    }
-    canister
-      .get_roles_attached_to_permissions({
-        rnp,
-        permission_ids: [permission.id],
-      })
-      .then(({ result }) => {
-        const ids = result.map(([, roleIds]) => roleIds).flat();
-
-        canister.get_roles({ rnp, ids }).then(({ roles }) => setRoles(roles));
-      });
-  }, [
-    rnp,
-    data.get_roles_attached_to_permissions,
-    fetching.get_roles_attached_to_permissions,
-    setRoles,
-  ]);
-
-  const progress = !!fetching.get_roles_attached_to_permissions || !!fetching.get_roles;
+  const { roles, fetching } = useAttachedRoles({ permissionId: permission.id });
 
   return (
     <Info
       title={permission.name}
       editLink={editable ? `../permission/edit/${permission.id}` : undefined}
-      fetching={progress}
+      fetching={fetching}
       items={roles.map((r) => ({ id: r.id, children: parseRole(r.role_type).title }))}
       {...p}
     />

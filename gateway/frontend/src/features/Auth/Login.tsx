@@ -53,9 +53,6 @@ export function Login({ buttonProps, ...p }: LoginProps) {
         variant='outlined'
         color='white'
         height={32}
-        onLogin={() => {
-          localStorage.setItem('user_type', selected.id);
-        }}
       />
     </Container>
   );

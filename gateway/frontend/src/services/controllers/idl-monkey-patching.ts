@@ -1,5 +1,8 @@
 import * as candid from '@dfinity/candid';
 
+// @ts-expect-error
+window.candid = candid;
+
 // NOTE
 // стандартная реализация valueToString просто конвертирует число в строку
 // чтобы сделать универсальную сериализацию, необходимо

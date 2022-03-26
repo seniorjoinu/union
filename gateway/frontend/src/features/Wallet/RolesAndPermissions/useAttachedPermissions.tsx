@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Role, Permission } from 'wallet-ts';
+import { Permission } from 'wallet-ts';
 import { useWallet } from '../../../services/controllers';
 import { useCurrentWallet } from '../context';
 
 export interface UseAttachedPermissionsProps {
-  role: Role;
+  roleId: number | string | null | undefined;
 }
 
-export const useAttachedPermissions = ({ role }: UseAttachedPermissionsProps) => {
+export const useAttachedPermissions = ({ roleId }: UseAttachedPermissionsProps) => {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const { rnp, principal } = useCurrentWallet();
   const { data, canister, fetching } = useWallet(principal);
 
   useEffect(() => {
-    if (!rnp) {
+    if (!rnp || !roleId) {
       return;
     }
 
@@ -23,7 +23,7 @@ export const useAttachedPermissions = ({ role }: UseAttachedPermissionsProps) =>
     canister
       .get_permissions_attached_to_roles({
         rnp,
-        role_ids: [role.id],
+        role_ids: [Number(roleId)],
       })
       .then(({ result }) => {
         const ids = result.map(([, permissionIds]) => permissionIds).flat();

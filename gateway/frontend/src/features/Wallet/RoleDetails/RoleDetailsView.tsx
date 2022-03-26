@@ -1,30 +1,21 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Role } from 'wallet-ts';
-import { Text } from 'components';
-import { parsePermission, parseRole } from '../utils';
-import { useAttachedPermissions } from '../RolesAndPermissions/useAttachedPermissions';
+import { Role, Permission } from 'wallet-ts';
+import { Text, TextProps } from 'components';
+import { parseRole } from '../utils';
+import { PermissionDetailsView as PDV } from '../PermissionDetails';
+
+const PermissionDetailsView = styled(PDV)`
+  padding: 8px;
+  border: 1px solid grey;
+  border-radius: 4px;
+`;
 
 const Title = styled(Text)``;
 const Description = styled(Text)``;
 const Item = styled.div`
   display: flex;
   flex-direction: column;
-  border: 1px solid grey;
-  border-radius: 4px;
-  padding: 8px 16px;
-
-  & > *:not(:last-child) {
-    margin-bottom: 8px;
-  }
-`;
-
-const Target = styled.div`
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid grey;
-  border-bottom: 1px solid grey;
-  padding: 8px 16px;
 
   & > *:not(:last-child) {
     margin-bottom: 8px;
@@ -34,6 +25,12 @@ const Target = styled.div`
 const Items = styled.div`
   display: flex;
   flex-direction: column;
+
+  & > * {
+    padding: 8px;
+    border: 1px solid grey;
+    border-radius: 4px;
+  }
 
   & > *:not(:last-child) {
     margin-bottom: 16px;
@@ -52,26 +49,32 @@ const Container = styled.div`
   }
 `;
 
-export interface RoleDetailsViewProps {
+export interface RoleDetailsViewProps extends IClassName {
   role: Role;
+  permissions: Permission[];
   enumerated: Role[];
+  variant?: TextProps['variant'];
 }
 
-export const RoleDetailsView = ({ role, enumerated }: RoleDetailsViewProps) => {
-  const { permissions } = useAttachedPermissions({ role });
-
+export const RoleDetailsView = ({
+  variant = 'p1',
+  role,
+  permissions,
+  enumerated,
+  ...p
+}: RoleDetailsViewProps) => {
   const parsedRole = parseRole(role.role_type);
 
   return (
-    <Container>
-      <Title variant='h2'>{parsedRole.title}</Title>
-      <Description variant='p1'>Описание: {parsedRole.description}</Description>
-      <Description variant='p1'>Тип: {parsedRole.type}</Description>
+    <Container {...p}>
+      <Description variant={variant}>Имя: {parsedRole.title}</Description>
+      <Description variant={variant}>Описание: {parsedRole.description}</Description>
+      <Description variant={variant}>Тип: {parsedRole.type}</Description>
       {!!parsedRole.principal && (
-        <Description variant='p1'>Принципал: {parsedRole.principal}</Description>
+        <Description variant={variant}>Принципал: {parsedRole.principal}</Description>
       )}
       {!!parsedRole.threshold && (
-        <Description variant='p1'>Пороговое значение: {parsedRole.threshold}</Description>
+        <Description variant={variant}>Пороговое значение: {parsedRole.threshold}</Description>
       )}
       {!!enumerated.length && (
         <>
@@ -101,29 +104,14 @@ export const RoleDetailsView = ({ role, enumerated }: RoleDetailsViewProps) => {
         <>
           <Title variant='h4'>Пермиссии</Title>
           <Items>
-            {permissions.map((permission) => {
-              const parsed = parsePermission(permission);
-
-              return (
-                <Item key={String(role.id)}>
-                  <Text variant='p3'>Имя: {parsed.name}</Text>
-                  <Text variant='p3'>Скоуп: {parsed.scope}</Text>
-                  {!!parsed.targets.length && (
-                    <>
-                      <Text variant='p2'>Цели</Text>
-                      {parsed.targets.map((t) => (
-                        <Target>
-                          {t.principal && <Text variant='p3'>Канистер: {t.principal}</Text>}
-                          {t.canisterId && <Text variant='p3'>Канистер: {t.canisterId}</Text>}
-                          {t.method && <Text variant='p3'>Метод: {t.method}</Text>}
-                          <Text variant='p3'>{t.type}</Text>
-                        </Target>
-                      ))}
-                    </>
-                  )}
-                </Item>
-              );
-            })}
+            {permissions.map((permission) => (
+              <PermissionDetailsView
+                key={permission.id}
+                variant='p3'
+                permission={permission}
+                roles={[]}
+              />
+            ))}
           </Items>
         </>
       )}

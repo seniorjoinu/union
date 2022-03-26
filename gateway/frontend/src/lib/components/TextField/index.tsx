@@ -29,3 +29,16 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
     </Container>
   ),
 );
+
+export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label: string;
+}
+
+export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
+  ({ className, style, label, ...p }, ref) => (
+    <Container className={className} style={style}>
+      <Label variant='p1'>{label}</Label>
+      <Input {...p} as='textarea' ref={ref} />
+    </Container>
+  ),
+);

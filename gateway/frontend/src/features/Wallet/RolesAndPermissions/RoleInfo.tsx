@@ -11,7 +11,7 @@ export interface RoleInfoProps extends IClassName {
 }
 
 export const RoleInfo = ({ role, editable, ...p }: RoleInfoProps) => {
-  const { permissions, fetching } = useAttachedPermissions({ role });
+  const { permissions, fetching } = useAttachedPermissions({ roleId: role.id });
   const { title } = parseRole(role.role_type);
 
   return (

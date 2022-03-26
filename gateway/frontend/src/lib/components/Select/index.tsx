@@ -7,7 +7,7 @@ const Container = styled.select`
   height: 32px;
 `;
 
-export interface SelectProps extends React.ButtonHTMLAttributes<HTMLSelectElement> {}
+export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>((p, ref) => (
   <Container {...p} ref={ref} />
