@@ -1,6 +1,5 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import {
   Text,
@@ -68,13 +67,10 @@ export const RoleForm = ({ create }: RoleFormProps) => {
     },
     mode: 'onTouched',
   });
-  const nav = useNavigate();
   const { fallback, submitting, onSubmit } = useSubmit({ create, setValue, getValues });
   const { roles } = useRoles();
 
-  const submit = useCallback(() => {
-    onSubmit().then(() => nav(-1));
-  }, [onSubmit, nav]);
+  const submit = onSubmit;
 
   if (fallback) {
     return fallback;

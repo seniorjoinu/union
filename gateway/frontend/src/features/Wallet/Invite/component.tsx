@@ -5,7 +5,8 @@ import { Principal } from '@dfinity/principal';
 import { Text, Button as B, TextField } from 'components';
 import { checkPrincipal } from 'toolkit';
 import { useCurrentWallet } from '../context';
-import { useWallet, walletSerializer } from '../../../services';
+import { ExternalExecutorFormData } from '../../Executor';
+import { walletSerializer } from '../../../services';
 
 const Title = styled(Text)``;
 const Button = styled(B)``;
@@ -64,7 +65,6 @@ export const Invite = () => {
   const [submitting, setSubmitting] = useState(false);
   const [members, setMembers] = useState<InviteForm[]>([{ ...defaultMember }]);
   const { rnp, principal } = useCurrentWallet();
-  const { canister } = useWallet(principal);
 
   const onSubmit = useCallback(() => {
     if (!rnp) {
@@ -72,49 +72,38 @@ export const Invite = () => {
     }
 
     setSubmitting(true);
-    canister
-      .execute({
-        title: 'Invite members',
-        description: 'Invite members and create profiles',
-        rnp,
-        authorization_delay_nano: BigInt(100),
-        program: {
-          RemoteCallSequence: [
-            ...members
-              .filter((m) => checkPrincipal(m.principal))
-              .map((member) => {
-                const args = walletSerializer.create_role({
-                  role_type: {
-                    Profile: {
-                      principal_id: Principal.fromText(member.principal),
-                      name: member.name || defaultMember.name,
-                      description: member.description || defaultMember.description,
-                    },
-                  },
-                });
+    const payload: ExternalExecutorFormData = {
+      title: 'Invite members',
+      description: 'Invite members and create profiles',
+      rnp,
+      program: [
+        ...members
+          .filter((m) => checkPrincipal(m.principal))
+          .map((member) => {
+            const args = walletSerializer.create_role({
+              role_type: {
+                Profile: {
+                  principal_id: Principal.fromText(member.principal),
+                  name: member.name || defaultMember.name,
+                  description: member.description || defaultMember.description,
+                },
+              },
+            });
 
-                return {
-                  endpoint: {
-                    canister_id: Principal.fromText(principal),
-                    method_name: 'create_role',
-                  },
-                  cycles: BigInt(0),
-                  args_candid: args,
-                };
-              }),
-          ],
-        },
-      })
-      .then((res) => {
-        // Executed | ScheduledForAuthorization
-        console.log('RESULT', res);
-        setMembers([{ ...defaultMember }]);
-        nav(-1);
-      })
-      .finally(() => {
-        setSubmitting(false);
-      });
-  }, [rnp, canister, principal, setSubmitting, members, setMembers]);
+            return {
+              endpoint: {
+                canister_id: principal,
+                method_name: 'create_role',
+              },
+              cycles: '0',
+              args_candid: args,
+            };
+          }),
+      ],
+    };
+
+    nav(`/wallet/${principal}/execute`, { state: payload });
+  }, [rnp, principal, setSubmitting, members, setMembers]);
 
   const isValid = !!members.find((m) => checkPrincipal(m.principal));
 

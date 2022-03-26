@@ -52,7 +52,7 @@ export function Header(p: IClassName) {
             <Text variant='p1' as={NavLink} to={`wallet/${walletId}/invite`}>
               Invite
             </Text>
-            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/execute`}>
+            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/manual-execute`}>
               Execute
             </Text>
           </>

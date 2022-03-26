@@ -16,6 +16,8 @@ export type ExecutorFormData = Omit<ExecuteRequest, 'authorization_delay_nano' |
   program: Program[];
 };
 
+export type ExternalExecutorFormData = Partial<ExecutorFormData>;
+
 export const getEmptyProgram = (): Program => ({
   endpoint: { canister_id: '', method_name: '' },
   args_candid: [''],

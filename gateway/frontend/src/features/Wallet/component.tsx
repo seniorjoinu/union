@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useParams, Routes, Route, Navigate } from 'react-router-dom';
-import { Executor } from '../Executor';
+import { ExternalExecutor, Executor } from '../Executor';
 import { Provider } from './context';
 import { RolesAndPermissions, MyRolesAndPermissions } from './RolesAndPermissions';
 import { RoleForm } from './RoleForm';
@@ -40,7 +40,8 @@ export const Wallet = () => {
           <Route path='/rnp' element={<RolesAndPermissions />} />
           <Route path='/invite' element={<Invite />} />
           <Route path='/participants' element={<Participants />} />
-          <Route path='/execute' element={<Executor canisterId={principal} />} />
+          <Route path='/manual-execute' element={<Executor canisterId={principal} />} />
+          <Route path='/execute' element={<ExternalExecutor canisterId={principal} />} />
           <Route path='' element={<Navigate to='my-rnp' />} />
         </Routes>
       </Container>

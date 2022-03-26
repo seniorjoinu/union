@@ -1,7 +1,8 @@
 import { Principal } from '@dfinity/principal';
 import { useCallback } from 'react';
 import { PermissionScope, PermissionTarget } from 'wallet-ts';
-import { useWallet, walletSerializer } from '../../../services';
+import { ExternalExecutorFormData } from '../../Executor';
+import { walletSerializer } from '../../../services';
 import { useCurrentWallet } from '../context';
 import { UseSubmitProps } from './types';
 
@@ -12,11 +13,10 @@ export interface UseCreateProps {
 
 export const useCreate = ({ create, getValues }: UseCreateProps) => {
   const { rnp, principal } = useCurrentWallet();
-  const { canister } = useWallet(principal);
 
-  const onCreate = useCallback(async () => {
+  const onCreate = useCallback(async (): Promise<ExternalExecutorFormData> => {
     if (!create || !rnp) {
-      return;
+      return Promise.reject();
     }
 
     const values = getValues();
@@ -34,32 +34,29 @@ export const useCreate = ({ create, getValues }: UseCreateProps) => {
       };
     });
 
-    const result = await canister.execute({
+    const payload: ExternalExecutorFormData = {
       title: 'Create new permission',
       description: 'Create new permission through interface',
       rnp,
-      authorization_delay_nano: BigInt(100),
-      program: {
-        RemoteCallSequence: [
-          {
-            endpoint: {
-              canister_id: Principal.fromText(principal),
-              method_name: 'create_permission',
-            },
-            cycles: BigInt(0),
-            args_candid: walletSerializer.create_permission({
-              name: values.name,
-              scope,
-              targets,
-            }),
+      program: [
+        {
+          endpoint: {
+            canister_id: principal,
+            method_name: 'create_permission',
           },
-        ],
-      },
-    });
+          cycles: '0',
+          args_candid: walletSerializer.create_permission({
+            name: values.name,
+            scope,
+            targets,
+          }),
+        },
+      ],
+    };
 
-    console.log('!!!RES', result);
-    return result;
-  }, [create, canister, getValues, principal, rnp]);
+    console.log('onCreate', payload);
+    return payload;
+  }, [create, getValues, principal, rnp]);
 
   return {
     onCreate,

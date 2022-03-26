@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTrigger } from 'toolkit';
+import { ExternalExecutorFormData } from '../../Executor';
 import { useWallet } from '../../../services';
 import { parseRole } from '../utils';
 import { useCurrentWallet } from '../context';
@@ -47,8 +48,24 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
     [data.get_roles, setValue],
   );
 
-  const onEdit = useCallback(async () => {
+  const onEdit = useCallback(async (): Promise<ExternalExecutorFormData> => {
     console.error('Not implemented');
+    const payload: ExternalExecutorFormData = {
+      title: 'Update role',
+      description: 'Update role through interface',
+      program: [
+        {
+          endpoint: {
+            canister_id: principal,
+            method_name: 'update_role',
+          },
+          cycles: '0',
+          args_candid: [],
+        },
+      ],
+    };
+
+    return payload;
   }, [getValues]);
 
   let fallback: JSX.Element | null = null;

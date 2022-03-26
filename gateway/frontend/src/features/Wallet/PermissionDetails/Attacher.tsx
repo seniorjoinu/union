@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
 import { ListSelect, Button } from 'components';
-import { Principal } from '@dfinity/principal';
 import { Permission } from 'wallet-ts';
+import { useNavigate } from 'react-router-dom';
 import { parseRole } from '../utils';
 import { useRoles } from '../Participants';
-import { useWallet, walletSerializer } from '../../../services';
+import { ExternalExecutorFormData } from '../../Executor';
+import { walletSerializer } from '../../../services';
 import { useCurrentWallet } from '../context';
 
 const Container = styled.div`
@@ -17,13 +18,12 @@ const Container = styled.div`
 
 export interface AttacherProps extends IClassName {
   permission: Permission;
-  onSuccess?(): void;
 }
 
-export function Attacher({ permission, onSuccess = () => undefined, ...p }: AttacherProps) {
+export function Attacher({ permission, ...p }: AttacherProps) {
   const { roles } = useRoles();
+  const nav = useNavigate();
   const { rnp, principal } = useCurrentWallet();
-  const { canister } = useWallet(principal);
   const [submitting, setSubmitting] = useState(false);
   const {
     control,
@@ -52,31 +52,24 @@ export function Attacher({ permission, onSuccess = () => undefined, ...p }: Atta
       })
       .join();
 
-    canister
-      .execute({
-        title: 'Attach roles to permission',
-        description: `Attach roles "${roleNames}" to permission "${permission.name}"(id ${permission.id})`,
-        rnp,
-        authorization_delay_nano: BigInt(100),
-        program: {
-          RemoteCallSequence: roleIds.map((roleId) => ({
-            endpoint: {
-              canister_id: Principal.fromText(principal),
-              method_name: 'attach_role_to_permission',
-            },
-            cycles: BigInt(0),
-            args_candid: walletSerializer.attach_role_to_permission({
-              role_id: Number(roleId),
-              permission_id: permission.id,
-            }),
-          })),
+    const payload: ExternalExecutorFormData = {
+      title: 'Attach roles to permission',
+      description: `Attach roles "${roleNames}" to permission "${permission.name}"(id ${permission.id})`,
+      rnp,
+      program: roleIds.map((roleId) => ({
+        endpoint: {
+          canister_id: principal,
+          method_name: 'attach_role_to_permission',
         },
-      })
-      .then((response) => {
-        console.log(response);
-        onSuccess();
-      })
-      .finally(() => setSubmitting(false));
+        cycles: '0',
+        args_candid: walletSerializer.attach_role_to_permission({
+          role_id: Number(roleId),
+          permission_id: permission.id,
+        }),
+      })),
+    };
+
+    nav(`wallet/${principal}/execute`, { state: payload });
   };
 
   return (

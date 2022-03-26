@@ -4,6 +4,7 @@ import { useTrigger } from 'toolkit';
 import { useWallet } from '../../../services';
 import { parsePermission } from '../utils';
 import { useCurrentWallet } from '../context';
+import { ExternalExecutorFormData } from '../../Executor';
 import { UseSubmitProps } from './types';
 
 export interface UseEditProps {
@@ -48,8 +49,24 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
     [data.get_permissions, setValue],
   );
 
-  const onEdit = useCallback(async () => {
+  const onEdit = useCallback(async (): Promise<ExternalExecutorFormData> => {
     console.error('Not implemented');
+    const payload: ExternalExecutorFormData = {
+      title: 'Create new permission',
+      description: 'Create new permission through interface',
+      program: [
+        {
+          endpoint: {
+            canister_id: principal,
+            method_name: 'create_permission',
+          },
+          cycles: '0',
+          args_candid: [],
+        },
+      ],
+    };
+
+    return payload;
   }, [getValues]);
 
   let fallback: JSX.Element | null = null;
