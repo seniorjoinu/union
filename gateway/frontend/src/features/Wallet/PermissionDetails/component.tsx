@@ -17,7 +17,7 @@ export const PermissionDetails = () => {
   const { permissionId } = useParams();
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
-  const { roles, fetchRoles } = useAttachedRoles({ permissionId });
+  const { roles } = useAttachedRoles({ permissionId });
 
   useTrigger(
     (rnp) => {
@@ -45,7 +45,7 @@ export const PermissionDetails = () => {
     <>
       <Title variant='h2'>{permission.name}</Title>
       <PermissionDetailsView permission={permission} roles={roles} />
-      <Attacher permission={permission} onSuccess={fetchRoles} />
+      <Attacher permission={permission} />
     </>
   );
 };

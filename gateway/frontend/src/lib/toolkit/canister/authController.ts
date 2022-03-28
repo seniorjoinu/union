@@ -3,7 +3,7 @@ import { CanisterControllerProps, CanisterController } from './controller';
 
 export interface AuthCanisterControllerProps extends Omit<CanisterControllerProps, 'agent'> {}
 
-export class AuthCanisterController<T, Children = T> extends CanisterController<T, Children> {
+export class AuthCanisterController<T> extends CanisterController<T> {
   constructor(props: AuthCanisterControllerProps) {
     super({
       ...props,

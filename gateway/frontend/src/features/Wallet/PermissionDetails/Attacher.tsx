@@ -69,7 +69,7 @@ export function Attacher({ permission, ...p }: AttacherProps) {
       })),
     };
 
-    nav(`wallet/${principal}/execute`, { state: payload });
+    nav(`/wallet/${principal}/execute`, { state: payload });
   };
 
   return (

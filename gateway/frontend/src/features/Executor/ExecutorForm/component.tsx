@@ -76,8 +76,6 @@ export function ExecutorForm({ canisterId, data, onSubmit, ...p }: ExecutorFormP
 
     const values = getValues();
 
-    console.log('!!!', values);
-
     const program = values.program.filter((p) => p.endpoint.canister_id && p.endpoint.method_name);
 
     canister
@@ -89,6 +87,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, ...p }: ExecutorFormP
           : {
               RemoteCallSequence: program.map((p) => ({
                 ...p,
+                args_candid: p.args_candid.map((a) => a.trim()),
                 cycles: BigInt(p.cycles),
                 endpoint: {
                   ...p.endpoint,
