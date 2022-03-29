@@ -120,7 +120,7 @@ type RejectionCode = variant {
 };
 
 type GetScheduledForAuthorizationExecutionsResponse = record {
-    entries : vec HistoryEntry;
+    entries : vec record { 0 : TaskId; 1 : HistoryEntry };
 };
 
 // ---------------- ROLES -------------------
