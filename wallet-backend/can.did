@@ -119,6 +119,11 @@ type RejectionCode = variant {
     Unknown;
 };
 
+type GetScheduledForAuthorizationExecutionsRequest = record {
+    rnp : RoleAndPermission;
+    task_ids : opt vec TaskId;
+};
+
 type GetScheduledForAuthorizationExecutionsResponse = record {
     entries : vec record { 0 : TaskId; 1 : HistoryEntry };
 };

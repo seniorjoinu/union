@@ -56,6 +56,12 @@ pub struct GetHistoryEntriesResponse {
 }
 
 #[derive(CandidType, Deserialize)]
+pub struct GetScheduledForAuthorizationExecutionsRequest {
+    pub rnp: RoleAndPermission,
+    pub task_ids: Option<Vec<TaskId>>,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct GetScheduledForAuthorizationExecutionsResponse {
     pub entries: Vec<(TaskId, HistoryEntry)>,
 }
