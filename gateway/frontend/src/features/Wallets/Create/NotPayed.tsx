@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { Button as B, Text } from 'components';
-import { useDeployer } from '../../../services';
+import { useDeployer } from 'services';
 
 const Button = styled(B)``;
 const Title = styled(Text)``;

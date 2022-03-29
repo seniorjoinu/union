@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import * as mobxReactLite from 'mobx-react-lite';
 import { useNavigate } from 'react-router-dom';
 import { CroppedString as CS, Button, ButtonProps } from 'components';
+import { useAuth } from 'services';
 import logo from '../../assets/logo.svg';
-import { useAuth } from '../../services';
 
 const CroppedString = styled(CS)``;
 

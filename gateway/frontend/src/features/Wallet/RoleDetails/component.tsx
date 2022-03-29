@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Text } from 'components';
 import { useTrigger } from 'toolkit';
 import styled from 'styled-components';
-import { useWallet } from '../../../services';
+import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { parseRole } from '../utils';
 import { useAttachedPermissions } from '../RolesAndPermissions/useAttachedPermissions';

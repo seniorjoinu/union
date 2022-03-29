@@ -1,15 +1,8 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ESNext",
-      "webworker"
-    ],
-    "types": [
-      "vite/client"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ESNext", "webworker"],
+    "types": ["vite/client"],
     "skipLibCheck": true,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
@@ -23,6 +16,7 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
+      "services": ["src/services/index.ts"],
       "components": ["src/lib/components/index.ts"],
       "toolkit": ["src/lib/toolkit/index.ts"],
       "deployer-ts": ["src/assets/union-deployer.did.d.ts"],
@@ -31,8 +25,5 @@
       "wallet-idl": ["src/assets/union-wallet.did.js"]
     }
   },
-  "include": [
-    "global.d.ts",
-    "."
-  ]
+  "include": ["global.d.ts", "."]
 }

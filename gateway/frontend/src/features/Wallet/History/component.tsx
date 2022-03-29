@@ -3,7 +3,8 @@ import styled from 'styled-components';
 import { Text, Button as B } from 'components';
 import { useTrigger } from 'toolkit';
 import { NavLink as N } from 'react-router-dom';
-import { useWallet } from '../../../services';
+import { HistoryEntry } from 'wallet-ts';
+import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { Item as I } from './Item';
 
@@ -41,6 +42,7 @@ export function History({ createLink, ...p }: HistoryProps) {
 
   useTrigger(
     (rnp) => {
+      canister.get_scheduled_for_authorization_executions({ rnp, task_ids: [] });
       canister
         .get_history_entry_ids({ rnp })
         .then(({ ids }) => canister.get_history_entries({ rnp, ids }));
@@ -49,8 +51,17 @@ export function History({ createLink, ...p }: HistoryProps) {
     [canister],
   );
 
-  const progress = !!fetching.get_history_entry_ids || !!fetching.get_history_entries;
-  const entries = data.get_history_entries?.entries || [];
+  const progress = !!fetching.get_history_entry_ids
+    || !!fetching.get_history_entries
+    || !!fetching.get_scheduled_for_authorization_executions;
+
+  const scheduled = data.get_scheduled_for_authorization_executions?.entries || [];
+  const history = data.get_history_entries?.entries || [];
+
+  const entries: [bigint | null, HistoryEntry][] = [
+    ...scheduled,
+    ...history.map<[bigint | null, HistoryEntry]>((entry) => [null, entry]),
+  ];
 
   return (
     <Container {...p}>
@@ -62,8 +73,11 @@ export function History({ createLink, ...p }: HistoryProps) {
       )}
       {progress && <span>Fetching...</span>}
       {!progress && !entries.length && <span>История пуста</span>}
-      {entries.map((entry) => (
-        <NavLink key={String(entry.id)} to={String(entry.id)}>
+      {entries.map(([taskId, entry]) => (
+        <NavLink
+          key={String(entry.id)}
+          to={taskId ? `scheduled/${String(taskId)}` : String(entry.id)}
+        >
           <Item entry={entry} />
         </NavLink>
       ))}

@@ -85,8 +85,12 @@ export interface GetRolesRequest {
   'rnp' : RoleAndPermission,
 }
 export interface GetRolesResponse { 'roles' : Array<Role> }
+export interface GetScheduledForAuthorizationExecutionsRequest {
+  'rnp' : RoleAndPermission,
+  'task_ids' : [] | [Array<TaskId>],
+}
 export interface GetScheduledForAuthorizationExecutionsResponse {
-  'entries' : Array<HistoryEntry>,
+  'entries' : Array<[TaskId, HistoryEntry]>,
 }
 export interface HistoryEntry {
   'id' : HistoryEntryId,
@@ -235,7 +239,7 @@ export interface _SERVICE {
       arg_0: GetRolesAttachedToPermissionsRequest,
     ) => Promise<GetRolesAttachedToPermissionsResponse>,
   'get_scheduled_for_authorization_executions' : (
-      arg_0: AuthorizedRequest,
+      arg_0: GetScheduledForAuthorizationExecutionsRequest,
     ) => Promise<GetScheduledForAuthorizationExecutionsResponse>,
   'remove_permission' : (arg_0: RemovePermissionRequest) => Promise<
       RemovePermissionResponse

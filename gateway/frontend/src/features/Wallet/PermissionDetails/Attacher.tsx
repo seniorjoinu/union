@@ -4,10 +4,10 @@ import { useForm, Controller } from 'react-hook-form';
 import { ListSelect, Button } from 'components';
 import { Permission } from 'wallet-ts';
 import { useNavigate } from 'react-router-dom';
+import { walletSerializer } from 'services';
 import { parseRole } from '../utils';
 import { useRoles } from '../Participants';
 import { ExternalExecutorFormData } from '../../Executor';
-import { walletSerializer } from '../../../services';
 import { useCurrentWallet } from '../context';
 
 const Container = styled.div`

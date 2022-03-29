@@ -4,9 +4,9 @@ import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { Text, Button as B, TextField } from 'components';
 import { checkPrincipal } from 'toolkit';
+import { walletSerializer } from 'services';
 import { useCurrentWallet } from '../context';
 import { ExternalExecutorFormData } from '../../Executor';
-import { walletSerializer } from '../../../services';
 
 const Title = styled(Text)``;
 const Button = styled(B)``;

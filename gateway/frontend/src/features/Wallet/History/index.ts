@@ -1,2 +1,2 @@
 export * from './component';
-export * from './HistoryEntry';
+export * from './Entry';

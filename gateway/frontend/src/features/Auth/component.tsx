@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { Text } from 'components';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../services';
+import { useAuth } from 'services';
 import { Login } from './Login';
 
 const Container = styled.section`

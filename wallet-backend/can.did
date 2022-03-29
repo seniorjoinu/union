@@ -320,7 +320,7 @@ type GetPermissionsAttachedToRolesResponse = record {
 service : (principal) -> {
     "execute" : (ExecuteRequest) -> (ExecuteResponse);
     "authorize_execution" : (AuthorizeExecutionRequest) -> (AuthorizeExecutionResponse);
-    "get_scheduled_for_authorization_executions" : (AuthorizedRequest) -> (GetScheduledForAuthorizationExecutionsResponse) query;
+    "get_scheduled_for_authorization_executions" : (GetScheduledForAuthorizationExecutionsRequest) -> (GetScheduledForAuthorizationExecutionsResponse) query;
     "get_history_entry_ids" : (AuthorizedRequest) -> (GetHistoryEntryIdsResponse) query;
     "get_history_entries" : (GetHistoryEntriesRequest) -> (GetHistoryEntriesResponse) query;
 

@@ -1,6 +1,6 @@
 import React, { useEffect, createContext, useContext, useMemo, useState, useCallback } from 'react';
 import { RoleAndPermission, Role, Permission } from 'wallet-ts';
-import { useWallet, Fetching } from '../../services';
+import { useWallet, Fetching } from 'services';
 
 export interface CurrentWalletContext {
   principal: string;

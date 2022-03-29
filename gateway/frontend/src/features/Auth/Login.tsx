@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styled from 'styled-components';
 import { Select as S, Option } from 'components';
-import { useAuth, AuthReadyState } from '../../services';
+import { useAuth, AuthReadyState } from 'services';
 import { LoginButton, LoginButtonProps } from './LoginButton';
 
 const Select = styled(S)``;

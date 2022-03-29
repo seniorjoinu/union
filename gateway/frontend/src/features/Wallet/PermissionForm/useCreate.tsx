@@ -1,8 +1,8 @@
 import { Principal } from '@dfinity/principal';
 import { useCallback } from 'react';
 import { PermissionScope, PermissionTarget } from 'wallet-ts';
+import { walletSerializer } from 'services';
 import { ExternalExecutorFormData } from '../../Executor';
-import { walletSerializer } from '../../../services';
 import { useCurrentWallet } from '../context';
 import { UseSubmitProps } from './types';
 

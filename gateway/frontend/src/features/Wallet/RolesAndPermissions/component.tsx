@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import { Text, Button as B } from 'components';
 import { NavLink } from 'react-router-dom';
 import { useTrigger } from 'toolkit';
+import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
-import { useWallet } from '../../../services';
 import { PermissionInfo as P } from './PermissionInfo';
 import { RoleInfo as R } from './RoleInfo';
 

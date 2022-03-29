@@ -180,8 +180,12 @@ export const idlFactory = ({ IDL }) => {
   const GetRolesAttachedToPermissionsResponse = IDL.Record({
     'result' : IDL.Vec(IDL.Tuple(PermissionId, IDL.Vec(RoleId))),
   });
+  const GetScheduledForAuthorizationExecutionsRequest = IDL.Record({
+    'rnp' : RoleAndPermission,
+    'task_ids' : IDL.Opt(IDL.Vec(TaskId)),
+  });
   const GetScheduledForAuthorizationExecutionsResponse = IDL.Record({
-    'entries' : IDL.Vec(HistoryEntry),
+    'entries' : IDL.Vec(IDL.Tuple(TaskId, HistoryEntry)),
   });
   const RemovePermissionRequest = IDL.Record({
     'permission_id' : PermissionId,
@@ -273,7 +277,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'get_scheduled_for_authorization_executions' : IDL.Func(
-        [AuthorizedRequest],
+        [GetScheduledForAuthorizationExecutionsRequest],
         [GetScheduledForAuthorizationExecutionsResponse],
         ['query'],
       ),

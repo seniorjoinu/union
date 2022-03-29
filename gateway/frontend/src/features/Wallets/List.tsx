@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Text, Button as B, SimpleListItem } from 'components';
-import { useDeployer } from '../../services';
+import { useDeployer } from 'services';
 
 const List = styled.div`
   display: flex;

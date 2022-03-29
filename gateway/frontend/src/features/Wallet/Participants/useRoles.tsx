@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTrigger } from 'toolkit';
 import { FractionOf, Profile, QuantityOf } from 'wallet-ts';
-import { useWallet } from '../../../services';
+import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 
 export function useFilteredRoles<T = Profile | FractionOf | QuantityOf>(

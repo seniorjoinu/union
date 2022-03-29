@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { RoleType } from 'wallet-ts';
-import { walletSerializer } from '../../../services';
+import { walletSerializer } from 'services';
 import { ExternalExecutorFormData } from '../../Executor';
 import { useCurrentWallet } from '../context';
 import { UseSubmitProps } from './types';

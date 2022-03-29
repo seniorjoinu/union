@@ -50,7 +50,7 @@ export const Item = ({ entry, ...p }: ItemProps) => {
     <Container {...p} $highlighted={hasAccess}>
       <Row>
         <Title variant='h5'>{entry.title}</Title>
-        <Text variant='p1'>{date.format('DD-MM-YY HH:mm:SS')}</Text>
+        <Text variant='p1'>{date.format('DD-MM-YY HH:mm:ss')}</Text>
       </Row>
       {!!entry.description && <Description variant='p1'>{entry.description}</Description>}
       {sequence.map((op, i) => (

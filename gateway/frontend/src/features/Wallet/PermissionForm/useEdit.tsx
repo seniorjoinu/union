@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTrigger } from 'toolkit';
-import { useWallet } from '../../../services';
+import { useWallet } from 'services';
 import { parsePermission } from '../utils';
 import { useCurrentWallet } from '../context';
 import { ExternalExecutorFormData } from '../../Executor';

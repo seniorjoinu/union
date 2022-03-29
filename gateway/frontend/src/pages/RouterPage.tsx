@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Navigate, Route } from 'react-router-dom';
 import { Progress } from 'components';
-import { useAuth, AuthReadyState } from '../services';
+import { useAuth, AuthReadyState } from 'services';
 import { Wallets } from '../features/Wallets';
 import { Wallet } from '../features/Wallet';
 import { App } from './App';

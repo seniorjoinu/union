@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { createGlobalStyle, ThemeProvider } from 'styled-components';
 import { theme } from 'components';
-import { ProvideAuth } from '../services';
+import { ProvideAuth } from 'services';
 import { RouterPage } from './RouterPage';
 
 const GlobalStyle = createGlobalStyle`

@@ -9,7 +9,7 @@ import { RoleDetails } from './RoleDetails';
 import { PermissionDetails } from './PermissionDetails';
 import { PermissionForm } from './PermissionForm';
 import { Participants } from './Participants';
-import { History, HistoryEntry } from './History';
+import { History, HistoryEntry, ScheduledEntry } from './History';
 import { Invite } from './Invite';
 
 const Container = styled.div`
@@ -45,6 +45,7 @@ export const Wallet = () => {
           <Route path='/participants/invite' element={<Invite />} />
 
           <Route path='/history' element={<History createLink='execute' />} />
+          <Route path='/history/scheduled/:taskId' element={<ScheduledEntry />} />
           <Route path='/history/:entryId' element={<HistoryEntry />} />
           <Route
             path='/history/execute'

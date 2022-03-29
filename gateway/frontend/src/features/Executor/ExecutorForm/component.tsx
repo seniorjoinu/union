@@ -5,8 +5,8 @@ import { Button as B, Text, TextField as TF, TextArea as TA } from 'components';
 import { checkPrincipal } from 'toolkit';
 import { Principal } from '@dfinity/principal';
 import { ExecuteResponse } from 'wallet-ts';
+import { useWallet } from 'services';
 import { ExecutorFormData, getEmptyProgram } from '../types';
-import { useWallet } from '../../../services';
 import { RoleSwitcher as RS } from './RoleSwitcher';
 
 const RoleSwitcher = styled(RS)``;
@@ -70,10 +70,12 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
     mode: 'onTouched',
   });
 
+  const submitting = fetching.execute;
   const editable = mode == 'edit';
+  const disabled = !editable || submitting;
 
   const submit = useCallback(() => {
-    if (!isValid || !editable) {
+    if (!isValid || disabled) {
       return;
     }
 
@@ -100,7 +102,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
             },
       })
       .then(onSubmit);
-  }, [editable, getValues, isValid, fetching.execute, canister, onSubmit]);
+  }, [disabled, getValues, isValid, fetching.execute, canister, onSubmit]);
 
   return (
     <Container {...p}>
@@ -112,19 +114,19 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
           required: 'Обязательное поле',
         }}
         render={({ field }) => (
-          <TextField {...field} disabled={!editable} label='Название действия' />
+          <TextField {...field} disabled={disabled} label='Название действия' />
         )}
       />
       <Controller
         name='description'
         control={control}
-        render={({ field }) => <TextField {...field} disabled={!editable} label='Описание' />}
+        render={({ field }) => <TextField {...field} disabled={disabled} label='Описание' />}
       />
       <Controller
         name='rnp'
         control={control}
         render={({ field }) => (
-          <RoleSwitcher {...field} disabled={!editable} label='Выполнить из под роли и пермиссии' />
+          <RoleSwitcher {...field} disabled={disabled} label='Выполнить из под роли и пермиссии' />
         )}
       />
       <Text variant='h5'>Операции</Text>
@@ -147,7 +149,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                     },
                   }}
                   render={({ field }) => (
-                    <TextField {...field} disabled={!editable} label='Идентификатор канистера' />
+                    <TextField {...field} disabled={disabled} label='Идентификатор канистера' />
                   )}
                 />
                 <Controller
@@ -157,7 +159,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                     required: 'Обязательное поле',
                   }}
                   render={({ field }) => (
-                    <TextField {...field} disabled={!editable} label='Наименование метода' />
+                    <TextField {...field} disabled={disabled} label='Наименование метода' />
                   )}
                 />
                 <Controller
@@ -169,7 +171,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      disabled={!editable}
+                      disabled={disabled}
                       type='number'
                       label='Сумма циклов для трансфера'
                     />
@@ -195,14 +197,17 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                           render={({ field }) => (
                             <TextArea
                               {...field}
-                              disabled={!editable}
+                              disabled={disabled}
                               label={`Candid-аргумент вызова #${j + 1}`}
                             />
                           )}
                         />
                       ))}
                       {editable && (
-                        <AddButton onClick={() => field.onChange([...field.value, ''])}>
+                        <AddButton
+                          disabled={disabled}
+                          onClick={() => field.onChange([...field.value, ''])}
+                        >
                           + добавить аргумент
                         </AddButton>
                       )}
@@ -212,7 +217,10 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
               </ProgramSlice>
             ))}
             {editable && (
-              <AddButton onClick={() => field.onChange([...field.value, getEmptyProgram()])}>
+              <AddButton
+                disabled={disabled}
+                onClick={() => field.onChange([...field.value, getEmptyProgram()])}
+              >
                 + добавить операцию
               </AddButton>
             )}
@@ -220,7 +228,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
         )}
       />
       {editable && (
-        <Button type='submit' disabled={!isValid || fetching.execute} onClick={submit}>
+        <Button type='submit' disabled={!isValid || submitting} onClick={submit}>
           Выполнить
         </Button>
       )}

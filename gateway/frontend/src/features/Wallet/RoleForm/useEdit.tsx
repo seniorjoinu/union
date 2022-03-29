@@ -1,8 +1,8 @@
 import React, { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTrigger } from 'toolkit';
+import { useWallet } from 'services';
 import { ExternalExecutorFormData } from '../../Executor';
-import { useWallet } from '../../../services';
 import { parseRole } from '../utils';
 import { useCurrentWallet } from '../context';
 import { UseSubmitProps } from './types';
