@@ -22,8 +22,8 @@ use crate::helpers::execute_program_and_log;
 use crate::state::{State, TaskType};
 use ic_cdk::api::time;
 use ic_cdk::caller;
+use ic_cdk::export::candid::export_service;
 use ic_cdk::export::Principal;
-use ic_cdk::export::candid::{export_service};
 use ic_cdk_macros::{heartbeat, init, query, update};
 use ic_cron::implement_cron;
 use ic_cron::types::{Iterations, SchedulingOptions};
@@ -162,7 +162,7 @@ fn get_scheduled_for_authorization_executions(
                 .expect("Unable to deserialize a task");
 
             match task_type {
-                TaskType::CallAuthorization(e) => e,
+                TaskType::CallAuthorization(e) => (it.id, e),
             }
         })
         .collect();
