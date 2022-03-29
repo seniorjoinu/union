@@ -28,6 +28,7 @@ use ic_cdk::export::Principal;
 use ic_cdk_macros::{heartbeat, init, query, update};
 use ic_cron::implement_cron;
 use ic_cron::types::{Iterations, SchedulingOptions};
+use std::collections::HashSet;
 
 pub mod api;
 pub mod common;
@@ -484,11 +485,11 @@ pub fn get_my_permissions() -> GetMyPermissionsResponse {
     let id = caller();
     let state = get_state();
     let role_ids = state.roles.get_role_ids_by_role_owner_cloned(&id);
-    let mut permission_ids = vec![];
+    let mut permission_ids = HashSet::new();
 
     for role_id in &role_ids {
-        let mut some_permission_ids = state.get_permission_ids_of_role_cloned(role_id);
-        permission_ids.append(&mut some_permission_ids);
+        let some_permission_ids = state.get_permission_ids_of_role_cloned(role_id);
+        permission_ids.extend(some_permission_ids.into_iter());
     }
 
     let mut permissions = vec![];
