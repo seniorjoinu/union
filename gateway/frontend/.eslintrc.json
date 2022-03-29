@@ -49,6 +49,7 @@
     "jsx-quotes": [1, "prefer-single"],
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx", ".ts", ".tsx"] }],
 
+    "camelcase": 0,
     "no-return-assign": 0,
     "no-param-reassign": 0,
     "no-underscore-dangle": 0,

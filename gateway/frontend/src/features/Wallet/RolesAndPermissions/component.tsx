@@ -34,6 +34,10 @@ const Container = styled.div`
 
   ${Title} {
     margin-bottom: 16px;
+
+    &:first-of-type {
+      margin-bottom: 64px;
+    }
   }
 
   ${Controls} {
@@ -70,17 +74,25 @@ export const RolesAndPermissions = () => {
   return (
     <Container>
       <Title variant='h2'>Роли и пермиссии</Title>
-      <Controls>
-        <Button forwardedAs={NavLink} to='../role/create'>
-          Создать новую роль
-        </Button>
-        <Button forwardedAs={NavLink} to='../permission/create'>
-          Создать новую пермиссию
-        </Button>
-      </Controls>
+      {!!rnp && (
+        <Controls>
+          <Button forwardedAs={NavLink} to='my'>
+            Мои роли
+          </Button>
+          <Button forwardedAs={NavLink} to='../role/create'>
+            + Создать новую роль
+          </Button>
+          <Button forwardedAs={NavLink} to='../permission/create'>
+            + Создать новую пермиссию
+          </Button>
+        </Controls>
+      )}
       <Title variant='h4'>Роли</Title>
       <Items>
         {(fetching.get_role_ids || fetching.get_roles) && <Text>fetching</Text>}
+        {!(fetching.get_role_ids || fetching.get_roles) && !roles.length && (
+          <Text>Роли отсутствуют</Text>
+        )}
         {roles.map((role) => (
           <RoleInfo key={role.id} role={role} href={`../role/${role.id}`} editable />
         ))}
@@ -88,6 +100,9 @@ export const RolesAndPermissions = () => {
       <Title variant='h4'>Пермиссии</Title>
       <Items>
         {(fetching.get_permission_ids || fetching.get_permissions) && <Text>fetching</Text>}
+        {!(fetching.get_permission_ids || fetching.get_permissions) && !permissions.length && (
+          <Text>Пермиссии отсутствуют</Text>
+        )}
         {permissions.map((permission) => (
           <PermissionInfo
             key={permission.id}

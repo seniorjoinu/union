@@ -4,10 +4,11 @@ import { Header as H } from '../features/Header';
 
 const Header = styled(H)``;
 
-const Content = styled.section`
+const Section = styled.section`
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
 `;
 
 const Container = styled.main`
@@ -25,11 +26,17 @@ const Container = styled.main`
     background: white;
   }
 
-  ${Content} {
+  ${Section} {
+    display: flex;
+    flex-direction: column;
+    padding: 64px 128px 32px 128px;
     z-index: 1;
-    padding: 64px 64px 32px 64px;
-    align-self: center;
-    min-width: 700px;
+
+    & > * {
+      height: 100%;
+      min-width: 700px;
+      align-self: center;
+    }
   }
 `;
 
@@ -40,6 +47,6 @@ export interface AppProps {
 export const App = ({ children }: AppProps) => (
   <Container>
     <Header />
-    <Content>{children}</Content>
+    <Section>{children}</Section>
   </Container>
 );

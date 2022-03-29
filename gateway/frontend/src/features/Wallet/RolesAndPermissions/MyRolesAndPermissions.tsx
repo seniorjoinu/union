@@ -30,6 +30,10 @@ const Container = styled.div`
 
   ${Title} {
     margin-bottom: 16px;
+
+    &:first-of-type {
+      margin-bottom: 64px;
+    }
   }
 
   ${Controls} {
@@ -54,6 +58,7 @@ export const MyRolesAndPermissions = () => {
       <Title variant='h4'>Роли</Title>
       <Items>
         {fetching.get_my_roles && <Text>fetching</Text>}
+        {!fetching.get_my_roles && !roles.length && <Text>Роли отсутствуют</Text>}
         {roles.map((role) => (
           <RoleInfo key={role.id} role={role} href={`../role/${role.id}`} />
         ))}
@@ -61,6 +66,7 @@ export const MyRolesAndPermissions = () => {
       <Title variant='h4'>Пермиссии</Title>
       <Items>
         {fetching.get_my_permissions && <Text>fetching</Text>}
+        {!fetching.get_my_permissions && !permissions.length && <Text>Пермиссии отсутствуют</Text>}
         {permissions.map((permission) => (
           <PermissionInfo
             key={permission.id}

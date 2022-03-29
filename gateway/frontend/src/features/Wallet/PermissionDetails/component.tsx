@@ -10,7 +10,7 @@ import { PermissionDetailsView } from './PermissionDetailsView';
 import { Attacher } from './Attacher';
 
 const Title = styled(Text)`
-  margin-bottom: 24px;
+  margin-bottom: 64px;
 `;
 
 export const PermissionDetails = () => {

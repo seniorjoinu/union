@@ -48,17 +48,18 @@ const Container = styled.div`
   }
 
   ${ProgramSlice} {
-    margin-top: 24px;
+    margin-top: 8px;
   }
 `;
 
 export interface ExecutorFormProps extends IClassName {
+  mode: 'edit' | 'view';
   canisterId: string;
   data: Partial<ExecutorFormData>;
   onSubmit(response: ExecuteResponse): void;
 }
 
-export function ExecutorForm({ canisterId, data, onSubmit, ...p }: ExecutorFormProps) {
+export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: ExecutorFormProps) {
   const { canister, fetching } = useWallet(canisterId);
   const {
     control,
@@ -69,8 +70,10 @@ export function ExecutorForm({ canisterId, data, onSubmit, ...p }: ExecutorFormP
     mode: 'onTouched',
   });
 
+  const editable = mode == 'edit';
+
   const submit = useCallback(() => {
-    if (!isValid) {
+    if (!isValid || !editable) {
       return;
     }
 
@@ -97,28 +100,32 @@ export function ExecutorForm({ canisterId, data, onSubmit, ...p }: ExecutorFormP
             },
       })
       .then(onSubmit);
-  }, [getValues, isValid, fetching.execute, canister, onSubmit]);
+  }, [editable, getValues, isValid, fetching.execute, canister, onSubmit]);
 
   return (
     <Container {...p}>
-      <Title variant='h2'>Выполнение произвольного вызова</Title>
+      {editable && <Title variant='h2'>Выполнение произвольного вызова</Title>}
       <Controller
         name='title'
         control={control}
         rules={{
           required: 'Обязательное поле',
         }}
-        render={({ field }) => <TextField {...field} label='Название действия' />}
+        render={({ field }) => (
+          <TextField {...field} disabled={!editable} label='Название действия' />
+        )}
       />
       <Controller
         name='description'
         control={control}
-        render={({ field }) => <TextField {...field} label='Описание' />}
+        render={({ field }) => <TextField {...field} disabled={!editable} label='Описание' />}
       />
       <Controller
         name='rnp'
         control={control}
-        render={({ field }) => <RoleSwitcher {...field} label='Ваша роль и пермиссия' />}
+        render={({ field }) => (
+          <RoleSwitcher {...field} disabled={!editable} label='Выполнить из под роли и пермиссии' />
+        )}
       />
       <Text variant='h5'>Операции</Text>
       <Controller
@@ -139,7 +146,9 @@ export function ExecutorForm({ canisterId, data, onSubmit, ...p }: ExecutorFormP
                       isPrincipal: (value) => !!value && checkPrincipal(value.toString()) != null,
                     },
                   }}
-                  render={({ field }) => <TextField {...field} label='Идентификатор канистера' />}
+                  render={({ field }) => (
+                    <TextField {...field} disabled={!editable} label='Идентификатор канистера' />
+                  )}
                 />
                 <Controller
                   name={`program.${i}.endpoint.method_name`}
@@ -147,7 +156,9 @@ export function ExecutorForm({ canisterId, data, onSubmit, ...p }: ExecutorFormP
                   rules={{
                     required: 'Обязательное поле',
                   }}
-                  render={({ field }) => <TextField {...field} label='Наименование метода' />}
+                  render={({ field }) => (
+                    <TextField {...field} disabled={!editable} label='Наименование метода' />
+                  )}
                 />
                 <Controller
                   name={`program.${i}.cycles`}
@@ -156,7 +167,12 @@ export function ExecutorForm({ canisterId, data, onSubmit, ...p }: ExecutorFormP
                     required: 'Обязательное поле',
                   }}
                   render={({ field }) => (
-                    <TextField {...field} type='number' label='Сумма циклов для трансфера' />
+                    <TextField
+                      {...field}
+                      disabled={!editable}
+                      type='number'
+                      label='Сумма циклов для трансфера'
+                    />
                   )}
                 />
                 <Controller
@@ -177,27 +193,37 @@ export function ExecutorForm({ canisterId, data, onSubmit, ...p }: ExecutorFormP
                             required: 'Обязательное поле',
                           }}
                           render={({ field }) => (
-                            <TextArea {...field} label={`Candid-аргумент вызова #${j + 1}`} />
+                            <TextArea
+                              {...field}
+                              disabled={!editable}
+                              label={`Candid-аргумент вызова #${j + 1}`}
+                            />
                           )}
                         />
                       ))}
-                      <AddButton onClick={() => field.onChange([...field.value, ''])}>
-                        + добавить аргумент
-                      </AddButton>
+                      {editable && (
+                        <AddButton onClick={() => field.onChange([...field.value, ''])}>
+                          + добавить аргумент
+                        </AddButton>
+                      )}
                     </>
                   )}
                 />
               </ProgramSlice>
             ))}
-            <AddButton onClick={() => field.onChange([...field.value, getEmptyProgram()])}>
-              + добавить операцию
-            </AddButton>
+            {editable && (
+              <AddButton onClick={() => field.onChange([...field.value, getEmptyProgram()])}>
+                + добавить операцию
+              </AddButton>
+            )}
           </>
         )}
       />
-      <Button type='submit' disabled={!isValid || fetching.execute} onClick={submit}>
-        Выполнить
-      </Button>
+      {editable && (
+        <Button type='submit' disabled={!isValid || fetching.execute} onClick={submit}>
+          Выполнить
+        </Button>
+      )}
     </Container>
   );
 }

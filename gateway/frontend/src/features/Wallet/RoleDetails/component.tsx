@@ -10,7 +10,7 @@ import { useAttachedPermissions } from '../RolesAndPermissions/useAttachedPermis
 import { RoleDetailsView } from './RoleDetailsView';
 
 const Title = styled(Text)`
-  margin-bottom: 24px;
+  margin-bottom: 64px;
 `;
 
 export const RoleDetails = () => {

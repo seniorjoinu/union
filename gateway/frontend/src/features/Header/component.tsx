@@ -2,7 +2,17 @@ import React from 'react';
 import styled from 'styled-components';
 import { NavLink, useParams } from 'react-router-dom';
 import { Text } from 'components';
-import { LoginButton } from '../LoginButton';
+import { LoginButton } from '../Auth/LoginButton';
+
+const Item = styled(Text)`
+  text-decoration: none;
+  color: #575757;
+
+  &.active {
+    color: black;
+    font-weight: 500;
+  }
+`;
 
 const Items = styled(Text)`
   display: flex;
@@ -21,6 +31,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
   padding: 8px 16px;
   border-bottom: 1px solid ${({ theme }) => theme.colors.dark[900]};
 `;
@@ -35,26 +46,20 @@ export function Header(p: IClassName) {
   return (
     <Container {...p}>
       <Items>
-        <Text variant='p1' as={NavLink} to='/wallets'>
+        <Item variant='p1' as={NavLink} to='/wallets'>
           Wallets
-        </Text>
+        </Item>
         {isInsideWallet && walletId && (
           <>
-            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/participants`}>
+            <Item variant='p1' as={NavLink} to={`wallet/${walletId}/participants`}>
               Participants
-            </Text>
-            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/my-rnp`}>
-              My roles
-            </Text>
-            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/rnp`}>
+            </Item>
+            <Item variant='p1' as={NavLink} to={`wallet/${walletId}/rnp`}>
               Roles and Permissions
-            </Text>
-            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/invite`}>
-              Invite
-            </Text>
-            <Text variant='p1' as={NavLink} to={`wallet/${walletId}/manual-execute`}>
-              Execute
-            </Text>
+            </Item>
+            <Item variant='p1' as={NavLink} to={`wallet/${walletId}/history`}>
+              History
+            </Item>
           </>
         )}
       </Items>

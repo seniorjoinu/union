@@ -6,20 +6,34 @@ import { useTrigger } from 'toolkit';
 import { useCurrentWallet } from '../../Wallet/context';
 import { parseRole } from '../../Wallet/utils';
 
-const Container = styled.div`
+const Controls = styled.div`
+  display: flex;
+  flex-direction: row;
+
   select {
-    height: 20px;
+    margin-right: 16px;
+    height: 24px;
+  }
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  ${Controls} {
+    margin-top: 8px;
   }
 `;
 
 export interface RoleSwitcherProps extends IClassName {
   label: string;
+  disabled?: boolean;
   onChange(e: { target: { value: RoleAndPermission | null } }): void;
   value: RoleAndPermission | null;
 }
 
 export const RoleSwitcher = React.forwardRef<HTMLDivElement, RoleSwitcherProps>(
-  ({ onChange, value, label, ...p }, ref) => {
+  ({ onChange, value, label, disabled, ...p }, ref) => {
     const { rnp, roles, permissions } = useCurrentWallet();
 
     useTrigger(
@@ -46,34 +60,37 @@ export const RoleSwitcher = React.forwardRef<HTMLDivElement, RoleSwitcherProps>(
 
     return (
       <Container {...p} ref={ref}>
-        <Text variant='p3'>{label}</Text>
-        <Select
-          title='Role'
-          onChange={(e) => handleChange(e, 'role_id')}
-          value={value?.role_id.toString()}
-        >
-          {roles.map((r) => {
-            const parsed = parseRole(r.role_type);
+        <Text variant='p1'>{label}</Text>
+        <Controls>
+          <Select
+            title='Role'
+            onChange={(e) => handleChange(e, 'role_id')}
+            value={value?.role_id.toString()}
+            disabled={disabled}
+          >
+            {roles.map((r) => {
+              const parsed = parseRole(r.role_type);
 
-            return (
-              <Option key={r.id} id={String(r.id)} value={String(r.id)}>
-                {parsed.title}
+              return (
+                <Option key={r.id} id={String(r.id)} value={String(r.id)}>
+                  {parsed.title}
+                </Option>
+              );
+            })}
+          </Select>
+          <Select
+            title='Permission'
+            onChange={(e) => handleChange(e, 'permission_id')}
+            value={value?.permission_id.toString()}
+            disabled={disabled}
+          >
+            {permissions.map(({ id, name }) => (
+              <Option key={id} id={String(id)} value={String(id)}>
+                {name}
               </Option>
-            );
-          })}
-        </Select>
-        <Text variant='p3'>Permission</Text>
-        <Select
-          title='Permission'
-          onChange={(e) => handleChange(e, 'permission_id')}
-          value={value?.permission_id.toString()}
-        >
-          {permissions.map(({ id, name }) => (
-            <Option key={id} id={String(id)} value={String(id)}>
-              {name}
-            </Option>
-          ))}
-        </Select>
+            ))}
+          </Select>
+        </Controls>
       </Container>
     );
   },

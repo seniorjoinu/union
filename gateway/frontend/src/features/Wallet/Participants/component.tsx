@@ -1,9 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Text } from 'components';
+import { Text, Button as B } from 'components';
 import { Profile } from 'wallet-ts';
+import { NavLink } from 'react-router-dom';
+import { useCurrentWallet } from '../context';
 import { useFilteredRoles } from './useRoles';
 
+const Button = styled(B)``;
 const Title = styled(Text)``;
 
 const Item = styled.div`
@@ -29,11 +32,17 @@ const Container = styled.div`
   flex-direction: column;
 
   ${Title} {
-    margin-bottom: 16px;
+    margin-bottom: 64px;
+  }
+
+  ${Button} {
+    margin-bottom: 24px;
+    align-self: flex-end;
   }
 `;
 
 export const Participants = () => {
+  const { rnp } = useCurrentWallet();
   const { roles, fetching } = useFilteredRoles<Profile>('Profile');
 
   return (
@@ -44,7 +53,13 @@ export const Participants = () => {
         !current.fetching.get_my_roles && !current.roles.find(r => 'Profile' in r.role_type) &&
           <Button>Вступить в Union</Button>
       } */}
+      {!!rnp && (
+        <Button forwardedAs={NavLink} to='invite'>
+          + Пригласить
+        </Button>
+      )}
       {fetching && <Text>fetching</Text>}
+      {!fetching && !roles.length && <Text>Пользователи отсутствуют</Text>}
       {!!roles.length && (
         <Items>
           {roles.map((p) => (
