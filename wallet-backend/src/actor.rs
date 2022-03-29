@@ -9,7 +9,8 @@ use crate::api::{
     GetPermissionsByPermissionTargetRequest, GetPermissionsByPermissionTargetResponse,
     GetPermissionsRequest, GetPermissionsResponse, GetRoleIdsResponse,
     GetRolesAttachedToPermissionsRequest, GetRolesAttachedToPermissionsResponse, GetRolesRequest,
-    GetRolesResponse, GetScheduledForAuthorizationExecutionsResponse, RemovePermissionRequest,
+    GetRolesResponse, GetScheduledForAuthorizationExecutionsRequest,
+    GetScheduledForAuthorizationExecutionsResponse, RemovePermissionRequest,
     RemovePermissionResponse, RemoveRoleRequest, RemoveRoleResponse,
     SubtractEnumeratedRolesRequest, UpdatePermissionRequest, UpdateRoleRequest,
 };
@@ -138,7 +139,7 @@ fn authorize_execution(req: AuthorizeExecutionRequest) -> AuthorizeExecutionResp
 
 #[query]
 fn get_scheduled_for_authorization_executions(
-    req: AuthorizedRequest,
+    req: GetScheduledForAuthorizationExecutionsRequest,
 ) -> GetScheduledForAuthorizationExecutionsResponse {
     let state = get_state();
 
@@ -153,19 +154,40 @@ fn get_scheduled_for_authorization_executions(
         )
         .expect("Access denied");
 
-    let entries = get_cron_state()
-        .get_tasks_cloned()
-        .into_iter()
-        .map(|it| {
-            let task_type = it
-                .get_payload::<TaskType>()
-                .expect("Unable to deserialize a task");
+    let entries = match req.task_ids {
+        None => get_cron_state()
+            .get_tasks_cloned()
+            .into_iter()
+            .map(|it| {
+                let task_type = it
+                    .get_payload::<TaskType>()
+                    .expect("Unable to deserialize a task");
 
-            match task_type {
-                TaskType::CallAuthorization(e) => (it.id, e),
+                match task_type {
+                    TaskType::CallAuthorization(e) => (it.id, e),
+                }
+            })
+            .collect(),
+        Some(ids) => {
+            let mut res = vec![];
+
+            for id in ids {
+                let task = get_cron_state()
+                    .get_task(&id)
+                    .unwrap_or_else(|| panic!("Unable to get task with id {}", id));
+
+                let task_type = task
+                    .get_payload::<TaskType>()
+                    .expect("Unable to deserialize a task");
+
+                match task_type {
+                    TaskType::CallAuthorization(e) => res.push((id, e)),
+                }
             }
-        })
-        .collect();
+
+            res
+        }
+    };
 
     GetScheduledForAuthorizationExecutionsResponse { entries }
 }
