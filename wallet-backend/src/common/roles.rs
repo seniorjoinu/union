@@ -1,4 +1,4 @@
-use crate::common::utils::{validate_and_trim_str, validate_f32, validate_u32, ValidationError};
+use crate::common::utils::{validate_and_trim_str, validate_f64, validate_u32, ValidationError};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -273,7 +273,7 @@ impl RolesState {
                 counter >= qty_of_params.quantity
             }
             RoleType::FractionOf(fr_of_params) => {
-                let mut counter = 0f32;
+                let mut counter = 0f64;
 
                 for required_role_id in &fr_of_params.enumerated {
                     let res = self.is_role_fulfilled(required_role_id, authorized_by);
@@ -283,7 +283,7 @@ impl RolesState {
                     }
                 }
 
-                (fr_of_params.enumerated.len() as f32) / counter >= fr_of_params.fraction
+                (fr_of_params.enumerated.len() as f64) / counter >= fr_of_params.fraction
             }
         }
     }
@@ -454,7 +454,7 @@ impl QuantityOf {
 pub struct FractionOf {
     pub name: String,
     pub description: String,
-    pub fraction: f32,
+    pub fraction: f64,
     pub enumerated: HashSet<RoleId>,
 }
 
@@ -462,7 +462,7 @@ impl FractionOf {
     pub fn new(
         name: &str,
         description: &str,
-        fraction: f32,
+        fraction: f64,
         enumerated_opt: Option<Vec<RoleId>>,
     ) -> Self {
         let of = if let Some(of_vec) = enumerated_opt {
@@ -512,7 +512,7 @@ impl RoleType {
                 Ok(())
             }
             RoleType::FractionOf(fraction_of) => {
-                validate_f32(fraction_of.fraction, 0.0001, 1.00, "Fraction")
+                validate_f64(fraction_of.fraction, 0.0001, 1.00, "Fraction")
                     .map_err(RolesError::ValidationError)
             }
             RoleType::QuantityOf(quantity_of) => validate_u32(
@@ -693,7 +693,7 @@ mod tests {
             "It should be impossible to remove A role, until there are related roles exist",
         );
 
-        let has_profile_role = roles_state.get_has_profile_role_mut();
+        let has_profile_role = roles_state.get_has_profile_role_mut().unwrap();
         assert_eq!(has_profile_role.enumerated.len(), 3);
         assert!(has_profile_role.enumerated.contains(&user_1_role_id));
         assert!(has_profile_role.enumerated.contains(&user_2_role_id));
@@ -735,7 +735,7 @@ mod tests {
             .remove_role(&user_3_role_id)
             .expect("It should be possible to remove User3 role now");
 
-        let has_profile_role = roles_state.get_has_profile_role_mut();
+        let has_profile_role = roles_state.get_has_profile_role_mut().unwrap();
         assert!(has_profile_role.enumerated.is_empty());
     }
 }

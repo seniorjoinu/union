@@ -205,7 +205,7 @@ type QuantityOf = record {
 type FractionOf = record {
     name : text;
     description : text;
-    fraction : float32;
+    fraction : float64;
     enumerated : vec RoleId;
 };
 

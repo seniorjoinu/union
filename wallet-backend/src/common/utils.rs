@@ -77,21 +77,15 @@ pub fn validate_and_trim_str(
     let trimmed_len = trimmed.len();
 
     if trimmed_len > max {
-        Err(ValidationError(
-            format!(
-                "{} can't be longer than {} symbols ({})",
-                name, max, trimmed_len
-            )
-            .to_string(),
-        ))
+        Err(ValidationError(format!(
+            "{} can't be longer than {} symbols ({})",
+            name, max, trimmed_len
+        )))
     } else if trimmed_len < min {
-        Err(ValidationError(
-            format!(
-                "{} can't be shorter than {} symbols ({})",
-                name, min, trimmed_len
-            )
-            .to_string(),
-        ))
+        Err(ValidationError(format!(
+            "{} can't be shorter than {} symbols ({})",
+            name, min, trimmed_len
+        )))
     } else {
         Ok(trimmed.to_string())
     }
@@ -125,4 +119,4 @@ macro_rules! gen_validate_num {
 }
 
 gen_validate_num!(validate_u32, u32);
-gen_validate_num!(validate_f32, f32);
+gen_validate_num!(validate_f64, f64);
