@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
+import { Control, Controller } from 'react-hook-form';
 import { Text, Select, Option } from 'components';
-import { RoleAndPermission } from 'wallet-ts';
 import { useTrigger } from 'toolkit';
 import { useCurrentWallet } from '../../Wallet/context';
 import { parseRole } from '../../Wallet/utils';
+import { ExecutorFormData } from '../types';
 
 const Controls = styled.div`
   display: flex;
@@ -28,70 +29,76 @@ const Container = styled.div`
 export interface RoleSwitcherProps extends IClassName {
   label: string;
   disabled?: boolean;
-  onChange(e: { target: { value: RoleAndPermission | null } }): void;
-  value: RoleAndPermission | null;
+  control: Control<ExecutorFormData, any>;
 }
 
-export const RoleSwitcher = React.forwardRef<HTMLDivElement, RoleSwitcherProps>(
-  ({ onChange, value, label, disabled, ...p }, ref) => {
-    const { rnp, roles, permissions } = useCurrentWallet();
+export const RoleSwitcher = ({ control, label, disabled, ...p }: RoleSwitcherProps) => {
+  const { rnp, roles, permissions, update } = useCurrentWallet();
+  const { onChange } = control.register('rnp');
 
-    useTrigger(
-      (rnp) => {
-        if (!value) {
-          onChange({ target: { value: rnp } });
-        }
-      },
-      rnp,
-      [],
-    );
+  useEffect(() => {
+    update();
+  }, []);
 
-    const handleChange = useCallback(
-      (e: React.ChangeEvent<HTMLSelectElement>, key: keyof RoleAndPermission) => {
-        if (!value) {
-          return;
-        }
-        const newValue = { ...value, [key]: Number(e.target.value) };
+  useTrigger(
+    (rnp) => {
+      onChange({ target: { name: 'rnp', value: rnp } });
+    },
+    rnp,
+    [],
+  );
 
-        onChange({ target: { value: newValue } });
-      },
-      [onChange, value],
-    );
+  return (
+    <Container {...p}>
+      <Text variant='p1'>{label}</Text>
+      <Controls>
+        <Controller
+          name='rnp.role_id'
+          control={control}
+          rules={{
+            required: 'Обязательное поле',
+          }}
+          render={({ field }) => (
+            <Select
+              title='Role'
+              {...field}
+              onChange={(e) => field.onChange(Number(e.target.value))}
+              disabled={disabled}
+            >
+              {roles.map((r) => {
+                const parsed = parseRole(r.role_type);
 
-    return (
-      <Container {...p} ref={ref}>
-        <Text variant='p1'>{label}</Text>
-        <Controls>
-          <Select
-            title='Role'
-            onChange={(e) => handleChange(e, 'role_id')}
-            value={value?.role_id.toString()}
-            disabled={disabled}
-          >
-            {roles.map((r) => {
-              const parsed = parseRole(r.role_type);
-
-              return (
-                <Option key={r.id} id={String(r.id)} value={String(r.id)}>
-                  {parsed.title}
+                return (
+                  <Option key={r.id} id={String(r.id)} value={String(r.id)}>
+                    {parsed.title}
+                  </Option>
+                );
+              })}
+            </Select>
+          )}
+        />
+        <Controller
+          name='rnp.permission_id'
+          control={control}
+          rules={{
+            required: 'Обязательное поле',
+          }}
+          render={({ field }) => (
+            <Select
+              {...field}
+              onChange={(e) => field.onChange(Number(e.target.value))}
+              title='Permission'
+              disabled={disabled}
+            >
+              {permissions.map(({ id, name }) => (
+                <Option key={id} id={String(id)} value={String(id)}>
+                  {name}
                 </Option>
-              );
-            })}
-          </Select>
-          <Select
-            title='Permission'
-            onChange={(e) => handleChange(e, 'permission_id')}
-            value={value?.permission_id.toString()}
-            disabled={disabled}
-          >
-            {permissions.map(({ id, name }) => (
-              <Option key={id} id={String(id)} value={String(id)}>
-                {name}
-              </Option>
-            ))}
-          </Select>
-        </Controls>
-      </Container>
-    );
-  },
-);
+              ))}
+            </Select>
+          )}
+        />
+      </Controls>
+    </Container>
+  );
+};

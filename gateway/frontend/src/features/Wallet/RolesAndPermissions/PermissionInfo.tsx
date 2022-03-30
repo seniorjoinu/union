@@ -1,8 +1,8 @@
 import React from 'react';
 import { Permission } from 'wallet-ts';
 import { parseRole } from '../utils';
+import { useAttachedRoles } from '../useAttachedRoles';
 import { Info } from './Info';
-import { useAttachedRoles } from './useAttachedRoles';
 
 export interface PermissionInfoProps extends IClassName {
   editable?: boolean;

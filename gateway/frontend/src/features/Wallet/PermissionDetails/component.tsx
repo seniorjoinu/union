@@ -5,7 +5,7 @@ import { Text } from 'components';
 import { useTrigger } from 'toolkit';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
-import { useAttachedRoles } from '../RolesAndPermissions/useAttachedRoles';
+import { useAttachedRoles } from '../useAttachedRoles';
 import { PermissionDetailsView } from './PermissionDetailsView';
 import { Attacher } from './Attacher';
 

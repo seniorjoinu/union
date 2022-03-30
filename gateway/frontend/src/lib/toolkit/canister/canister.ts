@@ -1,15 +1,10 @@
 import { Actor, CallConfig, HttpAgent } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
 
-export interface EnviromentContext {
-  name: string;
-}
-
 export interface CanisterProps {
   canisterId: string;
   idl: (p: any) => any;
   agent: HttpAgent;
-  context: EnviromentContext;
   handlers?: {
     onBeforeRequest?(methodName: string, args: any[], callConfig: CallConfig): void;
     onSuccess?(methodName: string, response: any): void;
@@ -21,13 +16,9 @@ export class Canister<T> {
   readonly canisterId: string;
   readonly idl: (p: any) => any;
   public canister: T;
-  public agent: HttpAgent; // FIXME для отладки, не нужно его хранить
-  public context: EnviromentContext;
   readonly handlers: CanisterProps['handlers'];
 
-  constructor({ canisterId, idl, agent, context, handlers = {} }: CanisterProps) {
-    this.context = context;
-    this.agent = agent;
+  constructor({ canisterId, idl, agent, handlers = {} }: CanisterProps) {
     this.canisterId = canisterId;
     this.idl = idl;
     this.canister = this.createActor(agent);
@@ -49,23 +40,22 @@ export class Canister<T> {
   };
 
   private createActor = (agent: HttpAgent): T => {
-    this.agent = agent;
+    const caller = agent.getPrincipal().then((caller) => `${caller.toString().slice(0, 12)}...`);
+
     const actor = Actor.createActor<T>(this.idl, {
       agent,
       canisterId: this.canisterId,
       queryTransform: (methodName, args, config) => {
         this.onBeforeRequest(methodName, args, config);
-        console.log(
-          `\x1b[92m[${this.context.name}] [query] [${this.canisterId}] ${methodName}`,
-          ...args,
+        caller.then((caller) =>
+          console.log(`\x1b[92m[query] [${this.canisterId}] [${caller}] ${methodName}`, ...args),
         );
         return config;
       },
       callTransform: (methodName, args, config) => {
         this.onBeforeRequest(methodName, args, config);
-        console.log(
-          `\x1b[35m[${this.context.name}] [update] [${this.canisterId}] ${methodName}`,
-          ...args,
+        caller.then((caller) =>
+          console.log(`\x1b[35m[update] [${this.canisterId}] [${caller}] ${methodName}`, ...args),
         );
         return config;
       },
@@ -83,15 +73,11 @@ export class Canister<T> {
             try {
               response = await element.call(actor, ...args);
               this.onSuccess(key, response);
-              console.log(
-                `\x1b[33m[${this.context.name}] [response] [${this.canisterId}] ${key}`,
-                response,
-                args,
-              );
+              console.log(`\x1b[33m[response] [${this.canisterId}] ${key}`, response, args);
             } catch (e) {
               this.onError(key, e);
               console.log(
-                `\x1b[33m[${this.context.name}] [error_response] [${this.canisterId}] ${key}`,
+                `\x1b[33m[error_response] [${this.canisterId}] ${key}`,
                 response,
                 args,
                 e,

@@ -4,7 +4,7 @@ import { Text, Button as B } from 'components';
 import { Profile } from 'wallet-ts';
 import { NavLink } from 'react-router-dom';
 import { useCurrentWallet } from '../context';
-import { useFilteredRoles } from './useRoles';
+import { useFilteredRoles } from '../useRoles';
 
 const Button = styled(B)``;
 const Title = styled(Text)``;

@@ -18,6 +18,7 @@ export function Executor({
   data = {
     title: '',
     description: '',
+    authorization_delay_nano: 1 * 60 * 60 * 10 ** 9, // 1 hour in nano
     program: [],
   },
   mode = 'edit',

@@ -6,8 +6,9 @@ import styled from 'styled-components';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { parseRole } from '../utils';
-import { useAttachedPermissions } from '../RolesAndPermissions/useAttachedPermissions';
+import { useAttachedPermissions } from '../useAttachedPermissions';
 import { RoleDetailsView } from './RoleDetailsView';
+import { Attacher } from './Attacher';
 
 const Title = styled(Text)`
   margin-bottom: 64px;
@@ -61,6 +62,7 @@ export const RoleDetails = () => {
     <>
       <Title variant='h2'>{parsedRole.title}</Title>
       <RoleDetailsView role={role} permissions={permissions} enumerated={enumerated} />
+      <Attacher role={role} />
     </>
   );
 };

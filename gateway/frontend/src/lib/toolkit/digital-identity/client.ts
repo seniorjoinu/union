@@ -60,7 +60,7 @@ export class DigitalIdentityClient {
 
       this.identity = identity;
     } catch (e) {
-      console.log('Unable to parse identity from localStorage', e);
+      console.warn('Unable to parse identity from localStorage', e);
     }
   };
 }

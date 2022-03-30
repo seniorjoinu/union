@@ -26,7 +26,7 @@ export const ScheduledEntry = (p: ScheduledEntryProps) => {
     [taskId],
   );
 
-  const [, entry] = (data.get_scheduled_for_authorization_executions?.entries || [])[0];
+  const entryInfo = (data.get_scheduled_for_authorization_executions?.entries || [])[0];
 
   if (!taskId) {
     return <span>Entry with taskId={taskId} does not found</span>;
@@ -36,9 +36,9 @@ export const ScheduledEntry = (p: ScheduledEntryProps) => {
     return <span>Fetching...</span>;
   }
 
-  if (!entry) {
+  if (!entryInfo) {
     return <span>Entry with taskId={taskId} does not exist</span>;
   }
 
-  return <Entry {...p} entry={entry} />;
+  return <Entry {...p} entry={entryInfo[1]} />;
 };

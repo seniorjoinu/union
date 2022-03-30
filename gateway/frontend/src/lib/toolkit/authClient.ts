@@ -1,5 +1,4 @@
 import { HttpAgent, HttpAgentOptions, Identity } from '@dfinity/agent';
-import * as mobx from 'mobx';
 import { Principal } from '@dfinity/principal';
 import { DigitalIdentityClient } from './digital-identity';
 import { getAgent, getHttpAgentOptions } from './agent';
@@ -17,21 +16,6 @@ export class AuthClientWrapper {
   public ready = false;
   public authentificated = false;
 
-  constructor() {
-    mobx.makeObservable(this, {
-      agent: mobx.observable,
-      ready: mobx.observable,
-      authentificated: mobx.observable,
-      principal: mobx.observable,
-      create: mobx.action,
-      login: mobx.action,
-      logout: mobx.action,
-    });
-
-    console.warn('CREATE AGENT', this.options, this.agent);
-    this.initializeAgent();
-  }
-
   // Create a new auth client and update it's ready state
   async create() {
     this.authClient = new DigitalIdentityClient();
@@ -42,7 +26,6 @@ export class AuthClientWrapper {
   }
 
   login = async (mnemonic: string): Promise<Identity | undefined> => {
-    console.log('[AuthClientWrapper] try to login');
     this.authClient?.login(mnemonic);
 
     const identity = this.authClient?.getIdentity();
@@ -53,7 +36,6 @@ export class AuthClientWrapper {
   };
 
   logout = async () => {
-    console.log('[AuthClientWrapper] logout');
     await this.authClient?.logout();
     // await this.authClient?.logout({ returnTo: '/' });
     this.principal = this.authClient?.getIdentity().getPrincipal() || null;
@@ -62,7 +44,9 @@ export class AuthClientWrapper {
 
   getIdentity = async () => this.authClient?.getIdentity();
 
-  isAuthentificated = async () => this.authClient?.isAuthenticated();
+  isAuthentificated = async () =>
+    this.authClient?.isAuthenticated() &&
+    !this.authClient.getIdentity().getPrincipal().isAnonymous();
 
   private initializeAgent = async () => {
     const identity = await this.authClient?.getIdentity();

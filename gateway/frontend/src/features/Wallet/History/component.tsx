@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { Text, Button as B } from 'components';
 import { useTrigger } from 'toolkit';
@@ -58,10 +58,13 @@ export function History({ createLink, ...p }: HistoryProps) {
   const scheduled = data.get_scheduled_for_authorization_executions?.entries || [];
   const history = data.get_history_entries?.entries || [];
 
-  const entries: [bigint | null, HistoryEntry][] = [
-    ...scheduled,
-    ...history.map<[bigint | null, HistoryEntry]>((entry) => [null, entry]),
-  ];
+  const entries: [bigint | null, HistoryEntry][] = useMemo(
+    () =>
+      [...scheduled, ...history.map<[bigint | null, HistoryEntry]>((entry) => [null, entry])].sort(
+        (a, b) => Number(b[1].timestamp) - Number(a[1].timestamp),
+      ),
+    [scheduled, history],
+  );
 
   return (
     <Container {...p}>

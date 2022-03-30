@@ -13,6 +13,7 @@ export interface Program extends Omit<RemoteCallPayload, 'endpoint' | 'cycles'> 
 }
 
 export type ExecutorFormData = Omit<ExecuteRequest, 'authorization_delay_nano' | 'program'> & {
+  authorization_delay_nano: number;
   program: Program[];
 };
 

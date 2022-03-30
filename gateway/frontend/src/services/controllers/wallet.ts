@@ -1,22 +1,22 @@
 import { useState, useMemo } from 'react';
-import { AuthCanisterController, AuthCanisterControllerProps } from 'toolkit';
+import { authClient, Canister, CanisterProps } from 'toolkit';
 import { IDL } from '@dfinity/candid';
 import { _SERVICE } from 'wallet-ts';
 // @ts-expect-error
 import { idlFactory as idl } from 'wallet-idl';
 import './idl-monkey-patching';
 
-export type IWalletController = AuthCanisterController<_SERVICE>;
+export type IWalletController = Canister<_SERVICE>;
 
-export const initWalletController = (
-  canisterId: string,
-  handlers?: AuthCanisterControllerProps['handlers'],
-) => {
-  const canister = ((window as any).wallet = new AuthCanisterController<_SERVICE>({
+export const initWalletController = (canisterId: string, handlers?: CanisterProps['handlers']) => {
+  authClient.agent
+    .getPrincipal()
+    .then((p) => console.log('DEBUG initWalletController', p.toString()));
+  const canister = ((window as any).wallet = new Canister<_SERVICE>({
     canisterId,
     idl,
-    context: { name: 'wallet' },
     handlers,
+    agent: authClient.agent,
   }));
 
   return canister;

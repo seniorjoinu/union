@@ -49,6 +49,8 @@
     "jsx-quotes": [1, "prefer-single"],
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx", ".ts", ".tsx"] }],
 
+    "function-paren-newline": 0,
+    "operator-linebreak": 0,
     "react/destructuring-assignment": 1,
     "camelcase": 0,
     "no-return-assign": 0,

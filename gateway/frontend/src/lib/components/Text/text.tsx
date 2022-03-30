@@ -14,8 +14,8 @@ export const Text = styled.span<TextProps>`
   padding: 0;
 
   ${({ color }) =>
-    color
-    && css`
+    color &&
+    css`
       color: ${color};
     `};
   ${({ variant = 'p2', weight = 'regular' }) => getFontStyles(variant, weight)};

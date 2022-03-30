@@ -60,6 +60,7 @@ export const Entry = ({ entry, children, ...p }: EntryProps) => {
     title: entry.title,
     description: entry.description,
     rnp: { role_id: entry.role_id, permission_id: entry.permission_id },
+    authorization_delay_nano: 0, // FIXME
     program: sequence.map(({ cycles, endpoint, args_candid }) => ({
       cycles: String(cycles),
       args_candid,

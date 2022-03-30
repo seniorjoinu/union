@@ -10,6 +10,7 @@ export interface CurrentWalletContext {
   permissions: Permission[];
   fetching: Fetching;
   error: Error | null;
+  update(): void;
 }
 
 const context = createContext<CurrentWalletContext>({
@@ -20,6 +21,7 @@ const context = createContext<CurrentWalletContext>({
   permissions: [],
   fetching: {},
   error: null,
+  update: () => undefined,
 });
 
 export interface ProviderProps {
@@ -45,6 +47,11 @@ export function Provider({ principal, children }: ProviderProps) {
     },
     [setRnp],
   );
+
+  const update = useCallback(() => {
+    canister.get_my_roles();
+    canister.get_my_permissions();
+  }, []);
 
   const value: CurrentWalletContext = useMemo(() => {
     let computedRnp = rnp;
@@ -72,6 +79,7 @@ export function Provider({ principal, children }: ProviderProps) {
       permissions,
       fetching,
       error,
+      update,
     };
   }, [principal, roles, permissions, fetching, error, setRoleAndPermission, rnp]);
 

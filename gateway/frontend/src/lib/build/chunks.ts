@@ -19,9 +19,6 @@ export const defaultManualChunks = (path: string, currentDir: string): string =>
   if (id.includes('react')) {
     return 'react';
   }
-  if (id.includes('mobx')) {
-    return 'mobx';
-  }
   if (id.includes('@popper')) {
     return 'popper';
   }

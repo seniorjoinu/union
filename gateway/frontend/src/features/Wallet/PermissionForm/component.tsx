@@ -79,14 +79,16 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
         name='name'
         control={control}
         rules={{ required: 'Обязательное поле' }}
-        render={({ field }) => <TextField {...field} label='Наименование пермиссии' />}
+        render={({ field, fieldState: { error } }) => (
+          <TextField {...field} helperText={error?.message} label='Наименование пермиссии' />
+        )}
       />
       <Controller
         name='scope'
         control={control}
         rules={{ required: 'Обязательное поле' }}
-        render={({ field }) => (
-          <Select {...field} title='Тип пермиссии'>
+        render={({ field, fieldState: { error } }) => (
+          <Select {...field} helperText={error?.message} title='Тип пермиссии'>
             <Option value='Blacklist'>Blacklist</Option>
             <Option value='Whitelist'>Whitelist</Option>
           </Select>
@@ -99,14 +101,17 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
           required: 'Обязательное поле',
           validate: {
             isPrincipal: (value) =>
-              !value.find(
-                (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
+              !value.find((v) =>
+                (v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null
+                  ? ''
+                  : 'Некорректный принципал'),
               ),
           },
         }}
-        render={({ field }) => (
+        render={({ field, fieldState: { error } }) => (
           <MultiSelectSkeleton
             {...field}
+            helperText={error?.message}
             label='Целевой канистер'
             renderElement={(v) =>
               `${v.canisterId || '*'}:${v.methodName || '*'}${v.methodName ? '()' : ''}`

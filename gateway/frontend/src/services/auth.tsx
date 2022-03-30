@@ -39,8 +39,8 @@ export function useProvideAuth(authClient: typeof authenticationClient): AuthCon
     if (!authClient.ready) return;
     Promise.all([authClient.getIdentity(), authClient.isAuthentificated()]).then(
       ([identity, isAuthentificated]) => {
-        setIsAuthenticatedLocal(isAuthentificated || false);
         setIdentity(identity);
+        setIsAuthenticatedLocal(isAuthentificated || false);
         setAuthClientReady(AuthReadyState.READY);
       },
     );

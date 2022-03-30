@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Role } from 'wallet-ts';
-import { useWallet } from '../../../services/controllers';
-import { useCurrentWallet } from '../context';
+import { useWallet } from '../../services/controllers';
+import { useCurrentWallet } from './context';
 
 export interface UseAttachedRolesProps {
   permissionId: number | string | null | undefined;

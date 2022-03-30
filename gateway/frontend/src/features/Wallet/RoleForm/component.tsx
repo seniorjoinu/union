@@ -9,7 +9,7 @@ import {
   Button as B,
   ListSelect as LS,
 } from 'components';
-import { useRoles } from '../Participants';
+import { useRoles } from '../useRoles';
 import { parseRole } from '../utils';
 import { useSubmit } from './useSubmit';
 import { FormData } from './types';
@@ -83,27 +83,51 @@ export const RoleForm = ({ create }: RoleFormProps) => {
         name='name'
         control={control}
         rules={{ required: 'Обязательное поле' }}
-        render={({ field }) => <TextField {...field} label='Наименование роли' />}
+        render={({ field, fieldState: { error } }) => (
+          <TextField {...field} helperText={error?.message} label='Наименование роли' />
+        )}
       />
       <Controller
         name='description'
         control={control}
         rules={{ required: 'Обязательное поле' }}
-        render={({ field }) => <TextField {...field} label='Описание роли' />}
+        render={({ field, fieldState: { error } }) => (
+          <TextField {...field} helperText={error?.message} label='Описание роли' />
+        )}
       />
       <Thresholds>
         <Controller
           name='threshold'
           control={control}
-          rules={{ required: 'Обязательное поле', min: 0, max: 100 }}
-          render={({ field }) => <TextField {...field} label='Пороговая схема' type='number' />}
+          rules={{
+            required: 'Обязательное поле',
+            min: 0,
+            validate: {
+              threshold: (value) => {
+                const { type } = getValues();
+
+                if (type == 'QuantityOf') {
+                  return value < 0 ? 'Значение должно быть положительно' : '';
+                }
+                return value >= 0 && value <= 1 ? '' : 'Некорректное значение';
+              },
+            },
+          }}
+          render={({ field, fieldState: { error } }) => (
+            <TextField
+              {...field}
+              helperText={error?.message}
+              label='Пороговая схема'
+              type='number'
+            />
+          )}
         />
         <Controller
           name='type'
           control={control}
           rules={{ required: 'Обязательное поле' }}
-          render={({ field }) => (
-            <Select {...field} title='Пороговая схема'>
+          render={({ field, fieldState: { error } }) => (
+            <Select {...field} helperText={error?.message} title='Пороговая схема'>
               <Option value='FractionOf'>Проценты</Option>
               <Option value='QuantityOf'>Доли</Option>
             </Select>
@@ -116,9 +140,10 @@ export const RoleForm = ({ create }: RoleFormProps) => {
         rules={{
           required: 'Обязательное поле',
         }}
-        render={({ field }) => (
+        render={({ field, fieldState: { error } }) => (
           <ListSelect
             {...field}
+            helperText={error?.message}
             label='Обладатели роли'
             from={roles.map((r) => {
               const parsed = parseRole(r.role_type);

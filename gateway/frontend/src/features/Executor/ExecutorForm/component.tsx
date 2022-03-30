@@ -6,6 +6,7 @@ import { checkPrincipal } from 'toolkit';
 import { Principal } from '@dfinity/principal';
 import { ExecuteResponse } from 'wallet-ts';
 import { useWallet } from 'services';
+import moment from 'moment';
 import { ExecutorFormData, getEmptyProgram } from '../types';
 import { RoleSwitcher as RS } from './RoleSwitcher';
 
@@ -43,7 +44,7 @@ const Container = styled.div`
   }
 
   ${AddButton} {
-    margin-top: 8px;
+    margin-top: 16px;
     align-self: flex-start;
   }
 
@@ -86,7 +87,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
     canister
       .execute({
         ...values,
-        authorization_delay_nano: BigInt(100),
+        authorization_delay_nano: BigInt(values.authorization_delay_nano),
         program: !program.length
           ? { Empty: null }
           : {
@@ -113,21 +114,61 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
         rules={{
           required: 'Обязательное поле',
         }}
-        render={({ field }) => (
-          <TextField {...field} disabled={disabled} label='Название действия' />
+        render={({ field, fieldState: { error } }) => (
+          <TextField
+            {...field}
+            helperText={error?.message}
+            disabled={disabled}
+            label='Название действия'
+          />
         )}
       />
       <Controller
         name='description'
         control={control}
-        render={({ field }) => <TextField {...field} disabled={disabled} label='Описание' />}
+        rules={{
+          required: 'Обязательное поле',
+        }}
+        render={({ field, fieldState: { error } }) => (
+          <TextField {...field} helperText={error?.message} disabled={disabled} label='Описание' />
+        )}
       />
       <Controller
-        name='rnp'
+        name='authorization_delay_nano'
         control={control}
-        render={({ field }) => (
-          <RoleSwitcher {...field} disabled={disabled} label='Выполнить из под роли и пермиссии' />
+        rules={{
+          required: 'Обязательное поле',
+          validate: {
+            gtNow: (value) => (value > 0 ? '' : 'Некорректная дата'),
+          },
+        }}
+        render={({ field, fieldState: { error } }) => (
+          <TextField
+            {...field}
+            onChange={(e) => {
+              const diff = moment(e.target.value).valueOf() - Date.now();
+
+              if (diff < 0) {
+                return;
+              }
+
+              field.onChange(diff * 10 ** 6);
+            }}
+            min={moment().format('YYYY-MM-DDTHH:mm')}
+            value={moment()
+              .add(Math.ceil(field.value / 10 ** 6), 'milliseconds')
+              .format('YYYY-MM-DDTHH:mm')}
+            disabled={disabled}
+            helperText={error?.message}
+            type='datetime-local'
+            label='Ожидание до'
+          />
         )}
+      />
+      <RoleSwitcher
+        control={control}
+        disabled={disabled}
+        label='Выполнить из под роли и пермиссии'
       />
       <Text variant='h5'>Операции</Text>
       <Controller
@@ -145,11 +186,19 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                   rules={{
                     required: 'Обязательное поле',
                     validate: {
-                      isPrincipal: (value) => !!value && checkPrincipal(value.toString()) != null,
+                      isPrincipal: (value) =>
+                        (!!value && checkPrincipal(value.toString()) != null
+                          ? ''
+                          : 'Некорректный принципал'),
                     },
                   }}
-                  render={({ field }) => (
-                    <TextField {...field} disabled={disabled} label='Идентификатор канистера' />
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      helperText={error?.message}
+                      disabled={disabled}
+                      label='Идентификатор канистера'
+                    />
                   )}
                 />
                 <Controller
@@ -158,8 +207,13 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                   rules={{
                     required: 'Обязательное поле',
                   }}
-                  render={({ field }) => (
-                    <TextField {...field} disabled={disabled} label='Наименование метода' />
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      helperText={error?.message}
+                      disabled={disabled}
+                      label='Наименование метода'
+                    />
                   )}
                 />
                 <Controller
@@ -168,9 +222,10 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                   rules={{
                     required: 'Обязательное поле',
                   }}
-                  render={({ field }) => (
+                  render={({ field, fieldState: { error } }) => (
                     <TextField
                       {...field}
+                      helperText={error?.message}
                       disabled={disabled}
                       type='number'
                       label='Сумма циклов для трансфера'
@@ -194,9 +249,10 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                           rules={{
                             required: 'Обязательное поле',
                           }}
-                          render={({ field }) => (
+                          render={({ field, fieldState: { error } }) => (
                             <TextArea
                               {...field}
+                              helperText={error?.message}
                               disabled={disabled}
                               label={`Candid-аргумент вызова #${j + 1}`}
                             />

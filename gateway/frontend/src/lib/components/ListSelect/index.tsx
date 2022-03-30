@@ -4,6 +4,9 @@ import { Select as S, Option } from '../Select';
 import { Text } from '../Text';
 import { Button } from '../Button';
 
+const HelperText = styled(Text)`
+  color: red;
+`;
 const Select = styled(S)``;
 const AddButton = styled(Button)``;
 const RemoveButton = styled(Button)`
@@ -32,11 +35,19 @@ const Item = styled.div`
 `;
 
 const Controls = styled.div`
+  position: relative;
   display: flex;
   flex-direction: row;
 
   & > *:not(:last-child) {
     margin-right: 16px;
+  }
+
+  ${HelperText} {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    transform: translateY(100%);
   }
 `;
 
@@ -62,10 +73,11 @@ export interface ListSelectProps extends IClassName {
   onChange(e: { target: { value: string[] } }): void;
   value: string[];
   from: { id: string; content?: JSX.Element | string | null }[];
+  helperText?: string | undefined | null;
 }
 
 export const ListSelect = React.forwardRef<HTMLDivElement, ListSelectProps>(
-  ({ label, onChange, value, from, ...p }, ref) => {
+  ({ label, onChange, value, from, helperText, ...p }, ref) => {
     const selectRef = useRef<HTMLSelectElement | null>(null);
 
     const onAdd = useCallback(() => {
@@ -93,6 +105,7 @@ export const ListSelect = React.forwardRef<HTMLDivElement, ListSelectProps>(
               ))}
           </Select>
           <AddButton onClick={onAdd}>+</AddButton>
+          {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
         </Controls>
         {!!value.length && (
           <Items>

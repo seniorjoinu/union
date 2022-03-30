@@ -3,6 +3,9 @@ import styled from 'styled-components';
 import { Text } from '../Text';
 import { Button } from '../Button';
 
+const HelperText = styled(Text)`
+  color: red;
+`;
 const AddButton = styled(Button)``;
 const RemoveButton = styled(Button)`
   border: none;
@@ -14,6 +17,18 @@ const Input = styled.input`
   min-height: 32px;
 `;
 
+const Children = styled.div`
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  ${HelperText} {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    transform: translateY(100%);
+  }
+`;
 const Items = styled.div`
   display: flex;
   flex-direction: column;
@@ -59,11 +74,14 @@ export interface MultiSelectSkeletonProps extends IClassName {
   onChange(e: { target: { value: Record<string, string>[] } }): void;
   value: Record<string, string>[];
   children: (refs: React.MutableRefObject<HTMLInputElement[]>) => JSX.Element;
-  renderElement(value: Record<string, string>): JSX.Element | string | number | null | void;
+  renderElement(
+    value: Record<string, string>,
+  ): JSX.Element | string | number | null | void | React.ReactNode;
+  helperText?: string | undefined | null;
 }
 
 export const MultiSelectSkeleton = React.forwardRef<HTMLDivElement, MultiSelectSkeletonProps>(
-  ({ label, onChange, value, children, renderElement, ...p }, ref) => {
+  ({ label, onChange, value, children, renderElement, helperText, ...p }, ref) => {
     const fieldRefs = useRef<HTMLInputElement[]>([]);
 
     const onAdd = useCallback(() => {
@@ -89,14 +107,17 @@ export const MultiSelectSkeleton = React.forwardRef<HTMLDivElement, MultiSelectS
     return (
       <Container {...p} ref={ref}>
         <Label variant='p1'>{label}</Label>
-        {children(fieldRefs)}
+        <Children>
+          {children(fieldRefs)}
+          {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
+        </Children>
         <AddButton onClick={onAdd}>+</AddButton>
         {!!value.length && (
           <Items>
             {value.map((v, i) => (
               // eslint-disable-next-line react/no-array-index-key
               <Item key={String(i)}>
-                <Text>{renderElement(v)}</Text>
+                <Text>{renderElement(v) || null}</Text>
                 <RemoveButton
                   onClick={() => onChange({ target: { value: value.filter((val) => val !== v) } })}
                 >

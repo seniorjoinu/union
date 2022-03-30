@@ -1,20 +1,20 @@
 import { useState, useMemo } from 'react';
-import { AuthCanisterController, AuthCanisterControllerProps } from 'toolkit';
+import { authClient, Canister, CanisterProps } from 'toolkit';
 import { _SERVICE } from 'deployer-ts';
 // @ts-expect-error
 import { idlFactory as idl } from 'deployer-idl';
 
-export type IDeployerController = AuthCanisterController<_SERVICE>;
+export type IDeployerController = Canister<_SERVICE>;
 
 export const initDeployerController = (
   canisterId: string,
-  handlers?: AuthCanisterControllerProps['handlers'],
+  handlers?: CanisterProps['handlers'],
 ) => {
-  const canister = ((window as any).deployer = new AuthCanisterController<_SERVICE>({
+  const canister = ((window as any).deployer = new Canister<_SERVICE>({
     canisterId,
     idl,
-    context: { name: 'wallet' },
     handlers,
+    agent: authClient.agent,
   }));
 
   return canister;
