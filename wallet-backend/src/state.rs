@@ -156,11 +156,13 @@ impl State {
 
     pub fn remove_role(&mut self, role_id: &RoleId) -> Result<Role, Error> {
         let role = self.roles.remove_role(role_id).map_err(Error::RolesError)?;
-        let permission_ids = self.permissions_by_role.remove(role_id).unwrap();
+        let permission_ids_opt = self.permissions_by_role.remove(role_id);
 
-        for permission_id in &permission_ids {
-            let roles_of_permission = self.roles_by_permission.get_mut(permission_id).unwrap();
-            roles_of_permission.remove(role_id);
+        if let Some(permission_ids) = permission_ids_opt {
+            for permission_id in &permission_ids {
+                let roles_of_permission = self.roles_by_permission.get_mut(permission_id).unwrap();
+                roles_of_permission.remove(role_id);
+            }
         }
 
         Ok(role)
@@ -171,11 +173,13 @@ impl State {
             .permissions
             .remove_permission(permission_id)
             .map_err(Error::PermissionsError)?;
-        let role_ids = self.roles_by_permission.remove(permission_id).unwrap();
+        let role_ids_opt = self.roles_by_permission.remove(permission_id);
 
-        for role_id in &role_ids {
-            let permissions_of_role = self.permissions_by_role.get_mut(role_id).unwrap();
-            permissions_of_role.remove(permission_id);
+        if let Some(role_ids) = role_ids_opt {
+            for role_id in &role_ids {
+                let permissions_of_role = self.permissions_by_role.get_mut(role_id).unwrap();
+                permissions_of_role.remove(permission_id);
+            }
         }
 
         Ok(permission)
