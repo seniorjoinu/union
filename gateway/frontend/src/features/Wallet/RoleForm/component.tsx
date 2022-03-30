@@ -107,9 +107,9 @@ export const RoleForm = ({ create }: RoleFormProps) => {
                 const { type } = getValues();
 
                 if (type == 'QuantityOf') {
-                  return value < 0 ? 'Значение должно быть положительно' : '';
+                  return value < 0 ? 'Значение должно быть положительно' : true;
                 }
-                return value >= 0 && value <= 1 ? '' : 'Некорректное значение';
+                return (value >= 0 && value <= 1) || 'Некорректное значение';
               },
             },
           }}

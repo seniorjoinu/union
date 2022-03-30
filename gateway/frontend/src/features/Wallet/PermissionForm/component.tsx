@@ -101,10 +101,10 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
           required: 'Обязательное поле',
           validate: {
             isPrincipal: (value) =>
-              !value.find((v) =>
-                (v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null
-                  ? ''
-                  : 'Некорректный принципал'),
+              !value.find(
+                (v) =>
+                  (v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null) ||
+                  'Некорректный принципал',
               ),
           },
         }}

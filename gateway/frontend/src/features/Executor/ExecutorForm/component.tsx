@@ -17,6 +17,14 @@ const Title = styled(Text)``;
 const AddButton = styled(B)``;
 const Button = styled(B)``;
 
+const Result = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  &:empty {
+    display: none;
+  }
+`;
 const ProgramSlice = styled.div`
   display: flex;
   flex-direction: column;
@@ -51,16 +59,28 @@ const Container = styled.div`
   ${ProgramSlice} {
     margin-top: 8px;
   }
+
+  ${Result} {
+    margin-top: 8px;
+  }
 `;
 
 export interface ExecutorFormProps extends IClassName {
   mode: 'edit' | 'view';
   canisterId: string;
   data: Partial<ExecutorFormData>;
+  renderResult?(index: number): React.ReactNode | null | void;
   onSubmit(response: ExecuteResponse): void;
 }
 
-export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: ExecutorFormProps) {
+export function ExecutorForm({
+  canisterId,
+  data,
+  onSubmit,
+  mode,
+  renderResult = () => null,
+  ...p
+}: ExecutorFormProps) {
   const { canister, fetching } = useWallet(canisterId);
   const {
     control,
@@ -74,6 +94,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
   const submitting = fetching.execute;
   const editable = mode == 'edit';
   const disabled = !editable || submitting;
+  const operationsLength = getValues().program.length;
 
   const submit = useCallback(() => {
     if (!isValid || disabled) {
@@ -139,7 +160,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
         rules={{
           required: 'Обязательное поле',
           validate: {
-            gtNow: (value) => (value > 0 ? '' : 'Некорректная дата'),
+            gtNow: (value) => value > 0 || 'Некорректная дата',
           },
         }}
         render={({ field, fieldState: { error } }) => (
@@ -170,7 +191,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
         disabled={disabled}
         label='Выполнить из под роли и пермиссии'
       />
-      <Text variant='h5'>Операции</Text>
+      {(editable || !!operationsLength) && <Text variant='h5'>Операции</Text>}
       <Controller
         name='program'
         control={control}
@@ -187,9 +208,8 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                     required: 'Обязательное поле',
                     validate: {
                       isPrincipal: (value) =>
-                        (!!value && checkPrincipal(value.toString()) != null
-                          ? ''
-                          : 'Некорректный принципал'),
+                        (!!value && checkPrincipal(value.toString()) != null) ||
+                        'Некорректный принципал',
                     },
                   }}
                   render={({ field, fieldState: { error } }) => (
@@ -267,6 +287,7 @@ export function ExecutorForm({ canisterId, data, onSubmit, mode, ...p }: Executo
                           + добавить аргумент
                         </AddButton>
                       )}
+                      <Result>{renderResult(i) || null}</Result>
                     </>
                   )}
                 />

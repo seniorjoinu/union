@@ -61,8 +61,6 @@ export const useCreate = ({ create, getValues }: UseCreateProps) => {
       ],
     };
 
-    console.log('onCreate payload', payload);
-
     return payload;
   }, [create, getValues, principal, rnp]);
 

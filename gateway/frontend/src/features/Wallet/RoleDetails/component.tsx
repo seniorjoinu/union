@@ -8,7 +8,13 @@ import { useCurrentWallet } from '../context';
 import { parseRole } from '../utils';
 import { useAttachedPermissions } from '../useAttachedPermissions';
 import { RoleDetailsView } from './RoleDetailsView';
-import { Attacher } from './Attacher';
+import { PermissionsAttacher as PA } from './PermissionsAttacher';
+import { RolesAttacher as RA } from './RolesAttacher';
+
+const PermissionsAttacher = styled(PA)``;
+const RolesAttacher = styled(RA)`
+  margin-top: 24px;
+`;
 
 const Title = styled(Text)`
   margin-bottom: 64px;
@@ -62,7 +68,10 @@ export const RoleDetails = () => {
     <>
       <Title variant='h2'>{parsedRole.title}</Title>
       <RoleDetailsView role={role} permissions={permissions} enumerated={enumerated} />
-      <Attacher role={role} />
+      <PermissionsAttacher role={role} />
+      {['FractionOf', 'QuantityOf'].includes(parsedRole.type) && (
+        <RolesAttacher role={role} enumerated={enumerated} />
+      )}
     </>
   );
 };

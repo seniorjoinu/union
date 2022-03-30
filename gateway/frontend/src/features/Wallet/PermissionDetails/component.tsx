@@ -7,7 +7,7 @@ import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { useAttachedRoles } from '../useAttachedRoles';
 import { PermissionDetailsView } from './PermissionDetailsView';
-import { Attacher } from './Attacher';
+import { RolesAttacher } from './RolesAttacher';
 
 const Title = styled(Text)`
   margin-bottom: 64px;
@@ -45,7 +45,7 @@ export const PermissionDetails = () => {
     <>
       <Title variant='h2'>{permission.name}</Title>
       <PermissionDetailsView permission={permission} roles={roles} />
-      <Attacher permission={permission} />
+      <RolesAttacher permission={permission} />
     </>
   );
 };

@@ -45,7 +45,10 @@ export const Wallet = () => {
           <Route path='/participants/invite' element={<Invite />} />
 
           <Route path='/history' element={<History createLink='execute' />} />
-          <Route path='/history/scheduled/:taskId' element={<ScheduledEntry />} />
+          <Route
+            path='/history/scheduled/:taskId'
+            element={<ScheduledEntry navigateToEntry={(entryId) => nav(`history/${entryId}`)} />}
+          />
           <Route path='/history/:entryId' element={<HistoryEntry />} />
           <Route
             path='/history/execute'

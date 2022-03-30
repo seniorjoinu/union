@@ -20,11 +20,11 @@ const Container = styled.div`
   }
 `;
 
-export interface AttacherProps extends IClassName {
+export interface PermissionsAttacherProps extends IClassName {
   role: Role;
 }
 
-export function Attacher({ role, ...p }: AttacherProps) {
+export function PermissionsAttacher({ role, ...p }: PermissionsAttacherProps) {
   const { permissions } = usePermissions();
   const nav = useNavigate();
   const { rnp, principal } = useCurrentWallet();
