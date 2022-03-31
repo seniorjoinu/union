@@ -41,7 +41,7 @@ export const idlFactory = ({ IDL }) => {
   const FractionOf = IDL.Record({
     'name' : IDL.Text,
     'description' : IDL.Text,
-    'fraction' : IDL.Float32,
+    'fraction' : IDL.Float64,
     'enumerated' : IDL.Vec(RoleId),
   });
   const Profile = IDL.Record({

@@ -39,13 +39,14 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
       }
 
       const parsed = parsePermission(permissions[0]);
+      const targets = parsed.targets.map((t) => ({
+        canisterId: t.canisterId || t.principal || '',
+        methodName: t.method || '',
+      }));
 
       setValue('name', parsed.name);
       setValue('scope', parsed.scope);
-      setValue(
-        'targets',
-        parsed.targets.map((t) => ({ canisterId: t.canisterId || '', methodName: t.method || '' })),
-      );
+      setValue('targets', targets);
     },
     data.get_permissions,
     [data.get_permissions, setValue],
@@ -63,9 +64,7 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
     const values = getValues();
     const scope = { [values.scope]: null } as PermissionScope;
 
-    // const repeatCounter = 0; // FIXME
     const targets: PermissionTarget[] = values.targets.map((t) => {
-      // if (old.targets.find()) // FIXME
       if (!t.canisterId) {
         return { SelfEmptyProgram: null };
       }
@@ -85,14 +84,14 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
         {
           endpoint: {
             canister_id: principal,
-            method_name: 'create_permission',
+            method_name: 'update_permission',
           },
           cycles: '0',
           args_candid: walletSerializer.update_permission({
             permission_id: Number(permissionId),
             new_name: old.name !== values.name ? [values.name] : [],
             new_scope: old.scope !== values.scope ? [scope] : [],
-            new_targets: [targets], // FIXME
+            new_targets: [targets], // TODO make check of change
           }),
         },
       ],

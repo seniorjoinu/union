@@ -98,8 +98,9 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
         name='targets'
         control={control}
         rules={{
-          required: 'Обязательное поле',
+          // required: 'Обязательное поле',
           validate: {
+            isNotEmpty: (value) => value.length > 0 || 'Список не может быть пустым',
             isPrincipal: (value) =>
               !value.find(
                 (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
@@ -112,7 +113,9 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
             helperText={error?.message}
             label='Целевой канистер'
             renderElement={(v) =>
-              `${v.canisterId || '*'}:${v.methodName || '*'}${v.methodName ? '()' : ''}`
+              (!v.canisterId && !v.methodName
+                ? 'Пустая программа'
+                : `${v.canisterId || '*'}:${v.methodName || '*'}${v.methodName ? '()' : ''}`)
             }
           >
             {(
