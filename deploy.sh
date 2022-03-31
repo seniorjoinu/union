@@ -13,7 +13,7 @@ cd ..
 echo "Wallet built"
 
 echo "Deploy frontend"
-cd gateway/frontend
+cd gateway/frontend/gateway
 rm -rf ./.dfx/local
 dfx deploy
 # open http://localhost:8000?canisterId=$(dfx canister id union-wallet-frontend)
