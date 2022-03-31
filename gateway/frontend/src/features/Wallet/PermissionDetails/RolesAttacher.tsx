@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
 import { ListSelect, Button as B } from 'components';
 import { Permission } from 'wallet-ts';
-import { useNavigate } from 'react-router-dom';
-import { walletSerializer } from 'services';
 import { parseRole } from '../utils';
 import { useRoles } from '../useRoles';
-import { ExternalExecutorFormData } from '../../Executor';
-import { useCurrentWallet } from '../context';
+import { useAttach } from '../useAttach';
 
 const Button = styled(B)``;
 const Container = styled.div`
@@ -27,9 +24,7 @@ export interface RolesAttacherProps extends IClassName {
 
 export function RolesAttacher({ permission, ...p }: RolesAttacherProps) {
   const { roles } = useRoles();
-  const nav = useNavigate();
-  const { rnp, principal } = useCurrentWallet();
-  const [submitting, setSubmitting] = useState(false);
+  const { attach } = useAttach();
   const {
     control,
     getValues,
@@ -40,42 +35,6 @@ export function RolesAttacher({ permission, ...p }: RolesAttacherProps) {
     },
     mode: 'onTouched',
   });
-
-  const submit = () => {
-    if (!rnp) {
-      return;
-    }
-    setSubmitting(true);
-    const { roleIds } = getValues();
-
-    const roleNames = roleIds
-      .map((id) => {
-        const role = roles.find((r) => r.id == Number(id));
-        const name = role ? parseRole(role.role_type).title : 'Unknown';
-
-        return name;
-      })
-      .join();
-
-    const payload: ExternalExecutorFormData = {
-      title: 'Attach roles to permission',
-      description: `Attach roles "${roleNames}" to permission "${permission.name}"(id ${permission.id})`,
-      rnp,
-      program: roleIds.map((roleId) => ({
-        endpoint: {
-          canister_id: principal,
-          method_name: 'attach_role_to_permission',
-        },
-        cycles: '0',
-        args_candid: walletSerializer.attach_role_to_permission({
-          role_id: Number(roleId),
-          permission_id: permission.id,
-        }),
-      })),
-    };
-
-    nav(`/wallet/${principal}/execute`, { state: payload });
-  };
 
   return (
     <Container {...p}>
@@ -101,7 +60,11 @@ export function RolesAttacher({ permission, ...p }: RolesAttacherProps) {
           />
         )}
       />
-      <Button type='submit' disabled={!isValid || submitting} onClick={submit}>
+      <Button
+        type='submit'
+        disabled={!isValid}
+        onClick={() => attach([permission.id], getValues().roleIds)}
+      >
         Добавить роли
       </Button>
     </Container>

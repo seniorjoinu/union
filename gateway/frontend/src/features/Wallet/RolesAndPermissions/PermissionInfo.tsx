@@ -7,16 +7,18 @@ import { Info } from './Info';
 export interface PermissionInfoProps extends IClassName {
   editable?: boolean;
   permission: Permission;
-  href: string;
+  edit(): void;
+  open(): void;
 }
 
-export const PermissionInfo = ({ permission, editable, ...p }: PermissionInfoProps) => {
+export const PermissionInfo = ({ permission, editable, edit, open, ...p }: PermissionInfoProps) => {
   const { roles, fetching } = useAttachedRoles({ permissionId: permission.id });
 
   return (
     <Info
       title={permission.name}
-      editLink={editable ? `../permission/edit/${permission.id}` : undefined}
+      edit={editable ? edit : undefined}
+      open={open}
       fetching={fetching}
       items={roles.map((r) => ({ id: r.id, children: parseRole(r.role_type).title }))}
       {...p}

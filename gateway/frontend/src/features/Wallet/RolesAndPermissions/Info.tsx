@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Text, Chips } from 'components';
-import { NavLink } from 'react-router-dom';
 import pencil from '../../../assets/pencil.svg';
 
 const Title = styled(Text)`
@@ -40,28 +39,27 @@ const Container = styled.div`
   ${Title} {
     margin-bottom: 8px;
   }
+
+  img {
+    cursor: pointer;
+  }
 `;
 
 export interface InfoProps extends IClassName {
   title: string;
   items: { id: string | number; children: React.ReactNode }[];
-  editLink?: string;
-  href: string;
+  edit?(): void;
+  open?(): void;
   fetching?: boolean;
 }
 
-export const Info = ({ items, fetching, title, editLink, href, ...p }: InfoProps) => (
+export const Info = ({ items, fetching, title, edit, open, ...p }: InfoProps) => (
   <Container {...p}>
     <Header>
-      <Title variant='p1' as={NavLink} to={href}>
+      <Title variant='p1' onClick={open}>
         {title}
       </Title>
-      {editLink
-        && false && ( // TODO временно отключено
-          <NavLink to={editLink}>
-            <img src={pencil} alt='pencil' />
-          </NavLink>
-        )}
+      {edit && <img src={pencil} alt='pencil' onClick={edit} />}
     </Header>
     {fetching && <span>fetching</span>}
     <Items>

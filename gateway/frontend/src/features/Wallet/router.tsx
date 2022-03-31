@@ -32,14 +32,42 @@ export const Wallet = () => {
         <Routes>
           <Route path='/role/create' element={<RoleForm create />} />
           <Route path='/role/edit/:roleId' element={<RoleForm />} />
-          <Route path='/role/:roleId' element={<RoleDetails />} />
+          <Route
+            path='/role/:roleId'
+            element={<RoleDetails edit={(roleId) => nav(`role/edit/${roleId}`)} />}
+          />
 
           <Route path='/permission/create' element={<PermissionForm create />} />
           <Route path='/permission/edit/:permissionId' element={<PermissionForm />} />
-          <Route path='/permission/:permissionId' element={<PermissionDetails />} />
+          <Route
+            path='/permission/:permissionId'
+            element={
+              <PermissionDetails edit={(permissionId) => nav(`permission/edit/${permissionId}`)} />
+            }
+          />
 
-          <Route path='/rnp' element={<RolesAndPermissions />} />
-          <Route path='/rnp/my' element={<MyRolesAndPermissions />} />
+          <Route
+            path='/rnp'
+            element={
+              <RolesAndPermissions
+                editRole={(roleId) => nav(`role/edit/${roleId}`)}
+                editPermission={(permissionId) => nav(`permission/edit/${permissionId}`)}
+                openRole={(roleId) => nav(`role/${roleId}`)}
+                openPermission={(permissionId) => nav(`permission/${permissionId}`)}
+              />
+            }
+          />
+          <Route
+            path='/rnp/my'
+            element={
+              <MyRolesAndPermissions
+                editRole={(roleId) => nav(`role/edit/${roleId}`)}
+                editPermission={(permissionId) => nav(`permission/edit/${permissionId}`)}
+                openRole={(roleId) => nav(`role/${roleId}`)}
+                openPermission={(permissionId) => nav(`permission/${permissionId}`)}
+              />
+            }
+          />
 
           <Route path='/participants' element={<Participants />} />
           <Route path='/participants/invite' element={<Invite />} />

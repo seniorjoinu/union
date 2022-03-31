@@ -102,10 +102,8 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
           validate: {
             isPrincipal: (value) =>
               !value.find(
-                (v) =>
-                  (v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null) ||
-                  'Некорректный принципал',
-              ),
+                (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
+              ) || 'Некорректный принципал',
           },
         }}
         render={({ field, fieldState: { error } }) => (

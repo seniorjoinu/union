@@ -14,6 +14,7 @@ const RoleSwitcher = styled(RS)``;
 const TextField = styled(TF)``;
 const TextArea = styled(TA)``;
 const Title = styled(Text)``;
+const RemoveButton = styled(B)``;
 const AddButton = styled(B)``;
 const Button = styled(B)``;
 
@@ -23,6 +24,20 @@ const Result = styled.div`
 
   &:empty {
     display: none;
+  }
+`;
+
+const Row = styled.div`
+  display: flex;
+  flex-direction: row;
+
+  & > *:first-child {
+    flex-grow: 1;
+  }
+
+  ${RemoveButton} {
+    margin-left: 8px;
+    align-self: flex-end;
   }
 `;
 const ProgramSlice = styled.div`
@@ -200,7 +215,15 @@ export function ExecutorForm({
             {field.value.map((_, i) => (
               // eslint-disable-next-line react/no-array-index-key
               <ProgramSlice key={String(i)}>
-                <Text variant='h5'>Операция #{i + 1}</Text>
+                <Row>
+                  <Text variant='h5'>Операция #{i + 1}</Text>
+                  <RemoveButton
+                    disabled={disabled}
+                    onClick={() => field.onChange(field.value.filter((_, index) => index !== i))}
+                  >
+                    -
+                  </RemoveButton>
+                </Row>
                 <Controller
                   name={`program.${i}.endpoint.canister_id`}
                   control={control}
@@ -269,13 +292,25 @@ export function ExecutorForm({
                           rules={{
                             required: 'Обязательное поле',
                           }}
-                          render={({ field, fieldState: { error } }) => (
-                            <TextArea
-                              {...field}
-                              helperText={error?.message}
-                              disabled={disabled}
-                              label={`Candid-аргумент вызова #${j + 1}`}
-                            />
+                          render={({ field: didfield, fieldState: { error } }) => (
+                            <Row>
+                              <TextArea
+                                {...didfield}
+                                helperText={error?.message}
+                                disabled={disabled}
+                                label={`Candid-аргумент вызова #${j + 1}`}
+                              />
+                              {editable && (
+                                <RemoveButton
+                                  disabled={disabled}
+                                  onClick={() =>
+                                    field.onChange(field.value.filter((_, index) => index !== j))
+                                  }
+                                >
+                                  -
+                                </RemoveButton>
+                              )}
+                            </Row>
                           )}
                         />
                       ))}

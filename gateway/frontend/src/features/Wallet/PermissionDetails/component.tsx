@@ -6,6 +6,8 @@ import { useTrigger } from 'toolkit';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { useAttachedRoles } from '../useAttachedRoles';
+import { useRemove } from '../useRemove';
+import { useDetach } from '../useDetach';
 import { PermissionDetailsView } from './PermissionDetailsView';
 import { RolesAttacher } from './RolesAttacher';
 
@@ -13,8 +15,14 @@ const Title = styled(Text)`
   margin-bottom: 64px;
 `;
 
-export const PermissionDetails = () => {
+export interface PermissionDetailsProps {
+  edit(permissionId: number): void;
+}
+
+export const PermissionDetails = ({ edit }: PermissionDetailsProps) => {
   const { permissionId } = useParams();
+  const { removePermission } = useRemove();
+  const { detachRoleAndPermission } = useDetach();
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
   const { roles } = useAttachedRoles({ permissionId });
@@ -44,7 +52,13 @@ export const PermissionDetails = () => {
   return (
     <>
       <Title variant='h2'>{permission.name}</Title>
-      <PermissionDetailsView permission={permission} roles={roles} />
+      <PermissionDetailsView
+        permission={permission}
+        roles={roles}
+        detachRole={detachRoleAndPermission}
+        remove={() => removePermission([permission.id])}
+        edit={() => edit(permission.id)}
+      />
       <RolesAttacher permission={permission} />
     </>
   );

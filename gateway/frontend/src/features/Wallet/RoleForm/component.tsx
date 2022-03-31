@@ -104,12 +104,17 @@ export const RoleForm = ({ create }: RoleFormProps) => {
             min: 0,
             validate: {
               threshold: (value) => {
-                const { type } = getValues();
+                const { type, owners } = getValues();
 
-                if (type == 'QuantityOf') {
-                  return value < 0 ? 'Значение должно быть положительно' : true;
+                if (type != 'QuantityOf') {
+                  return (value >= 0 && value <= 1) || 'Некорректное значение';
                 }
-                return (value >= 0 && value <= 1) || 'Некорректное значение';
+
+                if (value < 0) {
+                  return 'Значение должно быть положительно';
+                }
+
+                return owners.length >= value || 'Не должно превышать количество ролей';
               },
             },
           }}

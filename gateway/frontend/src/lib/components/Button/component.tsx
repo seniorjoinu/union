@@ -32,7 +32,7 @@ const Container = styled.button`
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'text' | 'outlined';
-  size?: 'M' | 'L';
+  size?: 'M' | 'L' | 'S';
   color?: string;
 }
 

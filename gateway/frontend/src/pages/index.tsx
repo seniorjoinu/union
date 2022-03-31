@@ -6,7 +6,7 @@ import { ProvideAuth } from 'services';
 import { RouterPage } from './RouterPage';
 
 const GlobalStyle = createGlobalStyle`
-  html, body, #root {
+  html, body {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -14,6 +14,14 @@ const GlobalStyle = createGlobalStyle`
     * {
       box-sizing: border-box;
     }
+  }
+
+  body {
+    overflow: auto;
+  }
+  #root {
+    margin: 0;
+    padding: 0;
   }
 `;
 

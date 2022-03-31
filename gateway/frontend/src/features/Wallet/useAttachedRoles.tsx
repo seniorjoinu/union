@@ -13,7 +13,7 @@ export const useAttachedRoles = ({ permissionId }: UseAttachedRolesProps) => {
   const { data, canister, fetching } = useWallet(principal);
 
   const fetchRoles = useCallback(() => {
-    if (!rnp || !permissionId) {
+    if (!rnp || permissionId == undefined || permissionId == null) {
       return;
     }
 
@@ -30,7 +30,7 @@ export const useAttachedRoles = ({ permissionId }: UseAttachedRolesProps) => {
   }, [rnp, permissionId]);
 
   useEffect(() => {
-    if (!rnp || !permissionId) {
+    if (!rnp || !permissionId == undefined || permissionId == null) {
       return;
     }
 

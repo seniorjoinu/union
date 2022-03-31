@@ -1,10 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Role, Permission } from 'wallet-ts';
-import { Text, TextProps } from 'components';
+import { Text, TextProps, Button as B } from 'components';
 import { parseRole } from '../utils';
 import { PermissionDetailsView as PDV } from '../PermissionDetails';
 
+const DetachButton = styled(B)``;
+const RemoveButton = styled(B)`
+  color: red;
+`;
 const PermissionDetailsView = styled(PDV)`
   padding: 8px;
   border: 1px solid grey;
@@ -13,15 +17,15 @@ const PermissionDetailsView = styled(PDV)`
 
 const Title = styled(Text)``;
 const Description = styled(Text)``;
-const Item = styled.div`
-  display: flex;
-  flex-direction: column;
 
-  & > *:not(:last-child) {
-    margin-bottom: 8px;
+const Controls = styled.div`
+  display: flex;
+  flex-direction: row;
+
+  & > * {
+    margin-right: 8px;
   }
 `;
-
 const Items = styled.div`
   display: flex;
   flex-direction: column;
@@ -47,6 +51,10 @@ const Container = styled.div`
   & > ${Description} {
     margin-bottom: 16px;
   }
+
+  ${Controls} {
+    margin-bottom: 16px;
+  }
 `;
 
 export interface RoleDetailsViewProps extends IClassName {
@@ -54,6 +62,11 @@ export interface RoleDetailsViewProps extends IClassName {
   permissions: Permission[];
   enumerated: Role[];
   variant?: TextProps['variant'];
+  detach?(): void;
+  remove?(): void;
+  edit?(): void;
+  detachPermission?(r: Role, p: Permission): void;
+  substractRole?(from: Role, substracted: Role): void;
 }
 
 export const RoleDetailsView = ({
@@ -61,12 +74,34 @@ export const RoleDetailsView = ({
   role,
   permissions,
   enumerated,
+  detach,
+  detachPermission,
+  substractRole,
+  remove,
+  edit,
   ...p
 }: RoleDetailsViewProps) => {
   const parsedRole = parseRole(role.role_type);
 
   return (
     <Container {...p}>
+      <Controls>
+        {detach && (
+          <DetachButton size='S' onClick={detach}>
+            Отвязать
+          </DetachButton>
+        )}
+        {edit && !('Everyone' in role.role_type) && (
+          <DetachButton size='S' onClick={edit}>
+            Редактировать
+          </DetachButton>
+        )}
+        {remove && (
+          <RemoveButton size='S' onClick={remove}>
+            Удалить
+          </RemoveButton>
+        )}
+      </Controls>
       <Description variant={variant}>Имя: {parsedRole.title}</Description>
       <Description variant={variant}>Описание: {parsedRole.description}</Description>
       <Description variant={variant}>Тип: {parsedRole.type}</Description>
@@ -80,23 +115,16 @@ export const RoleDetailsView = ({
         <>
           <Title variant='h4'>Связанные роли</Title>
           <Items>
-            {enumerated.map((role) => {
-              const parsed = parseRole(role.role_type);
-
-              return (
-                <Item key={String(role.id)}>
-                  <Text variant='p3'>Имя: {parsed.title}</Text>
-                  <Description variant='p3'>Описание: {parsed.description}</Description>
-                  <Description variant='p3'>Тип: {parsed.type}</Description>
-                  {!!parsed.principal && (
-                    <Description variant='p3'>Принципал: {parsed.principal}</Description>
-                  )}
-                  {!!parsed.threshold && (
-                    <Description variant='p3'>Пороговое значение: {parsed.threshold}</Description>
-                  )}
-                </Item>
-              );
-            })}
+            {enumerated.map((e) => (
+              <RoleDetailsView
+                key={e.id}
+                variant='p3'
+                role={e}
+                permissions={[]}
+                enumerated={[]}
+                detach={() => substractRole && substractRole(role, e)}
+              />
+            ))}
           </Items>
         </>
       )}
@@ -110,6 +138,7 @@ export const RoleDetailsView = ({
                 variant='p3'
                 permission={permission}
                 roles={[]}
+                detach={() => detachPermission && detachPermission(role, permission)}
               />
             ))}
           </Items>

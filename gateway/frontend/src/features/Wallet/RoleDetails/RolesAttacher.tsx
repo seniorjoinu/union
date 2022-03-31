@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
 import { ListSelect, Button as B } from 'components';
 import { Role } from 'wallet-ts';
-import { useNavigate } from 'react-router-dom';
-import { walletSerializer } from 'services';
 import { parseRole } from '../utils';
 import { useRoles } from '../useRoles';
-import { ExternalExecutorFormData } from '../../Executor';
-import { useCurrentWallet } from '../context';
+import { useEnumeratedRoles } from '../useEnumeratedRoles';
 
 const Button = styled(B)``;
 const Container = styled.div`
@@ -28,9 +25,7 @@ export interface RolesAttacherProps extends IClassName {
 
 export function RolesAttacher({ role, enumerated = [], ...p }: RolesAttacherProps) {
   const usedRoles = useRoles();
-  const nav = useNavigate();
-  const { rnp, principal } = useCurrentWallet();
-  const [submitting, setSubmitting] = useState(false);
+  const { addEnumeratedRoles } = useEnumeratedRoles();
   const {
     control,
     getValues,
@@ -45,46 +40,6 @@ export function RolesAttacher({ role, enumerated = [], ...p }: RolesAttacherProp
   const roles = usedRoles.roles.filter(
     (r) => r.id !== role.id && !enumerated.find((e) => e.id == r.id),
   );
-
-  const parsedRole = parseRole(role.role_type);
-
-  const submit = () => {
-    if (!rnp) {
-      return;
-    }
-    setSubmitting(true);
-    const { roleIds } = getValues();
-
-    const roleNames = roleIds
-      .map((id) => {
-        const role = roles.find((r) => r.id == Number(id));
-        const name = role ? parseRole(role.role_type).title : 'Unknown';
-
-        return name;
-      })
-      .join();
-
-    const payload: ExternalExecutorFormData = {
-      title: `Attach enumerated roles to role "${parsedRole.title}"`,
-      description: `Attach roles "${roleNames}" to role "${parsedRole.title}"(id ${role.id})`,
-      rnp,
-      program: [
-        {
-          endpoint: {
-            canister_id: principal,
-            method_name: 'attach_role_to_permission',
-          },
-          cycles: '0',
-          args_candid: walletSerializer.add_enumerated_roles({
-            role_id: role.id,
-            enumerated_roles_to_add: roleIds.map((rId) => Number(rId)),
-          }),
-        },
-      ],
-    };
-
-    nav(`/wallet/${principal}/execute`, { state: payload });
-  };
 
   if (!roles.length) {
     return null;
@@ -114,7 +69,11 @@ export function RolesAttacher({ role, enumerated = [], ...p }: RolesAttacherProp
           />
         )}
       />
-      <Button type='submit' disabled={!isValid || submitting} onClick={submit}>
+      <Button
+        type='submit'
+        disabled={!isValid}
+        onClick={() => addEnumeratedRoles(role, getValues().roleIds)}
+      >
         Добавить роли
       </Button>
     </Container>

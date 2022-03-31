@@ -7,17 +7,19 @@ import { Info } from './Info';
 export interface RoleInfoProps extends IClassName {
   editable?: boolean;
   role: Role;
-  href: string;
+  edit(): void;
+  open(): void;
 }
 
-export const RoleInfo = ({ role, editable, ...p }: RoleInfoProps) => {
+export const RoleInfo = ({ role, editable, edit, open, ...p }: RoleInfoProps) => {
   const { permissions, fetching } = useAttachedPermissions({ roleId: role.id });
   const { title } = parseRole(role.role_type);
 
   return (
     <Info
       title={title}
-      editLink={editable ? `../role/edit/${role.id}` : undefined}
+      edit={editable && !('Everyone' in role.role_type) ? edit : undefined}
+      open={open}
       fetching={fetching}
       items={permissions.map((p) => ({ id: p.id, children: p.name }))}
       {...p}

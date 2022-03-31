@@ -7,6 +7,9 @@ import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { parseRole } from '../utils';
 import { useAttachedPermissions } from '../useAttachedPermissions';
+import { useDetach } from '../useDetach';
+import { useRemove } from '../useRemove';
+import { useEnumeratedRoles } from '../useEnumeratedRoles';
 import { RoleDetailsView } from './RoleDetailsView';
 import { PermissionsAttacher as PA } from './PermissionsAttacher';
 import { RolesAttacher as RA } from './RolesAttacher';
@@ -20,8 +23,15 @@ const Title = styled(Text)`
   margin-bottom: 64px;
 `;
 
-export const RoleDetails = () => {
+export interface RoleDetailsProps {
+  edit(roleId: number): void;
+}
+
+export const RoleDetails = ({ edit }: RoleDetailsProps) => {
   const { roleId } = useParams();
+  const { removeRole } = useRemove();
+  const { substractEnumeratedRoles } = useEnumeratedRoles();
+  const { detachRoleAndPermission } = useDetach();
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
   const forEnumeratedCanister = useWallet(principal);
@@ -67,7 +77,15 @@ export const RoleDetails = () => {
   return (
     <>
       <Title variant='h2'>{parsedRole.title}</Title>
-      <RoleDetailsView role={role} permissions={permissions} enumerated={enumerated} />
+      <RoleDetailsView
+        role={role}
+        permissions={permissions}
+        enumerated={enumerated}
+        remove={() => removeRole([role.id])}
+        edit={() => edit(role.id)}
+        detachPermission={detachRoleAndPermission}
+        substractRole={(from, role) => substractEnumeratedRoles(from, [role.id])}
+      />
       <PermissionsAttacher role={role} />
       {['FractionOf', 'QuantityOf'].includes(parsedRole.type) && (
         <RolesAttacher role={role} enumerated={enumerated} />

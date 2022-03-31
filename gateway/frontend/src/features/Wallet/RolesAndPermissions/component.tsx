@@ -53,7 +53,19 @@ const Container = styled.div`
   }
 `;
 
-export const RolesAndPermissions = () => {
+export interface RolesAndPermissionsProps {
+  editRole(roleId: number): void;
+  editPermission(permissionId: number): void;
+  openRole(roleId: number): void;
+  openPermission(permissionId: number): void;
+}
+
+export const RolesAndPermissions = ({
+  editRole,
+  editPermission,
+  openPermission,
+  openRole,
+}: RolesAndPermissionsProps) => {
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
@@ -94,7 +106,13 @@ export const RolesAndPermissions = () => {
           <Text>Роли отсутствуют</Text>
         )}
         {roles.map((role) => (
-          <RoleInfo key={role.id} role={role} href={`../role/${role.id}`} editable />
+          <RoleInfo
+            key={role.id}
+            role={role}
+            edit={() => editRole(role.id)}
+            open={() => openRole(role.id)}
+            editable
+          />
         ))}
       </Items>
       <Title variant='h4'>Пермиссии</Title>
@@ -107,7 +125,8 @@ export const RolesAndPermissions = () => {
           <PermissionInfo
             key={permission.id}
             permission={permission}
-            href={`../permission/${permission.id}`}
+            edit={() => editPermission(permission.id)}
+            open={() => openPermission(permission.id)}
             editable
           />
         ))}

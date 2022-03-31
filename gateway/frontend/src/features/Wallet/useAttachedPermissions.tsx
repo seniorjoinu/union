@@ -13,7 +13,7 @@ export const useAttachedPermissions = ({ roleId }: UseAttachedPermissionsProps) 
   const { data, canister, fetching } = useWallet(principal);
 
   useEffect(() => {
-    if (!rnp || !roleId) {
+    if (!rnp || roleId == undefined || roleId == null) {
       return;
     }
 

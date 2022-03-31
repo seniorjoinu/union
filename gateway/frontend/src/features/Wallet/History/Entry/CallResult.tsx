@@ -7,6 +7,7 @@ const Error = styled(Text)`
   display: flex;
   flex-direction: column;
   white-space: pre-line;
+  word-break: break-word;
 `;
 
 const Container = styled.div`

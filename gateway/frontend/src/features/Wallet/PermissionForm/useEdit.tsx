@@ -1,7 +1,9 @@
 import React, { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTrigger } from 'toolkit';
-import { useWallet } from 'services';
+import { useWallet, walletSerializer } from 'services';
+import { PermissionScope, PermissionTarget } from 'wallet-ts';
+import { Principal } from '@dfinity/principal';
 import { parsePermission } from '../utils';
 import { useCurrentWallet } from '../context';
 import { ExternalExecutorFormData } from '../../Executor';
@@ -50,10 +52,35 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
   );
 
   const onEdit = useCallback(async (): Promise<ExternalExecutorFormData> => {
-    console.error('Not implemented');
+    const permission = data.get_permissions?.permissions[0];
+
+    if (!permissionId || !rnp || !permission) {
+      return Promise.reject();
+    }
+
+    const old = parsePermission(permission);
+
+    const values = getValues();
+    const scope = { [values.scope]: null } as PermissionScope;
+
+    // const repeatCounter = 0; // FIXME
+    const targets: PermissionTarget[] = values.targets.map((t) => {
+      // if (old.targets.find()) // FIXME
+      if (!t.canisterId) {
+        return { SelfEmptyProgram: null };
+      }
+      if (t.canisterId && !t.methodName) {
+        return { Canister: Principal.fromText(t.canisterId) };
+      }
+      return {
+        Endpoint: { canister_id: Principal.fromText(t.canisterId), method_name: t.methodName },
+      };
+    });
+
     const payload: ExternalExecutorFormData = {
-      title: 'Create new permission',
-      description: 'Create new permission through interface',
+      title: 'Update permission',
+      description: 'Update permission through interface',
+      rnp,
       program: [
         {
           endpoint: {
@@ -61,13 +88,18 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
             method_name: 'create_permission',
           },
           cycles: '0',
-          args_candid: [],
+          args_candid: walletSerializer.update_permission({
+            permission_id: Number(permissionId),
+            new_name: old.name !== values.name ? [values.name] : [],
+            new_scope: old.scope !== values.scope ? [scope] : [],
+            new_targets: [targets], // FIXME
+          }),
         },
       ],
     };
 
     return payload;
-  }, [getValues]);
+  }, [getValues, permissionId, data.get_permissions]);
 
   let fallback: JSX.Element | null = null;
 
