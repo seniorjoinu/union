@@ -30,7 +30,9 @@ export function useRoles() {
 
   useTrigger(
     (rnp) => {
-      canister.get_role_ids({ rnp }).then(({ ids }) => canister.get_roles({ rnp, ids }));
+      canister
+        .get_role_ids({ rnp })
+        .then(({ ids }) => (ids.length ? canister.get_roles({ rnp, ids }) : null));
     },
     rnp,
     [],

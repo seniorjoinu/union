@@ -12,7 +12,11 @@ export function useDetach() {
   const { canister, fetching } = useWallet(principal);
 
   const detachRoleAndPermission = useCallback(
-    async (role: Role, permission: Permission) => {
+    async (
+      role: Role,
+      permission: Permission,
+      verbose?: { title?: string; description?: string },
+    ) => {
       if (!rnp) {
         return;
       }
@@ -20,8 +24,10 @@ export function useDetach() {
       const parsed = parseRole(role.role_type);
 
       const payload: ExternalExecutorFormData = {
-        title: 'Detach role from permission',
-        description: `Detach role "${parsed.title}" from permission "${permission.name}"(id ${permission.id})`,
+        title: verbose?.title || 'Detach role from permission',
+        description:
+          verbose?.description ||
+          `Detach role "${parsed.title}" from permission "${permission.name}"(id ${permission.id})`,
         rnp,
         program: [
           {

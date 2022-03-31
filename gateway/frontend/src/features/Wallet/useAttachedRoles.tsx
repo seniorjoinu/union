@@ -25,6 +25,10 @@ export const useAttachedRoles = ({ permissionId }: UseAttachedRolesProps) => {
       .then(({ result }) => {
         const ids = result.map(([, roleIds]) => roleIds).flat();
 
+        if (!ids.length) {
+          return;
+        }
+
         canister.get_roles({ rnp, ids }).then(({ roles }) => setRoles(roles));
       });
   }, [rnp, permissionId]);

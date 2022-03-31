@@ -54,6 +54,10 @@ export const RoleDetails = ({ edit }: RoleDetailsProps) => {
         return;
       }
 
+      if (!parsedRole.enumerated.length) {
+        return;
+      }
+
       forEnumeratedCanister.canister.get_roles({ rnp, ids: parsedRole.enumerated });
     },
     parsedRole,

@@ -71,10 +71,12 @@ export const RolesAndPermissions = ({
 
   useTrigger(
     (rnp) => {
-      canister.get_role_ids({ rnp }).then(({ ids }) => canister.get_roles({ rnp, ids }));
+      canister
+        .get_role_ids({ rnp })
+        .then(({ ids }) => (ids.length ? canister.get_roles({ rnp, ids }) : null));
       canister
         .get_permission_ids({ rnp })
-        .then(({ ids }) => canister.get_permissions({ rnp, ids }));
+        .then(({ ids }) => (ids.length ? canister.get_permissions({ rnp, ids }) : null));
     },
     rnp,
     [],

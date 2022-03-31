@@ -37,6 +37,9 @@ export const RoleSwitcher = ({ control, label, disabled, ...p }: RoleSwitcherPro
   const { onChange } = control.register('rnp');
 
   useEffect(() => {
+    if (disabled) {
+      return;
+    }
     update();
   }, []);
 

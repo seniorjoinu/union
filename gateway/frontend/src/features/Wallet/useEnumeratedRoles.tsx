@@ -3,35 +3,31 @@ import { Role } from 'wallet-ts';
 import { useWallet, walletSerializer } from 'services';
 import { useNavigate } from 'react-router-dom';
 import { ExternalExecutorFormData } from '../Executor';
-import { useRoles } from './useRoles';
 import { useCurrentWallet } from './context';
 import { parseRole } from './utils';
 
 export function useEnumeratedRoles() {
   const nav = useNavigate();
-  const { roles } = useRoles();
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching } = useWallet(principal);
 
   const addEnumeratedRoles = useCallback(
-    async (role: Role, roleIds: (number | string)[]) => {
+    async (
+      role: Role,
+      roleIds: (number | string)[],
+      verbose?: { title?: string; description?: string },
+    ) => {
       if (!rnp) {
         return;
       }
 
       const parsedRole = parseRole(role.role_type);
-      const roleNames = roleIds
-        .map((id) => {
-          const role = roles.find((r) => r.id == Number(id));
-          const name = role ? parseRole(role.role_type).title : 'Unknown';
-
-          return name;
-        })
-        .join();
 
       const payload: ExternalExecutorFormData = {
-        title: `Attach enumerated roles to role "${parsedRole.title}"`,
-        description: `Attach roles "${roleNames}" to role "${parsedRole.title}"(id ${role.id})`,
+        title: verbose?.title || `Attach enumerated roles to role "${parsedRole.title}"`,
+        description:
+          verbose?.description ||
+          `Attach roles "${roleIds.join()}" to role "${parsedRole.title}"(id ${role.id})`,
         rnp,
         program: [
           {
@@ -50,28 +46,26 @@ export function useEnumeratedRoles() {
 
       nav(`/wallet/${principal}/execute`, { state: payload });
     },
-    [canister, fetching, rnp, roles],
+    [canister, fetching, rnp],
   );
 
   const substractEnumeratedRoles = useCallback(
-    async (role: Role, roleIds: (number | string)[]) => {
+    async (
+      role: Role,
+      roleIds: (number | string)[],
+      verbose?: { title?: string; description?: string },
+    ) => {
       if (!rnp) {
         return;
       }
 
       const parsedRole = parseRole(role.role_type);
-      const roleNames = roleIds
-        .map((id) => {
-          const role = roles.find((r) => r.id == Number(id));
-          const name = role ? parseRole(role.role_type).title : 'Unknown';
-
-          return name;
-        })
-        .join();
 
       const payload: ExternalExecutorFormData = {
-        title: `Substract enumerated roles to role "${parsedRole.title}"`,
-        description: `Substract roles "${roleNames}" to role "${parsedRole.title}"(id ${role.id})`,
+        title: verbose?.title || `Substract enumerated roles to role "${parsedRole.title}"`,
+        description:
+          verbose?.description ||
+          `Substract roles "${roleIds.join()}" to role "${parsedRole.title}"(id ${role.id})`,
         rnp,
         program: [
           {
@@ -90,7 +84,7 @@ export function useEnumeratedRoles() {
 
       nav(`/wallet/${principal}/execute`, { state: payload });
     },
-    [canister, fetching, rnp, roles],
+    [canister, fetching, rnp],
   );
 
   return {

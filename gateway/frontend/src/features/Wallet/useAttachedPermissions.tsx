@@ -28,6 +28,9 @@ export const useAttachedPermissions = ({ roleId }: UseAttachedPermissionsProps) 
       .then(({ result }) => {
         const ids = result.map(([, permissionIds]) => permissionIds).flat();
 
+        if (!ids.length) {
+          return;
+        }
         canister
           .get_permissions({ rnp, ids })
           .then(({ permissions }) => setPermissions(permissions));

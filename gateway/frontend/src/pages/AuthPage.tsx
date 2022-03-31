@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { Auth, AuthProps } from '../features/Auth';
 
@@ -20,10 +21,13 @@ const Container = styled.main`
 
 export type AuthPageProps = AuthProps;
 
-export function AuthPage(p: AuthPageProps) {
+export function AuthPage({ to, ...p }: AuthPageProps) {
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+
   return (
     <Container>
-      <Auth {...p} />
+      <Auth {...p} to={params.get('to') || to} />
     </Container>
   );
 }

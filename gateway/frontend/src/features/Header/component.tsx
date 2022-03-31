@@ -63,7 +63,6 @@ export function Header(p: IClassName) {
           </>
         )}
       </Items>
-      {/* TODO frontend костыль */}
       <LoginButton mnemonic='' />
     </Container>
   );

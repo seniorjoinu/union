@@ -17,7 +17,7 @@ const Row = styled.div`
 const Container = styled.div<{ $highlighted: boolean }>`
   display: flex;
   flex-direction: column;
-  background: ${({ $highlighted }) => ($highlighted ? 'grey' : 'black')};
+  background: ${({ $highlighted }) => ($highlighted ? 'black' : 'grey')};
   color: white;
   padding: 16px 24px;
   cursor: pointer;
@@ -43,11 +43,12 @@ export const Item = ({ entry, ...p }: ItemProps) => {
   const status = Object.keys(entry.entry_type)[0] || '';
 
   const sequence = 'RemoteCallSequence' in entry.program ? entry.program.RemoteCallSequence : [];
+  const isPending = 'Pending' in entry.entry_type;
   const date = moment(Math.ceil(Number(entry.timestamp) / 10 ** 6));
   const hasAccess = !!permissions.find((p) => p.id == entry.permission_id);
 
   return (
-    <Container {...p} $highlighted={hasAccess}>
+    <Container {...p} $highlighted={hasAccess && isPending}>
       <Row>
         <Title variant='h5'>{entry.title}</Title>
         <Text variant='p1'>{date.format('DD-MM-YY HH:mm:ss')}</Text>

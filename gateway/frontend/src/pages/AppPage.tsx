@@ -39,11 +39,11 @@ const Container = styled.main`
   }
 `;
 
-export interface AppProps {
+export interface AppPageProps {
   children: any;
 }
 
-export const App = ({ children }: AppProps) => (
+export const AppPage = ({ children }: AppPageProps) => (
   <Container>
     <Header />
     <Section>{children}</Section>

@@ -68,7 +68,8 @@ TODO
 
 ## Code assumptions
 
-- Used monkey-patching of @dfinity/candid in file `./src/services/controllers/idl-monkey-patching.ts`
+- Used monkey-patching of @dfinity/candid in [file](./src/services/controllers/idl-monkey-patching.ts)
+- [Lib folder](./src/lib/README.md) contains potential separated npm packages
 
 ## Troubleshooting
 

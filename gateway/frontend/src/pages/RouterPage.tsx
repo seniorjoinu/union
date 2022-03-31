@@ -4,8 +4,7 @@ import { Progress } from 'components';
 import { useAuth, AuthReadyState } from 'services';
 import { Wallets } from '../features/Wallets';
 import { Wallet } from '../features/Wallet';
-import { App } from './App';
-import { EmbedPage } from './EmbedPage';
+import { AppPage } from './AppPage';
 import { AuthPage } from './AuthPage';
 
 export function RouterPage() {
@@ -19,18 +18,17 @@ export function RouterPage() {
     <BrowserRouter>
       <Routes>
         <Route path='/auth' element={<AuthPage to='/wallets' />} />
-        <Route path='/embed' element={<EmbedPage />} />
         {!isAuthentificated && <Route path='/*' element={<Navigate to='/auth' replace />} />}
         <Route path='/' element={<Navigate to='/walets' replace />} />
         <Route
           path='/*'
           element={
-            <App>
+            <AppPage>
               <Routes>
                 <Route path='/wallets/*' element={<Wallets />} />
                 <Route path='/wallet/:id/*' element={<Wallet />} />
               </Routes>
-            </App>
+            </AppPage>
           }
         />
       </Routes>

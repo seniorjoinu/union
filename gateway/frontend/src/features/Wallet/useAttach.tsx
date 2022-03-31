@@ -2,43 +2,27 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { walletSerializer } from 'services';
 import { ExternalExecutorFormData } from '../Executor';
-import { parseRole } from './utils';
-import { useRoles } from './useRoles';
 import { useCurrentWallet } from './context';
-import { usePermissions } from './usePermissions';
 
 export function useAttach() {
-  const { roles } = useRoles();
-  const { permissions } = usePermissions();
   const nav = useNavigate();
   const { rnp, principal } = useCurrentWallet();
 
   const attach = useCallback(
-    (permissionIds: (string | number)[], roleIds: (number | string)[]) => {
+    (
+      permissionIds: (string | number)[],
+      roleIds: (number | string)[],
+      verbose?: { title?: string; description?: string },
+    ) => {
       if (!rnp) {
         return;
       }
 
-      const roleNames = roleIds
-        .map((id) => {
-          const role = roles.find((r) => r.id == Number(id));
-          const name = role ? parseRole(role.role_type).title : 'Unknown';
-
-          return `${name}(${String(id)})`;
-        })
-        .join();
-
-      const permissionNames = permissionIds
-        .map((id) => {
-          const permission = permissions.find((p) => p.id == Number(id));
-
-          return `${permission?.name || 'Unknown'}(${String(id)})`;
-        })
-        .join();
-
       const payload: ExternalExecutorFormData = {
-        title: 'Attach roles to permission',
-        description: `Attach roles "${roleNames}" to permissions "${permissionNames}"`,
+        title: verbose?.title || 'Attach roles to permission',
+        description:
+          verbose?.description ||
+          `Attach roles "${roleIds.join()}" to permissions "${permissionIds.join()}"`,
         rnp,
         program: roleIds
           .map((roleId) =>
@@ -59,7 +43,7 @@ export function useAttach() {
 
       nav(`/wallet/${principal}/execute`, { state: payload });
     },
-    [roles, permissions, nav],
+    [nav, rnp],
   );
 
   return { attach };
