@@ -3,7 +3,11 @@ import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Text, Button as B, SimpleListItem } from 'components';
-import { useDeployer } from 'services';
+import {
+  useDeployer,
+  // TODO use gateway controller to fetch spawned wallets when gateway is implemented
+  // useGateway
+} from 'services';
 
 const List = styled.div`
   display: flex;
@@ -34,6 +38,8 @@ const Container = styled.div`
 export const WalletsList = () => {
   const nav = useNavigate();
   const [wallets, setWallets] = useState<Principal[]>([]);
+  // TODO use gateway controller to fetch spawned wallets when gateway is implemented
+  // const { canister, fetching } = useGateway(process.env.GATEWAY_CANISTER_ID);
   const { canister, fetching } = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
 
   useEffect(() => {

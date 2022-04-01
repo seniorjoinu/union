@@ -8,6 +8,8 @@
 - `dfx deploy` here
 - `yarn dev` here
 
+Check `process.env` variable for canister ids in [global.d.ts](./global.d.ts) and [vite.config](./vite.config.ts). Canister controllers already implemented in [src/services/controllers](./src/services/controllers/).
+
 ## Target case
 
 Here is described the target infrastructure deployment option as it should be in production. This case is to be implemented.

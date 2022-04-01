@@ -8,7 +8,9 @@ import config from './tsconfig.json';
 
 const envs = {
   ...getCanisterIds(__dirname),
+  ...getCanisterIds(path.resolve('../../backend')),
   ...getCanisterIds(path.resolve('../../../wallet-deployer/canister')),
+  ...getCanisterIds(path.resolve('../internet-identity')),
 };
 
 export default defineConfig({
@@ -21,11 +23,13 @@ export default defineConfig({
   },
   publicDir: './public',
   resolve: {
-    alias: Object.entries(config.compilerOptions.paths)
-      .reduce((acc, [k, v]) => ({
+    alias: Object.entries(config.compilerOptions.paths).reduce(
+      (acc, [k, v]) => ({
         ...acc,
         [k]: path.resolve(__dirname, v[0]),
-      }), {} as Record<string, string>),
+      }),
+      {} as Record<string, string>,
+    ),
   },
   plugins: [
     reactRefresh(),

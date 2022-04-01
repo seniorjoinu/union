@@ -19,6 +19,8 @@
       "services": ["src/services/index.ts"],
       "components": ["src/lib/components/index.ts"],
       "toolkit": ["src/lib/toolkit/index.ts"],
+      "gateway-ts": ["src/assets/gateway.did.d.ts"],
+      "gateway-idl": ["src/assets/gateway.did.js"],
       "deployer-ts": ["src/assets/union-deployer.did.d.ts"],
       "deployer-idl": ["src/assets/union-deployer.did.js"],
       "wallet-ts": ["src/assets/union-wallet.did.d.ts"],

@@ -60,9 +60,6 @@ export const useWallet = (canisterId: string) => {
 
 const idlFactory = idl({ IDL }) as IDL.ServiceClass;
 
-// @ts-expect-error
-window.idl = idlFactory;
-
 export const walletSerializer = idlFactory._fields.reduce((acc, next) => {
   const func = next[1] as IDL.FuncClass;
 

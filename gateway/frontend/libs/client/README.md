@@ -1,10 +1,15 @@
 # Union wallet client
 
+Client library for union-wallet interaction. Start storybook with `yarn dev` and try to create execution in union-wallet
+
 ## Quickstart
 
 - deploy gateway frontend locally
-- get frontend gateway canisterId. This will be `gateway`
-- start `yarn dev`
+- get frontend gateway canisterId. This will be `gateway` option
+- deploy wallet through gateway and get wallet-canister-id. This will be `wallet` option
+- start `yarn dev`, open storybook frontend
+- Paste `gateway` and `wallet` in `Actions` tab
+- Make calls by buttons
 
 For more info check [storybook](./src/stories/index.stories.tsx).
 
@@ -29,4 +34,10 @@ client.execute(
 	},
 	{ after: 'close' },
 );
+
+// this will opens union-gateway frontend with prefilled execution command
 ```
+
+## Publishing
+
+Need to publish and test this package

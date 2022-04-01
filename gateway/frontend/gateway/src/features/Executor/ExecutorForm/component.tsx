@@ -35,8 +35,11 @@ const Row = styled.div`
     flex-grow: 1;
   }
 
-  ${RemoveButton} {
+  & > *:not(:first-child) {
     margin-left: 8px;
+  }
+
+  ${RemoveButton} {
     align-self: flex-end;
   }
 `;
@@ -100,7 +103,7 @@ export function ExecutorForm({
   const {
     control,
     getValues,
-    formState: { isValid },
+    formState: { isValid, errors },
   } = useForm<ExecutorFormData>({
     defaultValues: data,
     mode: 'onTouched',
@@ -176,30 +179,40 @@ export function ExecutorForm({
           rules={{
             required: 'Обязательное поле',
             validate: {
-              gtNow: (value) => value > 0 || 'Некорректная дата',
+              gtNow: (value) => value >= 0 || 'Некорректная дата',
             },
           }}
           render={({ field, fieldState: { error } }) => (
-            <TextField
-              {...field}
-              onChange={(e) => {
-                const diff = moment(e.target.value).valueOf() - Date.now();
+            <Row>
+              <TextField
+                {...field}
+                onChange={(e) => {
+                  const diff = moment(e.target.value).valueOf() - Date.now();
 
-                if (diff < 0) {
-                  return;
-                }
+                  if (diff < 0) {
+                    return;
+                  }
 
-                field.onChange(diff * 10 ** 6);
-              }}
-              min={moment().format('YYYY-MM-DDTHH:mm')}
-              value={moment()
-                .add(Math.ceil(field.value / 10 ** 6), 'milliseconds')
-                .format('YYYY-MM-DDTHH:mm')}
-              disabled={disabled}
-              helperText={error?.message}
-              type='datetime-local'
-              label='Ожидание до'
-            />
+                  field.onChange(diff * 10 ** 6);
+                }}
+                min={moment().format('YYYY-MM-DDTHH:mm')}
+                value={moment()
+                  .add(Math.ceil(field.value / 10 ** 6), 'milliseconds')
+                  .format('YYYY-MM-DDTHH:mm')}
+                disabled={disabled}
+                helperText={error?.message}
+                type='datetime-local'
+                label='Ожидание до'
+              />
+              <TextField
+                {...field}
+                min={0}
+                disabled={disabled}
+                helperText={error?.message}
+                type='number'
+                label='В наносекундах'
+              />
+            </Row>
           )}
         />
       )}

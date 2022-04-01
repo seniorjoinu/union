@@ -6,4 +6,7 @@ cp ../../../wallet-deployer/canister/.dfx/local/canisters/union-deployer/union-d
 cp ../../../wallet-backend/.dfx/local/canisters/union-wallet/union-wallet.did.d.ts ./src/assets/union-wallet.did.d.ts
 cp ../../../wallet-backend/.dfx/local/canisters/union-wallet/union-wallet.did.js ./src/assets/union-wallet.did.js
 
+cp ../../backend/.dfx/local/canisters/gateway/gateway.did.d.ts ./src/assets/gateway.did.d.ts || echo "Gateway not implemented yet"
+cp ../../backend/.dfx/local/canisters/gateway/gateway.did.js ./src/assets/gateway.did.js || echo "Gateway not implemented yet"
+
 cp ../../../wallet-backend/.dfx/local/canisters/union-wallet/union-wallet.wasm ./public/union-wallet.wasm
