@@ -10,16 +10,21 @@ export interface UseAttachedPermissionsProps {
 export const useAttachedPermissions = ({ roleId }: UseAttachedPermissionsProps) => {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const { rnp, principal } = useCurrentWallet();
-  const { data, canister, fetching } = useWallet(principal);
+  const { data, canister, fetching, errors } = useWallet(principal);
 
   useEffect(() => {
     if (!rnp || roleId == undefined || roleId == null) {
       return;
     }
 
-    if (!!fetching.get_permissions_attached_to_roles || !!data.get_permissions_attached_to_roles) {
+    if (
+      !!fetching.get_permissions_attached_to_roles ||
+      !!data.get_permissions_attached_to_roles ||
+      !!errors.get_permissions_attached_to_roles
+    ) {
       return;
     }
+
     canister
       .get_permissions_attached_to_roles({
         rnp,
@@ -39,6 +44,7 @@ export const useAttachedPermissions = ({ roleId }: UseAttachedPermissionsProps) 
     rnp,
     data.get_permissions_attached_to_roles,
     fetching.get_permissions_attached_to_roles,
+    errors.get_permissions_attached_to_roles,
     setPermissions,
   ]);
 

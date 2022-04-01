@@ -35,8 +35,15 @@ export interface RoleSwitcherProps extends IClassName {
 
 export const RoleSwitcher = ({ control, label, disabled, getValues, ...p }: RoleSwitcherProps) => {
   const { rnp, roles, permissions, fetchMyData } = useCurrentWallet();
-  const pid = control.register('rnp.permission_id');
-  const rid = control.register('rnp.role_id');
+  const rnpField = control.register('rnp', {
+    required: 'Обязательное поле',
+  });
+  const pid = control.register('rnp.permission_id', {
+    required: 'Обязательное поле',
+  });
+  const rid = control.register('rnp.role_id', {
+    required: 'Обязательное поле',
+  });
 
   useEffect(() => {
     if (disabled) {
@@ -47,12 +54,15 @@ export const RoleSwitcher = ({ control, label, disabled, getValues, ...p }: Role
 
   useTrigger(
     (rnp) => {
-      const value = getValues().rnp;
+      const { permission_id, role_id } = getValues().rnp;
 
-      if (!value) {
+      if (typeof permission_id == 'undefined' || permission_id == null) {
         pid.onChange({ target: { name: 'rnp.permission_id', value: rnp.permission_id } });
+      }
+      if (typeof role_id == 'undefined' || role_id == null) {
         rid.onChange({ target: { name: 'rnp.role_id', value: rnp.role_id } });
       }
+      rnpField.onChange({ target: { name: 'rnp', value: rnp } });
     },
     rnp,
     [getValues],

@@ -194,6 +194,7 @@ export interface UpdateRoleRequest {
   'new_role_type' : RoleType,
 }
 export interface _SERVICE {
+  '__get_candid_interface_tmp_hack' : () => Promise<string>,
   'add_enumerated_roles' : (arg_0: AddEnumeratedRolesRequest) => Promise<
       undefined
     >,
@@ -212,7 +213,6 @@ export interface _SERVICE {
     ) => Promise<undefined>,
   'edit_profile' : (arg_0: EditProfileRequest) => Promise<undefined>,
   'execute' : (arg_0: ExecuteRequest) => Promise<ExecuteResponse>,
-  'export_candid' : () => Promise<string>,
   'get_history_entries' : (arg_0: GetHistoryEntriesRequest) => Promise<
       GetHistoryEntriesResponse
     >,

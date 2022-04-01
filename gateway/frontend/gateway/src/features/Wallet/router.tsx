@@ -11,6 +11,7 @@ import { PermissionForm } from './PermissionForm';
 import { Participants } from './Participants';
 import { History, HistoryEntry, ScheduledEntry } from './History';
 import { Invite } from './Invite';
+import { useCandid } from './useCandid';
 
 const Container = styled.div`
   display: flex;
@@ -21,6 +22,9 @@ export const Wallet = () => {
   const params = useParams();
   const nav = useNavigate();
   const principal = params.id;
+
+  // FIXME REMOVE!!!
+  useCandid({ canisterId: principal! });
 
   if (!principal) {
     return <Navigate to='/wallets' replace />;

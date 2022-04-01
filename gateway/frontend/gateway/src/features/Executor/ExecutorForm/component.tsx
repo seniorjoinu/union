@@ -103,7 +103,7 @@ export function ExecutorForm({
   const {
     control,
     getValues,
-    formState: { isValid, errors },
+    formState: { isValid },
   } = useForm<ExecutorFormData>({
     defaultValues: data,
     mode: 'onTouched',

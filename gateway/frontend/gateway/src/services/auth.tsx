@@ -66,7 +66,10 @@ export function useProvideAuth(authClient: typeof authenticationClient): AuthCon
     }
     let identity = await authClient.getIdentity();
 
-    await authClient.login(getIdentityUrl());
+    await authClient.login({
+      identityProvider: getIdentityUrl(),
+      maxTimeToLive: BigInt(2 * 60 * 60 * 10 ** 9), // 2 hours
+    });
 
     identity = await authClient.getIdentity();
 

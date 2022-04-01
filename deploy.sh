@@ -28,6 +28,7 @@ cd ../../../
 echo "Deploy frontend"
 cd gateway/frontend/gateway
 rm -rf ./.dfx/local
+yarn
 dfx deploy
 echo "http://localhost:8000?canisterId=$(dfx canister id union-wallet-frontend)"
 echo "Frontend deployed"

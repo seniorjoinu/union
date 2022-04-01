@@ -208,6 +208,7 @@ export const idlFactory = ({ IDL }) => {
     'new_role_type' : RoleType,
   });
   return IDL.Service({
+    '__get_candid_interface_tmp_hack' : IDL.Func([], [IDL.Text], ['query']),
     'add_enumerated_roles' : IDL.Func([AddEnumeratedRolesRequest], [], []),
     'attach_role_to_permission' : IDL.Func(
         [AttachRoleToPermissionRequest],
@@ -232,7 +233,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'edit_profile' : IDL.Func([EditProfileRequest], [], []),
     'execute' : IDL.Func([ExecuteRequest], [ExecuteResponse], []),
-    'export_candid' : IDL.Func([], [IDL.Text], ['query']),
     'get_history_entries' : IDL.Func(
         [GetHistoryEntriesRequest],
         [GetHistoryEntriesResponse],

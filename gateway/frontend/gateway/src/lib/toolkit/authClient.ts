@@ -1,7 +1,9 @@
 import { Principal } from '@dfinity/principal';
 import { HttpAgent, HttpAgentOptions, Identity } from '@dfinity/agent';
-import { AuthClient, AuthClientCreateOptions } from '@dfinity/auth-client';
+import { AuthClient, AuthClientCreateOptions, AuthClientLoginOptions } from '@dfinity/auth-client';
 import { getAgent, getHttpAgentOptions } from './agent';
+
+export type LoginOptions = Omit<AuthClientLoginOptions, 'onSuccess'>;
 
 export class AuthClientWrapper {
   public principal: Principal | null = null;
@@ -19,10 +21,10 @@ export class AuthClientWrapper {
     this.ready = true;
   }
 
-  login = async (identityProvider?: string): Promise<Identity | undefined> => {
+  login = async (options?: LoginOptions): Promise<Identity | undefined> => {
     return new Promise(async (resolve) => {
       await this.authClient?.login({
-        identityProvider,
+        ...options,
         onSuccess: async () => {
           const identity = this.authClient?.getIdentity();
           this.principal = identity?.getPrincipal() || null;

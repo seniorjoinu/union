@@ -14,6 +14,10 @@ export default {
       type: 'string',
       defaultValue: 'renrk-eyaaa-aaaaa-aaada-cai',
     },
+    providerUrl: {
+      type: 'string',
+      defaultValue: 'http://localhost:3000',
+    },
   },
 };
 
@@ -26,9 +30,11 @@ const Container = styled.div`
 export const Playground = ({
   gateway: gatewayStr,
   wallet: walletStr,
+  providerUrl,
 }: {
   gateway: string;
   wallet: string;
+  providerUrl: string;
 }) => {
   const [client, setClient] = React.useState<UnionWalletClient | null>(null);
 
@@ -44,11 +50,11 @@ export const Playground = ({
     const client = new UnionWalletClient({
       gateway,
       wallet,
-      providerUrl: 'http://localhost:3000',
+      providerUrl,
     });
 
     setClient(client);
-  }, [wallet, gateway, setClient]);
+  }, [wallet, gateway, providerUrl, setClient]);
 
   return (
     <Container>
