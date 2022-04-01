@@ -42,6 +42,8 @@ export async function setup(identity: Identity): Promise<ISetup> {
         canisterId: canister_id
     });
 
+    console.log(await walletClient.export_candid());
+
     return {
         agent,
         walletClient,
