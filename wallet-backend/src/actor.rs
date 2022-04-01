@@ -541,11 +541,9 @@ pub fn get_permissions_attached_to_roles(
     GetPermissionsAttachedToRolesResponse { result }
 }
 
-export_service!();
-
-#[query(name = "__get_candid_interface_tmp_hack")]
+#[query]
 fn export_candid() -> String {
-    __export_service()
+    include_str!("../can.did").to_string()
 }
 
 static mut STATE: Option<State> = None;
