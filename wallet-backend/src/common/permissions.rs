@@ -174,6 +174,14 @@ impl PermissionsState {
             .into_iter()
             .collect()
     }
+    
+    pub fn get_permission_ids_by_permission_target(
+        &self,
+        permission_target: &PermissionTarget,
+    ) -> Option<&HashSet<PermissionId>> {
+        self.permissions_by_permission_target_index
+            .get(permission_target)
+    }
 
     fn get_permission_mut(
         &mut self,

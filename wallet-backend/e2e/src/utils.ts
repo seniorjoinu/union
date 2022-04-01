@@ -28,7 +28,7 @@ export async function setup(identity: Identity): Promise<ISetup> {
 
     const managementCanister = getManagementCanister({agent});
     const {canister_id} = await managementCanister.provisional_create_canister_with_cycles({amount: [], settings: []});
-    const wasm = fs.readFileSync('../.dfx/local/canisters/union-wallet/union-wallet.wasm');
+    const wasm = fs.readFileSync('.dfx/local/canisters/union-wallet/union-wallet.wasm');
 
     await managementCanister.install_code({
         canister_id,

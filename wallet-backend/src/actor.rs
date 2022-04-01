@@ -1,20 +1,19 @@
 use crate::api::{
     AddEnumeratedRolesRequest, AttachRoleToPermissionRequest, AuthorizeExecutionRequest,
-    AuthorizeExecutionResponse, AuthorizedRequest, CreatePermissionRequest,
-    CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse,
-    DetachRoleFromPermissionRequest, EditProfileRequest, ExecuteRequest, ExecuteResponse,
-    GetHistoryEntriesRequest, GetHistoryEntriesResponse, GetHistoryEntryIdsResponse,
-    GetMyPermissionsResponse, GetMyRolesResponse, GetPermissionIdsResponse,
-    GetPermissionsAttachedToRolesRequest, GetPermissionsAttachedToRolesResponse,
-    GetPermissionsByPermissionTargetRequest, GetPermissionsByPermissionTargetResponse,
-    GetPermissionsRequest, GetPermissionsResponse, GetRoleIdsResponse,
-    GetRolesAttachedToPermissionsRequest, GetRolesAttachedToPermissionsResponse, GetRolesRequest,
-    GetRolesResponse, GetScheduledForAuthorizationExecutionsRequest,
-    GetScheduledForAuthorizationExecutionsResponse, RemovePermissionRequest,
-    RemovePermissionResponse, RemoveRoleRequest, RemoveRoleResponse,
+    AuthorizeExecutionResponse, CreatePermissionRequest, CreatePermissionResponse,
+    CreateRoleRequest, CreateRoleResponse, DetachRoleFromPermissionRequest, EditProfileRequest,
+    ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest, GetHistoryEntriesResponse,
+    GetHistoryEntryIdsResponse, GetMyPermissionsResponse, GetMyRolesResponse,
+    GetPermissionIdsResponse, GetPermissionsAttachedToRolesRequest,
+    GetPermissionsAttachedToRolesResponse, GetPermissionsByPermissionTargetRequest,
+    GetPermissionsByPermissionTargetResponse, GetPermissionsRequest, GetPermissionsResponse,
+    GetRoleIdsResponse, GetRolesAttachedToPermissionsRequest,
+    GetRolesAttachedToPermissionsResponse, GetRolesRequest, GetRolesResponse,
+    GetScheduledForAuthorizationExecutionsRequest, GetScheduledForAuthorizationExecutionsResponse,
+    RemovePermissionRequest, RemovePermissionResponse, RemoveRoleRequest, RemoveRoleResponse,
     SubtractEnumeratedRolesRequest, UpdatePermissionRequest, UpdateRoleRequest,
 };
-use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallPayload};
+use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallEndpoint};
 use crate::common::permissions::PermissionId;
 use crate::common::roles::RoleId;
 use crate::common::utils::{validate_and_trim_str, CandidCallResult, ToCandidType};
@@ -22,13 +21,12 @@ use crate::guards::only_self_guard;
 use crate::helpers::execute_program_and_log;
 use crate::state::{State, TaskType};
 use ic_cdk::api::time;
-use ic_cdk::caller;
 use ic_cdk::export::candid::export_service;
 use ic_cdk::export::Principal;
+use ic_cdk::{caller, trap};
 use ic_cdk_macros::{heartbeat, init, query, update};
 use ic_cron::implement_cron;
 use ic_cron::types::{Iterations, SchedulingOptions};
-use std::collections::HashSet;
 
 pub mod api;
 pub mod common;
@@ -143,17 +141,11 @@ fn get_scheduled_for_authorization_executions(
     req: GetScheduledForAuthorizationExecutionsRequest,
 ) -> GetScheduledForAuthorizationExecutionsResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty(
-                "get_scheduled_for_authorization_executions",
-            )]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_scheduled_for_authorization_executions") {
+        trap("Access denied");
+    }
 
     let entries = match req.task_ids {
         None => get_cron_state()
@@ -223,19 +215,13 @@ fn tick() {
 }
 
 #[query]
-pub fn get_history_entry_ids(req: AuthorizedRequest) -> GetHistoryEntryIdsResponse {
+pub fn get_history_entry_ids() -> GetHistoryEntryIdsResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty(
-                "get_history_entry_ids",
-            )]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_history_entry_ids") {
+        trap("Access denied");
+    }
 
     let ids = state.execution_history.get_entry_ids_cloned();
 
@@ -245,17 +231,11 @@ pub fn get_history_entry_ids(req: AuthorizedRequest) -> GetHistoryEntryIdsRespon
 #[query]
 pub fn get_history_entries(req: GetHistoryEntriesRequest) -> GetHistoryEntriesResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty(
-                "get_history_entries",
-            )]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_history_entries") {
+        trap("Access denied");
+    }
 
     let mut entries = vec![];
 
@@ -337,17 +317,13 @@ pub fn subtract_enumerated_roles(req: SubtractEnumeratedRolesRequest) {
 }
 
 #[query]
-pub fn get_role_ids(req: AuthorizedRequest) -> GetRoleIdsResponse {
+pub fn get_role_ids() -> GetRoleIdsResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty("get_role_ids")]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_role_ids") {
+        trap("Access denied");
+    }
 
     let ids = state.roles.get_role_ids_cloned();
 
@@ -357,15 +333,11 @@ pub fn get_role_ids(req: AuthorizedRequest) -> GetRoleIdsResponse {
 #[query]
 pub fn get_roles(req: GetRolesRequest) -> GetRolesResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty("get_roles")]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_roles") {
+        trap("Access denied");
+    }
 
     let mut roles = vec![];
 
@@ -436,17 +408,13 @@ pub fn remove_permission(req: RemovePermissionRequest) -> RemovePermissionRespon
 }
 
 #[query]
-pub fn get_permission_ids(req: AuthorizedRequest) -> GetPermissionIdsResponse {
+pub fn get_permission_ids() -> GetPermissionIdsResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty("get_permission_ids")]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_permission_ids") {
+        trap("Access denied");
+    }
 
     let ids = state.permissions.get_permission_ids_cloned();
 
@@ -456,15 +424,11 @@ pub fn get_permission_ids(req: AuthorizedRequest) -> GetPermissionIdsResponse {
 #[query]
 pub fn get_permissions(req: GetPermissionsRequest) -> GetPermissionsResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty("get_permissions")]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_permissions") {
+        trap("Access denied");
+    }
 
     let mut permissions = vec![];
 
@@ -484,13 +448,8 @@ pub fn get_permissions(req: GetPermissionsRequest) -> GetPermissionsResponse {
 pub fn get_my_permissions() -> GetMyPermissionsResponse {
     let id = caller();
     let state = get_state();
-    let role_ids = state.roles.get_role_ids_by_role_owner_cloned(&id);
-    let mut permission_ids = HashSet::new();
 
-    for role_id in &role_ids {
-        let some_permission_ids = state.get_permission_ids_of_role_cloned(role_id);
-        permission_ids.extend(some_permission_ids.into_iter());
-    }
+    let permission_ids = state.get_permission_ids_of_cloned(&id);
 
     let mut permissions = vec![];
     for permission_id in &permission_ids {
@@ -507,17 +466,11 @@ pub fn get_permissions_by_permission_target(
     req: GetPermissionsByPermissionTargetRequest,
 ) -> GetPermissionsByPermissionTargetResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty(
-                "get_permissions_by_permission_target",
-            )]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_permissions_by_permission_target") {
+        trap("Access denied");
+    }
 
     let ids = state
         .permissions
@@ -551,17 +504,11 @@ pub fn get_roles_attached_to_permissions(
     req: GetRolesAttachedToPermissionsRequest,
 ) -> GetRolesAttachedToPermissionsResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty(
-                "get_roles_attached_to_permissions",
-            )]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_roles_attached_to_permissions") {
+        trap("Access denied");
+    }
 
     let mut result = vec![];
 
@@ -578,17 +525,11 @@ pub fn get_permissions_attached_to_roles(
     req: GetPermissionsAttachedToRolesRequest,
 ) -> GetPermissionsAttachedToRolesResponse {
     let state = get_state();
+    let caller = caller();
 
-    state
-        .validate_authorized_request(
-            &caller(),
-            &req.rnp.role_id,
-            &req.rnp.permission_id,
-            &Program::RemoteCallSequence(vec![RemoteCallPayload::this_empty(
-                "get_permissions_attached_to_roles",
-            )]),
-        )
-        .expect("Access denied");
+    if !state.is_query_caller_authorized(&caller, "get_permissions_attached_to_roles") {
+        trap("Access denied");
+    }
 
     let mut result = vec![];
 
