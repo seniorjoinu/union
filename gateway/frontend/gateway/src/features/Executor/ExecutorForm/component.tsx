@@ -132,7 +132,8 @@ export function ExecutorForm({
           : {
               RemoteCallSequence: program.map((p) => ({
                 ...p,
-                args_candid: p.args_candid.map((a) => a.trim()),
+                // TODO Encoded
+                args: { CandidString: p.args_candid.map((a) => a.trim()) },
                 cycles: BigInt(p.cycles),
                 endpoint: {
                   ...p.endpoint,

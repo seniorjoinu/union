@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { Text } from 'components';
-import { useTrigger } from 'toolkit';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { useAttachedRoles } from '../useAttachedRoles';
@@ -23,17 +22,13 @@ export const PermissionDetails = ({ edit }: PermissionDetailsProps) => {
   const { permissionId } = useParams();
   const { removePermission } = useRemove();
   const { detachRoleAndPermission } = useDetach();
-  const { rnp, principal } = useCurrentWallet();
+  const { principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
   const { roles } = useAttachedRoles({ permissionId });
 
-  useTrigger(
-    (rnp) => {
-      canister.get_permissions({ rnp, ids: [Number(permissionId)] });
-    },
-    rnp,
-    [permissionId],
-  );
+  useEffect(() => {
+    canister.get_permissions({ ids: [Number(permissionId)] });
+  }, [permissionId]);
 
   const permission = data.get_permissions?.permissions[0];
 

@@ -44,7 +44,7 @@ export function Header(p: IClassName) {
 
   const isInsideWallet = location.startsWith('wallet/');
   const walletId = location.split('wallet/')[1]?.split('/')[0];
-  const { data, canister, fetching, error } = useWallet(walletId);
+  const { data, canister } = useWallet(walletId);
 
   useEffect(() => {
     if (!checkPrincipal(walletId)) {

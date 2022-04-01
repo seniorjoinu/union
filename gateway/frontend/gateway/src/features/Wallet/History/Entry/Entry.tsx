@@ -72,9 +72,10 @@ export const Entry = ({ entry, children, renderControls = () => null, ...p }: En
     description: entry.description,
     rnp: { role_id: entry.role_id, permission_id: entry.permission_id },
     authorization_delay_nano: 0, // FIXME
-    program: sequence.map(({ cycles, endpoint, args_candid }) => ({
+    program: sequence.map(({ cycles, endpoint, args }) => ({
       cycles: String(cycles),
-      args_candid,
+      args_candid: 'CandidString' in args ? args.CandidString : [],
+      args_encoded: 'Encoded' in args ? args.Encoded : [],
       endpoint: {
         canister_id: endpoint.canister_id.toString(),
         method_name: endpoint.method_name,

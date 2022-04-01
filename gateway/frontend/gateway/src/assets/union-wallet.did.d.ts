@@ -9,7 +9,6 @@ export interface AttachRoleToPermissionRequest {
 }
 export interface AuthorizeExecutionRequest { 'task_id' : TaskId }
 export type AuthorizeExecutionResponse = ExecuteResponse;
-export interface AuthorizedRequest { 'rnp' : RoleAndPermission }
 export type CallResult = { 'Ok' : string } |
   { 'Err' : [RejectionCode, string] };
 export interface CreatePermissionRequest {
@@ -44,49 +43,36 @@ export interface FractionOf {
   'fraction' : number,
   'enumerated' : Array<RoleId>,
 }
-export interface GetHistoryEntriesRequest {
-  'ids' : Array<HistoryEntryId>,
-  'rnp' : RoleAndPermission,
-}
+export interface GetHistoryEntriesRequest { 'ids' : Array<HistoryEntryId> }
 export interface GetHistoryEntriesResponse { 'entries' : Array<HistoryEntry> }
 export interface GetHistoryEntryIdsResponse { 'ids' : Array<HistoryEntryId> }
 export interface GetMyPermissionsResponse { 'permissions' : Array<Permission> }
 export interface GetMyRolesResponse { 'roles' : Array<Role> }
 export interface GetPermissionIdsResponse { 'ids' : Array<PermissionId> }
 export interface GetPermissionsAttachedToRolesRequest {
-  'rnp' : RoleAndPermission,
   'role_ids' : Array<RoleId>,
 }
 export interface GetPermissionsAttachedToRolesResponse {
   'result' : Array<[RoleId, Array<PermissionId>]>,
 }
 export interface GetPermissionsByPermissionTargetRequest {
-  'rnp' : RoleAndPermission,
   'target' : PermissionTarget,
 }
 export interface GetPermissionsByPermissionTargetResponse {
   'ids' : Array<PermissionId>,
 }
-export interface GetPermissionsRequest {
-  'ids' : Array<PermissionId>,
-  'rnp' : RoleAndPermission,
-}
+export interface GetPermissionsRequest { 'ids' : Array<PermissionId> }
 export interface GetPermissionsResponse { 'permissions' : Array<Permission> }
 export interface GetRoleIdsResponse { 'ids' : Array<RoleId> }
 export interface GetRolesAttachedToPermissionsRequest {
-  'rnp' : RoleAndPermission,
   'permission_ids' : Array<PermissionId>,
 }
 export interface GetRolesAttachedToPermissionsResponse {
   'result' : Array<[PermissionId, Array<RoleId>]>,
 }
-export interface GetRolesRequest {
-  'ids' : Array<RoleId>,
-  'rnp' : RoleAndPermission,
-}
+export interface GetRolesRequest { 'ids' : Array<RoleId> }
 export interface GetRolesResponse { 'roles' : Array<Role> }
 export interface GetScheduledForAuthorizationExecutionsRequest {
-  'rnp' : RoleAndPermission,
   'task_ids' : [] | [Array<TaskId>],
 }
 export interface GetScheduledForAuthorizationExecutionsResponse {
@@ -141,13 +127,15 @@ export type RejectionCode = { 'NoError' : null } |
   { 'Unknown' : null } |
   { 'SysFatal' : null } |
   { 'CanisterReject' : null };
+export type RemoteCallArgs = { 'CandidString' : Array<string> } |
+  { 'Encoded' : Array<number> };
 export interface RemoteCallEndpoint {
   'canister_id' : Principal,
   'method_name' : string,
 }
 export interface RemoteCallPayload {
-  'args_candid' : Array<string>,
   'endpoint' : RemoteCallEndpoint,
+  'args' : RemoteCallArgs,
   'cycles' : bigint,
 }
 export interface RemovePermissionRequest { 'permission_id' : PermissionId }
@@ -194,7 +182,6 @@ export interface UpdateRoleRequest {
   'new_role_type' : RoleType,
 }
 export interface _SERVICE {
-  '__get_candid_interface_tmp_hack' : () => Promise<string>,
   'add_enumerated_roles' : (arg_0: AddEnumeratedRolesRequest) => Promise<
       undefined
     >,
@@ -213,17 +200,14 @@ export interface _SERVICE {
     ) => Promise<undefined>,
   'edit_profile' : (arg_0: EditProfileRequest) => Promise<undefined>,
   'execute' : (arg_0: ExecuteRequest) => Promise<ExecuteResponse>,
+  'export_candid' : () => Promise<string>,
   'get_history_entries' : (arg_0: GetHistoryEntriesRequest) => Promise<
       GetHistoryEntriesResponse
     >,
-  'get_history_entry_ids' : (arg_0: AuthorizedRequest) => Promise<
-      GetHistoryEntryIdsResponse
-    >,
+  'get_history_entry_ids' : () => Promise<GetHistoryEntryIdsResponse>,
   'get_my_permissions' : () => Promise<GetMyPermissionsResponse>,
   'get_my_roles' : () => Promise<GetMyRolesResponse>,
-  'get_permission_ids' : (arg_0: AuthorizedRequest) => Promise<
-      GetPermissionIdsResponse
-    >,
+  'get_permission_ids' : () => Promise<GetPermissionIdsResponse>,
   'get_permissions' : (arg_0: GetPermissionsRequest) => Promise<
       GetPermissionsResponse
     >,
@@ -233,7 +217,7 @@ export interface _SERVICE {
   'get_permissions_by_permission_target' : (
       arg_0: GetPermissionsByPermissionTargetRequest,
     ) => Promise<GetPermissionsByPermissionTargetResponse>,
-  'get_role_ids' : (arg_0: AuthorizedRequest) => Promise<GetRoleIdsResponse>,
+  'get_role_ids' : () => Promise<GetRoleIdsResponse>,
   'get_roles' : (arg_0: GetRolesRequest) => Promise<GetRolesResponse>,
   'get_roles_attached_to_permissions' : (
       arg_0: GetRolesAttachedToPermissionsRequest,

@@ -76,9 +76,13 @@ export const idlFactory = ({ IDL }) => {
     'role_id' : RoleId,
     'permission_id' : PermissionId,
   });
+  const RemoteCallArgs = IDL.Variant({
+    'CandidString' : IDL.Vec(IDL.Text),
+    'Encoded' : IDL.Vec(IDL.Nat8),
+  });
   const RemoteCallPayload = IDL.Record({
-    'args_candid' : IDL.Vec(IDL.Text),
     'endpoint' : RemoteCallEndpoint,
+    'args' : RemoteCallArgs,
     'cycles' : IDL.Nat64,
   });
   const Program = IDL.Variant({
@@ -94,7 +98,6 @@ export const idlFactory = ({ IDL }) => {
   });
   const GetHistoryEntriesRequest = IDL.Record({
     'ids' : IDL.Vec(HistoryEntryId),
-    'rnp' : RoleAndPermission,
   });
   const RejectionCode = IDL.Variant({
     'NoError' : IDL.Null,
@@ -128,7 +131,6 @@ export const idlFactory = ({ IDL }) => {
   const GetHistoryEntriesResponse = IDL.Record({
     'entries' : IDL.Vec(HistoryEntry),
   });
-  const AuthorizedRequest = IDL.Record({ 'rnp' : RoleAndPermission });
   const GetHistoryEntryIdsResponse = IDL.Record({
     'ids' : IDL.Vec(HistoryEntryId),
   });
@@ -146,42 +148,32 @@ export const idlFactory = ({ IDL }) => {
   const GetPermissionIdsResponse = IDL.Record({
     'ids' : IDL.Vec(PermissionId),
   });
-  const GetPermissionsRequest = IDL.Record({
-    'ids' : IDL.Vec(PermissionId),
-    'rnp' : RoleAndPermission,
-  });
+  const GetPermissionsRequest = IDL.Record({ 'ids' : IDL.Vec(PermissionId) });
   const GetPermissionsResponse = IDL.Record({
     'permissions' : IDL.Vec(Permission),
   });
   const GetPermissionsAttachedToRolesRequest = IDL.Record({
-    'rnp' : RoleAndPermission,
     'role_ids' : IDL.Vec(RoleId),
   });
   const GetPermissionsAttachedToRolesResponse = IDL.Record({
     'result' : IDL.Vec(IDL.Tuple(RoleId, IDL.Vec(PermissionId))),
   });
   const GetPermissionsByPermissionTargetRequest = IDL.Record({
-    'rnp' : RoleAndPermission,
     'target' : PermissionTarget,
   });
   const GetPermissionsByPermissionTargetResponse = IDL.Record({
     'ids' : IDL.Vec(PermissionId),
   });
   const GetRoleIdsResponse = IDL.Record({ 'ids' : IDL.Vec(RoleId) });
-  const GetRolesRequest = IDL.Record({
-    'ids' : IDL.Vec(RoleId),
-    'rnp' : RoleAndPermission,
-  });
+  const GetRolesRequest = IDL.Record({ 'ids' : IDL.Vec(RoleId) });
   const GetRolesResponse = IDL.Record({ 'roles' : IDL.Vec(Role) });
   const GetRolesAttachedToPermissionsRequest = IDL.Record({
-    'rnp' : RoleAndPermission,
     'permission_ids' : IDL.Vec(PermissionId),
   });
   const GetRolesAttachedToPermissionsResponse = IDL.Record({
     'result' : IDL.Vec(IDL.Tuple(PermissionId, IDL.Vec(RoleId))),
   });
   const GetScheduledForAuthorizationExecutionsRequest = IDL.Record({
-    'rnp' : RoleAndPermission,
     'task_ids' : IDL.Opt(IDL.Vec(TaskId)),
   });
   const GetScheduledForAuthorizationExecutionsResponse = IDL.Record({
@@ -208,7 +200,6 @@ export const idlFactory = ({ IDL }) => {
     'new_role_type' : RoleType,
   });
   return IDL.Service({
-    '__get_candid_interface_tmp_hack' : IDL.Func([], [IDL.Text], ['query']),
     'add_enumerated_roles' : IDL.Func([AddEnumeratedRolesRequest], [], []),
     'attach_role_to_permission' : IDL.Func(
         [AttachRoleToPermissionRequest],
@@ -233,23 +224,20 @@ export const idlFactory = ({ IDL }) => {
       ),
     'edit_profile' : IDL.Func([EditProfileRequest], [], []),
     'execute' : IDL.Func([ExecuteRequest], [ExecuteResponse], []),
+    'export_candid' : IDL.Func([], [IDL.Text], ['query']),
     'get_history_entries' : IDL.Func(
         [GetHistoryEntriesRequest],
         [GetHistoryEntriesResponse],
         ['query'],
       ),
     'get_history_entry_ids' : IDL.Func(
-        [AuthorizedRequest],
+        [],
         [GetHistoryEntryIdsResponse],
         ['query'],
       ),
     'get_my_permissions' : IDL.Func([], [GetMyPermissionsResponse], ['query']),
     'get_my_roles' : IDL.Func([], [GetMyRolesResponse], ['query']),
-    'get_permission_ids' : IDL.Func(
-        [AuthorizedRequest],
-        [GetPermissionIdsResponse],
-        ['query'],
-      ),
+    'get_permission_ids' : IDL.Func([], [GetPermissionIdsResponse], ['query']),
     'get_permissions' : IDL.Func(
         [GetPermissionsRequest],
         [GetPermissionsResponse],
@@ -265,11 +253,7 @@ export const idlFactory = ({ IDL }) => {
         [GetPermissionsByPermissionTargetResponse],
         ['query'],
       ),
-    'get_role_ids' : IDL.Func(
-        [AuthorizedRequest],
-        [GetRoleIdsResponse],
-        ['query'],
-      ),
+    'get_role_ids' : IDL.Func([], [GetRoleIdsResponse], ['query']),
     'get_roles' : IDL.Func([GetRolesRequest], [GetRolesResponse], ['query']),
     'get_roles_attached_to_permissions' : IDL.Func(
         [GetRolesAttachedToPermissionsRequest],

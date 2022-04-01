@@ -1,8 +1,7 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import styled from 'styled-components';
 import { Text, Button as B } from 'components';
 import { NavLink } from 'react-router-dom';
-import { useTrigger } from 'toolkit';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { PermissionInfo as P } from './PermissionInfo';
@@ -69,16 +68,15 @@ export const RolesAndPermissions = ({
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
-  useTrigger(
-    (rnp) => {
+  useEffect(
+    () => {
       canister
-        .get_role_ids({ rnp })
-        .then(({ ids }) => (ids.length ? canister.get_roles({ rnp, ids }) : null));
+        .get_role_ids()
+        .then(({ ids }) => (ids.length ? canister.get_roles({ ids }) : null));
       canister
-        .get_permission_ids({ rnp })
-        .then(({ ids }) => (ids.length ? canister.get_permissions({ rnp, ids }) : null));
+        .get_permission_ids()
+        .then(({ ids }) => (ids.length ? canister.get_permissions({ ids }) : null));
     },
-    rnp,
     [],
   );
 

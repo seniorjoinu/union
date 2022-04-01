@@ -1,5 +1,4 @@
-import { useMemo } from 'react';
-import { useTrigger } from 'toolkit';
+import { useEffect, useMemo } from 'react';
 import { FractionOf, Profile, QuantityOf } from 'wallet-ts';
 import { useWallet } from 'services';
 import { useCurrentWallet } from './context';
@@ -25,18 +24,12 @@ export function useFilteredRoles<T = Profile | FractionOf | QuantityOf>(
 }
 
 export function useRoles() {
-  const { rnp, principal } = useCurrentWallet();
+  const { principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
-  useTrigger(
-    (rnp) => {
-      canister
-        .get_role_ids({ rnp })
-        .then(({ ids }) => (ids.length ? canister.get_roles({ rnp, ids }) : null));
-    },
-    rnp,
-    [],
-  );
+  useEffect(() => {
+    canister.get_role_ids().then(({ ids }) => (ids.length ? canister.get_roles({ ids }) : null));
+  }, []);
 
   return {
     roles: data.get_roles?.roles || [],

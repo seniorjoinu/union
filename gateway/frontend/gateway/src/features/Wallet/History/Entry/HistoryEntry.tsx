@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useTrigger } from 'toolkit';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../../context';
 import { Entry } from './Entry';
@@ -12,19 +11,15 @@ export interface HistoryEntryProps {
 
 export const HistoryEntry = (p: HistoryEntryProps) => {
   const { entryId } = useParams();
-  const { rnp, principal } = useCurrentWallet();
+  const { principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
-  useTrigger(
-    (rnp) => {
-      if (!entryId) {
-        return;
-      }
-      canister.get_history_entries({ ids: [BigInt(entryId)], rnp });
-    },
-    rnp,
-    [entryId],
-  );
+  useEffect(() => {
+    if (!entryId) {
+      return;
+    }
+    canister.get_history_entries({ ids: [BigInt(entryId)] });
+  }, [entryId]);
 
   const entry = (data.get_history_entries?.entries || [])[0];
 

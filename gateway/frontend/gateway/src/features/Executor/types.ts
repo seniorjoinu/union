@@ -4,12 +4,14 @@ export interface ExecutorContextData {
   canisterId: string;
 }
 
-export interface Program extends Omit<RemoteCallPayload, 'endpoint' | 'cycles'> {
+export interface Program extends Omit<RemoteCallPayload, 'endpoint' | 'cycles' | 'args'> {
   endpoint: Omit<RemoteCallEndpoint, 'canister_id'> & {
     // eslint-disable-next-line camelcase
     canister_id: string;
   };
   cycles: string;
+  args_candid: string[];
+  args_encoded?: number[];
 }
 
 export type ExecutorFormData = Omit<ExecuteRequest, 'authorization_delay_nano' | 'program'> & {

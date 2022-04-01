@@ -1,6 +1,6 @@
 import React, { useEffect, createContext, useContext, useMemo, useState, useCallback } from 'react';
 import { RoleAndPermission, Role, Permission } from 'wallet-ts';
-import { useWallet, Fetching } from 'services';
+import { useWallet } from 'services';
 
 export interface CurrentWalletContext {
   principal: string;
@@ -8,8 +8,8 @@ export interface CurrentWalletContext {
   setRoleAndPermission(rnp: Partial<RoleAndPermission>): void;
   roles: Role[];
   permissions: Permission[];
-  fetching: Fetching;
-  error: Error | null;
+  fetching: ReturnType<typeof useWallet>['fetching'];
+  errors: ReturnType<typeof useWallet>['errors'];
   fetchMyData(): void;
 }
 
@@ -20,7 +20,7 @@ const context = createContext<CurrentWalletContext>({
   roles: [],
   permissions: [],
   fetching: {},
-  error: null,
+  errors: {},
   fetchMyData: () => undefined,
 });
 
@@ -31,7 +31,7 @@ export interface ProviderProps {
 
 export function Provider({ principal, children }: ProviderProps) {
   const [rnp, setRnp] = useState<RoleAndPermission | null>(null);
-  const { data, canister, fetching, error } = useWallet(principal);
+  const { data, canister, fetching, errors } = useWallet(principal);
 
   useEffect(() => {
     canister.get_my_roles();
@@ -79,10 +79,10 @@ export function Provider({ principal, children }: ProviderProps) {
       roles,
       permissions,
       fetching,
-      error,
+      errors,
       fetchMyData,
     };
-  }, [principal, roles, permissions, fetching, error, setRoleAndPermission, rnp]);
+  }, [principal, roles, permissions, fetching, errors, setRoleAndPermission, rnp]);
 
   return <context.Provider value={value}>{children}</context.Provider>;
 }

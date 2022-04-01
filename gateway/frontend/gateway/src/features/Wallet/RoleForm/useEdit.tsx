@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTrigger } from 'toolkit';
 import { useWallet, walletSerializer } from 'services';
@@ -17,20 +17,16 @@ export interface UseEditProps {
 
 export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
   const { roleId } = useParams();
-  const { rnp, principal } = useCurrentWallet();
+  const { principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
-  useTrigger(
-    async (rnp) => {
-      if (create || !roleId) {
-        return;
-      }
+  useEffect(() => {
+    if (create || !roleId) {
+      return;
+    }
 
-      canister.get_roles({ rnp, ids: [Number(roleId)] });
-    },
-    rnp,
-    [setValue, roleId],
-  );
+    canister.get_roles({ ids: [Number(roleId)] });
+  }, [setValue, roleId]);
 
   useTrigger(
     ({ roles }) => {

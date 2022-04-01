@@ -1,7 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { Text, Button as B } from 'components';
-import { useTrigger } from 'toolkit';
 import { NavLink as N } from 'react-router-dom';
 import { HistoryEntry } from 'wallet-ts';
 import { useWallet } from 'services';
@@ -40,20 +39,15 @@ export function History({ createLink, ...p }: HistoryProps) {
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
-  useTrigger(
-    (rnp) => {
-      canister.get_scheduled_for_authorization_executions({ rnp, task_ids: [] });
-      canister
-        .get_history_entry_ids({ rnp })
-        .then(({ ids }) => canister.get_history_entries({ rnp, ids }));
-    },
-    rnp,
-    [canister],
-  );
+  useEffect(() => {
+    canister.get_scheduled_for_authorization_executions({ task_ids: [] });
+    canister.get_history_entry_ids().then(({ ids }) => canister.get_history_entries({ ids }));
+  }, [canister]);
 
-  const progress = !!fetching.get_history_entry_ids
-    || !!fetching.get_history_entries
-    || !!fetching.get_scheduled_for_authorization_executions;
+  const progress =
+    !!fetching.get_history_entry_ids ||
+    !!fetching.get_history_entries ||
+    !!fetching.get_scheduled_for_authorization_executions;
 
   const scheduled = data.get_scheduled_for_authorization_executions?.entries || [];
   const history = data.get_history_entries?.entries || [];

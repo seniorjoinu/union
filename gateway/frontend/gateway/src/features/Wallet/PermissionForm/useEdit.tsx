@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTrigger } from 'toolkit';
 import { useWallet, walletSerializer } from 'services';
@@ -20,17 +20,13 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
-  useTrigger(
-    async (rnp) => {
-      if (create || !permissionId) {
-        return;
-      }
+  useEffect(() => {
+    if (create || !permissionId) {
+      return;
+    }
 
-      canister.get_permissions({ rnp, ids: [Number(permissionId)] });
-    },
-    rnp,
-    [setValue, permissionId],
-  );
+    canister.get_permissions({ ids: [Number(permissionId)] });
+  }, [setValue, permissionId]);
 
   useTrigger(
     ({ permissions }) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Text } from 'components';
 import { useTrigger } from 'toolkit';
@@ -32,36 +32,28 @@ export const RoleDetails = ({ edit }: RoleDetailsProps) => {
   const { removeRole } = useRemove();
   const { substractEnumeratedRoles } = useEnumeratedRoles();
   const { detachRoleAndPermission } = useDetach();
-  const { rnp, principal } = useCurrentWallet();
+  const { principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
   const forEnumeratedCanister = useWallet(principal);
   const { permissions } = useAttachedPermissions({ roleId });
 
-  useTrigger(
-    (rnp) => {
-      canister.get_roles({ rnp, ids: [Number(roleId)] });
-    },
-    rnp,
-    [roleId],
-  );
+  useEffect(() => {
+    canister.get_roles({ ids: [Number(roleId)] });
+  }, [roleId]);
 
   const role = data.get_roles?.roles[0];
   const parsedRole = role ? parseRole(role.role_type) : null;
 
   useTrigger(
     (parsedRole) => {
-      if (!rnp) {
-        return;
-      }
-
       if (!parsedRole.enumerated.length) {
         return;
       }
 
-      forEnumeratedCanister.canister.get_roles({ rnp, ids: parsedRole.enumerated });
+      forEnumeratedCanister.canister.get_roles({ ids: parsedRole.enumerated });
     },
     parsedRole,
-    [rnp, forEnumeratedCanister],
+    [forEnumeratedCanister],
   );
 
   const enumerated = forEnumeratedCanister.data.get_roles?.roles || [];

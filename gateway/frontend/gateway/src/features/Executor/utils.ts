@@ -1,4 +1,4 @@
-import { ExecutorFormData } from './types';
+import { ExecutorFormData, Program } from './types';
 
 export const parseMessage = (data: any): Partial<ExecutorFormData> | null => {
   if (!data) {
@@ -34,16 +34,23 @@ export const parseMessage = (data: any): Partial<ExecutorFormData> | null => {
         (p: any) =>
           !!p && 'endpoint' in p && !!p.endpoint?.canister_id && !!p.endpoint?.method_name,
       )
-      .map((p: any) => ({
-        endpoint: {
-          canister_id: String(p.endpoint.canister_id),
-          method_name: String(p.endpoint.method_name),
-        },
-        cycles: !Number.isNaN(Number(p.cycles)) ? String(p.cycles) : '',
-        args_candid: Array.isArray(p.args_candid)
-          ? p.args_candid.filter((a: any) => typeof a == 'string')
-          : [],
-      }));
+      .map(
+        (p: any): Program => ({
+          endpoint: {
+            canister_id: String(p.endpoint.canister_id),
+            method_name: String(p.endpoint.method_name),
+          },
+          cycles: !Number.isNaN(Number(p.cycles)) ? String(p.cycles) : '',
+          // args: p.args || { CandidString: [] },
+          args_candid: Array.isArray(p.args_candid)
+            ? p.args_candid.filter((a: any) => typeof a == 'string')
+            : [],
+          args_encoded:
+            Array.isArray(p.args_encoded) && typeof p.args_encoded[0] == 'number'
+              ? p.args_encoded
+              : [],
+        }),
+      );
 
     result.program = program;
   }

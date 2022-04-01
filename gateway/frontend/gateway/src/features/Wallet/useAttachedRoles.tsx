@@ -9,17 +9,16 @@ export interface UseAttachedRolesProps {
 
 export const useAttachedRoles = ({ permissionId }: UseAttachedRolesProps) => {
   const [roles, setRoles] = useState<Role[]>([]);
-  const { rnp, principal } = useCurrentWallet();
+  const { principal } = useCurrentWallet();
   const { data, canister, fetching, errors } = useWallet(principal);
 
   const fetchRoles = useCallback(() => {
-    if (!rnp || permissionId == undefined || permissionId == null) {
+    if (permissionId == undefined || permissionId == null) {
       return;
     }
 
     canister
       .get_roles_attached_to_permissions({
-        rnp,
         permission_ids: [Number(permissionId)],
       })
       .then(({ result }) => {
@@ -29,12 +28,12 @@ export const useAttachedRoles = ({ permissionId }: UseAttachedRolesProps) => {
           return;
         }
 
-        canister.get_roles({ rnp, ids }).then(({ roles }) => setRoles(roles));
+        canister.get_roles({ ids }).then(({ roles }) => setRoles(roles));
       });
-  }, [rnp, permissionId]);
+  }, [permissionId]);
 
   useEffect(() => {
-    if (!rnp || !permissionId == undefined || permissionId == null) {
+    if (permissionId == undefined || permissionId == null) {
       return;
     }
 
@@ -48,7 +47,6 @@ export const useAttachedRoles = ({ permissionId }: UseAttachedRolesProps) => {
 
     fetchRoles();
   }, [
-    rnp,
     data.get_roles_attached_to_permissions,
     fetching.get_roles_attached_to_permissions,
     errors.get_roles_attached_to_permissions,

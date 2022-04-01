@@ -1,7 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams } from 'react-router-dom';
-import { useTrigger } from 'toolkit';
 import { Button as B } from 'components';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../../context';
@@ -26,19 +25,15 @@ export interface ScheduledEntryProps {
 
 export const ScheduledEntry = ({ navigateToEntry, ...p }: ScheduledEntryProps) => {
   const { taskId } = useParams();
-  const { rnp, principal } = useCurrentWallet();
+  const { principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
-  useTrigger(
-    (rnp) => {
-      if (!taskId) {
-        return;
-      }
-      canister.get_scheduled_for_authorization_executions({ task_ids: [[BigInt(taskId)]], rnp });
-    },
-    rnp,
-    [taskId],
-  );
+  useEffect(() => {
+    if (!taskId) {
+      return;
+    }
+    canister.get_scheduled_for_authorization_executions({ task_ids: [[BigInt(taskId)]] });
+  }, [taskId]);
 
   const authorizeExecution = useCallback(async () => {
     if (fetching.authorize_execution || !taskId) {
@@ -51,11 +46,8 @@ export const ScheduledEntry = ({ navigateToEntry, ...p }: ScheduledEntryProps) =
       return navigateToEntry(String(result.Executed));
     }
 
-    if (!rnp) {
-      return;
-    }
-    canister.get_scheduled_for_authorization_executions({ task_ids: [[BigInt(taskId)]], rnp });
-  }, [canister, fetching.authorize_execution, taskId, rnp, navigateToEntry]);
+    canister.get_scheduled_for_authorization_executions({ task_ids: [[BigInt(taskId)]] });
+  }, [canister, fetching.authorize_execution, taskId, navigateToEntry]);
 
   const entryInfo = (data.get_scheduled_for_authorization_executions?.entries || [])[0];
 

@@ -1,20 +1,16 @@
-import { useTrigger } from 'toolkit';
+import { useEffect } from 'react';
 import { useWallet } from 'services';
 import { useCurrentWallet } from './context';
 
 export function usePermissions() {
-  const { rnp, principal } = useCurrentWallet();
+  const { principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
-  useTrigger(
-    (rnp) => {
-      canister
-        .get_permission_ids({ rnp })
-        .then(({ ids }) => (ids.length ? canister.get_permissions({ rnp, ids }) : null));
-    },
-    rnp,
-    [],
-  );
+  useEffect(() => {
+    canister
+      .get_permission_ids()
+      .then(({ ids }) => (ids.length ? canister.get_permissions({ ids }) : null));
+  }, []);
 
   return {
     permissions: data.get_permissions?.permissions || [],
