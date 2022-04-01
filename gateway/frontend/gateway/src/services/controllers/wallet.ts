@@ -47,7 +47,7 @@ export const useWallet = (canisterId: string) => {
           setError(e);
         },
       }),
-    [setFetching, setError],
+    [setFetching, setError, canisterId],
   );
 
   return {

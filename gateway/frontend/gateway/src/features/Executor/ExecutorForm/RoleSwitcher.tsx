@@ -34,7 +34,7 @@ export interface RoleSwitcherProps extends IClassName {
 }
 
 export const RoleSwitcher = ({ control, label, disabled, getValues, ...p }: RoleSwitcherProps) => {
-  const { rnp, roles, permissions, update } = useCurrentWallet();
+  const { rnp, roles, permissions, fetchMyData } = useCurrentWallet();
   const pid = control.register('rnp.permission_id');
   const rid = control.register('rnp.role_id');
 
@@ -42,7 +42,7 @@ export const RoleSwitcher = ({ control, label, disabled, getValues, ...p }: Role
     if (disabled) {
       return;
     }
-    update();
+    fetchMyData();
   }, []);
 
   useTrigger(

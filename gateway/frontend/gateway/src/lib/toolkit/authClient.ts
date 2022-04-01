@@ -1,63 +1,64 @@
-import { HttpAgent, HttpAgentOptions, Identity } from '@dfinity/agent';
 import { Principal } from '@dfinity/principal';
-import { DigitalIdentityClient } from './digital-identity';
+import { HttpAgent, HttpAgentOptions, Identity } from '@dfinity/agent';
+import { AuthClient, AuthClientCreateOptions } from '@dfinity/auth-client';
 import { getAgent, getHttpAgentOptions } from './agent';
-/**
- * @dfinity/agent requires this. Can be removed once it's fixed
- // FIXME КОСТЫЛИ
- */
-import './polyfill';
 
 export class AuthClientWrapper {
-  private options: HttpAgentOptions = getHttpAgentOptions();
   public principal: Principal | null = null;
-  public authClient?: DigitalIdentityClient;
+  protected options: HttpAgentOptions = getHttpAgentOptions();
+  public authClient?: AuthClient;
   public agent: HttpAgent = new HttpAgent(this.options);
   public ready = false;
   public authentificated = false;
 
-  // Create a new auth client and update it's ready state
-  async create() {
-    this.authClient = new DigitalIdentityClient();
-    await this.initializeAgent();
-    this.authentificated = this.authClient?.isAuthenticated();
+  async create(opts?: AuthClientCreateOptions) {
+    this.authClient = await AuthClient.create(opts);
+    await this.initializeAgent(opts);
+    this.authentificated = await this.authClient?.isAuthenticated();
     this.principal = this.authClient?.getIdentity().getPrincipal() || null;
     this.ready = true;
   }
 
-  login = async (mnemonic: string): Promise<Identity | undefined> => {
-    this.authClient?.login(mnemonic);
-
-    const identity = this.authClient?.getIdentity();
-
-    this.principal = identity?.getPrincipal() || null;
-    await this.initializeAgent();
-    return identity;
+  login = async (identityProvider?: string): Promise<Identity | undefined> => {
+    return new Promise(async (resolve) => {
+      await this.authClient?.login({
+        identityProvider,
+        onSuccess: async () => {
+          const identity = this.authClient?.getIdentity();
+          this.principal = identity?.getPrincipal() || null;
+          await this.initializeAgent();
+          resolve(identity);
+        },
+      });
+    });
   };
 
   logout = async () => {
+    console.log('[AuthClientWrapper] logout');
     await this.authClient?.logout();
     // await this.authClient?.logout({ returnTo: '/' });
     this.principal = this.authClient?.getIdentity().getPrincipal() || null;
     await this.initializeAgent();
   };
 
-  getIdentity = async () => this.authClient?.getIdentity();
+  getIdentity = async () => {
+    return this.authClient?.getIdentity();
+  };
 
-  isAuthentificated = async () =>
-    this.authClient?.isAuthenticated() &&
-    !this.authClient.getIdentity().getPrincipal().isAnonymous();
+  isAuthentificated = async () => {
+    return await (this.authClient?.isAuthenticated() || false);
+  };
 
-  private initializeAgent = async () => {
-    const identity = await this.authClient?.getIdentity();
-
-    this.agent = await getAgent({ identity });
+  private initializeAgent = async (opts?: AuthClientCreateOptions) => {
+    const identity = opts?.identity || (await this.authClient?.getIdentity());
+    this.agent = await getAgent({ ...opts, identity });
   };
 }
 
-// TODO пока что это синглтон, наверно это неправильно
-// На изменения в этом инстансе завязан canister/controller, он реагирует на авторизацию
-// FIXME придумать более изящное решение
 export const authClient = ((window as any).authClient = new AuthClientWrapper());
 
+/**
+ * @dfinity/agent requires this. Can be removed once it's fixed
+ // FIXME КОСТЫЛИ
+ */
 (window as any).ic = authClient;

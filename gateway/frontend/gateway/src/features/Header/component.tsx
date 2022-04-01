@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { NavLink, useParams } from 'react-router-dom';
 import { Text } from 'components';
+import { useWallet } from 'services';
+import { checkPrincipal } from 'toolkit';
 import { LoginButton } from '../Auth/LoginButton';
 
 const Item = styled(Text)`
@@ -42,6 +44,21 @@ export function Header(p: IClassName) {
 
   const isInsideWallet = location.startsWith('wallet/');
   const walletId = location.split('wallet/')[1]?.split('/')[0];
+  const { data, canister, fetching, error } = useWallet(walletId);
+
+  useEffect(() => {
+    if (!checkPrincipal(walletId)) {
+      return;
+    }
+    canister.get_my_roles();
+  }, [walletId, canister]);
+
+  const profileName = useMemo(() => {
+    const roles = data.get_my_roles?.roles || [];
+    const profile = roles.find((r) => 'Profile' in r.role_type);
+
+    return profile && 'Profile' in profile.role_type ? profile.role_type.Profile.name : '';
+  }, [data.get_my_roles]);
 
   return (
     <Container {...p}>
@@ -63,7 +80,7 @@ export function Header(p: IClassName) {
           </>
         )}
       </Items>
-      <LoginButton mnemonic='' />
+      <LoginButton name={profileName} />
     </Container>
   );
 }

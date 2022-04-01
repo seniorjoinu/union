@@ -10,7 +10,7 @@ export interface CurrentWalletContext {
   permissions: Permission[];
   fetching: Fetching;
   error: Error | null;
-  update(): void;
+  fetchMyData(): void;
 }
 
 const context = createContext<CurrentWalletContext>({
@@ -21,7 +21,7 @@ const context = createContext<CurrentWalletContext>({
   permissions: [],
   fetching: {},
   error: null,
-  update: () => undefined,
+  fetchMyData: () => undefined,
 });
 
 export interface ProviderProps {
@@ -48,7 +48,7 @@ export function Provider({ principal, children }: ProviderProps) {
     [setRnp],
   );
 
-  const update = useCallback(() => {
+  const fetchMyData = useCallback(() => {
     canister.get_my_roles();
     canister.get_my_permissions();
   }, []);
@@ -57,10 +57,11 @@ export function Provider({ principal, children }: ProviderProps) {
     let computedRnp = rnp;
 
     if (!computedRnp) {
-      const roleId = roles.find(
+      const roleId =
+        roles.find(
           (r) =>
-            'QuantityOf' in r.role_type
-            && r.role_type.QuantityOf.name.toLowerCase() == 'has profile',
+            'QuantityOf' in r.role_type &&
+            r.role_type.QuantityOf.name.toLowerCase() == 'has profile',
         )?.id || roles.find((r) => 'Everyone' in r.role_type)?.id;
       const permissionId = permissions.find((p) => p.name.toLowerCase() == 'default')?.id;
       const rnpExist = typeof roleId !== 'undefined' && typeof permissionId !== 'undefined';
@@ -79,7 +80,7 @@ export function Provider({ principal, children }: ProviderProps) {
       permissions,
       fetching,
       error,
-      update,
+      fetchMyData,
     };
   }, [principal, roles, permissions, fetching, error, setRoleAndPermission, rnp]);
 

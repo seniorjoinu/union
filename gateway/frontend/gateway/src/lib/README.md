@@ -7,6 +7,6 @@ Contains potential separated npm packages.
 - [toolkit](./toolkit) contains set of tools for
   - canister interaction
   - authorization
-  - custom mnemonic identity provider
+  - identity provider
   - custom React hooks
   - pure-functional utils

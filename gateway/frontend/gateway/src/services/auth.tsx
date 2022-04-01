@@ -1,6 +1,7 @@
 import { Identity } from '@dfinity/agent';
 import * as React from 'react';
 import { authClient as authenticationClient, AuthClientWrapper } from 'toolkit';
+import { getIdentityUrl } from './config';
 
 const { createContext, useContext, useEffect, useState } = React;
 
@@ -9,7 +10,7 @@ export interface AuthContext {
   isAuthReady: AuthReadyState;
   authClient: AuthClientWrapper;
   identity: Identity | undefined;
-  login: (mnemonic: string) => Promise<void>;
+  login: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -59,13 +60,13 @@ export function useProvideAuth(authClient: typeof authenticationClient): AuthCon
 
   const isAuthentificated = isAuthentificatedLocal;
 
-  const login = async (mnemonic: string): Promise<void> => {
+  const login = async (): Promise<void> => {
     if (!authClient) {
       return;
     }
     let identity = await authClient.getIdentity();
 
-    await authClient.login(mnemonic);
+    await authClient.login(getIdentityUrl());
 
     identity = await authClient.getIdentity();
 

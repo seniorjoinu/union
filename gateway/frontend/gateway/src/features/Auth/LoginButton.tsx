@@ -1,10 +1,15 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { CroppedString as CS, Button, ButtonProps } from 'components';
+import { CroppedString as CS, Button, ButtonProps, Text } from 'components';
 import { useAuth } from 'services';
 import logo from '../../assets/logo.svg';
 
+const Name = styled(Text)`
+  padding: 0 8px;
+  border-radius: 4px;
+  background-color: #dfdfdf;
+`;
 const CroppedString = styled(CS)``;
 
 const Principal = styled.span`
@@ -29,17 +34,22 @@ const Container = styled.div`
   ${CroppedString} {
     margin-right: 8px;
   }
+
+  ${Name} {
+    align-self: center;
+    margin-right: 8px;
+  }
 `;
 
 export interface LoginButtonProps extends Omit<ButtonProps, 'id'> {
   height?: number;
-  mnemonic: string;
+  name?: string;
   children?: JSX.Element | string;
   onLogin?(): void;
 }
 
 export const LoginButton = ({
-  mnemonic,
+  name,
   children,
   onLogin,
   height = 16,
@@ -58,7 +68,7 @@ export const LoginButton = ({
         id='login'
         {...props}
         onClick={() => {
-          login(mnemonic);
+          login();
           onLogin?.();
         }}
       >
@@ -72,6 +82,7 @@ export const LoginButton = ({
 
   return (
     <Container>
+      {name && <Name variant='p1'>{name}</Name>}
       <CroppedString variant='p1' onClick={() => navigator.clipboard.writeText(principal)}>
         {principal}
       </CroppedString>

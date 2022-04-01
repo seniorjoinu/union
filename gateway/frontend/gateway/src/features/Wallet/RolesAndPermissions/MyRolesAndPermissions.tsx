@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { Text } from 'components';
 import { useCurrentWallet } from '../context';
@@ -62,7 +62,11 @@ export const MyRolesAndPermissions = ({
   openPermission,
   openRole,
 }: MyRolesAndPermissionsProps) => {
-  const { roles, permissions, fetching } = useCurrentWallet();
+  const { fetchMyData, roles, permissions, fetching } = useCurrentWallet();
+
+  useEffect(() => {
+    fetchMyData();
+  }, []);
 
   return (
     <Container>
