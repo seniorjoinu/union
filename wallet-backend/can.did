@@ -8,9 +8,14 @@ type RemoteCallEndpoint = record {
     method_name : text;
 };
 
+type RemoteCallArgs = variant {
+    CandidString : vec text;
+    Encoded : blob;
+};
+
 type RemoteCallPayload = record {
     endpoint : RemoteCallEndpoint;
-    args_candid : vec text;
+    args : RemoteCallArgs;
     cycles : nat64;
 };
 
@@ -22,10 +27,6 @@ type Program = variant {
 type RoleAndPermission = record {
     role_id : RoleId;
     permission_id : PermissionId;
-};
-
-type AuthorizedRequest = record {
-    rnp : RoleAndPermission;
 };
 
 type ExecuteRequest = record {
@@ -77,7 +78,6 @@ type GetHistoryEntryIdsResponse = record {
 
 type GetHistoryEntriesRequest = record {
     ids : vec HistoryEntryId;
-    rnp : RoleAndPermission;
 };
 
 type GetHistoryEntriesResponse = record {
@@ -120,7 +120,6 @@ type RejectionCode = variant {
 };
 
 type GetScheduledForAuthorizationExecutionsRequest = record {
-    rnp : RoleAndPermission;
     task_ids : opt vec TaskId;
 };
 
@@ -173,7 +172,6 @@ type GetRoleIdsResponse = record {
 
 type GetRolesRequest = record {
     ids : vec RoleId;
-    rnp : RoleAndPermission;
 };
 
 type GetRolesResponse = record {
@@ -249,7 +247,6 @@ type GetPermissionIdsResponse = record {
 
 type GetPermissionsRequest = record {
     ids : vec PermissionId;
-    rnp : RoleAndPermission;
 };
 
 type GetPermissionsResponse = record {
@@ -258,7 +255,6 @@ type GetPermissionsResponse = record {
 
 type GetPermissionsByPermissionTargetRequest = record {
     target : PermissionTarget;
-    rnp : RoleAndPermission;
 };
 
 type GetPermissionsByPermissionTargetResponse = record {
@@ -301,7 +297,6 @@ type DetachRoleFromPermissionRequest = record {
 
 type GetRolesAttachedToPermissionsRequest = record {
     permission_ids : vec PermissionId;
-    rnp : RoleAndPermission;
 };
 
 type GetRolesAttachedToPermissionsResponse = record {
@@ -310,7 +305,6 @@ type GetRolesAttachedToPermissionsResponse = record {
 
 type GetPermissionsAttachedToRolesRequest = record {
     role_ids : vec RoleId;
-    rnp : RoleAndPermission;
 };
 
 type GetPermissionsAttachedToRolesResponse = record {
@@ -320,8 +314,8 @@ type GetPermissionsAttachedToRolesResponse = record {
 service : (principal) -> {
     "execute" : (ExecuteRequest) -> (ExecuteResponse);
     "authorize_execution" : (AuthorizeExecutionRequest) -> (AuthorizeExecutionResponse);
-    "get_scheduled_for_authorization_executions" : (AuthorizedRequest) -> (GetScheduledForAuthorizationExecutionsResponse) query;
-    "get_history_entry_ids" : (AuthorizedRequest) -> (GetHistoryEntryIdsResponse) query;
+    "get_scheduled_for_authorization_executions" : () -> (GetScheduledForAuthorizationExecutionsResponse) query;
+    "get_history_entry_ids" : () -> (GetHistoryEntryIdsResponse) query;
     "get_history_entries" : (GetHistoryEntriesRequest) -> (GetHistoryEntriesResponse) query;
 
     "create_role" : (CreateRoleRequest) -> (CreateRoleResponse);
@@ -330,14 +324,14 @@ service : (principal) -> {
     "edit_profile" : (EditProfileRequest) -> ();
     "add_enumerated_roles" : (AddEnumeratedRolesRequest) -> ();
     "subtract_enumerated_roles" : (SubtractEnumeratedRolesRequest) -> ();
-    "get_role_ids" : (AuthorizedRequest) -> (GetRoleIdsResponse) query;
+    "get_role_ids" : () -> (GetRoleIdsResponse) query;
     "get_roles" : (GetRolesRequest) -> (GetRolesResponse) query;
     "get_my_roles" : () -> (GetMyRolesResponse) query;
 
     "create_permission" : (CreatePermissionRequest) -> (CreatePermissionResponse);
     "update_permission" : (UpdatePermissionRequest) -> ();
     "remove_permission" : (RemovePermissionRequest) -> (RemovePermissionResponse);
-    "get_permission_ids" : (AuthorizedRequest) -> (GetPermissionIdsResponse) query;
+    "get_permission_ids" : () -> (GetPermissionIdsResponse) query;
     "get_permissions" : (GetPermissionsRequest) -> (GetPermissionsResponse) query;
     "get_my_permissions" : () -> (GetMyPermissionsResponse) query;
     "get_permissions_by_permission_target" : (GetPermissionsByPermissionTargetRequest) -> (GetPermissionsByPermissionTargetResponse) query;

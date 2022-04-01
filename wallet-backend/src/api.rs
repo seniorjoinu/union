@@ -10,11 +10,6 @@ pub struct RoleAndPermission {
     pub permission_id: PermissionId,
 }
 
-#[derive(CandidType, Deserialize)]
-pub struct AuthorizedRequest {
-    pub rnp: RoleAndPermission,
-}
-
 // ------------ EXECUTION & HISTORY -------------
 
 #[derive(CandidType, Deserialize)]
@@ -47,7 +42,6 @@ pub struct GetHistoryEntryIdsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetHistoryEntriesRequest {
     pub ids: Vec<HistoryEntryId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -57,7 +51,6 @@ pub struct GetHistoryEntriesResponse {
 
 #[derive(CandidType, Deserialize)]
 pub struct GetScheduledForAuthorizationExecutionsRequest {
-    pub rnp: RoleAndPermission,
     pub task_ids: Option<Vec<TaskId>>,
 }
 
@@ -121,7 +114,6 @@ pub struct GetRoleIdsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetRolesRequest {
     pub ids: Vec<RoleId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -174,7 +166,6 @@ pub struct GetPermissionIdsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetPermissionsRequest {
     pub ids: Vec<PermissionId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -190,7 +181,6 @@ pub struct GetMyPermissionsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetPermissionsByPermissionTargetRequest {
     pub target: PermissionTarget,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -215,7 +205,6 @@ pub struct DetachRoleFromPermissionRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetRolesAttachedToPermissionsRequest {
     pub permission_ids: Vec<PermissionId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -226,7 +215,6 @@ pub struct GetRolesAttachedToPermissionsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetPermissionsAttachedToRolesRequest {
     pub role_ids: Vec<RoleId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]

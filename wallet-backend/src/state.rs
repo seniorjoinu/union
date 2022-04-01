@@ -2,7 +2,7 @@ use crate::common::execution_history::{ExecutionHistoryError, ExecutionHistorySt
 use crate::common::permissions::{Permission, PermissionScope, PermissionsError, PermissionsState};
 use crate::common::roles::{Profile, Role, RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
 use crate::common::utils::ValidationError;
-use crate::{HistoryEntry, PermissionId, Program, RoleId};
+use crate::{HistoryEntry, PermissionId, Program, RemoteCallEndpoint, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -152,6 +152,35 @@ impl State {
             .unwrap_or_default()
             .into_iter()
             .collect()
+    }
+
+    pub fn get_permission_ids_of_cloned(&self, caller: &Principal) -> Vec<PermissionId> {
+        let role_ids = self.roles.get_role_ids_by_role_owner_cloned(caller);
+        let mut permission_ids = HashSet::new();
+
+        for role_id in &role_ids {
+            let some_permission_ids = self.get_permission_ids_of_role_cloned(role_id);
+            permission_ids.extend(some_permission_ids.into_iter());
+        }
+
+        permission_ids.into_iter().collect()
+    }
+
+    pub fn is_query_caller_authorized(&self, caller: &Principal, method_name: &str) -> bool {
+        let callers_permissions = self.get_permission_ids_of_cloned(&caller);
+        let mut result = false;
+
+        for perm in &callers_permissions {
+            let res = self
+                .permissions
+                .is_permission_target(Some(RemoteCallEndpoint::this(method_name)), perm);
+            if res.is_ok() {
+                result = true;
+                break;
+            }
+        }
+
+        result
     }
 
     pub fn remove_role(&mut self, role_id: &RoleId) -> Result<Role, Error> {

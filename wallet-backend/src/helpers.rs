@@ -28,7 +28,7 @@ pub async fn execute_program(program: &Program) -> Vec<CandidCallResult<String>>
                     call_payload.endpoint.canister_id,
                     call_payload.endpoint.method_name.as_str(),
                     // TODO: maybe it is safe to throw here, idk
-                    call_payload.serialize_args().expect("Execution error"),
+                    call_payload.args.serialize_args().expect("Execution error"),
                     call_payload.cycles,
                 )
                 .await
