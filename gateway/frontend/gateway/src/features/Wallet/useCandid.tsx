@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from 'services';
-import { checkPrincipal } from 'toolkit';
 import { IDL } from '@dfinity/candid';
 import { Actor, ActorSubclass } from '@dfinity/agent';
+import { useAuth } from 'services';
+import { checkPrincipal } from 'toolkit';
 
 export interface UseCandidProps {
   canisterId: string;
@@ -11,8 +11,9 @@ export interface UseCandidProps {
 
 export const useCandid = ({
   canisterId,
-  getCandidMethodName = '__get_candid_interface_tmp_hack',
+  getCandidMethodName = 'export_candid',
 }: UseCandidProps) => {
+  const [did, setDid] = useState<ParseResult>({ methods: [] });
   const { authClient } = useAuth();
 
   useEffect(() => {
@@ -22,9 +23,6 @@ export const useCandid = ({
       return;
     }
 
-    // authClient.agent.query(canisterId, { methodName: getCandidMethodName, arg: Buffer.from([]) });
-
-    // return didToJs(candid_source);
     const common_interface: IDL.InterfaceFactory = ({ IDL }) =>
       IDL.Service({
         [getCandidMethodName]: IDL.Func([], [IDL.Text], ['query']),
@@ -34,26 +32,41 @@ export const useCandid = ({
       canisterId,
     });
 
-    actor.__get_candid_interface_tmp_hack().then(console.warn);
-
-    // authClient
-    // .getIdentity()
-    // .then(
-    //   (identity) =>
-    //       authClient.agent.query(
-    //         canisterId,
-    //         { methodName: getCandidMethodName, arg: Buffer.from([]) },
-    //         identity,
-    //       ),
-    //     // authClient.agent.call(
-    //     //   canisterId,
-    //     //   {
-    //     //     methodName: getCandidMethodName,
-    //     //     arg: Buffer.from([]),
-    //     //   },
-    //     //   identity,
-    //     // ),
-    //   )
-    //   .then(console.warn);
+    actor[getCandidMethodName]().then(parse).then(setDid);
   }, []);
+
+  return { did };
+};
+
+export interface ParseResult {
+  methods: string[];
+}
+
+const parse = (did: any): ParseResult => {
+  const result: ParseResult = { methods: [] };
+
+  if (typeof did !== 'string') {
+    return result;
+  }
+
+  const serviceStr = did
+    .replace(/[\n\t ]/g, '')
+    .replace(/'/g, '"')
+    .match(/service\:\(|\)\->{(.*?)\}/g);
+
+  if (!serviceStr || !serviceStr[1]) {
+    return result;
+  }
+
+  const serviceContent = serviceStr[1].match(/(?<=\{)\s*[^{]*?(?=[\}])/g);
+
+  if (!serviceContent || !serviceContent[0]) {
+    return result;
+  }
+
+  const methodNames = serviceContent[0].match(/"(.*?)"/g);
+
+  result.methods = (methodNames || []).map((value) => value.replace(/"/g, ''));
+
+  return result;
 };

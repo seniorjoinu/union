@@ -73,7 +73,7 @@ export function History({ createLink, ...p }: HistoryProps) {
       {entries.map(([taskId, entry]) => (
         <NavLink
           key={String(entry.id)}
-          to={taskId ? `scheduled/${String(taskId)}` : String(entry.id)}
+          to={taskId !== null ? `scheduled/${String(taskId)}` : String(entry.id)}
         >
           <Item entry={entry} />
         </NavLink>

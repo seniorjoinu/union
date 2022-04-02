@@ -10,6 +10,7 @@ import {
   MultiSelectSkeleton as MS,
 } from 'components';
 import { checkPrincipal } from 'toolkit';
+import { CanisterMethods } from './CanisterMethods';
 import { useSubmit } from './useSubmit';
 import { FormData } from './types';
 
@@ -94,17 +95,37 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
           </Select>
         )}
       />
+
       <Controller
         name='targets'
         control={control}
         rules={{
           // required: 'Обязательное поле',
           validate: {
-            isNotEmpty: (value) => value.length > 0 || 'Список не может быть пустым',
+            // isNotEmpty: (value) => value.length > 0 || 'Список не может быть пустым',
             isPrincipal: (value) =>
+              !value.length ||
               !value.find(
                 (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
-              ) || 'Некорректный принципал',
+              ) ||
+              'Некорректный принципал',
+          },
+        }}
+        render={({ field }) => <CanisterMethods {...field} />}
+      />
+      <Controller
+        name='targets'
+        control={control}
+        rules={{
+          // required: 'Обязательное поле',
+          validate: {
+            // isNotEmpty: (value) => value.length > 0 || 'Список не может быть пустым',
+            isPrincipal: (value) =>
+              !value.length ||
+              !value.find(
+                (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
+              ) ||
+              'Некорректный принципал',
           },
         }}
         render={({ field, fieldState: { error } }) => (

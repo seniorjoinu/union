@@ -63,7 +63,7 @@ export function Provider({ principal, children }: ProviderProps) {
             'QuantityOf' in r.role_type &&
             r.role_type.QuantityOf.name.toLowerCase() == 'has profile',
         )?.id || roles.find((r) => 'Everyone' in r.role_type)?.id;
-      const permissionId = permissions.find((p) => p.name.toLowerCase() == 'default')?.id;
+      const permissionId = permissions[0]?.id;
       const rnpExist = typeof roleId !== 'undefined' && typeof permissionId !== 'undefined';
 
       if (rnpExist) {

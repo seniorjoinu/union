@@ -54,7 +54,7 @@ export const RoleSwitcher = ({ control, label, disabled, getValues, ...p }: Role
 
   useTrigger(
     (rnp) => {
-      const { permission_id, role_id } = getValues().rnp;
+      const { permission_id, role_id } = getValues().rnp || {};
 
       if (typeof permission_id == 'undefined' || permission_id == null) {
         pid.onChange({ target: { name: 'rnp.permission_id', value: rnp.permission_id } });

@@ -104,7 +104,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
             min: 0,
             validate: {
               threshold: (value) => {
-                const { type, owners } = getValues();
+                const { type } = getValues();
 
                 if (type != 'QuantityOf') {
                   return (value >= 0 && value <= 1) || 'Некорректное значение';
@@ -114,7 +114,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
                   return 'Значение должно быть положительно';
                 }
 
-                return owners.length >= value || 'Не должно превышать количество ролей';
+                return true;
               },
             },
           }}
@@ -134,7 +134,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
           render={({ field, fieldState: { error } }) => (
             <Select {...field} helperText={error?.message} title='Пороговая схема'>
               <Option value='FractionOf'>Проценты</Option>
-              <Option value='QuantityOf'>Доли</Option>
+              <Option value='QuantityOf'>Количество</Option>
             </Select>
           )}
         />
