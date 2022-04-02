@@ -283,7 +283,7 @@ impl RolesState {
                     }
                 }
 
-                (fr_of_params.enumerated.len() as f64) / counter >= fr_of_params.fraction
+                counter / (fr_of_params.enumerated.len() as f64) >= fr_of_params.fraction
             }
         }
     }
