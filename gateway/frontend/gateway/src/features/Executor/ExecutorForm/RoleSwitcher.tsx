@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { Control, Controller } from 'react-hook-form';
 import { Text, Select, Option } from 'components';
 import { useTrigger } from 'toolkit';
+import { useWallet } from 'services';
 import { useCurrentWallet } from '../../Wallet/context';
 import { parseRole } from '../../Wallet/utils';
 import { ExecutorFormData } from '../types';
@@ -30,11 +31,27 @@ export interface RoleSwitcherProps extends IClassName {
   label: string;
   disabled?: boolean;
   control: Control<ExecutorFormData, any>;
+  mode?: 'edit' | 'view';
   getValues(): ExecutorFormData;
 }
 
-export const RoleSwitcher = ({ control, label, disabled, getValues, ...p }: RoleSwitcherProps) => {
-  const { rnp, roles, permissions, fetchMyData } = useCurrentWallet();
+export const RoleSwitcher = ({
+  control,
+  label,
+  disabled,
+  getValues,
+  mode = 'edit',
+  ...p
+}: RoleSwitcherProps) => {
+  const {
+    rnp,
+    roles: myRoles,
+    permissions: myPermissions,
+    fetchMyData,
+    principal,
+  } = useCurrentWallet();
+  const { canister, data } = useWallet(principal);
+
   const rnpField = control.register('rnp', {
     required: 'Обязательное поле',
   });
@@ -46,14 +63,22 @@ export const RoleSwitcher = ({ control, label, disabled, getValues, ...p }: Role
   });
 
   useEffect(() => {
-    if (disabled) {
-      return;
+    if (mode == 'edit') {
+      fetchMyData();
+    } else {
+      const { permission_id, role_id } = getValues().rnp || {};
+
+      canister.get_roles({ ids: [role_id] });
+      canister.get_permissions({ ids: [permission_id] });
     }
-    fetchMyData();
   }, []);
 
   useTrigger(
     (rnp) => {
+      if (mode !== 'edit') {
+        return;
+      }
+
       const { permission_id, role_id } = getValues().rnp || {};
 
       if (typeof permission_id == 'undefined' || permission_id == null) {
@@ -65,7 +90,18 @@ export const RoleSwitcher = ({ control, label, disabled, getValues, ...p }: Role
       rnpField.onChange({ target: { name: 'rnp', value: rnp } });
     },
     rnp,
-    [getValues],
+    [getValues, mode],
+  );
+
+  const roles = useMemo(() => (mode == 'edit' ? myRoles : data.get_roles?.roles || []), [
+    mode,
+    myRoles,
+    data.get_roles,
+  ]);
+
+  const permissions = useMemo(
+    () => (mode == 'edit' ? myPermissions : data.get_permissions?.permissions || []),
+    [mode, myPermissions, data.get_permissions],
   );
 
   return (

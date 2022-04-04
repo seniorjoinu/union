@@ -221,6 +221,7 @@ export function ExecutorForm({
         control={control}
         getValues={getValues}
         disabled={disabled}
+        mode={mode}
         label='Выполнить из под роли и пермиссии'
       />
       {(editable || !!operationsLength) && <Text variant='h5'>Операции</Text>}

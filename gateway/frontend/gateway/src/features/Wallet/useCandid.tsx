@@ -49,24 +49,29 @@ const parse = (did: any): ParseResult => {
     return result;
   }
 
+  console.log(0, { did });
+
   const serviceStr = did
     .replace(/[\n\t ]/g, '')
     .replace(/'/g, '"')
-    .match(/service\:\(|\)\->{(.*?)\}/g);
+    .match(/service\:(|\((.*?)\)\->){(.*?)\}/g); // get service:{} braces content
 
-  if (!serviceStr || !serviceStr[1]) {
+  if (!serviceStr || !serviceStr.length) {
     return result;
   }
 
-  const serviceContent = serviceStr[1].match(/(?<=\{)\s*[^{]*?(?=[\}])/g);
+  const serviceContent = serviceStr.pop()!.match(/(?<=\{)\s*[^{]*?(?=[\}])/g); // get method names as is (maybe with quotes)
 
   if (!serviceContent || !serviceContent[0]) {
     return result;
   }
 
-  const methodNames = serviceContent[0].match(/"(.*?)"/g);
+  const methodNames = serviceContent[0].match(/(\w+)(?=("|)\:\()/g); // get method content inside quotes - will be methodname
 
-  result.methods = (methodNames || []).map((value) => value.replace(/"/g, ''));
+  result.methods = [...(methodNames || [])];
 
   return result;
 };
+
+// @ts-expect-error
+window.parse = parse;

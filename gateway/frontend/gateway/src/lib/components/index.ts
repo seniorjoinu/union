@@ -7,5 +7,6 @@ export * from './Select';
 export * from './TextField';
 export * from './MultiSelect';
 export * from './ListSelect';
+export * from './Accordeon';
 export * from './Chips';
 export * from './theme';
