@@ -15,7 +15,7 @@ describe('setup', () => {
         s = await setup(Ed25519KeyIdentity.generate());
     });
 
-    xit("deployer works fine", async () => {
+    it("deployer works fine", async () => {
         const myPrincipal = await s.agent.getPrincipal();
         const walletWasmBinary = getWasmBinary("wallet");
 
@@ -52,7 +52,7 @@ describe('setup', () => {
         assert(instances.length == 2);
     });
 
-    xit("wallet works fine", async () => {
+    it("wallet works fine", async () => {
         const myPrincipal = await s.agent.getPrincipal();
 
         const {roles} = await s.wallet.actor.get_my_roles();
@@ -94,19 +94,19 @@ describe('setup', () => {
                         method_name: "create_role"
                     },
                     cycles: 0n,
-                    args_candid: [`record { role_type = variant { Profile = record { principal_id = principal "aaaaa-aa"; name = "Test"; description = "Test role" } } }`]
+                    args: { CandidString : [`record { role_type = variant { Profile = record { principal_id = principal "aaaaa-aa"; name = "Test"; description = "Test role" } } }`] }
                 }]
             }
         }) as {Executed: HistoryEntryId};
 
         assert(result.Executed !== undefined, "Create role call should be executed right away");
 
-        const {entries} = await s.wallet.actor.get_history_entries({ids: [result.Executed], rnp});
+        const {entries} = await s.wallet.actor.get_history_entries({ids: [result.Executed]});
         assert(entries.length == 1);
         assert(entries[0].title = "Create new role");
 
-        const {ids} = await s.wallet.actor.get_role_ids({rnp});
-        const {roles: newRoles} = await s.wallet.actor.get_roles({ids, rnp});
+        const {ids} = await s.wallet.actor.get_role_ids();
+        const {roles: newRoles} = await s.wallet.actor.get_roles({ids});
 
         assert(newRoles.length == 4);
         const newRole = newRoles.find(it => {
