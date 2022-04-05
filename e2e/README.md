@@ -1,12 +1,10 @@
-### E2E test for ic-cron
-
-This directory contains tests for automatic counter canister located at [example directory](..)
+### E2E test
 
 #### Requirements
 
-* `rust`
-* `wasm32-unknown-unknown` target
-* `dfx 0.9.0`
+* `yarn`
+* `rust` and `wasm32-unknown-unknown` target
+* `dfx 0.9.2`
 * `ic-cdk-optimizer` (`cargo install --locked ic-cdk-optimizer`)
 
 #### Local development

@@ -1,0 +1,53 @@
+type TransferControlRequest = record {
+    new_controller : principal;
+};
+
+type AttachToUnionWalletRequest = record {
+    union_wallet_id : principal;
+};
+
+type DetachFromUnionWalletRequest = AttachToUnionWalletRequest;
+
+type GetAttachedUnionWalletsResponse = record {
+    wallet_ids : vec principal;
+};
+
+type SpawnUnionWalletRequest = record {
+    version : text;
+    wallet_creator : principal;
+};
+
+type BillId = nat;
+
+type SpawnUnionWalletResponse = record {
+    bill_id : BillId;
+};
+
+type BillPaymentProof = record {
+    bill_id : BillId;
+};
+
+type ProveBillPaidRequest = record {
+    proof : BillPaymentProof;
+};
+
+type ProveBillPaidResponse = record {
+    canister_id : principal;
+};
+
+type UpgradeUnionWalletRequest = record {
+    new_version : text;
+};
+
+service : (principal, principal) -> {
+    "transfer_control" : (TransferControlRequest) -> ();
+    "attach_to_union_wallet" : (AttachToUnionWalletRequest) -> ();
+    "detach_from_union_wallet" : (DetachFromUnionWalletRequest) -> ();
+    "get_attached_union_wallets" : () -> (GetAttachedUnionWalletsResponse) query;
+
+    "spawn_union_wallet" : (SpawnUnionWalletRequest) -> (SpawnUnionWalletResponse);
+    "prove_bill_paid" : (ProveBillPaidRequest) -> (ProveBillPaidResponse);
+    "upgrade_union_wallet" : (UpgradeUnionWalletRequest) -> ();
+
+    "export_candid" : () -> (text) query;
+}
