@@ -4,6 +4,7 @@ use crate::common::roles::{Profile, Role, RoleType, RolesError, RolesState, HAS_
 use crate::common::utils::ValidationError;
 use crate::{HistoryEntry, PermissionId, Program, RemoteCallEndpoint, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use ic_cdk::id;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 
@@ -16,6 +17,7 @@ pub enum Error {
     RoleIsNotAttachedToPermission,
 }
 
+#[derive(CandidType, Deserialize)]
 pub struct State {
     pub execution_history: ExecutionHistoryState,
     pub roles: RolesState,
@@ -166,7 +168,16 @@ impl State {
         permission_ids.into_iter().collect()
     }
 
-    pub fn is_query_caller_authorized(&self, caller: &Principal, method_name: &str) -> bool {
+    pub fn is_query_caller_authorized(
+        &self,
+        self_id: &Principal,
+        caller: &Principal,
+        method_name: &str,
+    ) -> bool {
+        if caller == self_id {
+            return true;
+        }
+
         let callers_permissions = self.get_permission_ids_of_cloned(&caller);
         let mut result = false;
 

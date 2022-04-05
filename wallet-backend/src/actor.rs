@@ -21,10 +21,10 @@ use crate::guards::only_self_guard;
 use crate::helpers::execute_program_and_log;
 use crate::state::{State, TaskType};
 use ic_cdk::api::time;
-use ic_cdk::export::candid::export_service;
 use ic_cdk::export::Principal;
-use ic_cdk::{caller, trap};
-use ic_cdk_macros::{heartbeat, init, query, update};
+use ic_cdk::storage::{stable_restore, stable_save};
+use ic_cdk::{caller, id, trap};
+use ic_cdk_macros::{heartbeat, init, post_upgrade, pre_upgrade, query, update};
 use ic_cron::implement_cron;
 use ic_cron::types::{Iterations, SchedulingOptions};
 
@@ -143,7 +143,11 @@ fn get_scheduled_for_authorization_executions(
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_scheduled_for_authorization_executions") {
+    if !state.is_query_caller_authorized(
+        &id(),
+        &caller,
+        "get_scheduled_for_authorization_executions",
+    ) {
         trap("Access denied");
     }
 
@@ -219,7 +223,7 @@ pub fn get_history_entry_ids() -> GetHistoryEntryIdsResponse {
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_history_entry_ids") {
+    if !state.is_query_caller_authorized(&id(), &caller, "get_history_entry_ids") {
         trap("Access denied");
     }
 
@@ -233,7 +237,7 @@ pub fn get_history_entries(req: GetHistoryEntriesRequest) -> GetHistoryEntriesRe
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_history_entries") {
+    if !state.is_query_caller_authorized(&id(), &caller, "get_history_entries") {
         trap("Access denied");
     }
 
@@ -321,7 +325,7 @@ pub fn get_role_ids() -> GetRoleIdsResponse {
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_role_ids") {
+    if !state.is_query_caller_authorized(&id(), &caller, "get_role_ids") {
         trap("Access denied");
     }
 
@@ -335,7 +339,7 @@ pub fn get_roles(req: GetRolesRequest) -> GetRolesResponse {
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_roles") {
+    if !state.is_query_caller_authorized(&id(), &caller, "get_roles") {
         trap("Access denied");
     }
 
@@ -412,7 +416,7 @@ pub fn get_permission_ids() -> GetPermissionIdsResponse {
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_permission_ids") {
+    if !state.is_query_caller_authorized(&id(), &caller, "get_permission_ids") {
         trap("Access denied");
     }
 
@@ -426,7 +430,7 @@ pub fn get_permissions(req: GetPermissionsRequest) -> GetPermissionsResponse {
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_permissions") {
+    if !state.is_query_caller_authorized(&id(), &caller, "get_permissions") {
         trap("Access denied");
     }
 
@@ -468,7 +472,7 @@ pub fn get_permissions_by_permission_target(
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_permissions_by_permission_target") {
+    if !state.is_query_caller_authorized(&id(), &caller, "get_permissions_by_permission_target") {
         trap("Access denied");
     }
 
@@ -506,7 +510,7 @@ pub fn get_roles_attached_to_permissions(
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_roles_attached_to_permissions") {
+    if !state.is_query_caller_authorized(&id(), &caller, "get_roles_attached_to_permissions") {
         trap("Access denied");
     }
 
@@ -527,7 +531,7 @@ pub fn get_permissions_attached_to_roles(
     let state = get_state();
     let caller = caller();
 
-    if !state.is_query_caller_authorized(&caller, "get_permissions_attached_to_roles") {
+    if !state.is_query_caller_authorized(&id(), &caller, "get_permissions_attached_to_roles") {
         trap("Access denied");
     }
 
@@ -560,3 +564,20 @@ fn init(wallet_creator: Principal) {
         STATE = Some(state);
     }
 }
+
+#[pre_upgrade]
+fn pre_upgrade_hook() {
+    let wallet_state = unsafe { STATE.take() };
+
+    stable_save((wallet_state,)).expect("Unable to execute pre-upgrade");
+}
+
+#[post_upgrade]
+fn post_upgrade_hook() {
+    let (wallet_state,): (Option<State>,) =
+        stable_restore().expect("Unable to execute post-upgrade");
+
+    unsafe { STATE = wallet_state };
+}
+
+// ------------------ CERTIFIED ASSETS ---------------------
