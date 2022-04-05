@@ -345,6 +345,27 @@ type DeleteBatchesRequest = record {
     batch_ids : vec BatchId;
 };
 
+// ---------------------- INFO --------------------
+
+type File = record {
+    mime_type : text;
+    content : blob;
+};
+
+type UnionInfo = record {
+    name : text;
+    description : text;
+    logo : opt File;
+};
+
+type UpdateInfoRequest = record {
+    new_info : UnionInfo;
+};
+
+type GetInfoResponse = record {
+    info : UnionInfo;
+};
+
 service : (principal) -> {
     "execute" : (ExecuteRequest) -> (ExecuteResponse);
     "authorize_execution" : (AuthorizeExecutionRequest) -> (AuthorizeExecutionResponse);
@@ -381,6 +402,9 @@ service : (principal) -> {
     "delete_unlocked_batches" : (DeleteBatchesRequest) -> ();
     "delete_batches" : (DeleteBatchesRequest) -> ();
     "send_batch" : (SendBatchRequest) -> ();
+
+    "update_info" : (UpdateInfoRequest) -> ();
+    "get_info" : () -> (GetInfoResponse) query;
 
     "export_candid" : () -> (text) query;
 }

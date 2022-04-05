@@ -1,6 +1,7 @@
 use crate::common::permissions::{Permission, PermissionScope, PermissionTarget};
 use crate::common::roles::{Role, RoleType};
 use crate::common::streaming::{BatchId, ChunkId, Key};
+use crate::state::UnionInfo;
 use crate::{HistoryEntry, HistoryEntryId, PermissionId, Principal, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize};
 use ic_cron::types::TaskId;
@@ -303,4 +304,16 @@ pub struct LockBatchesRequest {
 #[derive(CandidType, Deserialize)]
 pub struct DeleteBatchesRequest {
     pub batch_ids: Vec<BatchId>,
+}
+
+// ------------------ INFO -------------------
+
+#[derive(CandidType, Deserialize)]
+pub struct UpdateInfoRequest {
+    pub new_info: UnionInfo,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetInfoResponse {
+    pub info: UnionInfo,
 }

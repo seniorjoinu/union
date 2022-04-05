@@ -5,7 +5,7 @@ use crate::api::{
     CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse, DeleteAssetArguments,
     DeleteBatchesRequest, DetachRoleFromPermissionRequest, EditProfileRequest, ExecuteRequest,
     ExecuteResponse, GetHistoryEntriesRequest, GetHistoryEntriesResponse,
-    GetHistoryEntryIdsResponse, GetMyPermissionsResponse, GetMyRolesResponse,
+    GetHistoryEntryIdsResponse, GetInfoResponse, GetMyPermissionsResponse, GetMyRolesResponse,
     GetPermissionIdsResponse, GetPermissionsAttachedToRolesRequest,
     GetPermissionsAttachedToRolesResponse, GetPermissionsByPermissionTargetRequest,
     GetPermissionsByPermissionTargetResponse, GetPermissionsRequest, GetPermissionsResponse,
@@ -13,8 +13,8 @@ use crate::api::{
     GetRolesAttachedToPermissionsResponse, GetRolesRequest, GetRolesResponse,
     GetScheduledForAuthorizationExecutionsRequest, GetScheduledForAuthorizationExecutionsResponse,
     LockBatchesRequest, RemovePermissionRequest, RemovePermissionResponse, RemoveRoleRequest,
-    RemoveRoleResponse, SendBatchRequest, SubtractEnumeratedRolesRequest, UpdatePermissionRequest,
-    UpdateRoleRequest,
+    RemoveRoleResponse, SendBatchRequest, SubtractEnumeratedRolesRequest, UpdateInfoRequest,
+    UpdatePermissionRequest, UpdateRoleRequest,
 };
 use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallEndpoint};
 use crate::common::permissions::PermissionId;
@@ -731,4 +731,18 @@ async fn send_batch(req: SendBatchRequest) {
         })
         .await
         .expect("Unable to commit batch");
+}
+
+// --------------------------- INFO ------------------------
+
+#[update(guard = "only_self_guard")]
+fn update_info(req: UpdateInfoRequest) {
+    get_state().set_info(req.new_info);
+}
+
+#[query]
+fn get_info() -> GetInfoResponse {
+    let info = get_state().get_info().clone();
+
+    GetInfoResponse { info }
 }

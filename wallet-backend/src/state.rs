@@ -17,12 +17,27 @@ pub enum Error {
     RoleIsNotAttachedToPermission,
 }
 
+#[derive(Clone, CandidType, Deserialize)]
+pub struct File {
+    pub mime_type: String,
+    pub content: Vec<u8>,
+}
+
+#[derive(Clone, CandidType, Deserialize)]
+pub struct UnionInfo {
+    pub name: String,
+    pub description: String,
+    pub logo: Option<File>,
+}
+
 #[derive(CandidType, Deserialize)]
 pub struct State {
     pub execution_history: ExecutionHistoryState,
     pub roles: RolesState,
     pub permissions: PermissionsState,
     pub streaming: StreamingState,
+
+    pub info: UnionInfo,
 
     pub roles_by_permission: HashMap<PermissionId, HashSet<RoleId>>,
     pub permissions_by_role: HashMap<RoleId, HashSet<PermissionId>>,
@@ -47,11 +62,19 @@ impl State {
             PermissionScope::Blacklist,
         );
 
+        let default_info = UnionInfo {
+            name: String::from("Unnamed union"),
+            description: String::from("Empty description"),
+            logo: None,
+        };
+
         let mut state = State {
             execution_history: ExecutionHistoryState::default(),
             roles: roles_state,
             permissions: permissions_state,
             streaming: StreamingState::default(),
+
+            info: default_info,
 
             roles_by_permission: HashMap::default(),
             permissions_by_role: HashMap::default(),
@@ -60,6 +83,14 @@ impl State {
         state.attach_role_to_permission(HAS_PROFILE_ROLE_ID, default_permission_id)?;
 
         Ok(state)
+    }
+
+    pub fn set_info(&mut self, new_info: UnionInfo) {
+        self.info = new_info
+    }
+
+    pub fn get_info(&self) -> &UnionInfo {
+        &self.info
     }
 
     pub fn validate_authorized_request(
