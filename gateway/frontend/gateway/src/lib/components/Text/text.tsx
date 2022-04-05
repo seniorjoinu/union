@@ -3,7 +3,7 @@ import { TextWeight, TextVariant } from './types';
 import { getFontStyles } from './utils';
 
 export interface TextProps {
-  variant?: TextVariant;
+  variant?: TextVariant | 'inherit';
   weight?: TextWeight;
   color?: string;
 }
@@ -18,5 +18,6 @@ export const Text = styled.span<TextProps>`
     css`
       color: ${color};
     `};
-  ${({ variant = 'p2', weight = 'regular' }) => getFontStyles(variant, weight)};
+  ${({ variant = 'p2', weight = 'regular' }) =>
+    variant != 'inherit' && getFontStyles(variant, weight)};
 `;

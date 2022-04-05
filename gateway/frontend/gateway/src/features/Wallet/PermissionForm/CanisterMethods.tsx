@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import styled from 'styled-components';
-import { Text, Option, MultiSelectSkeleton as MS } from 'components';
+import { Text } from 'components';
 import { useCandid } from '../useCandid';
 import { useCurrentWallet } from '../context';
 import { FormTarget } from './types';
 
-const Method = styled.div<{ $selected: boolean }>`
+const Method = styled(Text)<{ $selected: boolean }>`
   cursor: pointer;
   color: ${({ $selected }) => ($selected ? 'black' : 'grey')};
 
@@ -17,16 +17,22 @@ const Method = styled.div<{ $selected: boolean }>`
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+
+  ${Method}:not(:last-child) {
+    margin-bottom: 4px;
+  }
 `;
 
 export interface CanisterMethodsProps {
+  className?: string;
+  style?: React.CSSProperties;
   disabled?: boolean;
   value: FormTarget[];
   onChange(value: FormTarget[]): void;
 }
 
 export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsProps>(
-  ({ value, onChange, disabled }, ref) => {
+  ({ value, onChange, disabled, ...p }, ref) => {
     const { principal } = useCurrentWallet();
     const { did } = useCandid({ canisterId: principal });
 
@@ -53,10 +59,11 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
     );
 
     return (
-      <Container ref={ref}>
+      <Container ref={ref} {...p}>
         {did.methods.map((methodName) => (
           <Method
             key={methodName}
+            variant='p2'
             onClick={() => processMethod(methodName)}
             $selected={!!value.find((v) => v.methodName == methodName && v.canisterId == principal)}
           >

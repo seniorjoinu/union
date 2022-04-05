@@ -8,12 +8,16 @@ import {
   TextField as TF,
   Button as B,
   MultiSelectSkeleton as MS,
+  Accordeon as Acc,
 } from 'components';
 import { checkPrincipal } from 'toolkit';
-import { CanisterMethods } from './CanisterMethods';
+import { CanisterMethods as CM } from './CanisterMethods';
 import { useSubmit } from './useSubmit';
 import { FormData } from './types';
 
+const Accordeon = styled(Acc)``;
+const AccordeonTitle = styled(Text)``;
+const CanisterMethods = styled(CM)``;
 const MultiSelectSkeleton = styled(MS)``;
 const Select = styled(LS)``;
 const Button = styled(B)``;
@@ -30,6 +34,7 @@ const MultiSelectFields = styled.div`
     margin-bottom: 8px;
   }
 `;
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -38,7 +43,15 @@ const Container = styled.div`
     margin-bottom: 64px;
   }
 
-  ${TextField}, ${Select}, ${MultiSelectSkeleton} {
+  ${AccordeonTitle} {
+    padding: 8px 16px;
+  }
+
+  ${CanisterMethods} {
+    padding: 16px;
+  }
+
+  ${TextField}, ${Select}, ${MultiSelectSkeleton}, ${Accordeon} {
     margin-bottom: 24px;
   }
 
@@ -95,24 +108,23 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
           </Select>
         )}
       />
-
-      <Controller
-        name='targets'
-        control={control}
-        rules={{
-          // required: 'Обязательное поле',
-          validate: {
-            // isNotEmpty: (value) => value.length > 0 || 'Список не может быть пустым',
-            isPrincipal: (value) =>
-              !value.length ||
-              !value.find(
-                (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
-              ) ||
-              'Некорректный принципал',
-          },
-        }}
-        render={({ field }) => <CanisterMethods {...field} />}
-      />
+      <Accordeon title={<AccordeonTitle variant='p1'>Candid кошелька</AccordeonTitle>}>
+        <Controller
+          name='targets'
+          control={control}
+          rules={{
+            validate: {
+              isPrincipal: (value) =>
+                !value.length ||
+                !value.find(
+                  (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
+                ) ||
+                'Некорректный принципал',
+            },
+          }}
+          render={({ field }) => <CanisterMethods {...field} />}
+        />
+      </Accordeon>
       <Controller
         name='targets'
         control={control}

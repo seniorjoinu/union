@@ -14,7 +14,7 @@ const Controls = styled.div`
 
   select {
     margin-right: 16px;
-    height: 24px;
+    height: 32px;
   }
 `;
 

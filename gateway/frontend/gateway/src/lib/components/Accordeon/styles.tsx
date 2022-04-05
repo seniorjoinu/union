@@ -5,6 +5,7 @@ import * as A from './arrow-bracket';
 export type Borders = 'border' | 'no-border';
 
 export const Title = styled(Text)`
+  display: flex;
   flex-grow: 1;
   flex-shrink: 1;
   padding-right: 32px;
