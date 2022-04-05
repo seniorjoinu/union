@@ -15,7 +15,7 @@ describe('setup', () => {
         s = await setup(Ed25519KeyIdentity.generate());
     });
 
-    it("deployer works fine", async () => {
+    xit("deployer works fine", async () => {
         const myPrincipal = await s.agent.getPrincipal();
         const walletWasmBinary = getWasmBinary("wallet");
 
@@ -52,7 +52,7 @@ describe('setup', () => {
         assert(instances.length == 2);
     });
 
-    it("wallet works fine", async () => {
+    xit("wallet works fine", async () => {
         const myPrincipal = await s.agent.getPrincipal();
 
         const {roles} = await s.wallet.actor.get_my_roles();
@@ -114,5 +114,29 @@ describe('setup', () => {
             return profile && profile.name == "Test";
         });
         assert(newRole);
+    });
+
+    it('gateway works fine', async () => {
+        const myPrincipal = await s.agent.getPrincipal();
+        const walletWasmBinary = getWasmBinary("wallet");
+
+        // set deployer's spawn controller to gateway
+        await s.deployer.actor.transfer_spawn_control({new_controller: s.gateway.canisterId});
+
+        // add a version to the deployer
+        await s.deployer.actor.create_binary_version({version: "0.0.1", description: "Initial version"});
+        await s.deployer.actor.upload_binary({version: "0.0.1", binary: walletWasmBinary});
+
+        // create a bill to be paid via Loops
+        const {bill_id} = await s.gateway.actor.spawn_union_wallet({version: "0.0.1", wallet_creator: myPrincipal});
+
+        // imagine user paid the bill and Loops returned a proof
+
+        // present proof to the gateway
+        const {canister_id} = await s.gateway.actor.prove_bill_paid({proof: {bill_id}});
+
+        // check if now attached
+        const {wallet_ids} = await s.gateway.actor.get_attached_union_wallets();
+        assert(wallet_ids.map(it => it.toText()).includes(canister_id.toText()), "There is no deployed wallet");
     });
 });

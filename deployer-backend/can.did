@@ -100,7 +100,9 @@ type GetLatestVersionResponse = record {
 };
 
 service : (principal) -> {
-    "transfer_control" : (TransferControlRequest) -> ();
+    "transfer_binary_control" : (TransferControlRequest) -> ();
+    "transfer_spawn_control" : (TransferControlRequest) -> ();
+
     "spawn_wallet" : (SpawnWalletRequest) -> (SpawnWalletResponse);
     "upgrade_wallet_version" : (UpgradeWalletVersionRequest) -> ();
     "create_binary_version" : (CreateBinaryVersionRequest) -> ();

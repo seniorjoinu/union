@@ -1,29 +1,29 @@
-use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use ic_cdk::export::candid::{CandidType, Deserialize, Nat, Principal};
 
-pub type InvoiceId = u64;
+pub type BillId = Nat;
 
 #[derive(Debug)]
 pub enum GatewayError {
-    InvoiceNotFound,
-    InvoiceAlreadyPaid,
+    BillNotFound,
+    BillAlreadyPaid,
 }
 
 #[derive(CandidType, Deserialize)]
-pub enum InvoiceType {
+pub enum BillType {
     SpawnUnionWallet(SpawnUnionWalletRequest),
 }
 
 #[derive(CandidType, Deserialize)]
-pub enum InvoiceStatus {
+pub enum BillStatus {
     Created,
     Paid,
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct Invoice {
-    pub id: InvoiceId,
-    pub invoice_type: InvoiceType,
-    pub status: InvoiceStatus,
+pub struct Bill {
+    pub id: BillId,
+    pub bill_type: BillType,
+    pub status: BillStatus,
     pub to: Principal,
     pub created_at: u64,
 }
@@ -53,5 +53,32 @@ pub struct SpawnUnionWalletRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct SpawnUnionWalletResponse {
-    pub invoice_id: InvoiceId,
+    pub bill_id: BillId,
+}
+
+// TODO: this proof should be issued to the right principal that should match the caller
+#[derive(CandidType, Deserialize)]
+pub struct BillPaymentProof {
+    pub bill_id: BillId,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ProveBillPaidRequest {
+    pub proof: BillPaymentProof,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ProveBillPaidResponse {
+    pub canister_id: Principal,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct UpgradeUnionWalletRequest {
+    pub new_version: String,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct UpgradeWalletVersionRequest {
+    pub canister_id: Principal,
+    pub new_version: String,
 }

@@ -1,7 +1,7 @@
 mod common;
 
 use crate::common::deployer::State;
-use crate::common::guards::only_controller;
+use crate::common::guards::{only_binary_controller, only_spawn_controller};
 use crate::common::types::{
     CreateBinaryVersionRequest, DeleteBinaryVersionRequest, DownloadBinaryRequest,
     DownloadBinaryResponse, GetBinaryVersionInfosRequest, GetBinaryVersionInfosResponse,
@@ -19,12 +19,17 @@ use ic_cdk::id;
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
 
-#[update(guard = "only_controller")]
-fn transfer_control(req: TransferControlRequest) {
-    get_state().transfer_control(req.new_controller);
+#[update(guard = "only_binary_controller")]
+fn transfer_binary_control(req: TransferControlRequest) {
+    get_state().transfer_binary_control(req.new_controller);
 }
 
-#[update(guard = "only_controller")]
+#[update(guard = "only_spawn_controller")]
+fn transfer_spawn_control(req: TransferControlRequest) {
+    get_state().transfer_spawn_control(req.new_controller);
+}
+
+#[update(guard = "only_spawn_controller")]
 async fn spawn_wallet(req: SpawnWalletRequest) -> SpawnWalletResponse {
     let binary = get_state()
         .get_non_deleted_binary(&req.version)
@@ -42,8 +47,12 @@ async fn spawn_wallet(req: SpawnWalletRequest) -> SpawnWalletResponse {
     SpawnWalletResponse { canister_id }
 }
 
-#[update(guard = "only_controller")]
+#[update(guard = "only_spawn_controller")]
 async fn upgrade_wallet_version(req: UpgradeWalletVersionRequest) {
+    get_state()
+        .get_instance(&req.canister_id)
+        .expect("Unable to upgrade");
+
     // todo: maybe it is correct to check for a version compatibility in order of downgrades
 
     let binary = get_state()
@@ -55,35 +64,35 @@ async fn upgrade_wallet_version(req: UpgradeWalletVersionRequest) {
     get_state().set_instance_version(req.canister_id, req.new_version, time());
 }
 
-#[update(guard = "only_controller")]
+#[update(guard = "only_binary_controller")]
 fn create_binary_version(req: CreateBinaryVersionRequest) {
     get_state()
         .create_binary_version(req.version, req.description, time())
         .expect("Unable to create new binary version");
 }
 
-#[update(guard = "only_controller")]
+#[update(guard = "only_binary_controller")]
 fn update_binary_version_description(req: UpdateBinaryVersionDescriptionRequest) {
     get_state()
         .update_binary_version_description(&req.version, req.new_description, time())
         .expect("Unable to update binary version description");
 }
 
-#[update(guard = "only_controller")]
+#[update(guard = "only_binary_controller")]
 fn release_binary_version(req: ReleaseBinaryVersionRequest) {
     get_state()
         .release_binary_version(&req.version, time())
         .expect("Unable to release binary version");
 }
 
-#[update(guard = "only_controller")]
+#[update(guard = "only_binary_controller")]
 fn delete_binary_version(req: DeleteBinaryVersionRequest) {
     get_state()
         .delete_binary_version(&req.version, time())
         .expect("Unable to delete binary version");
 }
 
-#[update(guard = "only_controller")]
+#[update(guard = "only_binary_controller")]
 fn upload_binary(req: UploadBinaryRequest) {
     get_state()
         .upload_binary(&req.version, req.binary, time())
@@ -168,8 +177,8 @@ pub fn get_state() -> &'static mut State {
 }
 
 #[init]
-pub fn init(controller: Principal) {
-    unsafe { STATE = Some(State::new(controller)) }
+pub fn init(binary_controller: Principal, spawn_controller: Principal) {
+    unsafe { STATE = Some(State::new(binary_controller, spawn_controller)) }
 }
 
 #[pre_upgrade]

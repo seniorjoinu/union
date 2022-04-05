@@ -8,24 +8,30 @@ use std::collections::HashMap;
 
 #[derive(CandidType, Deserialize)]
 pub struct State {
-    pub controller: Principal,
+    pub binary_controller: Principal,
+    pub spawn_controller: Principal,
     pub instances: HashMap<Principal, BinaryInstance>,
     pub binary_version_infos: HashMap<String, BinaryVersionInfo>,
     pub latest_version: Option<String>,
 }
 
 impl State {
-    pub fn new(controller: Principal) -> Self {
+    pub fn new(binary_controller: Principal, spawn_controller: Principal) -> Self {
         Self {
-            controller,
+            binary_controller,
+            spawn_controller,
             instances: HashMap::default(),
             binary_version_infos: HashMap::default(),
             latest_version: None,
         }
     }
 
-    pub fn transfer_control(&mut self, new_controller: Principal) {
-        self.controller = new_controller;
+    pub fn transfer_binary_control(&mut self, new_controller: Principal) {
+        self.binary_controller = new_controller;
+    }
+
+    pub fn transfer_spawn_control(&mut self, new_controller: Principal) {
+        self.spawn_controller = new_controller;
     }
 
     pub fn create_binary_version(

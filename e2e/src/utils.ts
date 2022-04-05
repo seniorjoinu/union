@@ -30,11 +30,14 @@ export async function setup(identity: Identity): Promise<ISetup> {
     });
     await agent.fetchRootKey();
 
-    const encodedUserPrincipal = [...IDL.encode([IDL.Principal], [identity.getPrincipal()])];
+    const walletArgs = [...IDL.encode([IDL.Principal], [identity.getPrincipal()])];
+    const wallet = await deployCanister<IWallet>("wallet", walletArgs, agent);
 
-    const wallet = await deployCanister<IWallet>("wallet", encodedUserPrincipal, agent);
-    const deployer = await deployCanister<IDeployer>("deployer", encodedUserPrincipal, agent);
-    const gateway = await deployCanister<IGateway>("gateway", encodedUserPrincipal, agent);
+    const deployerArgs = [...IDL.encode([IDL.Principal, IDL.Principal], [identity.getPrincipal(), identity.getPrincipal()])];
+    const deployer = await deployCanister<IDeployer>("deployer", deployerArgs, agent);
+
+    const gatewayArgs = [...IDL.encode([IDL.Principal, IDL.Principal], [identity.getPrincipal(), deployer.canisterId])];
+    const gateway = await deployCanister<IGateway>("gateway", gatewayArgs, agent);
 
     return {
         agent,

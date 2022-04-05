@@ -1,17 +1,16 @@
-use crate::common::api::{GatewayError, Invoice, InvoiceId, InvoiceStatus, InvoiceType};
+use crate::common::api::{Bill, BillId, BillStatus, BillType, GatewayError};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(CandidType, Deserialize)]
 pub struct State {
     pub controller: Principal,
     pub users_by_union_wallet_index: HashMap<Principal, HashSet<Principal>>,
     pub union_wallets_by_user_index: HashMap<Principal, HashSet<Principal>>,
 
     pub deployer_canister_id: Principal,
-    pub invoices: HashMap<InvoiceId, Invoice>,
-    pub invoice_id_counter: InvoiceId,
+    pub bills: HashMap<BillId, Bill>,
 }
 
 impl State {
@@ -22,49 +21,45 @@ impl State {
             union_wallets_by_user_index: HashMap::default(),
 
             deployer_canister_id,
-            invoices: HashMap::default(),
-            invoice_id_counter: 0,
+            bills: HashMap::default(),
         }
     }
 
-    pub fn create_invoice(
+    pub fn create_bill(
         &mut self,
-        invoice_type: InvoiceType,
+        id: BillId,
+        invoice_type: BillType,
         to: Principal,
         timestamp: u64,
-    ) -> InvoiceId {
-        let id = self.generate_invoice_id();
-        let invoice = Invoice {
-            id,
-            invoice_type,
+    ) -> BillId {
+        let bill = Bill {
+            id: id.clone(),
+            bill_type: invoice_type,
             to,
-            status: InvoiceStatus::Created,
+            status: BillStatus::Created,
             created_at: timestamp,
         };
 
-        self.invoices.insert(id, invoice);
+        self.bills.insert(id.clone(), bill);
 
         id
     }
 
-    pub fn set_invoice_paid(&mut self, id: InvoiceId) -> Result<(), GatewayError> {
-        let invoice = self
-            .invoices
-            .get_mut(&id)
-            .ok_or(GatewayError::InvoiceNotFound)?;
-        
-        match invoice.status {
-            InvoiceStatus::Paid => Err(GatewayError::InvoiceAlreadyPaid),
-            InvoiceStatus::Created => {
-                invoice.status = InvoiceStatus::Paid;
-                
+    pub fn set_bill_paid(&mut self, id: BillId) -> Result<(), GatewayError> {
+        let bill = self.bills.get_mut(&id).ok_or(GatewayError::BillNotFound)?;
+
+        match bill.status {
+            BillStatus::Paid => Err(GatewayError::BillAlreadyPaid),
+            BillStatus::Created => {
+                bill.status = BillStatus::Paid;
+
                 Ok(())
             }
         }
     }
-    
-    pub fn remove_invoice(&mut self, id: InvoiceId) {
-        self.invoices.remove(&id);
+
+    pub fn remove_bill(&mut self, id: BillId) {
+        self.bills.remove(&id);
     }
 
     pub fn update_controller(&mut self, new_controller: Principal) {
@@ -117,12 +112,5 @@ impl State {
             .unwrap_or_default()
             .into_iter()
             .collect()
-    }
-
-    fn generate_invoice_id(&mut self) -> InvoiceId {
-        let id = self.invoice_id_counter;
-        self.invoice_id_counter += 1;
-
-        id
     }
 }

@@ -1,10 +1,12 @@
 use crate::common::api::{
-    AttachToUnionWalletRequest, DetachFromUnionWalletRequest, GetAttachedUnionWalletsResponse,
-    InvoiceId, InvoiceType, SpawnUnionWalletRequest, SpawnUnionWalletResponse,
-    TransferControlRequest,
+    AttachToUnionWalletRequest, BillId, BillType, DetachFromUnionWalletRequest,
+    GetAttachedUnionWalletsResponse, ProveBillPaidRequest, ProveBillPaidResponse,
+    SpawnUnionWalletRequest, SpawnUnionWalletResponse, TransferControlRequest,
+    UpgradeUnionWalletRequest, UpgradeWalletVersionRequest,
 };
 use crate::common::gateway::State;
 use crate::guards::{not_anonymous, only_controller};
+use candid::Nat;
 use ic_cdk::api::call::call_with_payment;
 use ic_cdk::api::time;
 use ic_cdk::export::candid::export_service;
@@ -31,7 +33,7 @@ pub fn detach_from_union_wallet(req: DetachFromUnionWalletRequest) {
     get_state().detach_user_from_union_wallet(caller(), req.union_wallet_id);
 }
 
-#[update(guard = "not_anonymous")]
+#[query]
 pub fn get_attached_union_wallets() -> GetAttachedUnionWalletsResponse {
     let wallet_ids = get_state().get_union_wallets_attached_to_user(&caller());
 
@@ -39,33 +41,60 @@ pub fn get_attached_union_wallets() -> GetAttachedUnionWalletsResponse {
 }
 
 #[update(guard = "not_anonymous")]
-pub fn spawn_union_wallet(req: SpawnUnionWalletRequest) -> SpawnUnionWalletResponse {
-    let invoice_id =
-        get_state().create_invoice(InvoiceType::SpawnUnionWallet(req), caller(), time());
+pub async fn spawn_union_wallet(req: SpawnUnionWalletRequest) -> SpawnUnionWalletResponse {
+    let bill_id = BillId::from(0);
+    get_state().create_bill(
+        bill_id.clone(),
+        BillType::SpawnUnionWallet(req),
+        caller(),
+        time(),
+    );
 
-    SpawnUnionWalletResponse { invoice_id }
+    SpawnUnionWalletResponse { bill_id }
 }
 
-async fn process_paid_invoice(id: InvoiceId) {
+#[update]
+pub async fn upgrade_union_wallet(req: UpgradeUnionWalletRequest) {
+    let upgrade_req = UpgradeWalletVersionRequest {
+        canister_id: caller(),
+        new_version: req.new_version,
+    };
+
+    call::<(UpgradeWalletVersionRequest,), ()>(
+        get_state().deployer_canister_id,
+        "upgrade_wallet_version",
+        (upgrade_req,),
+    )
+    .await
+    .expect("Unable to call deployer.upgrade_wallet_version");
+}
+
+#[update]
+pub async fn prove_bill_paid(req: ProveBillPaidRequest) -> ProveBillPaidResponse {
+    let caller = caller();
+
     get_state()
-        .set_invoice_paid(id)
+        .set_bill_paid(req.proof.bill_id.clone())
         .expect("Unable to process paid invoice");
 
-    let invoice = get_state().invoices.get(&id).unwrap();
+    let bill = get_state().bills.get(&req.proof.bill_id).unwrap();
 
     // TODO: add deployer client and use it
-    // TODO: spawn a wallet
 
-    match invoice.invoice_type {
-        InvoiceType::SpawnUnionWallet(req) => {
-            call_with_payment(
+    match &bill.bill_type {
+        BillType::SpawnUnionWallet(spawn_request) => {
+            let (res,): (ProveBillPaidResponse,) = call_with_payment(
                 get_state().deployer_canister_id,
                 "spawn_wallet",
-                (req,),
+                (spawn_request,),
                 1_000_000_000_000,
             )
             .await
             .expect("Unable to call deployer.spawn_wallet");
+
+            get_state().attach_user_to_union_wallet(caller, res.canister_id);
+
+            res
         }
     }
 }
