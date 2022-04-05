@@ -1,8 +1,10 @@
 use crate::api::{
     AddEnumeratedRolesRequest, AttachRoleToPermissionRequest, AuthorizeExecutionRequest,
-    AuthorizeExecutionResponse, CreatePermissionRequest, CreatePermissionResponse,
-    CreateRoleRequest, CreateRoleResponse, DetachRoleFromPermissionRequest, EditProfileRequest,
-    ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest, GetHistoryEntriesResponse,
+    AuthorizeExecutionResponse, BatchOperation, CommitBatchArguments, CreateAssetArguments,
+    CreateBatchResponse, CreateChunkRequest, CreateChunkResponse, CreatePermissionRequest,
+    CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse, DeleteAssetArguments,
+    DeleteBatchesRequest, DetachRoleFromPermissionRequest, EditProfileRequest, ExecuteRequest,
+    ExecuteResponse, GetHistoryEntriesRequest, GetHistoryEntriesResponse,
     GetHistoryEntryIdsResponse, GetMyPermissionsResponse, GetMyRolesResponse,
     GetPermissionIdsResponse, GetPermissionsAttachedToRolesRequest,
     GetPermissionsAttachedToRolesResponse, GetPermissionsByPermissionTargetRequest,
@@ -10,13 +12,14 @@ use crate::api::{
     GetRoleIdsResponse, GetRolesAttachedToPermissionsRequest,
     GetRolesAttachedToPermissionsResponse, GetRolesRequest, GetRolesResponse,
     GetScheduledForAuthorizationExecutionsRequest, GetScheduledForAuthorizationExecutionsResponse,
-    RemovePermissionRequest, RemovePermissionResponse, RemoveRoleRequest, RemoveRoleResponse,
-    SubtractEnumeratedRolesRequest, UpdatePermissionRequest, UpdateRoleRequest,
+    LockBatchesRequest, RemovePermissionRequest, RemovePermissionResponse, RemoveRoleRequest,
+    RemoveRoleResponse, SendBatchRequest, SubtractEnumeratedRolesRequest, UpdatePermissionRequest,
+    UpdateRoleRequest,
 };
 use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallEndpoint};
 use crate::common::permissions::PermissionId;
 use crate::common::roles::RoleId;
-use crate::common::utils::{validate_and_trim_str, CandidCallResult, ToCandidType};
+use crate::common::utils::{validate_and_trim_str, CandidCallResult, IAssetCanister, ToCandidType};
 use crate::guards::only_self_guard;
 use crate::helpers::execute_program_and_log;
 use crate::state::{State, TaskType};
@@ -27,6 +30,7 @@ use ic_cdk::{caller, id, trap};
 use ic_cdk_macros::{heartbeat, init, post_upgrade, pre_upgrade, query, update};
 use ic_cron::implement_cron;
 use ic_cron::types::{Iterations, SchedulingOptions};
+use serde_bytes::ByteBuf;
 
 pub mod api;
 pub mod common;
@@ -580,4 +584,155 @@ fn post_upgrade_hook() {
     unsafe { STATE = wallet_state };
 }
 
-// ------------------ CERTIFIED ASSETS ---------------------
+// ------------------ STREAMING ---------------------
+
+#[update]
+fn create_batch() -> CreateBatchResponse {
+    let state = get_state();
+
+    if !state.is_query_caller_authorized(&id(), &caller(), "create_batch") {
+        trap("Access denied");
+    }
+
+    let batch_id = state.streaming.create_batch();
+
+    CreateBatchResponse { batch_id }
+}
+
+#[update]
+fn create_chunk(req: CreateChunkRequest) -> CreateChunkResponse {
+    let state = get_state();
+
+    if !state.is_query_caller_authorized(&id(), &caller(), "create_chunk") {
+        trap("Access denied");
+    }
+
+    let chunk_id = state
+        .streaming
+        .create_chunk(req.batch_id, req.content)
+        .expect("Unable to create chunk");
+
+    CreateChunkResponse { chunk_id }
+}
+
+#[update]
+fn lock_batches(req: LockBatchesRequest) {
+    let state = get_state();
+
+    if !state.is_query_caller_authorized(&id(), &caller(), "lock_batches") {
+        trap("Access denied");
+    }
+
+    for batch_id in &req.batch_ids {
+        state
+            .streaming
+            .lock_batch(batch_id)
+            .expect("Unable to lock batches");
+    }
+}
+
+#[update]
+fn delete_unlocked_batches(req: DeleteBatchesRequest) {
+    let state = get_state();
+
+    if !state.is_query_caller_authorized(&id(), &caller(), "delete_unlocked_batches") {
+        trap("Access denied");
+    }
+
+    for batch_id in &req.batch_ids {
+        state
+            .streaming
+            .delete_batch(batch_id, false)
+            .expect("Unable to delete unlocked batches");
+    }
+}
+
+#[update]
+fn delete_batches(req: DeleteBatchesRequest) {
+    let state = get_state();
+
+    if !state.is_query_caller_authorized(&id(), &caller(), "delete_batches") {
+        trap("Access denied");
+    }
+
+    for batch_id in &req.batch_ids {
+        state
+            .streaming
+            .delete_batch(batch_id, true)
+            .expect("Unable to delete batches");
+    }
+}
+
+#[update(guard = "only_self_guard")]
+async fn send_batch(req: SendBatchRequest) {
+    let batch = get_state()
+        .streaming
+        .get_batch(&req.batch_id)
+        .expect("Unable to send batch")
+        .clone();
+
+    if !batch.locked {
+        trap("Batch is not locked!");
+    }
+
+    let (resp,) = req
+        .target_canister
+        .create_batch()
+        .await
+        .to_candid_type()
+        .expect("Unable to create batch at remote canister");
+
+    for chunk_id in &batch.chunk_ids {
+        let chunk_content = ByteBuf::from(
+            get_state()
+                .streaming
+                .get_chunk(chunk_id)
+                .expect("Unable to send batch")
+                .content
+                .as_ref(),
+        );
+
+        let res = req
+            .target_canister
+            .create_chunk(CreateChunkRequest {
+                batch_id: resp.batch_id.clone(),
+                content: chunk_content,
+            })
+            .await
+            .to_candid_type();
+
+        if let Err(e) = res {
+            req.target_canister
+                .commit_batch(CommitBatchArguments {
+                    batch_id: resp.batch_id.clone(),
+                    operations: vec![
+                        BatchOperation::CreateAsset(CreateAssetArguments {
+                            key: String::from("$$$.failed"),
+                            content_type: String::from("text/plain"),
+                        }),
+                        BatchOperation::DeleteAsset(DeleteAssetArguments {
+                            key: String::from("$$$.failed"),
+                        }),
+                    ],
+                })
+                .await
+                .unwrap_or_else(|_| {
+                    panic!(
+                        "[FATAL] Unable to cleanup after chunk creation error {:?}",
+                        e
+                    )
+                });
+        }
+    }
+
+    req.target_canister
+        .commit_batch(CommitBatchArguments {
+            batch_id: resp.batch_id,
+            operations: vec![BatchOperation::CreateAsset(CreateAssetArguments {
+                key: req.key,
+                content_type: req.content_type,
+            })],
+        })
+        .await
+        .expect("Unable to commit batch");
+}

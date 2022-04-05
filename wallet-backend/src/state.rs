@@ -1,10 +1,10 @@
 use crate::common::execution_history::{ExecutionHistoryError, ExecutionHistoryState};
 use crate::common::permissions::{Permission, PermissionScope, PermissionsError, PermissionsState};
 use crate::common::roles::{Profile, Role, RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
+use crate::common::streaming::StreamingState;
 use crate::common::utils::ValidationError;
 use crate::{HistoryEntry, PermissionId, Program, RemoteCallEndpoint, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
-use ic_cdk::id;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 
@@ -22,6 +22,7 @@ pub struct State {
     pub execution_history: ExecutionHistoryState,
     pub roles: RolesState,
     pub permissions: PermissionsState,
+    pub streaming: StreamingState,
 
     pub roles_by_permission: HashMap<PermissionId, HashSet<RoleId>>,
     pub permissions_by_role: HashMap<RoleId, HashSet<PermissionId>>,
@@ -50,6 +51,7 @@ impl State {
             execution_history: ExecutionHistoryState::default(),
             roles: roles_state,
             permissions: permissions_state,
+            streaming: StreamingState::default(),
 
             roles_by_permission: HashMap::default(),
             permissions_by_role: HashMap::default(),
