@@ -647,13 +647,9 @@ fn delete_unlocked_batches(req: DeleteBatchesRequest) {
     }
 }
 
-#[update]
+#[update(guard = "only_self_guard")]
 fn delete_batches(req: DeleteBatchesRequest) {
     let state = get_state();
-
-    if !state.is_query_caller_authorized(&id(), &caller(), "delete_batches") {
-        trap("Access denied");
-    }
 
     for batch_id in &req.batch_ids {
         state
