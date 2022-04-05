@@ -1,8 +1,9 @@
 use crate::common::execution_history::{ExecutionHistoryError, ExecutionHistoryState};
 use crate::common::permissions::{Permission, PermissionScope, PermissionsError, PermissionsState};
 use crate::common::roles::{Profile, Role, RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
+use crate::common::streaming::StreamingState;
 use crate::common::utils::ValidationError;
-use crate::{HistoryEntry, PermissionId, Program, RoleId};
+use crate::{HistoryEntry, PermissionId, Program, RemoteCallEndpoint, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
@@ -16,10 +17,12 @@ pub enum Error {
     RoleIsNotAttachedToPermission,
 }
 
+#[derive(CandidType, Deserialize)]
 pub struct State {
     pub execution_history: ExecutionHistoryState,
     pub roles: RolesState,
     pub permissions: PermissionsState,
+    pub streaming: StreamingState,
 
     pub roles_by_permission: HashMap<PermissionId, HashSet<RoleId>>,
     pub permissions_by_role: HashMap<RoleId, HashSet<PermissionId>>,
@@ -48,6 +51,7 @@ impl State {
             execution_history: ExecutionHistoryState::default(),
             roles: roles_state,
             permissions: permissions_state,
+            streaming: StreamingState::default(),
 
             roles_by_permission: HashMap::default(),
             permissions_by_role: HashMap::default(),
@@ -154,13 +158,53 @@ impl State {
             .collect()
     }
 
+    pub fn get_permission_ids_of_cloned(&self, caller: &Principal) -> Vec<PermissionId> {
+        let role_ids = self.roles.get_role_ids_by_role_owner_cloned(caller);
+        let mut permission_ids = HashSet::new();
+
+        for role_id in &role_ids {
+            let some_permission_ids = self.get_permission_ids_of_role_cloned(role_id);
+            permission_ids.extend(some_permission_ids.into_iter());
+        }
+
+        permission_ids.into_iter().collect()
+    }
+
+    pub fn is_query_caller_authorized(
+        &self,
+        self_id: &Principal,
+        caller: &Principal,
+        method_name: &str,
+    ) -> bool {
+        if caller == self_id {
+            return true;
+        }
+
+        let callers_permissions = self.get_permission_ids_of_cloned(&caller);
+        let mut result = false;
+
+        for perm in &callers_permissions {
+            let res = self
+                .permissions
+                .is_permission_target(Some(RemoteCallEndpoint::this(method_name)), perm);
+            if res.is_ok() {
+                result = true;
+                break;
+            }
+        }
+
+        result
+    }
+
     pub fn remove_role(&mut self, role_id: &RoleId) -> Result<Role, Error> {
         let role = self.roles.remove_role(role_id).map_err(Error::RolesError)?;
-        let permission_ids = self.permissions_by_role.remove(role_id).unwrap();
+        let permission_ids_opt = self.permissions_by_role.remove(role_id);
 
-        for permission_id in &permission_ids {
-            let roles_of_permission = self.roles_by_permission.get_mut(permission_id).unwrap();
-            roles_of_permission.remove(role_id);
+        if let Some(permission_ids) = permission_ids_opt {
+            for permission_id in &permission_ids {
+                let roles_of_permission = self.roles_by_permission.get_mut(permission_id).unwrap();
+                roles_of_permission.remove(role_id);
+            }
         }
 
         Ok(role)
@@ -171,11 +215,13 @@ impl State {
             .permissions
             .remove_permission(permission_id)
             .map_err(Error::PermissionsError)?;
-        let role_ids = self.roles_by_permission.remove(permission_id).unwrap();
+        let role_ids_opt = self.roles_by_permission.remove(permission_id);
 
-        for role_id in &role_ids {
-            let permissions_of_role = self.permissions_by_role.get_mut(role_id).unwrap();
-            permissions_of_role.remove(permission_id);
+        if let Some(role_ids) = role_ids_opt {
+            for role_id in &role_ids {
+                let permissions_of_role = self.permissions_by_role.get_mut(role_id).unwrap();
+                permissions_of_role.remove(permission_id);
+            }
         }
 
         Ok(permission)

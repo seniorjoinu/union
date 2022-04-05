@@ -174,7 +174,7 @@ impl Program {
             Program::Empty => Ok(()),
             Program::RemoteCallSequence(seq) => {
                 for call in seq {
-                    call.validate()?;
+                    call.args.validate()?;
                 }
 
                 Ok(())
@@ -199,9 +199,66 @@ impl RemoteCallEndpoint {
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
+pub enum RemoteCallArgs {
+    CandidString(Vec<String>),
+    Encoded(Vec<u8>),
+}
+
+impl RemoteCallArgs {
+    pub fn validate(&self) -> Result<(), ExecutionHistoryError> {
+        match self {
+            RemoteCallArgs::CandidString(str_args) => {
+                for (i, arg) in str_args.iter().enumerate() {
+                    arg.parse::<IDLValue>().map_err(|e| {
+                        ExecutionHistoryError::CandidError(format!(
+                            "Invalid argument #{}: {:?}",
+                            i, e
+                        ))
+                    })?;
+                }
+
+                Ok(())
+            }
+            _ => Ok(()),
+        }
+    }
+
+    pub fn serialize_args(&self) -> Result<Vec<u8>, ExecutionHistoryError> {
+        match self {
+            RemoteCallArgs::CandidString(str_args) => {
+                let mut builder = IDLBuilder::new();
+
+                for (i, arg) in str_args.iter().enumerate() {
+                    let idl_arg = arg.parse::<IDLValue>().map_err(|e| {
+                        ExecutionHistoryError::CandidError(format!(
+                            "Invalid argument #{}: {:?}",
+                            i, e
+                        ))
+                    })?;
+                    builder.value_arg(&idl_arg).map_err(|e| {
+                        ExecutionHistoryError::CandidError(format!(
+                            "Builder error on argument #{}: {:?}",
+                            i, e
+                        ))
+                    })?;
+                }
+
+                builder.serialize_to_vec().map_err(|e| {
+                    ExecutionHistoryError::CandidError(format!(
+                        "Arguments serialization failed {:?}",
+                        e
+                    ))
+                })
+            }
+            RemoteCallArgs::Encoded(blob) => Ok(blob.clone()),
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
 pub struct RemoteCallPayload {
     pub endpoint: RemoteCallEndpoint,
-    pub args_candid: Vec<String>,
+    pub args: RemoteCallArgs,
     pub cycles: u64,
 }
 
@@ -209,39 +266,9 @@ impl RemoteCallPayload {
     pub fn this_empty(method_name: &str) -> Self {
         Self {
             endpoint: RemoteCallEndpoint::this(method_name),
-            args_candid: vec![],
+            args: RemoteCallArgs::CandidString(vec![]),
             cycles: 0,
         }
-    }
-
-    pub fn validate(&self) -> Result<(), ExecutionHistoryError> {
-        for (i, arg) in self.args_candid.iter().enumerate() {
-            arg.parse::<IDLValue>().map_err(|e| {
-                ExecutionHistoryError::CandidError(format!("Invalid argument #{}: {:?}", i, e))
-            })?;
-        }
-
-        Ok(())
-    }
-
-    pub fn serialize_args(&self) -> Result<Vec<u8>, ExecutionHistoryError> {
-        let mut builder = IDLBuilder::new();
-
-        for (i, arg) in self.args_candid.iter().enumerate() {
-            let idl_arg = arg.parse::<IDLValue>().map_err(|e| {
-                ExecutionHistoryError::CandidError(format!("Invalid argument #{}: {:?}", i, e))
-            })?;
-            builder.value_arg(&idl_arg).map_err(|e| {
-                ExecutionHistoryError::CandidError(format!(
-                    "Builder error on argument #{}: {:?}",
-                    i, e
-                ))
-            })?;
-        }
-
-        builder.serialize_to_vec().map_err(|e| {
-            ExecutionHistoryError::CandidError(format!("Arguments serialization failed {:?}", e))
-        })
     }
 }
 

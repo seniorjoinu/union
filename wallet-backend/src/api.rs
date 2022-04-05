@@ -1,18 +1,15 @@
 use crate::common::permissions::{Permission, PermissionScope, PermissionTarget};
 use crate::common::roles::{Role, RoleType};
-use crate::{HistoryEntry, HistoryEntryId, PermissionId, Program, RoleId};
+use crate::common::streaming::{BatchId, ChunkId, Key};
+use crate::{HistoryEntry, HistoryEntryId, PermissionId, Principal, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize};
 use ic_cron::types::TaskId;
+use serde_bytes::ByteBuf;
 
 #[derive(CandidType, Deserialize)]
 pub struct RoleAndPermission {
     pub role_id: RoleId,
     pub permission_id: PermissionId,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct AuthorizedRequest {
-    pub rnp: RoleAndPermission,
 }
 
 // ------------ EXECUTION & HISTORY -------------
@@ -47,7 +44,6 @@ pub struct GetHistoryEntryIdsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetHistoryEntriesRequest {
     pub ids: Vec<HistoryEntryId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -56,8 +52,13 @@ pub struct GetHistoryEntriesResponse {
 }
 
 #[derive(CandidType, Deserialize)]
+pub struct GetScheduledForAuthorizationExecutionsRequest {
+    pub task_ids: Option<Vec<TaskId>>,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct GetScheduledForAuthorizationExecutionsResponse {
-    pub entries: Vec<HistoryEntry>,
+    pub entries: Vec<(TaskId, HistoryEntry)>,
 }
 
 // ---------------------- ROLES -----------------------
@@ -115,7 +116,6 @@ pub struct GetRoleIdsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetRolesRequest {
     pub ids: Vec<RoleId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -168,7 +168,6 @@ pub struct GetPermissionIdsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetPermissionsRequest {
     pub ids: Vec<PermissionId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -184,7 +183,6 @@ pub struct GetMyPermissionsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetPermissionsByPermissionTargetRequest {
     pub target: PermissionTarget,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -209,7 +207,6 @@ pub struct DetachRoleFromPermissionRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetRolesAttachedToPermissionsRequest {
     pub permission_ids: Vec<PermissionId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -220,10 +217,90 @@ pub struct GetRolesAttachedToPermissionsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetPermissionsAttachedToRolesRequest {
     pub role_ids: Vec<RoleId>,
-    pub rnp: RoleAndPermission,
 }
 
 #[derive(CandidType, Deserialize)]
 pub struct GetPermissionsAttachedToRolesResponse {
     pub result: Vec<(RoleId, Vec<PermissionId>)>,
+}
+
+// -------------- ASSET CANISTER --------------
+
+#[derive(CandidType, Deserialize)]
+pub struct CreateAssetArguments {
+    pub key: Key,
+    pub content_type: String,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct SetAssetContentArguments {
+    pub key: Key,
+    pub content_encoding: String,
+    pub chunk_ids: Vec<ChunkId>,
+    pub sha256: Option<ByteBuf>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct UnsetAssetContentArguments {
+    pub key: Key,
+    pub content_encoding: String,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct DeleteAssetArguments {
+    pub key: Key,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ClearArguments {}
+
+#[derive(CandidType, Deserialize)]
+pub enum BatchOperation {
+    CreateAsset(CreateAssetArguments),
+    SetAssetContent(SetAssetContentArguments),
+    UnsetAssetContent(UnsetAssetContentArguments),
+    DeleteAsset(DeleteAssetArguments),
+    Clear(ClearArguments),
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct CommitBatchArguments {
+    pub batch_id: BatchId,
+    pub operations: Vec<BatchOperation>,
+}
+
+// -------------- STREAMING -------------------
+
+#[derive(CandidType, Deserialize)]
+pub struct SendBatchRequest {
+    pub batch_id: BatchId,
+    pub key: Key,
+    pub content_type: String,
+    pub target_canister: Principal,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct CreateBatchResponse {
+    pub batch_id: BatchId,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct CreateChunkRequest {
+    pub batch_id: BatchId,
+    pub content: ByteBuf,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct CreateChunkResponse {
+    pub chunk_id: ChunkId,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct LockBatchesRequest {
+    pub batch_ids: Vec<BatchId>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct DeleteBatchesRequest {
+    pub batch_ids: Vec<BatchId>,
 }
