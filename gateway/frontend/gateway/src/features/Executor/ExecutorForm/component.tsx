@@ -130,10 +130,10 @@ export function ExecutorForm({
         program: !program.length
           ? { Empty: null }
           : {
-              RemoteCallSequence: program.map((p) => ({
+              RemoteCallSequence: program.map(({ args_candid, args_encoded, ...p }) => ({
                 ...p,
                 // TODO Encoded
-                args: { CandidString: p.args_candid.map((a) => a.trim()) },
+                args: { CandidString: args_candid.map((a) => a.trim()).filter((a) => !!a) },
                 cycles: BigInt(p.cycles),
                 endpoint: {
                   ...p.endpoint,
@@ -296,9 +296,11 @@ export function ExecutorForm({
                 <Controller
                   name={`program.${i}.args_candid`}
                   control={control}
-                  rules={{
-                    required: 'Обязательное поле',
-                  }}
+                  rules={
+                    {
+                      // required: 'Обязательное поле',
+                    }
+                  }
                   render={({ field }) => (
                     <>
                       {field.value.map((_, j) => (

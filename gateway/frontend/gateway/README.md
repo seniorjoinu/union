@@ -16,7 +16,9 @@ Here is described the target infrastructure deployment option as it should be in
 
 ### Start infrastructure
 
-- deploy root union-wallet `dfx deploy union-wallet --argument '(principal "$(dfx identity get-principal)")'`
+- deploy deployer
+- deploy root union-wallet through deployer
+<!-- `dfx deploy union-wallet --argument '(principal "$(dfx identity get-principal)")'` -->
 - \*setup roles
 - get `certified_assets` canister wasm.
 - Setup and run facade execution #1

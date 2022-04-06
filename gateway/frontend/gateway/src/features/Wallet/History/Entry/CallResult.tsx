@@ -3,10 +3,10 @@ import styled from 'styled-components';
 import { Text } from 'components';
 import { HistoryEntry } from 'wallet-ts';
 
-const Error = styled(Text)`
+const Result = styled(Text)`
   display: flex;
   flex-direction: column;
-  white-space: pre-line;
+  white-space: pre;
   word-break: break-word;
 `;
 
@@ -39,18 +39,19 @@ export const CallResult = ({ entry, index, ...p }: CallResultProps) => {
   return (
     <Container {...p}>
       {ok && (
-        <Text variant='p1' color='green'>
-          Результат: {ok}
-        </Text>
+        <Result variant='p1' color='green'>
+          <Text variant='p1'>Результат:</Text>
+          <Text variant='p1'>{ok}</Text>
+        </Result>
       )}
       {err && (
-        <Error variant='p1' color='red'>
+        <Result variant='p1' color='red'>
           <Text variant='p1'>Код ошибки: {Object.keys(err[0]).join()}</Text>
           <Text variant='p1'>
             Причина: {'\n'}
             {err[1]}
           </Text>
-        </Error>
+        </Result>
       )}
     </Container>
   );
