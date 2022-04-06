@@ -13,7 +13,7 @@ use crate::common::types::{
 use crate::common::upgrade_canister;
 use common::deploy_canister_install_code_update_settings;
 use ic_cdk::api::time;
-use ic_cdk::export::candid::{encode_one, export_service};
+use ic_cdk::export::candid::{encode_args, export_service};
 use ic_cdk::export::Principal;
 use ic_cdk::id;
 use ic_cdk::storage::{stable_restore, stable_save};
@@ -41,7 +41,7 @@ async fn spawn_wallet(req: SpawnWalletRequest) -> SpawnWalletResponse {
 
     let canister_id = deploy_canister_install_code_update_settings(
         id(),
-        encode_one(req.wallet_creator).expect("Unable to encode args"),
+        encode_args((req.wallet_creator, req.gateway)).expect("Unable to encode args"),
         binary,
     )
     .await;
@@ -190,12 +190,12 @@ pub fn init(binary_controller: Principal, spawn_controller: Principal) {
         .expect("Unable to create initial binary version");
 
     state
-        .release_binary_version("0.0.0", time)
-        .expect("Unable to release initial binary version");
-
-    state
         .upload_binary("0.0.0", INITIAL_BINARY_VERSION.to_vec(), time)
         .expect("Unable to initialize initial binary version");
+
+    state
+        .release_binary_version("0.0.0", time)
+        .expect("Unable to release initial binary version");
 
     unsafe { STATE = Some(state) }
 }

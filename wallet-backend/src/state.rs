@@ -38,20 +38,26 @@ pub struct State {
     pub streaming: StreamingState,
 
     pub info: UnionInfo,
+    pub gateway: Principal,
 
     pub roles_by_permission: HashMap<PermissionId, HashSet<RoleId>>,
     pub permissions_by_role: HashMap<RoleId, HashSet<PermissionId>>,
 }
 
 impl State {
-    pub fn new(caller: Principal) -> Result<Self, Error> {
+    pub fn new(caller: Principal, gateway: Principal) -> Result<Self, Error> {
         let mut roles_state = RolesState::new().map_err(Error::RolesError)?;
-        roles_state
+        let wallet_creator_role_id = roles_state
             .create_role(RoleType::Profile(Profile::new(
                 caller,
                 "Wallet creator",
                 "The person who created the wallet",
+                false,
             )))
+            .map_err(Error::RolesError)?;
+
+        roles_state
+            .activate_profile(&wallet_creator_role_id, &caller)
             .map_err(Error::RolesError)?;
 
         let mut permissions_state = PermissionsState::default();
@@ -75,6 +81,7 @@ impl State {
             streaming: StreamingState::default(),
 
             info: default_info,
+            gateway,
 
             roles_by_permission: HashMap::default(),
             permissions_by_role: HashMap::default(),

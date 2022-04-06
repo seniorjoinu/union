@@ -1,10 +1,11 @@
 use crate::common::permissions::{Permission, PermissionScope, PermissionTarget};
-use crate::common::roles::{Role, RoleType};
+use crate::common::roles::{Profile, Role, RoleType};
 use crate::common::streaming::{BatchId, ChunkId, Key};
 use crate::state::UnionInfo;
 use crate::{HistoryEntry, HistoryEntryId, PermissionId, Principal, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize};
 use ic_cron::types::TaskId;
+use ic_event_hub_macros::Event;
 use serde_bytes::ByteBuf;
 
 #[derive(CandidType, Deserialize)]
@@ -95,6 +96,17 @@ pub struct EditProfileRequest {
     pub role_id: RoleId,
     pub new_name: Option<String>,
     pub new_description: Option<String>,
+}
+
+#[derive(Event)]
+pub struct ProfileCreatedEvent {
+    pub profile_owner: Principal,
+    pub profile_role_id: RoleId,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ActivateProfileRequest {
+    pub role_id: RoleId,
 }
 
 #[derive(CandidType, Deserialize)]

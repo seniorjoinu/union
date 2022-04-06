@@ -156,6 +156,10 @@ type EditProfileRequest = record {
     new_description : opt text;
 };
 
+type ActivateProfileRequest = record {
+    role_id : RoleId;
+};
+
 type AddEnumeratedRolesRequest = record {
     role_id : RoleId;
     enumerated_roles_to_add : vec RoleId;
@@ -191,6 +195,7 @@ type Profile = record {
     principal_id : principal;
     name : text;
     description : text;
+    active : bool;
 };
 
 type QuantityOf = record {
@@ -377,6 +382,7 @@ service : (principal) -> {
     "update_role" : (UpdateRoleRequest) -> ();
     "remove_role" : (RemoveRoleRequest) -> (RemoveRoleResponse);
     "edit_profile" : (EditProfileRequest) -> ();
+    "activate_profile" : (ActivateProfileRequest) -> ();
     "add_enumerated_roles" : (AddEnumeratedRolesRequest) -> ();
     "subtract_enumerated_roles" : (SubtractEnumeratedRolesRequest) -> ();
     "get_role_ids" : () -> (GetRoleIdsResponse) query;

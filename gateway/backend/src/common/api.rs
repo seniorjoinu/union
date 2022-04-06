@@ -1,32 +1,8 @@
-use ic_cdk::export::candid::{CandidType, Deserialize, Nat, Principal};
-
-pub type BillId = Nat;
-
-#[derive(Debug)]
-pub enum GatewayError {
-    BillNotFound,
-    BillAlreadyPaid,
-}
-
-#[derive(CandidType, Deserialize)]
-pub enum BillType {
-    SpawnUnionWallet(SpawnUnionWalletRequest),
-}
-
-#[derive(CandidType, Deserialize)]
-pub enum BillStatus {
-    Created,
-    Paid,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct Bill {
-    pub id: BillId,
-    pub bill_type: BillType,
-    pub status: BillStatus,
-    pub to: Principal,
-    pub created_at: u64,
-}
+use crate::common::gateway::NotificationId;
+use crate::ProfileCreatedNotification;
+use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use ic_event_hub_macros::Event;
+use crate::common::types::{BillId, BillPaymentProof, RoleId};
 
 #[derive(CandidType, Deserialize)]
 pub struct TransferControlRequest {
@@ -53,12 +29,6 @@ pub struct SpawnUnionWalletRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct SpawnUnionWalletResponse {
-    pub bill_id: BillId,
-}
-
-// TODO: this proof should be issued to the right principal that should match the caller
-#[derive(CandidType, Deserialize)]
-pub struct BillPaymentProof {
     pub bill_id: BillId,
 }
 
@@ -92,4 +62,22 @@ pub struct ControllerSpawnWalletRequest {
 #[derive(CandidType, Deserialize)]
 pub struct ControllerSpawnWalletResponse {
     pub canister_id: Principal,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetMyNotificationsResponse {
+    pub notifications: Vec<ProfileCreatedNotification>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct RemoveMyNotificationRequest {
+    pub id: NotificationId,
+}
+
+// ------------------- EVENTS --------------------
+
+#[derive(Event)]
+pub struct ProfileCreatedEvent {
+    pub profile_owner: Principal,
+    pub profile_role_id: RoleId,
 }

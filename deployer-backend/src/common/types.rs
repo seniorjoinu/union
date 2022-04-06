@@ -69,6 +69,7 @@ pub struct BinaryInstance {
 pub struct SpawnWalletRequest {
     pub version: String,
     pub wallet_creator: Principal,
+    pub gateway: Principal,
 }
 
 #[derive(CandidType, Deserialize)]

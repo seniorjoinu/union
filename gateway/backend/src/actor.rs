@@ -1,19 +1,24 @@
 use crate::common::api::{
-    AttachToUnionWalletRequest, BillId, BillType, ControllerSpawnWalletRequest,
-    ControllerSpawnWalletResponse, DetachFromUnionWalletRequest, GetAttachedUnionWalletsResponse,
-    ProveBillPaidRequest, ProveBillPaidResponse, SpawnUnionWalletRequest, SpawnUnionWalletResponse,
+    AttachToUnionWalletRequest, ControllerSpawnWalletRequest, ControllerSpawnWalletResponse,
+    DetachFromUnionWalletRequest, GetAttachedUnionWalletsResponse, GetMyNotificationsResponse,
+    ProfileCreatedEvent, ProfileCreatedEventFilter, ProveBillPaidRequest, ProveBillPaidResponse,
+    RemoveMyNotificationRequest, SpawnUnionWalletRequest, SpawnUnionWalletResponse,
     TransferControlRequest, UpgradeUnionWalletRequest, UpgradeWalletVersionRequest,
 };
-use crate::common::gateway::State;
-use crate::guards::{not_anonymous, only_controller};
-use candid::Nat;
+use crate::common::gateway::{ProfileCreatedNotification, State};
+use crate::common::types::{
+    BillId, BillType, DeployerSpawnWalletRequest, DeployerSpawnWalletResponse,
+};
+use crate::guards::{not_anonymous, only_controller, only_mentioned_union_wallet};
 use ic_cdk::api::call::call_with_payment;
 use ic_cdk::api::time;
 use ic_cdk::export::candid::export_service;
 use ic_cdk::export::Principal;
 use ic_cdk::storage::{stable_restore, stable_save};
-use ic_cdk::{call, caller};
+use ic_cdk::{call, caller, id};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
+use ic_event_hub::api::IEventHubClient;
+use ic_event_hub::types::{CallbackInfo, Event, IEvent, IEventFilter, SubscribeRequest};
 
 pub mod common;
 pub mod guards;
@@ -43,9 +48,16 @@ pub fn get_attached_union_wallets() -> GetAttachedUnionWalletsResponse {
 #[update(guard = "not_anonymous")]
 pub async fn spawn_union_wallet(req: SpawnUnionWalletRequest) -> SpawnUnionWalletResponse {
     let bill_id = BillId::from(0);
+
+    let deployer_req = DeployerSpawnWalletRequest {
+        wallet_creator: req.wallet_creator,
+        version: req.version,
+        gateway: id(),
+    };
+
     get_state().create_bill(
         bill_id.clone(),
-        BillType::SpawnUnionWallet(req),
+        BillType::SpawnUnionWallet(deployer_req),
         caller(),
         time(),
     );
@@ -75,10 +87,16 @@ pub async fn controller_spawn_wallet(
 ) -> ControllerSpawnWalletResponse {
     let wallet_creator = req.wallet_creator;
 
-    let (res,): (ProveBillPaidResponse,) = call_with_payment(
+    let deployer_req = DeployerSpawnWalletRequest {
+        wallet_creator,
+        version: req.version,
+        gateway: id(),
+    };
+
+    let (res,): (DeployerSpawnWalletResponse,) = call_with_payment(
         get_state().deployer_canister_id,
         "spawn_wallet",
-        (req,),
+        (deployer_req,),
         1_000_000_000_000,
     )
     .await
@@ -116,7 +134,45 @@ pub async fn prove_bill_paid(req: ProveBillPaidRequest) -> ProveBillPaidResponse
 
             get_state().attach_user_to_union_wallet(caller, res.canister_id);
 
+            let filter = ProfileCreatedEventFilter {};
+
+            res.canister_id
+                .subscribe(SubscribeRequest {
+                    callbacks: vec![CallbackInfo {
+                        filter: filter.to_event_filter(),
+                        method_name: String::from("events_callback"),
+                    }],
+                })
+                .await
+                .expect("Unable to call gateway.subscribe");
+
             res
+        }
+    }
+}
+
+#[query]
+fn get_my_notifications() -> GetMyNotificationsResponse {
+    let notifications = get_state().get_notifications_by_user_cloned(&caller());
+
+    GetMyNotificationsResponse { notifications }
+}
+
+#[update]
+fn remove_my_notification(req: RemoveMyNotificationRequest) {
+    get_state().remove_notification(&req.id, &caller());
+}
+
+#[update(guard = "only_mentioned_union_wallet")]
+fn events_callback(events: Vec<Event>) {
+    for event in events {
+        match event.get_name().as_str() {
+            "ProfileCreatedEvent" => {
+                let ev: ProfileCreatedEvent = ProfileCreatedEvent::from_event(event);
+
+                get_state().create_notification(ev.profile_owner, caller(), ev.profile_role_id);
+            }
+            _ => unreachable!("Unknown event"),
         }
     }
 }

@@ -16,6 +16,7 @@ pub enum RolesError {
     NotRoleOwner,
     ProfileAlreadyExists,
     InvalidRoleType,
+    RoleAlreadyActive,
     RelatedRoleExists(Vec<RoleId>),
     ValidationError(ValidationError),
 }
@@ -197,6 +198,25 @@ impl RolesState {
         role.role_type.validate()
     }
 
+    pub fn activate_profile(
+        &mut self,
+        role_id: &RoleId,
+        caller: &Principal,
+    ) -> Result<(), RolesError> {
+        let role = self.get_role_mut(role_id)?;
+        let profile = role.role_type.get_profile_mut()?;
+
+        assert_eq!(caller, &profile.principal_id, "Access denied");
+
+        if profile.active {
+            return Err(RolesError::RoleAlreadyActive);
+        }
+
+        profile.active = true;
+
+        Ok(())
+    }
+
     pub fn add_enumerated_roles(
         &mut self,
         role_id: &RoleId,
@@ -258,7 +278,7 @@ impl RolesState {
 
         match &role.role_type {
             RoleType::Everyone => true,
-            RoleType::Profile(p) => authorized_by.contains(&p.principal_id),
+            RoleType::Profile(p) => p.active && authorized_by.contains(&p.principal_id),
             RoleType::QuantityOf(qty_of_params) => {
                 let mut counter = 0u32;
 
@@ -371,7 +391,7 @@ impl RolesState {
 
         match &role.role_type {
             RoleType::Everyone => {
-                // TODO: возможно, здесь стоит бросать ошибку
+                // TODO: maybe throw here
             }
             RoleType::Profile(p) => {
                 result.push(p.principal_id);
@@ -408,14 +428,16 @@ pub struct Profile {
     pub principal_id: Principal,
     pub name: String,
     pub description: String,
+    pub active: bool,
 }
 
 impl Profile {
-    pub fn new(principal_id: Principal, name: &str, description: &str) -> Self {
+    pub fn new(principal_id: Principal, name: &str, description: &str, active: bool) -> Self {
         Self {
             principal_id,
             name: String::from(name),
             description: String::from(description),
+            active,
         }
     }
 }
@@ -499,6 +521,12 @@ impl RoleType {
         match self {
             RoleType::Everyone => Ok(()),
             RoleType::Profile(profile) => {
+                if profile.active {
+                    return Err(RolesError::ValidationError(ValidationError(String::from(
+                        "Profile active flag should be set to false",
+                    ))));
+                }
+
                 let name = validate_and_trim_str(profile.name.clone(), 1, 100, "Name")
                     .map_err(RolesError::ValidationError)?;
 
@@ -622,7 +650,7 @@ mod tests {
             .remove_role(&HAS_PROFILE_ROLE_ID)
             .expect_err("It should be impossible to remove Has profile role");
 
-        let new_profile = Profile::new(random_principal_test(), "Test", "Test");
+        let new_profile = Profile::new(random_principal_test(), "Test", "Test", true);
 
         roles_state
             .update_role(&EVERYONE_ROLE_ID, RoleType::Profile(new_profile.clone()))
@@ -646,6 +674,7 @@ mod tests {
                 user1,
                 "User1",
                 "User1 desc",
+                true,
             )))
             .expect("Unable to create user1 role");
         let user_2_role_id = roles_state
@@ -653,6 +682,7 @@ mod tests {
                 user2,
                 "User2",
                 "User2 desc",
+                true,
             )))
             .expect("Unable to create user1 role");
         let user_3_role_id = roles_state
@@ -660,6 +690,7 @@ mod tests {
                 user3,
                 "User3",
                 "User3 desc",
+                true,
             )))
             .expect("Unable to create user1 role");
 

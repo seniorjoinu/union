@@ -19,3 +19,11 @@ pub fn not_anonymous() -> Result<(), String> {
         _ => Ok(()),
     }
 }
+
+pub fn only_mentioned_union_wallet() -> Result<(), String> {
+    if !get_state().is_mentioned_union_wallet(&caller()) {
+        Err(String::from("Access denied"))
+    } else {
+        Ok(())
+    }
+}

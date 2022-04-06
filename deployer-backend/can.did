@@ -25,6 +25,7 @@ type BinaryInstance = record {
 type SpawnWalletRequest = record {
     version : text;
     wallet_creator : principal;
+    gateway : principal;
 };
 
 type SpawnWalletResponse = record {

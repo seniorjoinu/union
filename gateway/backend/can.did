@@ -48,6 +48,24 @@ type ControllerSpawnWalletResponse = record {
     canister_id : principal;
 };
 
+type RoleId = nat32;
+type NotificationId = nat64;
+
+type ProfileCreatedNotification = record {
+    id : NotificationId;
+    receiver : principal;
+    union_wallet_id : principal;
+    role_id : RoleId;
+};
+
+type GetMyNotificationsResponse = record {
+    notifications : vec ProfileCreatedNotification;
+};
+
+type RemoveMyNotificationRequest = record {
+    id : NotificationId;
+};
+
 service : (principal, principal) -> {
     "transfer_control" : (TransferControlRequest) -> ();
     "attach_to_union_wallet" : (AttachToUnionWalletRequest) -> ();
@@ -58,6 +76,9 @@ service : (principal, principal) -> {
     "spawn_union_wallet" : (SpawnUnionWalletRequest) -> (SpawnUnionWalletResponse);
     "prove_bill_paid" : (ProveBillPaidRequest) -> (ProveBillPaidResponse);
     "upgrade_union_wallet" : (UpgradeUnionWalletRequest) -> ();
+
+    "get_my_notifications" : () -> (GetMyNotificationsResponse) query;
+    "remove_my_notification" : (RemoveMyNotificationRequest) -> ();
 
     "export_candid" : () -> (text) query;
 }
