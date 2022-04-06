@@ -9,8 +9,16 @@ export interface AttachRoleToPermissionRequest {
 }
 export interface AuthorizeExecutionRequest { 'task_id' : TaskId }
 export type AuthorizeExecutionResponse = ExecuteResponse;
+export type BatchId = bigint;
 export type CallResult = { 'Ok' : string } |
   { 'Err' : [RejectionCode, string] };
+export type ChunkId = bigint;
+export interface CreateBatchResponse { 'batch_id' : BatchId }
+export interface CreateChunkRequest {
+  'content' : Array<number>,
+  'batch_id' : BatchId,
+}
+export interface CreateChunkResponse { 'chunk_id' : ChunkId }
 export interface CreatePermissionRequest {
   'name' : string,
   'scope' : PermissionScope,
@@ -19,6 +27,7 @@ export interface CreatePermissionRequest {
 export interface CreatePermissionResponse { 'permission_id' : PermissionId }
 export interface CreateRoleRequest { 'role_type' : RoleType }
 export interface CreateRoleResponse { 'role_id' : RoleId }
+export interface DeleteBatchesRequest { 'batch_ids' : Array<BatchId> }
 export interface DetachRoleFromPermissionRequest {
   'role_id' : RoleId,
   'permission_id' : PermissionId,
@@ -37,6 +46,7 @@ export interface ExecuteRequest {
 }
 export type ExecuteResponse = { 'ScheduledForAuthorization' : TaskId } |
   { 'Executed' : HistoryEntryId };
+export interface File { 'content' : Array<number>, 'mime_type' : string }
 export interface FractionOf {
   'name' : string,
   'description' : string,
@@ -46,6 +56,7 @@ export interface FractionOf {
 export interface GetHistoryEntriesRequest { 'ids' : Array<HistoryEntryId> }
 export interface GetHistoryEntriesResponse { 'entries' : Array<HistoryEntry> }
 export interface GetHistoryEntryIdsResponse { 'ids' : Array<HistoryEntryId> }
+export interface GetInfoResponse { 'info' : UnionInfo }
 export interface GetMyPermissionsResponse { 'permissions' : Array<Permission> }
 export interface GetMyRolesResponse { 'roles' : Array<Role> }
 export interface GetPermissionIdsResponse { 'ids' : Array<PermissionId> }
@@ -95,6 +106,8 @@ export type HistoryEntryType = { 'Executed' : [bigint, Array<CallResult>] } |
   { 'Pending' : null };
 export type Iterations = { 'Exact' : bigint } |
   { 'Infinite' : null };
+export type Key = string;
+export interface LockBatchesRequest { 'batch_ids' : Array<BatchId> }
 export interface Permission {
   'id' : PermissionId,
   'name' : string,
@@ -165,12 +178,24 @@ export interface SchedulingOptions {
   'iterations' : Iterations,
   'delay_nano' : bigint,
 }
+export interface SendBatchRequest {
+  'key' : Key,
+  'batch_id' : BatchId,
+  'content_type' : string,
+  'target_canister' : Principal,
+}
 export interface SubtractEnumeratedRolesRequest {
   'enumerated_roles_to_subtract' : Array<RoleId>,
   'role_id' : RoleId,
 }
 export interface Task { 'data' : Array<number> }
 export type TaskId = bigint;
+export interface UnionInfo {
+  'logo' : [] | [File],
+  'name' : string,
+  'description' : string,
+}
+export interface UpdateInfoRequest { 'new_info' : UnionInfo }
 export interface UpdatePermissionRequest {
   'new_targets' : [] | [Array<PermissionTarget>],
   'new_name' : [] | [string],
@@ -191,10 +216,16 @@ export interface _SERVICE {
   'authorize_execution' : (arg_0: AuthorizeExecutionRequest) => Promise<
       AuthorizeExecutionResponse
     >,
+  'create_batch' : () => Promise<CreateBatchResponse>,
+  'create_chunk' : (arg_0: CreateChunkRequest) => Promise<CreateChunkResponse>,
   'create_permission' : (arg_0: CreatePermissionRequest) => Promise<
       CreatePermissionResponse
     >,
   'create_role' : (arg_0: CreateRoleRequest) => Promise<CreateRoleResponse>,
+  'delete_batches' : (arg_0: DeleteBatchesRequest) => Promise<undefined>,
+  'delete_unlocked_batches' : (arg_0: DeleteBatchesRequest) => Promise<
+      undefined
+    >,
   'detach_role_from_permission' : (
       arg_0: DetachRoleFromPermissionRequest,
     ) => Promise<undefined>,
@@ -205,6 +236,7 @@ export interface _SERVICE {
       GetHistoryEntriesResponse
     >,
   'get_history_entry_ids' : () => Promise<GetHistoryEntryIdsResponse>,
+  'get_info' : () => Promise<GetInfoResponse>,
   'get_my_permissions' : () => Promise<GetMyPermissionsResponse>,
   'get_my_roles' : () => Promise<GetMyRolesResponse>,
   'get_permission_ids' : () => Promise<GetPermissionIdsResponse>,
@@ -225,13 +257,16 @@ export interface _SERVICE {
   'get_scheduled_for_authorization_executions' : (
       arg_0: GetScheduledForAuthorizationExecutionsRequest,
     ) => Promise<GetScheduledForAuthorizationExecutionsResponse>,
+  'lock_batches' : (arg_0: LockBatchesRequest) => Promise<undefined>,
   'remove_permission' : (arg_0: RemovePermissionRequest) => Promise<
       RemovePermissionResponse
     >,
   'remove_role' : (arg_0: RemoveRoleRequest) => Promise<RemoveRoleResponse>,
+  'send_batch' : (arg_0: SendBatchRequest) => Promise<undefined>,
   'subtract_enumerated_roles' : (
       arg_0: SubtractEnumeratedRolesRequest,
     ) => Promise<undefined>,
+  'update_info' : (arg_0: UpdateInfoRequest) => Promise<undefined>,
   'update_permission' : (arg_0: UpdatePermissionRequest) => Promise<undefined>,
   'update_role' : (arg_0: UpdateRoleRequest) => Promise<undefined>,
 }

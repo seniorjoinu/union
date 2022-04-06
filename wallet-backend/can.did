@@ -311,6 +311,61 @@ type GetPermissionsAttachedToRolesResponse = record {
     result : vec record { 0 : RoleId; 1 : vec PermissionId };
 };
 
+// ------------------- STREAMING -------------------
+
+type BatchId = nat;
+type ChunkId = nat;
+type Key = text;
+
+type SendBatchRequest = record {
+    batch_id : BatchId;
+    key : Key;
+    content_type : text;
+    target_canister : principal;
+};
+
+type CreateBatchResponse = record {
+    batch_id : BatchId;
+};
+
+type CreateChunkRequest = record {
+    batch_id : BatchId;
+    content : blob;
+};
+
+type CreateChunkResponse = record {
+    chunk_id : ChunkId;
+};
+
+type LockBatchesRequest = record {
+    batch_ids : vec BatchId;
+};
+
+type DeleteBatchesRequest = record {
+    batch_ids : vec BatchId;
+};
+
+// ---------------------- INFO --------------------
+
+type File = record {
+    mime_type : text;
+    content : blob;
+};
+
+type UnionInfo = record {
+    name : text;
+    description : text;
+    logo : opt File;
+};
+
+type UpdateInfoRequest = record {
+    new_info : UnionInfo;
+};
+
+type GetInfoResponse = record {
+    info : UnionInfo;
+};
+
 service : (principal) -> {
     "execute" : (ExecuteRequest) -> (ExecuteResponse);
     "authorize_execution" : (AuthorizeExecutionRequest) -> (AuthorizeExecutionResponse);
@@ -340,6 +395,16 @@ service : (principal) -> {
     "detach_role_from_permission" : (DetachRoleFromPermissionRequest) -> ();
     "get_roles_attached_to_permissions" : (GetRolesAttachedToPermissionsRequest) -> (GetRolesAttachedToPermissionsResponse) query;
     "get_permissions_attached_to_roles" : (GetPermissionsAttachedToRolesRequest) -> (GetPermissionsAttachedToRolesResponse) query;
+
+    "create_batch" : () -> (CreateBatchResponse);
+    "create_chunk" : (CreateChunkRequest) -> (CreateChunkResponse);
+    "lock_batches" : (LockBatchesRequest) -> ();
+    "delete_unlocked_batches" : (DeleteBatchesRequest) -> ();
+    "delete_batches" : (DeleteBatchesRequest) -> ();
+    "send_batch" : (SendBatchRequest) -> ();
+
+    "update_info" : (UpdateInfoRequest) -> ();
+    "get_info" : () -> (GetInfoResponse) query;
 
     "export_candid" : () -> (text) query;
 }

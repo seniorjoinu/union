@@ -1,6 +1,10 @@
-use candid::parser::value::IDLValue;
+use crate::{
+    CommitBatchArguments, CreateBatchResponse, CreateChunkRequest, CreateChunkResponse, Principal,
+};
+use async_trait::async_trait;
 use candid::IDLArgs;
 use ic_cdk::api::call::{CallResult, RejectionCode};
+use ic_cdk::call;
 use ic_cdk::export::candid::{CandidType, Deserialize};
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
@@ -120,3 +124,25 @@ macro_rules! gen_validate_num {
 
 gen_validate_num!(validate_u32, u32);
 gen_validate_num!(validate_f64, f64);
+
+#[async_trait]
+pub trait IAssetCanister {
+    async fn create_batch(&self) -> CallResult<(CreateBatchResponse,)>;
+    async fn create_chunk(&self, req: CreateChunkRequest) -> CallResult<(CreateChunkResponse,)>;
+    async fn commit_batch(&self, req: CommitBatchArguments) -> CallResult<()>;
+}
+
+#[async_trait]
+impl IAssetCanister for Principal {
+    async fn create_batch(&self) -> CallResult<(CreateBatchResponse,)> {
+        call(*self, "create_batch", ()).await
+    }
+
+    async fn create_chunk(&self, req: CreateChunkRequest) -> CallResult<(CreateChunkResponse,)> {
+        call(*self, "create_chunk", (req,)).await
+    }
+
+    async fn commit_batch(&self, req: CommitBatchArguments) -> CallResult<()> {
+        call(*self, "commit_batch", (req,)).await
+    }
+}

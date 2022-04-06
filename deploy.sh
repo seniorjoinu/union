@@ -1,10 +1,10 @@
 echo "Start deploy infrastructure"
 echo "Deploy deployer"
-cd wallet-deployer/canister
+cd deployer-backend
 rm -rf ./.dfx/local
 dfx deploy
 echo "Deployer deployed"
-cd ../../
+cd ../
 
 echo "Build wallet"
 cd wallet-backend

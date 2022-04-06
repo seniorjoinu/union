@@ -19,4 +19,3 @@ chrono = "0.4.19"
 ic-cdk = "0.3.2"
 ic-cdk-macros = "0.3.2"
 serde = "1.0.126"
-union-deployer-client = { path = "../clients/rust" }

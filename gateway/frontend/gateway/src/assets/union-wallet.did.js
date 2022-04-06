@@ -17,6 +17,14 @@ export const idlFactory = ({ IDL }) => {
     'Executed' : HistoryEntryId,
   });
   const AuthorizeExecutionResponse = ExecuteResponse;
+  const BatchId = IDL.Nat;
+  const CreateBatchResponse = IDL.Record({ 'batch_id' : BatchId });
+  const CreateChunkRequest = IDL.Record({
+    'content' : IDL.Vec(IDL.Nat8),
+    'batch_id' : BatchId,
+  });
+  const ChunkId = IDL.Nat;
+  const CreateChunkResponse = IDL.Record({ 'chunk_id' : ChunkId });
   const PermissionScope = IDL.Variant({
     'Blacklist' : IDL.Null,
     'Whitelist' : IDL.Null,
@@ -63,6 +71,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const CreateRoleRequest = IDL.Record({ 'role_type' : RoleType });
   const CreateRoleResponse = IDL.Record({ 'role_id' : RoleId });
+  const DeleteBatchesRequest = IDL.Record({ 'batch_ids' : IDL.Vec(BatchId) });
   const DetachRoleFromPermissionRequest = IDL.Record({
     'role_id' : RoleId,
     'permission_id' : PermissionId,
@@ -134,6 +143,16 @@ export const idlFactory = ({ IDL }) => {
   const GetHistoryEntryIdsResponse = IDL.Record({
     'ids' : IDL.Vec(HistoryEntryId),
   });
+  const File = IDL.Record({
+    'content' : IDL.Vec(IDL.Nat8),
+    'mime_type' : IDL.Text,
+  });
+  const UnionInfo = IDL.Record({
+    'logo' : IDL.Opt(File),
+    'name' : IDL.Text,
+    'description' : IDL.Text,
+  });
+  const GetInfoResponse = IDL.Record({ 'info' : UnionInfo });
   const Permission = IDL.Record({
     'id' : PermissionId,
     'name' : IDL.Text,
@@ -179,16 +198,25 @@ export const idlFactory = ({ IDL }) => {
   const GetScheduledForAuthorizationExecutionsResponse = IDL.Record({
     'entries' : IDL.Vec(IDL.Tuple(TaskId, HistoryEntry)),
   });
+  const LockBatchesRequest = IDL.Record({ 'batch_ids' : IDL.Vec(BatchId) });
   const RemovePermissionRequest = IDL.Record({
     'permission_id' : PermissionId,
   });
   const RemovePermissionResponse = IDL.Record({ 'permission' : Permission });
   const RemoveRoleRequest = IDL.Record({ 'role_id' : RoleId });
   const RemoveRoleResponse = IDL.Record({ 'role' : Role });
+  const Key = IDL.Text;
+  const SendBatchRequest = IDL.Record({
+    'key' : Key,
+    'batch_id' : BatchId,
+    'content_type' : IDL.Text,
+    'target_canister' : IDL.Principal,
+  });
   const SubtractEnumeratedRolesRequest = IDL.Record({
     'enumerated_roles_to_subtract' : IDL.Vec(RoleId),
     'role_id' : RoleId,
   });
+  const UpdateInfoRequest = IDL.Record({ 'new_info' : UnionInfo });
   const UpdatePermissionRequest = IDL.Record({
     'new_targets' : IDL.Opt(IDL.Vec(PermissionTarget)),
     'new_name' : IDL.Opt(IDL.Text),
@@ -211,12 +239,16 @@ export const idlFactory = ({ IDL }) => {
         [AuthorizeExecutionResponse],
         [],
       ),
+    'create_batch' : IDL.Func([], [CreateBatchResponse], []),
+    'create_chunk' : IDL.Func([CreateChunkRequest], [CreateChunkResponse], []),
     'create_permission' : IDL.Func(
         [CreatePermissionRequest],
         [CreatePermissionResponse],
         [],
       ),
     'create_role' : IDL.Func([CreateRoleRequest], [CreateRoleResponse], []),
+    'delete_batches' : IDL.Func([DeleteBatchesRequest], [], []),
+    'delete_unlocked_batches' : IDL.Func([DeleteBatchesRequest], [], []),
     'detach_role_from_permission' : IDL.Func(
         [DetachRoleFromPermissionRequest],
         [],
@@ -235,6 +267,7 @@ export const idlFactory = ({ IDL }) => {
         [GetHistoryEntryIdsResponse],
         ['query'],
       ),
+    'get_info' : IDL.Func([], [GetInfoResponse], ['query']),
     'get_my_permissions' : IDL.Func([], [GetMyPermissionsResponse], ['query']),
     'get_my_roles' : IDL.Func([], [GetMyRolesResponse], ['query']),
     'get_permission_ids' : IDL.Func([], [GetPermissionIdsResponse], ['query']),
@@ -265,17 +298,20 @@ export const idlFactory = ({ IDL }) => {
         [GetScheduledForAuthorizationExecutionsResponse],
         ['query'],
       ),
+    'lock_batches' : IDL.Func([LockBatchesRequest], [], []),
     'remove_permission' : IDL.Func(
         [RemovePermissionRequest],
         [RemovePermissionResponse],
         [],
       ),
     'remove_role' : IDL.Func([RemoveRoleRequest], [RemoveRoleResponse], []),
+    'send_batch' : IDL.Func([SendBatchRequest], [], []),
     'subtract_enumerated_roles' : IDL.Func(
         [SubtractEnumeratedRolesRequest],
         [],
         [],
       ),
+    'update_info' : IDL.Func([UpdateInfoRequest], [], []),
     'update_permission' : IDL.Func([UpdatePermissionRequest], [], []),
     'update_role' : IDL.Func([UpdateRoleRequest], [], []),
   });

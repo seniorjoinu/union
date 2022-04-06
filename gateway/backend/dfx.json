@@ -1,12 +1,12 @@
 {
   "canisters": {
-    "union-wallet": {
-      "build": "../build.sh",
-      "candid": "../can.did",
-      "wasm": "../target/wasm32-unknown-unknown/release/union-wallet-opt.wasm",
+    "gateway": {
+      "build": "./build.sh",
+      "candid": "./can.did",
+      "wasm": "target/wasm32-unknown-unknown/release/union-gateway-opt.wasm",
       "type": "custom"
     }
-  },
+   },
   "dfx": "0.9.2",
   "networks": {
     "local": {
