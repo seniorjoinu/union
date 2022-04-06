@@ -39,12 +39,22 @@ type UpgradeUnionWalletRequest = record {
     new_version : text;
 };
 
+type ControllerSpawnWalletRequest = record {
+    version : text;
+    wallet_creator : principal;
+};
+
+type ControllerSpawnWalletResponse = record {
+    canister_id : principal;
+};
+
 service : (principal, principal) -> {
     "transfer_control" : (TransferControlRequest) -> ();
     "attach_to_union_wallet" : (AttachToUnionWalletRequest) -> ();
     "detach_from_union_wallet" : (DetachFromUnionWalletRequest) -> ();
     "get_attached_union_wallets" : () -> (GetAttachedUnionWalletsResponse) query;
 
+    "controller_spawn_wallet" : (ControllerSpawnWalletRequest) -> (ControllerSpawnWalletResponse);
     "spawn_union_wallet" : (SpawnUnionWalletRequest) -> (SpawnUnionWalletResponse);
     "prove_bill_paid" : (ProveBillPaidRequest) -> (ProveBillPaidResponse);
     "upgrade_union_wallet" : (UpgradeUnionWalletRequest) -> ();

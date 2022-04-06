@@ -1,8 +1,8 @@
 use crate::common::api::{
-    AttachToUnionWalletRequest, BillId, BillType, DetachFromUnionWalletRequest,
-    GetAttachedUnionWalletsResponse, ProveBillPaidRequest, ProveBillPaidResponse,
-    SpawnUnionWalletRequest, SpawnUnionWalletResponse, TransferControlRequest,
-    UpgradeUnionWalletRequest, UpgradeWalletVersionRequest,
+    AttachToUnionWalletRequest, BillId, BillType, ControllerSpawnWalletRequest,
+    ControllerSpawnWalletResponse, DetachFromUnionWalletRequest, GetAttachedUnionWalletsResponse,
+    ProveBillPaidRequest, ProveBillPaidResponse, SpawnUnionWalletRequest, SpawnUnionWalletResponse,
+    TransferControlRequest, UpgradeUnionWalletRequest, UpgradeWalletVersionRequest,
 };
 use crate::common::gateway::State;
 use crate::guards::{not_anonymous, only_controller};
@@ -67,6 +67,28 @@ pub async fn upgrade_union_wallet(req: UpgradeUnionWalletRequest) {
     )
     .await
     .expect("Unable to call deployer.upgrade_wallet_version");
+}
+
+#[update(guard = "only_controller")]
+pub async fn controller_spawn_wallet(
+    req: ControllerSpawnWalletRequest,
+) -> ControllerSpawnWalletResponse {
+    let wallet_creator = req.wallet_creator;
+
+    let (res,): (ProveBillPaidResponse,) = call_with_payment(
+        get_state().deployer_canister_id,
+        "spawn_wallet",
+        (req,),
+        1_000_000_000_000,
+    )
+    .await
+    .expect("Unable to call deployer.spawn_wallet");
+
+    get_state().attach_user_to_union_wallet(wallet_creator, res.canister_id);
+
+    ControllerSpawnWalletResponse {
+        canister_id: res.canister_id,
+    }
 }
 
 #[update]

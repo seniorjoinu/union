@@ -19,6 +19,10 @@ use ic_cdk::id;
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
 
+const INITIAL_BINARY_VERSION: &[u8] = include_bytes!(
+    "../../wallet-backend/target/wasm32-unknown-unknown/release/union-wallet-opt.wasm"
+);
+
 #[update(guard = "only_binary_controller")]
 fn transfer_binary_control(req: TransferControlRequest) {
     get_state().transfer_binary_control(req.new_controller);
@@ -178,7 +182,22 @@ pub fn get_state() -> &'static mut State {
 
 #[init]
 pub fn init(binary_controller: Principal, spawn_controller: Principal) {
-    unsafe { STATE = Some(State::new(binary_controller, spawn_controller)) }
+    let mut state = State::new(binary_controller, spawn_controller);
+    let time = time();
+
+    state
+        .create_binary_version(String::from("0.0.0"), String::from("Initial release"), time)
+        .expect("Unable to create initial binary version");
+
+    state
+        .release_binary_version("0.0.0", time)
+        .expect("Unable to release initial binary version");
+
+    state
+        .upload_binary("0.0.0", INITIAL_BINARY_VERSION.to_vec(), time)
+        .expect("Unable to initialize initial binary version");
+
+    unsafe { STATE = Some(state) }
 }
 
 #[pre_upgrade]

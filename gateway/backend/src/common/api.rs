@@ -82,3 +82,14 @@ pub struct UpgradeWalletVersionRequest {
     pub canister_id: Principal,
     pub new_version: String,
 }
+
+#[derive(CandidType, Deserialize)]
+pub struct ControllerSpawnWalletRequest {
+    pub version: String,
+    pub wallet_creator: Principal,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ControllerSpawnWalletResponse {
+    pub canister_id: Principal,
+}
