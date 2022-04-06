@@ -12,10 +12,10 @@ use crate::api::{
     GetPermissionsRequest, GetPermissionsResponse, GetRoleIdsResponse,
     GetRolesAttachedToPermissionsRequest, GetRolesAttachedToPermissionsResponse, GetRolesRequest,
     GetRolesResponse, GetScheduledForAuthorizationExecutionsRequest,
-    GetScheduledForAuthorizationExecutionsResponse, LockBatchesRequest, ProfileCreatedEvent,
-    RemovePermissionRequest, RemovePermissionResponse, RemoveRoleRequest, RemoveRoleResponse,
-    SendBatchRequest, SubtractEnumeratedRolesRequest, UpdateInfoRequest, UpdatePermissionRequest,
-    UpdateRoleRequest,
+    GetScheduledForAuthorizationExecutionsResponse, LockBatchesRequest, ProfileActivatedEvent,
+    ProfileCreatedEvent, RemovePermissionRequest, RemovePermissionResponse, RemoveRoleRequest,
+    RemoveRoleResponse, SendBatchRequest, SubtractEnumeratedRolesRequest, UpdateInfoRequest,
+    UpdatePermissionRequest, UpdateRoleRequest,
 };
 use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallEndpoint};
 use crate::common::permissions::PermissionId;
@@ -305,6 +305,15 @@ pub fn remove_role(req: RemoveRoleRequest) -> RemoveRoleResponse {
         .remove_role(&req.role_id)
         .expect("Unable to remove a role");
 
+    if let RoleType::Profile(p) = &role.role_type {
+        if !p.active {
+            // triggers removal of notification
+            emit(ProfileActivatedEvent {
+                profile_owner: p.principal_id,
+            });
+        }
+    }
+
     RemoveRoleResponse { role }
 }
 
@@ -320,10 +329,16 @@ pub fn edit_profile(req: EditProfileRequest) {
 
 #[update]
 pub fn activate_profile(req: ActivateProfileRequest) {
+    let caller = caller();
+
     get_state()
         .roles
-        .activate_profile(&req.role_id, &caller())
+        .activate_profile(&req.role_id, &caller)
         .expect("Unable to activate profile");
+
+    emit(ProfileActivatedEvent {
+        profile_owner: caller,
+    });
 }
 
 #[update(guard = "only_self_guard")]

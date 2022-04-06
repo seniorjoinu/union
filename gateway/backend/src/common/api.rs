@@ -1,8 +1,7 @@
-use crate::common::gateway::NotificationId;
+use crate::common::types::{BillId, BillPaymentProof, RoleId};
 use crate::ProfileCreatedNotification;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use ic_event_hub_macros::Event;
-use crate::common::types::{BillId, BillPaymentProof, RoleId};
 
 #[derive(CandidType, Deserialize)]
 pub struct TransferControlRequest {
@@ -69,15 +68,17 @@ pub struct GetMyNotificationsResponse {
     pub notifications: Vec<ProfileCreatedNotification>,
 }
 
-#[derive(CandidType, Deserialize)]
-pub struct RemoveMyNotificationRequest {
-    pub id: NotificationId,
-}
-
 // ------------------- EVENTS --------------------
 
 #[derive(Event)]
 pub struct ProfileCreatedEvent {
+    #[topic]
     pub profile_owner: Principal,
     pub profile_role_id: RoleId,
+}
+
+#[derive(Event)]
+pub struct ProfileActivatedEvent {
+    #[topic]
+    pub profile_owner: Principal,
 }

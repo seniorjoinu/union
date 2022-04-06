@@ -114,21 +114,11 @@ describe('setup', () => {
 
         const {entries} = await s.wallet.actor.get_history_entries({ids: [result.Executed]});
 
-        console.log(
-            JSON.stringify(entries, (key, value) =>
-                typeof value === 'bigint'
-                    ? value.toString()
-                    : value // return everything else unchanged
-            )
-        );
-
         assert(entries.length == 1);
         assert(entries[0].title = "Create new role");
 
         const {ids} = await s.wallet.actor.get_role_ids();
         const {roles: newRoles} = await s.wallet.actor.get_roles({ids});
-
-        console.log(newRoles)
 
         assert(newRoles.length == 4);
         const newRole = newRoles.find(it => {

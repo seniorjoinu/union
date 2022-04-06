@@ -1,9 +1,10 @@
 use crate::common::api::{
     AttachToUnionWalletRequest, ControllerSpawnWalletRequest, ControllerSpawnWalletResponse,
     DetachFromUnionWalletRequest, GetAttachedUnionWalletsResponse, GetMyNotificationsResponse,
-    ProfileCreatedEvent, ProfileCreatedEventFilter, ProveBillPaidRequest, ProveBillPaidResponse,
-    RemoveMyNotificationRequest, SpawnUnionWalletRequest, SpawnUnionWalletResponse,
-    TransferControlRequest, UpgradeUnionWalletRequest, UpgradeWalletVersionRequest,
+    ProfileActivatedEvent, ProfileActivatedEventFilter, ProfileCreatedEvent,
+    ProfileCreatedEventFilter, ProveBillPaidRequest, ProveBillPaidResponse,
+    SpawnUnionWalletRequest, SpawnUnionWalletResponse, TransferControlRequest,
+    UpgradeUnionWalletRequest, UpgradeWalletVersionRequest,
 };
 use crate::common::gateway::{ProfileCreatedNotification, State};
 use crate::common::types::{
@@ -134,14 +135,25 @@ pub async fn prove_bill_paid(req: ProveBillPaidRequest) -> ProveBillPaidResponse
 
             get_state().attach_user_to_union_wallet(caller, res.canister_id);
 
-            let filter = ProfileCreatedEventFilter {};
+            let created_filter = ProfileCreatedEventFilter {
+                profile_owner: None,
+            };
+            let activated_filter = ProfileActivatedEventFilter {
+                profile_owner: None,
+            };
 
             res.canister_id
                 .subscribe(SubscribeRequest {
-                    callbacks: vec![CallbackInfo {
-                        filter: filter.to_event_filter(),
-                        method_name: String::from("events_callback"),
-                    }],
+                    callbacks: vec![
+                        CallbackInfo {
+                            filter: created_filter.to_event_filter(),
+                            method_name: String::from("events_callback"),
+                        },
+                        CallbackInfo {
+                            filter: activated_filter.to_event_filter(),
+                            method_name: String::from("events_callback"),
+                        },
+                    ],
                 })
                 .await
                 .expect("Unable to call gateway.subscribe");
@@ -158,11 +170,6 @@ fn get_my_notifications() -> GetMyNotificationsResponse {
     GetMyNotificationsResponse { notifications }
 }
 
-#[update]
-fn remove_my_notification(req: RemoveMyNotificationRequest) {
-    get_state().remove_notification(&req.id, &caller());
-}
-
 #[update(guard = "only_mentioned_union_wallet")]
 fn events_callback(events: Vec<Event>) {
     for event in events {
@@ -171,6 +178,11 @@ fn events_callback(events: Vec<Event>) {
                 let ev: ProfileCreatedEvent = ProfileCreatedEvent::from_event(event);
 
                 get_state().create_notification(ev.profile_owner, caller(), ev.profile_role_id);
+            }
+            "ProfileActivatedEvent" => {
+                let ev: ProfileActivatedEvent = ProfileActivatedEvent::from_event(event);
+
+                get_state().remove_notifications(caller(), ev.profile_owner);
             }
             _ => unreachable!("Unknown event"),
         }

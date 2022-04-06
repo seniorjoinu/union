@@ -1,5 +1,5 @@
 use crate::common::permissions::{Permission, PermissionScope, PermissionTarget};
-use crate::common::roles::{Profile, Role, RoleType};
+use crate::common::roles::{Role, RoleType};
 use crate::common::streaming::{BatchId, ChunkId, Key};
 use crate::state::UnionInfo;
 use crate::{HistoryEntry, HistoryEntryId, PermissionId, Principal, Program, RoleId};
@@ -96,12 +96,6 @@ pub struct EditProfileRequest {
     pub role_id: RoleId,
     pub new_name: Option<String>,
     pub new_description: Option<String>,
-}
-
-#[derive(Event)]
-pub struct ProfileCreatedEvent {
-    pub profile_owner: Principal,
-    pub profile_role_id: RoleId,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -328,4 +322,19 @@ pub struct UpdateInfoRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetInfoResponse {
     pub info: UnionInfo,
+}
+
+// ---------------- EVENTS -----------------
+
+#[derive(Event)]
+pub struct ProfileCreatedEvent {
+    #[topic]
+    pub profile_owner: Principal,
+    pub profile_role_id: RoleId,
+}
+
+#[derive(Event)]
+pub struct ProfileActivatedEvent {
+    #[topic]
+    pub profile_owner: Principal,
 }

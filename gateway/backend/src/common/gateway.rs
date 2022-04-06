@@ -188,16 +188,40 @@ impl State {
         }
     }
 
-    pub fn remove_notification(&mut self, notification_id: &NotificationId, caller: &Principal) {
+    pub fn get_notifications_by_user(
+        &self,
+        user_id: &Principal,
+    ) -> Vec<&ProfileCreatedNotification> {
+        match self.notifications_by_user.get(user_id) {
+            None => Vec::new(),
+            Some(ids) => {
+                let mut result = Vec::new();
+
+                for id in ids {
+                    let notification = self.notifications.get(id).unwrap();
+
+                    result.push(notification);
+                }
+
+                result
+            }
+        }
+    }
+
+    pub fn remove_notifications(&mut self, union_wallet_id: Principal, user_id: Principal) {
         let notification_ids = self
-            .notifications_by_user
-            .get_mut(caller)
-            .expect("Access denied");
+            .get_notifications_by_user(&user_id)
+            .into_iter()
+            .filter(|it| it.union_wallet_id == union_wallet_id)
+            .map(|it| it.id)
+            .collect::<Vec<_>>();
 
-        assert!(notification_ids.contains(notification_id), "Access denied");
-        notification_ids.remove(notification_id);
+        let user_notification_ids = self.notifications_by_user.get_mut(&user_id).unwrap();
 
-        self.notifications.remove(notification_id).unwrap();
+        for id in &notification_ids {
+            user_notification_ids.remove(id);
+            self.notifications.remove(id).unwrap();
+        }
     }
 
     fn generate_notification_id(&mut self) -> NotificationId {
