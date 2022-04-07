@@ -63,6 +63,7 @@ export interface _SERVICE {
       DownloadBinaryResponse
     >,
   'export_candid' : () => Promise<string>,
+  'get_binary_controller' : () => Promise<Principal>,
   'get_binary_version_infos' : (arg_0: GetBinaryVersionInfosRequest) => Promise<
       GetBinaryVersionInfosResponse
     >,
@@ -72,6 +73,7 @@ export interface _SERVICE {
       GetInstancesResponse
     >,
   'get_latest_version' : () => Promise<GetLatestVersionResponse>,
+  'get_spawn_controller' : () => Promise<Principal>,
   'release_binary_version' : (arg_0: ReleaseBinaryVersionRequest) => Promise<
       undefined
     >,

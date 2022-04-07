@@ -130,16 +130,21 @@ export function ExecutorForm({
         program: !program.length
           ? { Empty: null }
           : {
-              RemoteCallSequence: program.map(({ args_candid, args_encoded, ...p }) => ({
-                ...p,
-                // TODO Encoded
-                args: { CandidString: args_candid.map((a) => a.trim()).filter((a) => !!a) },
-                cycles: BigInt(p.cycles),
-                endpoint: {
-                  ...p.endpoint,
-                  canister_id: Principal.fromText(p.endpoint.canister_id),
-                },
-              })),
+              RemoteCallSequence: program.map(({ args_candid, args_encoded, ...p }) => {
+                const args = args_encoded?.length
+                  ? { Encoded: args_encoded }
+                  : { CandidString: args_candid.map((a) => a.trim()).filter((a) => !!a) };
+
+                return {
+                  ...p,
+                  args,
+                  cycles: BigInt(p.cycles),
+                  endpoint: {
+                    ...p.endpoint,
+                    canister_id: Principal.fromText(p.endpoint.canister_id),
+                  },
+                };
+              }),
             },
       })
       .then(onSubmit);
@@ -293,6 +298,9 @@ export function ExecutorForm({
                     />
                   )}
                 />
+                {!!field.value[i].args_encoded?.length && (
+                  <Text>Используется encoded аргумент</Text>
+                )}
                 <Controller
                   name={`program.${i}.args_candid`}
                   control={control}

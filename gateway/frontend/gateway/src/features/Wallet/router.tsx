@@ -7,6 +7,7 @@ import { RolesAndPermissions, MyRolesAndPermissions } from './RolesAndPermission
 import { RoleForm } from './RoleForm';
 import { RoleDetails } from './RoleDetails';
 import { PermissionDetails } from './PermissionDetails';
+import { VersionForm } from './VersionForm';
 import { PermissionForm } from './PermissionForm';
 import { Participants } from './Participants';
 import { History, HistoryEntry, ScheduledEntry } from './History';
@@ -30,6 +31,8 @@ export const Wallet = () => {
     <Provider principal={principal}>
       <Container>
         <Routes>
+          <Route path='/versions/create' element={<VersionForm />} />
+
           <Route path='/role/create' element={<RoleForm create />} />
           <Route path='/role/edit/:roleId' element={<RoleForm />} />
           <Route
@@ -92,7 +95,7 @@ export const Wallet = () => {
               <ExternalExecutor canisterId={principal} redirectToHistory={() => nav('history')} />
             }
           />
-          <Route path='' element={<Navigate to='history' />} />
+          <Route path='' element={<Navigate to='history' replace />} />
         </Routes>
       </Container>
     </Provider>

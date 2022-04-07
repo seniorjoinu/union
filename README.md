@@ -25,7 +25,7 @@ dfx start --clean
 ./scripts/setup.sh
 
 # Register via Internet Identity and get principal on frontend gateway
-./scripts/add-profile.sh *identity*
+./scripts/add-profile.sh --ii=*identity* --wallet=*root_wallet* --name=*name (default is Agent)*
 ```
 
 ## didc

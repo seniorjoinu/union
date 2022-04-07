@@ -1,8 +1,15 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Header as H } from '../features/Header';
+import { SubHeader as SH } from '../features/SubHeader';
 
 const Header = styled(H)``;
+const SubHeader = styled(SH)``;
+
+const Fixed = styled.section`
+  display: flex;
+  flex-direction: column;
+`;
 
 const Section = styled.section`
   display: flex;
@@ -16,19 +23,26 @@ const Container = styled.main`
   justify-content: center;
   height: 100%;
 
-  ${Header} {
+  ${Fixed} {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 2;
+    z-index: 3;
     background: white;
+  }
+
+  ${Header} {
+  }
+
+  ${SubHeader} {
+    border-bottom: 1px solid grey;
   }
 
   ${Section} {
     display: flex;
     flex-direction: column;
-    padding: 64px 128px 32px 128px;
+    padding: 104px 128px 32px 128px;
     z-index: 1;
 
     & > * {
@@ -45,7 +59,10 @@ export interface AppPageProps {
 
 export const AppPage = ({ children }: AppPageProps) => (
   <Container>
-    <Header />
+    <Fixed>
+      <Header />
+      <SubHeader />
+    </Fixed>
     <Section>{children}</Section>
   </Container>
 );

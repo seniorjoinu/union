@@ -104,6 +104,9 @@ service : (principal, principal) -> {
     "transfer_binary_control" : (TransferControlRequest) -> ();
     "transfer_spawn_control" : (TransferControlRequest) -> ();
 
+    "get_binary_controller" : () -> (principal) query;
+    "get_spawn_controller" : () -> (principal) query;
+
     "spawn_wallet" : (SpawnWalletRequest) -> (SpawnWalletResponse);
     "upgrade_wallet_version" : (UpgradeWalletVersionRequest) -> ();
     "create_binary_version" : (CreateBinaryVersionRequest) -> ();

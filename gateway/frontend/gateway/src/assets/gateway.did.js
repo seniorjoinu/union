@@ -55,6 +55,7 @@ export const idlFactory = ({ IDL }) => {
         [GetAttachedUnionWalletsResponse],
         ['query'],
       ),
+    'get_controller' : IDL.Func([], [IDL.Principal], ['query']),
     'get_my_notifications' : IDL.Func(
         [],
         [GetMyNotificationsResponse],

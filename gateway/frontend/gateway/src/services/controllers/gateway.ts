@@ -1,4 +1,3 @@
-import { useState, useMemo } from 'react';
 import { authClient, useCanister, Canister, CanisterProps } from 'toolkit';
 import { _SERVICE } from 'gateway-ts';
 // @ts-expect-error

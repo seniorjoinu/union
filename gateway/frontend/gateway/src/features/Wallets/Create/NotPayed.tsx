@@ -1,9 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
-import { Button as B, Text } from 'components';
-import { useDeployer } from 'services';
+import { SubmitButton as B, Text, Select as S, Option } from 'components';
+import { useAuth, useDeployer, useGateway } from 'services';
+import { useForm, Controller } from 'react-hook-form';
 
+const Select = styled(S)``;
 const Button = styled(B)``;
 const Title = styled(Text)``;
 const Item = styled(Text)``;
@@ -47,26 +49,60 @@ export interface NotPayedProps {
 }
 
 export const NotPayed = ({ onApproved }: NotPayedProps) => {
-  const [spawning, setSpawning] = useState<boolean>(false);
-  const { canister } = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
+  const {
+    control,
+    getValues,
+    setValue,
+    formState: { isValid },
+  } = useForm<{ version: string }>({
+    defaultValues: {
+      version: '',
+    },
+  });
+  const { identity } = useAuth();
+  const deployer = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
+  const { canister } = useGateway(process.env.GATEWAY_CANISTER_ID);
+
+  useEffect(() => {
+    deployer.canister.get_binary_versions();
+  }, []);
 
   const onCreate = useCallback(async () => {
-    const principal: Principal | null = null;
+    const { version } = getValues();
+    const walletCreator = identity?.getPrincipal();
 
-    setSpawning(true);
+    if (!version || !walletCreator) {
+      return;
+    }
+
+    let principal: Principal | null = null;
+
     try {
-      const res = await fetch('/union-wallet.wasm');
-      const buffer = await res.arrayBuffer();
-      const module = [...new Uint8Array(buffer)];
+      const { bill_id } = await canister.spawn_union_wallet({
+        version,
+        wallet_creator: walletCreator,
+      });
 
-      console.error('Not implemented');
-      // principal = await canister.spawn_wallet({ wasm_module: module });
+      const { canister_id } = await canister.prove_bill_paid({ proof: { bill_id } });
+
+      principal = canister_id;
     } catch (e) {
       console.error(e);
     }
-    setSpawning(false);
     onApproved(principal);
-  }, [setSpawning, onApproved]);
+  }, [onApproved, getValues, identity]);
+
+  const versions = deployer.data.get_binary_versions?.versions || [];
+
+  useEffect(() => {
+    const existing = getValues().version;
+
+    if (existing || !versions.length) {
+      return;
+    }
+
+    setValue('version', versions[0], { shouldValidate: true });
+  }, [setValue, getValues, versions]);
 
   return (
     <Container>
@@ -80,7 +116,21 @@ export const NotPayed = ({ onApproved }: NotPayedProps) => {
         Для оплаты перейдите в nns.ic0.app и переведите 0.2 ICP на аккаунт
         <br />-
       </Info>
-      <Button disabled={spawning} onClick={onCreate}>
+      <Controller
+        name='version'
+        control={control}
+        rules={{ required: 'Обязательное поле' }}
+        render={({ field, fieldState: { error } }) => (
+          <Select {...field} helperText={error?.message} title='Выберите версию'>
+            {versions.map((v) => (
+              <Option key={v} value={v}>
+                {v}
+              </Option>
+            ))}
+          </Select>
+        )}
+      />
+      <Button disabled={!isValid} onClick={onCreate}>
         Подтвердить оплату и создать кошелек
       </Button>
     </Container>

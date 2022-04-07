@@ -43,6 +43,7 @@ export interface _SERVICE {
     >,
   'export_candid' : () => Promise<string>,
   'get_attached_union_wallets' : () => Promise<GetAttachedUnionWalletsResponse>,
+  'get_controller' : () => Promise<Principal>,
   'get_my_notifications' : () => Promise<GetMyNotificationsResponse>,
   'prove_bill_paid' : (arg_0: ProveBillPaidRequest) => Promise<
       ProveBillPaidResponse

@@ -165,6 +165,16 @@ fn get_latest_version() -> GetLatestVersionResponse {
     GetLatestVersionResponse { version }
 }
 
+#[query]
+fn get_binary_controller() -> Principal {
+    get_state().binary_controller
+}
+
+#[query]
+fn get_spawn_controller() -> Principal {
+    get_state().spawn_controller
+}
+
 // ---------------- STATE ----------------
 
 export_service!();

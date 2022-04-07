@@ -10,7 +10,7 @@ import config from './tsconfig.json';
 const envs = {
   ...getCanisterIds(__dirname),
   ...getCanisterIds(path.resolve('../../backend')),
-  ...getCanisterIds(path.resolve('../../../wallet-deployer/canister')),
+  ...getCanisterIds(path.resolve('../../../deployer-backend')),
   ...getCanisterIds(path.resolve('../internet-identity')),
 };
 

@@ -1,4 +1,3 @@
-import { useState, useMemo } from 'react';
 import { authClient, Canister, CanisterProps, useCanister } from 'toolkit';
 import { IDL } from '@dfinity/candid';
 import { _SERVICE } from 'wallet-ts';

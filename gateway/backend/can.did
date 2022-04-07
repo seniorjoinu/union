@@ -64,6 +64,9 @@ type GetMyNotificationsResponse = record {
 
 service : (principal, principal) -> {
     "transfer_control" : (TransferControlRequest) -> ();
+
+    "get_controller" : () -> (principal) query;
+
     "attach_to_union_wallet" : (AttachToUnionWalletRequest) -> ();
     "detach_from_union_wallet" : (DetachFromUnionWalletRequest) -> ();
     "get_attached_union_wallets" : () -> (GetAttachedUnionWalletsResponse) query;

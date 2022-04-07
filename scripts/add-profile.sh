@@ -3,32 +3,29 @@ set -e
 
 identity=
 root_wallet=
+role_name="Agent"
 
 while getopts ":-:" optchar; do
     case "${optchar}" in
         -)
             case "${OPTARG}" in
                 ii)
-                    val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-										identity=$val
-                    echo "Parsing option: '--${OPTARG}', value: '${val}'" >&2;
+										identity="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                     ;;
                 ii=*)
-                    val=${OPTARG#*=}
-                    opt=${OPTARG%=$val}
-										identity=$val
-                    echo "Parsing option: '--${opt}', value: '${val}'" >&2
+										identity=${OPTARG#*=}
                     ;;
                 wallet)
-                    val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-										root_wallet=$val
-                    echo "Parsing option: '--${OPTARG}', value: '${val}'" >&2;
+										root_wallet="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
                     ;;
                 wallet=*)
-                    val=${OPTARG#*=}
-                    opt=${OPTARG%=$val}
-										root_wallet=$val
-                    echo "Parsing option: '--${opt}', value: '${val}'" >&2
+										root_wallet=${OPTARG#*=}
+                    ;;
+                name)
+										role_name="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+                    ;;
+                name=*)
+										role_name=${OPTARG#*=}
                     ;;
                 *)
                     if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
@@ -54,8 +51,8 @@ create_role_program_args='(record {
 	role_type = variant {
 		Profile = record {
 			principal_id = principal \"'$identity'\";
-    	name = \"Agent\";
-    	description = \"Agent profile for manipulations\";
+    	name = \"'$role_name'\";
+    	description = \"'$role_name' profile created by add-profile.sh\";
 			active = false;
 		}
 	}
