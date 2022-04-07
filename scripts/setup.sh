@@ -1,6 +1,32 @@
 #!/usr/bin/env bash
 set -e
 
+# Target control schema
+#
+# Gateway backend
+# controller = root_wallet - TODO
+# inner controller = root_wallet
+#
+# Gateway frontend
+# controller = root_wallet
+# authorized controller = root_wallet - TODO need PR for `deauthorize` method on certified_asset canister
+#
+# Deployer
+# controller = 'aaaaaa-aaaaa' - TODO check this
+# spawn controller = gateway_backend
+# binary controller = root_wallet
+#
+# Root wallet
+# controller = deployer
+
+COLOR="96"
+function log {
+	C="\033[0;${COLOR}m"
+	NC='\033[0m' # No Color
+
+	echo -e "${C}$@${NC}"
+}
+
 args=
 # TODO uncomment in future - for using `./setup.sh --network ic`
 # args=$@
@@ -19,24 +45,23 @@ cd gateway/frontend/gateway
 gateway_frontend=$(dfx canister $args id union-wallet-frontend)
 cd ../../../
 
-echo "Setup deployer spawn control"
-# spawn-control - гейтвею, binary-control - корневому кошельку.
+log "Setup deployer spawn control..."
 dfx canister $args call $deployer "transfer_spawn_control" "(record { new_controller = principal \"${gateway_backend}\" })"
 
-echo "Deploy root wallet"
+log "Deploy root wallet..."
 spawn_result=$(dfx canister $args call $gateway_backend "controller_spawn_wallet" "(record { version = \"0.0.0\"; wallet_creator = principal \"${identity}\" })")
 echo spawn_result=$spawn_result
 root_wallet=$(echo $spawn_result | grep -Eo 'principal \"(\w|-)+\"' | grep -Eo '\"(\w|-)+\"' | grep -Eo '(\w|-)+')
 
-echo root_wallet=$root_wallet
-
-echo "Setup deployer binary control"
-# spawn-control - гейтвею, binary-control - корневому кошельку.
+log "Setup deployer binary control..."
 dfx canister $args call $deployer "transfer_binary_control" "(record { new_controller = principal \"${root_wallet}\" })"
 
-echo "Setup gateway control"
-# control - корневому кошельку
+log "Setup gateway control..."
 dfx canister $args call $gateway_backend "transfer_control" "(record { new_controller = principal \"${root_wallet}\" })"
+
+COLOR="92"
+log root_wallet=$root_wallet
+log spawn_result=$spawn_result
 
 # TODO #1 transfer control of root wallet to deployer
 

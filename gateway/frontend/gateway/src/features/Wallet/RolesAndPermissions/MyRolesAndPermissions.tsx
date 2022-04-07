@@ -75,9 +75,9 @@ export const MyRolesAndPermissions = ({
       <Items>
         {fetching.get_my_roles && <Text>fetching</Text>}
         {!fetching.get_my_roles && !roles.length && <Text>Роли отсутствуют</Text>}
-        {roles.map((role) => (
+        {roles.map((role, i) => (
           <RoleInfo
-            key={role.id}
+            key={`${role.id}${i}`}
             role={role}
             edit={() => editRole(role.id)}
             open={() => openRole(role.id)}
@@ -88,9 +88,9 @@ export const MyRolesAndPermissions = ({
       <Items>
         {fetching.get_my_permissions && <Text>fetching</Text>}
         {!fetching.get_my_permissions && !permissions.length && <Text>Пермиссии отсутствуют</Text>}
-        {permissions.map((permission) => (
+        {permissions.map((permission, i) => (
           <PermissionInfo
-            key={permission.id}
+            key={`${permission.id}${i}`}
             permission={permission}
             edit={() => editPermission(permission.id)}
             open={() => openPermission(permission.id)}

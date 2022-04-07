@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Start deploy infrastructure"
+COLOR="96"
+function log {
+	C="\033[0;${COLOR}m"
+	NC='\033[0m' # No Color
+
+	echo -e "${C}$@${NC}"
+}
+
+log "Start deploy infrastructure"
 
 args=""
 # TODO uncomment in future for using `./deploy.sh --network ic`
@@ -9,9 +17,9 @@ args=""
 
 if [ -z "$args" ]
 then
-	echo "Local deploy"
+	log "Local deploy"
 
-	echo "Deploy Internet Identity"
+	log "Deploy Internet Identity"
 	cd gateway/frontend
 	git clone git@github.com:dfinity/internet-identity.git || (echo "Internet identity exists. Pulling" && cd ./internet-identity && git pull && cd ../)
 	cd ./internet-identity
@@ -19,44 +27,46 @@ then
 	npm i
 	II_FETCH_ROOT_KEY=1 II_DUMMY_CAPTCHA=1 II_DUMMY_AUTH=1 dfx deploy --no-wallet --argument '(null)'
 	dfx canister call internet_identity init_salt
-	echo "Internet-identity here http://localhost:8000?canisterId=$(dfx canister id internet_identity)"
 	INTERNET_IDENTITY_CANISTER_ID=$(dfx canister id internet_identity)
 	cd ../../../
 fi
 
 identity=$(dfx identity $args get-principal)
 
-echo "Build root wallet"
+log "Build root wallet..."
 cd wallet-backend
 rm -rf ./.dfx/local
 dfx build --all --check
 cd ..
-echo "Root wallet built"
+log "Root wallet built"
 
-echo "Deploy deployer"
+log "Deploy deployer..."
 cd deployer-backend
 rm -rf ./.dfx/local
 dfx deploy $args --argument "(principal \"${identity}\", principal \"${identity}\")"
 deployer=$(dfx canister $args id union-deployer)
-echo "Deployer deployed"
+log "Deployer deployed"
 cd ../
 
-echo "Deploy gateway backend"
+log "Deploy gateway backend..."
 cd gateway/backend
 rm -rf ./.dfx/local
 dfx deploy $args --argument "(principal \"${identity}\", principal \"${deployer}\")"
 gateway_backend=$(dfx canister $args id gateway)
 cd ../..
-echo "Gateway backend deployed"
+log "Gateway backend deployed"
 
-echo "Deploy frontend"
+log "Deploy frontend..."
 cd gateway/frontend/gateway
 rm -rf ./.dfx/local
 yarn
 dfx deploy
-echo "http://localhost:8000?canisterId=$(dfx canister id union-wallet-frontend)"
-echo "Frontend deployed"
+gateway_frontend=$(dfx canister $args id union-wallet-frontend)
+log "Frontend deployed"
 cd ../../../
 
-echo deployer=$deployer
-echo gateway_backend=$gateway_backend
+COLOR="92"
+log deployer=$deployer
+log gateway_backend=$gateway_backend
+log gateway_frontend="http://localhost:8000?canisterId=$gateway_frontend"
+log internet-identity="http://localhost:8000?canisterId=$INTERNET_IDENTITY_CANISTER_ID"

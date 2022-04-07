@@ -119,9 +119,9 @@ export const RolesAndPermissions = ({
           {!(fetching.get_role_ids || fetching.get_roles) && !groups.Profile.length && (
             <Text>Профили отсутствуют</Text>
           )}
-          {groups.Profile.map((role) => (
+          {groups.Profile.map((role, i) => (
             <RoleInfo
-              key={role.id}
+              key={`${role.id}${i}`}
               role={role}
               edit={() => editRole(role.id)}
               open={() => openRole(role.id)}
@@ -136,9 +136,9 @@ export const RolesAndPermissions = ({
           {!(fetching.get_role_ids || fetching.get_roles) && !groups.Another.length && (
             <Text>Роли отсутствуют</Text>
           )}
-          {groups.Another.map((role) => (
+          {groups.Another.map((role, i) => (
             <RoleInfo
-              key={role.id}
+              key={`${role.id}${i}`}
               role={role}
               edit={() => editRole(role.id)}
               open={() => openRole(role.id)}
@@ -153,9 +153,9 @@ export const RolesAndPermissions = ({
           {!(fetching.get_permission_ids || fetching.get_permissions) && !permissions.length && (
             <Text>Пермиссии отсутствуют</Text>
           )}
-          {permissions.map((permission) => (
+          {permissions.map((permission, i) => (
             <PermissionInfo
-              key={permission.id}
+              key={`${permission.id}${i}`}
               permission={permission}
               edit={() => editPermission(permission.id)}
               open={() => openPermission(permission.id)}

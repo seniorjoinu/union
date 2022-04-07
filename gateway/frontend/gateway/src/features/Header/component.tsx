@@ -63,6 +63,9 @@ export function Header(p: IClassName) {
   return (
     <Container {...p}>
       <Items>
+        <Item variant='p1' as={NavLink} to='/notifications'>
+          Notifications
+        </Item>
         <Item variant='p1' as={NavLink} to='/wallets'>
           Wallets
         </Item>

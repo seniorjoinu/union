@@ -3,6 +3,7 @@ import { unstable_HistoryRouter as HistoryRouter, Routes, Navigate, Route } from
 import { Progress } from 'components';
 import { useAuth, AuthReadyState } from 'services';
 import { createBrowserHistory } from 'toolkit';
+import { Notifications } from '../features/Notifications';
 import { Wallets } from '../features/Wallets';
 import { Wallet } from '../features/Wallet';
 import { AppPage } from './AppPage';
@@ -30,6 +31,7 @@ export function RouterPage() {
           element={
             <AppPage>
               <Routes>
+                <Route path='/notifications/*' element={<Notifications />} />
                 <Route path='/wallets/*' element={<Wallets />} />
                 <Route path='/wallet/:id/*' element={<Wallet />} />
               </Routes>
