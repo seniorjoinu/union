@@ -1,16 +1,53 @@
 #!/usr/bin/env bash
 set -e
 
-[ -z "$@" ] && echo "Princpal does not found" && exit;
-identity="$@" # FIXME
+identity=
+root_wallet=
+
+while getopts ":-:" optchar; do
+    case "${optchar}" in
+        -)
+            case "${OPTARG}" in
+                ii)
+                    val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+										identity=$val
+                    echo "Parsing option: '--${OPTARG}', value: '${val}'" >&2;
+                    ;;
+                ii=*)
+                    val=${OPTARG#*=}
+                    opt=${OPTARG%=$val}
+										identity=$val
+                    echo "Parsing option: '--${opt}', value: '${val}'" >&2
+                    ;;
+                wallet)
+                    val="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
+										root_wallet=$val
+                    echo "Parsing option: '--${OPTARG}', value: '${val}'" >&2;
+                    ;;
+                wallet=*)
+                    val=${OPTARG#*=}
+                    opt=${OPTARG%=$val}
+										root_wallet=$val
+                    echo "Parsing option: '--${opt}', value: '${val}'" >&2
+                    ;;
+                *)
+                    if [ "$OPTERR" = 1 ] && [ "${optspec:0:1}" != ":" ]; then
+                        echo "Unknown option --${OPTARG}" >&2
+                    fi
+                    ;;
+            esac;;
+    esac
+done
 
 args=
 # TODO target using `./add-profile.sh --network ic`
 # args=$@
 
-cd wallet-backend
-root_wallet=$(dfx canister $args id union-wallet)
-cd ..
+[ -z "$identity" ] && echo "Princpal does not found" && exit;
+[ -z "$root_wallet" ] && echo "Wallet does not found" && exit;
+
+echo identity=$identity
+echo root_wallet=$root_wallet
 
 echo "Add internet-identity principal to root wallet"
 create_role_program_args='(record {
@@ -19,6 +56,7 @@ create_role_program_args='(record {
 			principal_id = principal \"'$identity'\";
     	name = \"Agent\";
     	description = \"Agent profile for manipulations\";
+			active = false;
 		}
 	}
 })'
@@ -44,4 +82,5 @@ create_role_args="(record {
 		}
 	}
 })"
+echo payload=$create_role_args
 dfx canister $args call $root_wallet "execute" "$create_role_args"

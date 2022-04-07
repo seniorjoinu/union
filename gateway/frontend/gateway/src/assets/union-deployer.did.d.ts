@@ -35,6 +35,7 @@ export interface GetLatestVersionResponse { 'version' : string }
 export interface ReleaseBinaryVersionRequest { 'version' : string }
 export interface SpawnWalletRequest {
   'version' : string,
+  'gateway' : Principal,
   'wallet_creator' : Principal,
 }
 export interface SpawnWalletResponse { 'canister_id' : Principal }

@@ -2,9 +2,27 @@ export const idlFactory = ({ IDL }) => {
   const AttachToUnionWalletRequest = IDL.Record({
     'union_wallet_id' : IDL.Principal,
   });
+  const ControllerSpawnWalletRequest = IDL.Record({
+    'version' : IDL.Text,
+    'wallet_creator' : IDL.Principal,
+  });
+  const ControllerSpawnWalletResponse = IDL.Record({
+    'canister_id' : IDL.Principal,
+  });
   const DetachFromUnionWalletRequest = AttachToUnionWalletRequest;
   const GetAttachedUnionWalletsResponse = IDL.Record({
     'wallet_ids' : IDL.Vec(IDL.Principal),
+  });
+  const NotificationId = IDL.Nat64;
+  const RoleId = IDL.Nat32;
+  const ProfileCreatedNotification = IDL.Record({
+    'id' : NotificationId,
+    'role_id' : RoleId,
+    'union_wallet_id' : IDL.Principal,
+    'receiver' : IDL.Principal,
+  });
+  const GetMyNotificationsResponse = IDL.Record({
+    'notifications' : IDL.Vec(ProfileCreatedNotification),
   });
   const BillId = IDL.Nat;
   const BillPaymentProof = IDL.Record({ 'bill_id' : BillId });
@@ -21,6 +39,11 @@ export const idlFactory = ({ IDL }) => {
   const UpgradeUnionWalletRequest = IDL.Record({ 'new_version' : IDL.Text });
   return IDL.Service({
     'attach_to_union_wallet' : IDL.Func([AttachToUnionWalletRequest], [], []),
+    'controller_spawn_wallet' : IDL.Func(
+        [ControllerSpawnWalletRequest],
+        [ControllerSpawnWalletResponse],
+        [],
+      ),
     'detach_from_union_wallet' : IDL.Func(
         [DetachFromUnionWalletRequest],
         [],
@@ -30,6 +53,11 @@ export const idlFactory = ({ IDL }) => {
     'get_attached_union_wallets' : IDL.Func(
         [],
         [GetAttachedUnionWalletsResponse],
+        ['query'],
+      ),
+    'get_my_notifications' : IDL.Func(
+        [],
+        [GetMyNotificationsResponse],
         ['query'],
       ),
     'prove_bill_paid' : IDL.Func(

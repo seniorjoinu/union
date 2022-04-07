@@ -18,6 +18,8 @@ export const initWalletController = (canisterId: string, handlers?: CanisterProp
 
   return canister;
 };
+// @ts-expect-error
+window.initWalletController = initWalletController;
 
 export const useWallet = (canisterId: string) => useCanister(canisterId, initWalletController);
 

@@ -1,5 +1,6 @@
 export const idlFactory = ({ IDL }) => {
   const RoleId = IDL.Nat32;
+  const ActivateProfileRequest = IDL.Record({ 'role_id' : RoleId });
   const AddEnumeratedRolesRequest = IDL.Record({
     'enumerated_roles_to_add' : IDL.Vec(RoleId),
     'role_id' : RoleId,
@@ -53,6 +54,7 @@ export const idlFactory = ({ IDL }) => {
     'enumerated' : IDL.Vec(RoleId),
   });
   const Profile = IDL.Record({
+    'active' : IDL.Bool,
     'name' : IDL.Text,
     'description' : IDL.Text,
     'principal_id' : IDL.Principal,
@@ -228,6 +230,7 @@ export const idlFactory = ({ IDL }) => {
     'new_role_type' : RoleType,
   });
   return IDL.Service({
+    'activate_profile' : IDL.Func([ActivateProfileRequest], [], []),
     'add_enumerated_roles' : IDL.Func([AddEnumeratedRolesRequest], [], []),
     'attach_role_to_permission' : IDL.Func(
         [AttachRoleToPermissionRequest],

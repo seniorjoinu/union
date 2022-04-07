@@ -1,4 +1,5 @@
 import type { Principal } from '@dfinity/principal';
+export interface ActivateProfileRequest { 'role_id' : RoleId }
 export interface AddEnumeratedRolesRequest {
   'enumerated_roles_to_add' : Array<RoleId>,
   'role_id' : RoleId,
@@ -121,6 +122,7 @@ export type PermissionTarget = { 'Endpoint' : RemoteCallEndpoint } |
   { 'SelfEmptyProgram' : null } |
   { 'Canister' : Principal };
 export interface Profile {
+  'active' : boolean,
   'name' : string,
   'description' : string,
   'principal_id' : Principal,
@@ -207,6 +209,7 @@ export interface UpdateRoleRequest {
   'new_role_type' : RoleType,
 }
 export interface _SERVICE {
+  'activate_profile' : (arg_0: ActivateProfileRequest) => Promise<undefined>,
   'add_enumerated_roles' : (arg_0: AddEnumeratedRolesRequest) => Promise<
       undefined
     >,

@@ -86,6 +86,7 @@ export const Invite = () => {
                   principal_id: Principal.fromText(member.principal),
                   name: member.name || defaultMember.name,
                   description: member.description || defaultMember.description,
+                  active: false,
                 },
               },
             });

@@ -26,6 +26,13 @@ fi
 
 identity=$(dfx identity $args get-principal)
 
+echo "Build root wallet"
+cd wallet-backend
+rm -rf ./.dfx/local
+dfx build --all --check
+cd ..
+echo "Root wallet built"
+
 echo "Deploy deployer"
 cd deployer-backend
 rm -rf ./.dfx/local
@@ -33,14 +40,6 @@ dfx deploy $args --argument "(principal \"${identity}\", principal \"${identity}
 deployer=$(dfx canister $args id union-deployer)
 echo "Deployer deployed"
 cd ../
-
-echo "Deploy root wallet"
-cd wallet-backend
-rm -rf ./.dfx/local
-dfx deploy $args --argument "(principal \"${identity}\")"
-root_wallet=$(dfx canister $args id union-wallet)
-cd ..
-echo "Root wallet deployed"
 
 echo "Deploy gateway backend"
 cd gateway/backend
@@ -60,5 +59,4 @@ echo "Frontend deployed"
 cd ../../../
 
 echo deployer=$deployer
-echo root_wallet=$root_wallet
 echo gateway_backend=$gateway_backend

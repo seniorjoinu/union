@@ -5,13 +5,11 @@ args=
 # TODO uncomment in future - for using `./setup.sh --network ic`
 # args=$@
 
+identity=$(dfx identity $args get-principal)
+
 cd deployer-backend
 deployer=$(dfx canister $args id union-deployer)
 cd ../
-
-cd wallet-backend
-root_wallet=$(dfx canister $args id union-wallet)
-cd ..
 
 cd gateway/backend
 gateway_backend=$(dfx canister $args id gateway)
@@ -21,22 +19,32 @@ cd gateway/frontend/gateway
 gateway_frontend=$(dfx canister $args id union-wallet-frontend)
 cd ../../../
 
-echo "Setup deployer control"
+echo "Setup deployer spawn control"
 # spawn-control - гейтвею, binary-control - корневому кошельку.
 dfx canister $args call $deployer "transfer_spawn_control" "(record { new_controller = principal \"${gateway_backend}\" })"
+
+echo "Deploy root wallet"
+spawn_result=$(dfx canister $args call $gateway_backend "controller_spawn_wallet" "(record { version = \"0.0.0\"; wallet_creator = principal \"${identity}\" })")
+echo spawn_result=$spawn_result
+root_wallet=$(echo $spawn_result | grep -Eo 'principal \"(\w|-)+\"' | grep -Eo '\"(\w|-)+\"' | grep -Eo '(\w|-)+')
+
+echo root_wallet=$root_wallet
+
+echo "Setup deployer binary control"
+# spawn-control - гейтвею, binary-control - корневому кошельку.
 dfx canister $args call $deployer "transfer_binary_control" "(record { new_controller = principal \"${root_wallet}\" })"
 
 echo "Setup gateway control"
 # control - корневому кошельку
 dfx canister $args call $gateway_backend "transfer_control" "(record { new_controller = principal \"${root_wallet}\" })"
 
-# TODO transfer control of root wallet to deployer
+# TODO #1 transfer control of root wallet to deployer
 
-# TODO transfer frontend control (authorization and controller) to root-wallet
+# TODO #2 transfer frontend control (authorization and controller) to root-wallet
 # and make asset updating through root-wallet
 # echo "Setup gateway frontend control"
 
-# TODO release first wallet-wasm version
+# TODO #3 release first wallet-wasm version
 # echo "Deployer: Create first version of wallet"
 # create_binary_version_args='(record { version = \"0.0.1\"; description = \"Initial version\" })'
 # dfx canister $args call $root_wallet "execute" "(record {

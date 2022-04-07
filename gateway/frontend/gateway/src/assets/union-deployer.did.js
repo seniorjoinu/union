@@ -45,6 +45,7 @@ export const idlFactory = ({ IDL }) => {
   const ReleaseBinaryVersionRequest = IDL.Record({ 'version' : IDL.Text });
   const SpawnWalletRequest = IDL.Record({
     'version' : IDL.Text,
+    'gateway' : IDL.Principal,
     'wallet_creator' : IDL.Principal,
   });
   const SpawnWalletResponse = IDL.Record({ 'canister_id' : IDL.Principal });
