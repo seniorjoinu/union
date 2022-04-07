@@ -102,4 +102,4 @@ export const idlFactory = ({ IDL }) => {
     'upload_binary' : IDL.Func([UploadBinaryRequest], [], []),
   });
 };
-export const init = ({ IDL }) => { return [IDL.Principal]; };
+export const init = ({ IDL }) => { return [IDL.Principal, IDL.Principal]; };

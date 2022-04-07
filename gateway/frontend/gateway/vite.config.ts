@@ -2,6 +2,7 @@
 import path from 'path';
 import { defineConfig } from 'vite';
 import reactRefresh from '@vitejs/plugin-react-refresh';
+import checker from 'vite-plugin-checker';
 import copy from 'rollup-plugin-copy';
 import { getCanisterIds, defaultManualChunks } from './src/lib/build';
 import config from './tsconfig.json';
@@ -32,6 +33,7 @@ export default defineConfig({
     ),
   },
   plugins: [
+    checker({ typescript: true }),
     reactRefresh(),
     copy({
       targets: [

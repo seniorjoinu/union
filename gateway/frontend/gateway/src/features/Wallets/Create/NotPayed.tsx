@@ -51,7 +51,7 @@ export const NotPayed = ({ onApproved }: NotPayedProps) => {
   const { canister } = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
 
   const onCreate = useCallback(async () => {
-    let principal: Principal | null = null;
+    const principal: Principal | null = null;
 
     setSpawning(true);
     try {
@@ -59,7 +59,8 @@ export const NotPayed = ({ onApproved }: NotPayedProps) => {
       const buffer = await res.arrayBuffer();
       const module = [...new Uint8Array(buffer)];
 
-      principal = await canister.spawn({ wasm_module: module });
+      console.error('Not implemented');
+      // principal = await canister.spawn_wallet({ wasm_module: module });
     } catch (e) {
       console.error(e);
     }

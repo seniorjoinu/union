@@ -3,11 +3,7 @@ import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Text, Button as B, SimpleListItem } from 'components';
-import {
-  useDeployer,
-  // TODO use gateway controller to fetch spawned wallets when gateway is implemented
-  // useGateway
-} from 'services';
+import { useGateway } from 'services';
 
 const List = styled.div`
   display: flex;
@@ -38,18 +34,16 @@ const Container = styled.div`
 export const WalletsList = () => {
   const nav = useNavigate();
   const [wallets, setWallets] = useState<Principal[]>([]);
-  // TODO use gateway controller to fetch spawned wallets when gateway is implemented
-  // const { canister, fetching } = useGateway(process.env.GATEWAY_CANISTER_ID);
-  const { canister, fetching } = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
+  const { canister, fetching } = useGateway(process.env.GATEWAY_CANISTER_ID);
 
   useEffect(() => {
-    canister.get_spawned_instances().then(setWallets);
+    canister.get_attached_union_wallets().then(({ wallet_ids }) => setWallets(wallet_ids));
   }, []);
 
   return (
     <Container>
       <Panel>
-        <Text>Spawned wallets {fetching.get_spawned_instances ? 'fetching' : ''}</Text>
+        <Text>Spawned wallets {fetching.get_attached_union_wallets ? 'fetching' : ''}</Text>
         <Button forwardedAs={NavLink} to='/wallets/create'>
           Create wallet
         </Button>
@@ -66,7 +60,7 @@ export const WalletsList = () => {
             onClick={() => nav(`/wallet/${wallet.toString()}`)}
           />
         ))}
-        {!wallets.length && !fetching.get_spawned_instances && (
+        {!wallets.length && !fetching.get_attached_union_wallets && (
           <Text>There are no union wallets. You can create new wallet</Text>
         )}
       </List>

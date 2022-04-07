@@ -99,7 +99,7 @@ type GetLatestVersionResponse = record {
     version : text;
 };
 
-service : (principal) -> {
+service : (principal, principal) -> {
     "transfer_binary_control" : (TransferControlRequest) -> ();
     "transfer_spawn_control" : (TransferControlRequest) -> ();
 
