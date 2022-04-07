@@ -30,14 +30,14 @@ export async function setup(identity: Identity): Promise<ISetup> {
     });
     await agent.fetchRootKey();
 
-    const walletArgs = [...IDL.encode([IDL.Principal], [identity.getPrincipal()])];
-    const wallet = await deployCanister<IWallet>("wallet", walletArgs, agent);
-
     const deployerArgs = [...IDL.encode([IDL.Principal, IDL.Principal], [identity.getPrincipal(), identity.getPrincipal()])];
     const deployer = await deployCanister<IDeployer>("deployer", deployerArgs, agent);
 
     const gatewayArgs = [...IDL.encode([IDL.Principal, IDL.Principal], [identity.getPrincipal(), deployer.canisterId])];
     const gateway = await deployCanister<IGateway>("gateway", gatewayArgs, agent);
+
+    const {canister_id} = await deployer.actor.spawn_wallet({wallet_creator: identity.getPrincipal(), version: "0.0.0", gateway: gateway.canisterId})
+    const wallet = await connectCanister<IWallet>("wallet", canister_id, agent);
 
     return {
         agent,
@@ -74,6 +74,20 @@ export async function deployCanister<T>(name: string, arg: number[], agent: Http
             canisterId: canister_id
         }),
         canisterId: canister_id
+    };
+}
+
+export async function connectCanister<T>(name: string, canisterId: Principal, agent: HttpAgent): Promise<{ actor: T, canisterId: Principal }> {
+    const {idlFactory} = await import(`dfx-idl/${name}/${name}`)
+
+    console.log(`Canister ${name} ${canisterId} connected`);
+
+    return {
+        actor: Actor.createActor(idlFactory, {
+            agent,
+            canisterId: canisterId
+        }),
+        canisterId,
     };
 }
 

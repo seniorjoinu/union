@@ -1,5 +1,5 @@
 use ic_cdk::api::call::{CallResult, RejectionCode};
-use ic_cdk::export::candid::{CandidType, Deserialize, IDLArgs};
+use ic_cdk::export::candid::{CandidType, Deserialize};
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub enum CandidRejectionCode {

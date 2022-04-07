@@ -1,13 +1,28 @@
-use crate::common::api::{Bill, BillId, BillStatus, BillType, GatewayError};
+use crate::common::types::{Bill, BillStatus, GatewayError, RoleId};
+use crate::{BillId, BillType};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
+
+pub type NotificationId = u64;
+
+#[derive(Clone, CandidType, Deserialize)]
+pub struct ProfileCreatedNotification {
+    pub id: NotificationId,
+    pub receiver: Principal,
+    pub union_wallet_id: Principal,
+    pub role_id: RoleId,
+}
 
 #[derive(CandidType, Deserialize)]
 pub struct State {
     pub controller: Principal,
     pub users_by_union_wallet_index: HashMap<Principal, HashSet<Principal>>,
     pub union_wallets_by_user_index: HashMap<Principal, HashSet<Principal>>,
+
+    pub notifications: HashMap<NotificationId, ProfileCreatedNotification>,
+    pub notifications_by_user: HashMap<Principal, HashSet<NotificationId>>,
+    pub notification_id_counter: NotificationId,
 
     pub deployer_canister_id: Principal,
     pub bills: HashMap<BillId, Bill>,
@@ -20,6 +35,10 @@ impl State {
             users_by_union_wallet_index: HashMap::default(),
             union_wallets_by_user_index: HashMap::default(),
 
+            notifications: HashMap::default(),
+            notifications_by_user: HashMap::default(),
+            notification_id_counter: 0,
+
             deployer_canister_id,
             bills: HashMap::default(),
         }
@@ -28,13 +47,13 @@ impl State {
     pub fn create_bill(
         &mut self,
         id: BillId,
-        invoice_type: BillType,
+        bill_type: BillType,
         to: Principal,
         timestamp: u64,
     ) -> BillId {
         let bill = Bill {
             id: id.clone(),
-            bill_type: invoice_type,
+            bill_type,
             to,
             status: BillStatus::Created,
             created_at: timestamp,
@@ -112,5 +131,103 @@ impl State {
             .unwrap_or_default()
             .into_iter()
             .collect()
+    }
+
+    pub fn is_mentioned_union_wallet(&self, wallet_canister_id: &Principal) -> bool {
+        self.users_by_union_wallet_index
+            .contains_key(wallet_canister_id)
+    }
+
+    // TODO: NOTIFICATIONS CAN OVERFLOW THE STORAGE
+    pub fn create_notification(
+        &mut self,
+        receiver: Principal,
+        union_wallet_id: Principal,
+        role_id: RoleId,
+    ) -> NotificationId {
+        let id = self.generate_notification_id();
+
+        let notification = ProfileCreatedNotification {
+            id,
+            receiver,
+            union_wallet_id,
+            role_id,
+        };
+
+        match self.notifications_by_user.entry(notification.receiver) {
+            Entry::Occupied(mut e) => {
+                e.get_mut().insert(id);
+            }
+            Entry::Vacant(e) => {
+                e.insert(vec![id].into_iter().collect());
+            }
+        }
+
+        self.notifications.insert(id, notification);
+
+        id
+    }
+
+    pub fn get_notifications_by_user_cloned(
+        &self,
+        user_id: &Principal,
+    ) -> Vec<ProfileCreatedNotification> {
+        match self.notifications_by_user.get(user_id) {
+            None => Vec::new(),
+            Some(ids) => {
+                let mut result = Vec::new();
+
+                for id in ids {
+                    let notification = self.notifications.get(id).unwrap();
+
+                    result.push(notification.clone());
+                }
+
+                result
+            }
+        }
+    }
+
+    pub fn get_notifications_by_user(
+        &self,
+        user_id: &Principal,
+    ) -> Vec<&ProfileCreatedNotification> {
+        match self.notifications_by_user.get(user_id) {
+            None => Vec::new(),
+            Some(ids) => {
+                let mut result = Vec::new();
+
+                for id in ids {
+                    let notification = self.notifications.get(id).unwrap();
+
+                    result.push(notification);
+                }
+
+                result
+            }
+        }
+    }
+
+    pub fn remove_notifications(&mut self, union_wallet_id: Principal, user_id: Principal) {
+        let notification_ids = self
+            .get_notifications_by_user(&user_id)
+            .into_iter()
+            .filter(|it| it.union_wallet_id == union_wallet_id)
+            .map(|it| it.id)
+            .collect::<Vec<_>>();
+
+        let user_notification_ids = self.notifications_by_user.get_mut(&user_id).unwrap();
+
+        for id in &notification_ids {
+            user_notification_ids.remove(id);
+            self.notifications.remove(id).unwrap();
+        }
+    }
+
+    fn generate_notification_id(&mut self) -> NotificationId {
+        let id = self.notification_id_counter;
+        self.notification_id_counter += 1;
+
+        id
     }
 }

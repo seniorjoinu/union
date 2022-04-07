@@ -22,11 +22,11 @@ describe('setup', () => {
         await s.deployer.actor.create_binary_version({version: "0.0.1", description: "Initial version"});
         await s.deployer.actor.upload_binary({version: "0.0.1", binary: walletWasmBinary});
 
-        const {canister_id: newWalletId} = await s.deployer.actor.spawn_wallet({version: "0.0.1", wallet_creator: myPrincipal});
+        const {canister_id: newWalletId} = await s.deployer.actor.spawn_wallet({version: "0.0.1", wallet_creator: myPrincipal, gateway: s.gateway.canisterId});
 
         await s.deployer.actor.release_binary_version({version: "0.0.1"});
 
-        const {canister_id: newWalletId1} = await s.deployer.actor.spawn_wallet({version: "0.0.1", wallet_creator: myPrincipal});
+        const {canister_id: newWalletId1} = await s.deployer.actor.spawn_wallet({version: "0.0.1", wallet_creator: myPrincipal, gateway: s.gateway.canisterId});
 
         await expectThrowsAsync(s.deployer.actor.delete_binary_version({version: "0.0.1"}));
 
@@ -35,7 +35,7 @@ describe('setup', () => {
         await s.deployer.actor.release_binary_version({version: "0.0.2"});
 
         await s.deployer.actor.delete_binary_version({version: "0.0.1"})
-        await expectThrowsAsync(s.deployer.actor.spawn_wallet({version: "0.0.1", wallet_creator: myPrincipal}));
+        await expectThrowsAsync(s.deployer.actor.spawn_wallet({version: "0.0.1", wallet_creator: myPrincipal, gateway: s.gateway.canisterId}));
 
         const {version: latestVersion} = await s.deployer.actor.get_latest_version();
         assert(latestVersion == "0.0.2");
@@ -45,11 +45,11 @@ describe('setup', () => {
         assert(JSON.stringify(infos[0].status) == JSON.stringify({Deleted: null}));
 
         const {ids} = await s.deployer.actor.get_instance_ids();
-        assert(ids.length == 2);
+        assert(ids.length == 3); // 2 deployed now + one deployed during deploy script
         assert(ids.map(it => it.toText()).includes(newWalletId.toText()) && ids.map(it => it.toText()).includes(newWalletId1.toText()));
 
         const {instances} = await s.deployer.actor.get_instances({ids});
-        assert(instances.length == 2);
+        assert(instances.length == 3); // 2 deployed now + one deployed during deploy script
     });
 
     it("wallet works fine", async () => {
@@ -94,7 +94,18 @@ describe('setup', () => {
                         method_name: "create_role"
                     },
                     cycles: 0n,
-                    args: { CandidString : [`record { role_type = variant { Profile = record { principal_id = principal "aaaaa-aa"; name = "Test"; description = "Test role" } } }`] }
+                    args: { CandidString : [
+                        `record { 
+                            role_type = variant { 
+                                Profile = record { 
+                                    principal_id = principal "aaaaa-aa"; 
+                                    name = "Test"; 
+                                    description = "Test role"; 
+                                    active = false;
+                                } 
+                            } 
+                        }`
+                    ] }
                 }]
             }
         }) as {Executed: HistoryEntryId};
@@ -102,6 +113,7 @@ describe('setup', () => {
         assert(result.Executed !== undefined, "Create role call should be executed right away");
 
         const {entries} = await s.wallet.actor.get_history_entries({ids: [result.Executed]});
+
         assert(entries.length == 1);
         assert(entries[0].title = "Create new role");
 
@@ -123,12 +135,8 @@ describe('setup', () => {
         // set deployer's spawn controller to gateway
         await s.deployer.actor.transfer_spawn_control({new_controller: s.gateway.canisterId});
 
-        // add a version to the deployer
-        await s.deployer.actor.create_binary_version({version: "0.0.1", description: "Initial version"});
-        await s.deployer.actor.upload_binary({version: "0.0.1", binary: walletWasmBinary});
-
         // create a bill to be paid via Loops
-        const {bill_id} = await s.gateway.actor.spawn_union_wallet({version: "0.0.1", wallet_creator: myPrincipal});
+        const {bill_id} = await s.gateway.actor.spawn_union_wallet({version: "0.0.0", wallet_creator: myPrincipal});
 
         // imagine user paid the bill and Loops returned a proof
 

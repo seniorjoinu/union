@@ -1,26 +1,27 @@
 use crate::api::{
-    AddEnumeratedRolesRequest, AttachRoleToPermissionRequest, AuthorizeExecutionRequest,
-    AuthorizeExecutionResponse, BatchOperation, CommitBatchArguments, CreateAssetArguments,
-    CreateBatchResponse, CreateChunkRequest, CreateChunkResponse, CreatePermissionRequest,
-    CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse, DeleteAssetArguments,
-    DeleteBatchesRequest, DetachRoleFromPermissionRequest, EditProfileRequest, ExecuteRequest,
-    ExecuteResponse, GetHistoryEntriesRequest, GetHistoryEntriesResponse,
-    GetHistoryEntryIdsResponse, GetInfoResponse, GetMyPermissionsResponse, GetMyRolesResponse,
-    GetPermissionIdsResponse, GetPermissionsAttachedToRolesRequest,
-    GetPermissionsAttachedToRolesResponse, GetPermissionsByPermissionTargetRequest,
-    GetPermissionsByPermissionTargetResponse, GetPermissionsRequest, GetPermissionsResponse,
-    GetRoleIdsResponse, GetRolesAttachedToPermissionsRequest,
-    GetRolesAttachedToPermissionsResponse, GetRolesRequest, GetRolesResponse,
-    GetScheduledForAuthorizationExecutionsRequest, GetScheduledForAuthorizationExecutionsResponse,
-    LockBatchesRequest, RemovePermissionRequest, RemovePermissionResponse, RemoveRoleRequest,
+    ActivateProfileRequest, AddEnumeratedRolesRequest, AttachRoleToPermissionRequest,
+    AuthorizeExecutionRequest, AuthorizeExecutionResponse, BatchOperation, CommitBatchArguments,
+    CreateAssetArguments, CreateBatchResponse, CreateChunkRequest, CreateChunkResponse,
+    CreatePermissionRequest, CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse,
+    DeleteAssetArguments, DeleteBatchesRequest, DetachRoleFromPermissionRequest,
+    EditProfileRequest, ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest,
+    GetHistoryEntriesResponse, GetHistoryEntryIdsResponse, GetInfoResponse,
+    GetMyPermissionsResponse, GetMyRolesResponse, GetPermissionIdsResponse,
+    GetPermissionsAttachedToRolesRequest, GetPermissionsAttachedToRolesResponse,
+    GetPermissionsByPermissionTargetRequest, GetPermissionsByPermissionTargetResponse,
+    GetPermissionsRequest, GetPermissionsResponse, GetRoleIdsResponse,
+    GetRolesAttachedToPermissionsRequest, GetRolesAttachedToPermissionsResponse, GetRolesRequest,
+    GetRolesResponse, GetScheduledForAuthorizationExecutionsRequest,
+    GetScheduledForAuthorizationExecutionsResponse, LockBatchesRequest, ProfileActivatedEvent,
+    ProfileCreatedEvent, RemovePermissionRequest, RemovePermissionResponse, RemoveRoleRequest,
     RemoveRoleResponse, SendBatchRequest, SubtractEnumeratedRolesRequest, UpdateInfoRequest,
     UpdatePermissionRequest, UpdateRoleRequest,
 };
 use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallEndpoint};
 use crate::common::permissions::PermissionId;
-use crate::common::roles::RoleId;
+use crate::common::roles::{RoleId, RoleType};
 use crate::common::utils::{validate_and_trim_str, CandidCallResult, IAssetCanister, ToCandidType};
-use crate::guards::only_self_guard;
+use crate::guards::{only_gateway, only_self_guard};
 use crate::helpers::execute_program_and_log;
 use crate::state::{State, TaskType};
 use ic_cdk::api::time;
@@ -30,6 +31,7 @@ use ic_cdk::{caller, id, trap};
 use ic_cdk_macros::{heartbeat, init, post_upgrade, pre_upgrade, query, update};
 use ic_cron::implement_cron;
 use ic_cron::types::{Iterations, SchedulingOptions};
+use ic_event_hub::{implement_event_emitter, implement_subscribe, implement_unsubscribe};
 use serde_bytes::ByteBuf;
 
 pub mod api;
@@ -194,9 +196,14 @@ fn get_scheduled_for_authorization_executions(
 }
 
 implement_cron!();
+implement_event_emitter!(10 * 1_000_000_000, 100 * 1024);
+implement_subscribe!(guard = "only_gateway");
+implement_unsubscribe!(guard = "only_gateway");
 
 #[heartbeat]
 fn tick() {
+    send_events();
+
     for task in cron_ready_tasks() {
         match task
             .get_payload::<TaskType>()
@@ -270,6 +277,13 @@ pub fn create_role(req: CreateRoleRequest) -> CreateRoleResponse {
         .create_role(req.role_type)
         .expect("Unable to create a role");
 
+    if let RoleType::Profile(p) = &state.roles.get_role(&role_id).unwrap().role_type {
+        emit(ProfileCreatedEvent {
+            profile_role_id: role_id,
+            profile_owner: p.principal_id,
+        });
+    }
+
     CreateRoleResponse { role_id }
 }
 
@@ -291,6 +305,15 @@ pub fn remove_role(req: RemoveRoleRequest) -> RemoveRoleResponse {
         .remove_role(&req.role_id)
         .expect("Unable to remove a role");
 
+    if let RoleType::Profile(p) = &role.role_type {
+        if !p.active {
+            // triggers removal of notification
+            emit(ProfileActivatedEvent {
+                profile_owner: p.principal_id,
+            });
+        }
+    }
+
     RemoveRoleResponse { role }
 }
 
@@ -302,6 +325,20 @@ pub fn edit_profile(req: EditProfileRequest) {
         .roles
         .edit_profile(&req.role_id, req.new_name, req.new_description)
         .expect("Unable to edit profile");
+}
+
+#[update]
+pub fn activate_profile(req: ActivateProfileRequest) {
+    let caller = caller();
+
+    get_state()
+        .roles
+        .activate_profile(&req.role_id, &caller)
+        .expect("Unable to activate profile");
+
+    emit(ProfileActivatedEvent {
+        profile_owner: caller,
+    });
 }
 
 #[update(guard = "only_self_guard")]
@@ -354,6 +391,7 @@ pub fn get_roles(req: GetRolesRequest) -> GetRolesResponse {
             .roles
             .get_role(id)
             .unwrap_or_else(|_| panic!("Unable to get role with id {}", id));
+
         roles.push(role.clone());
     }
 
@@ -561,8 +599,8 @@ pub fn get_state() -> &'static mut State {
 }
 
 #[init]
-fn init(wallet_creator: Principal) {
-    let state = State::new(wallet_creator).expect("Unable to create state");
+fn init(wallet_creator: Principal, gateway: Principal) {
+    let state = State::new(wallet_creator, gateway).expect("Unable to create state");
 
     unsafe {
         STATE = Some(state);

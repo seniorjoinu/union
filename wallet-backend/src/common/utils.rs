@@ -65,7 +65,7 @@ impl ToDecodedCandidType for CandidCallResult<Vec<u8>> {
 }
 
 #[derive(CandidType, Deserialize, Debug, Clone)]
-pub struct ValidationError(String);
+pub struct ValidationError(pub String);
 
 pub fn validate_and_trim_str(
     string: String,
