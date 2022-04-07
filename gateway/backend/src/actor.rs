@@ -105,6 +105,29 @@ pub async fn controller_spawn_wallet(
 
     get_state().attach_user_to_union_wallet(wallet_creator, res.canister_id);
 
+    let created_filter = ProfileCreatedEventFilter {
+        profile_owner: None,
+    };
+    let activated_filter = ProfileActivatedEventFilter {
+        profile_owner: None,
+    };
+
+    res.canister_id
+        .subscribe(SubscribeRequest {
+            callbacks: vec![
+                CallbackInfo {
+                    filter: created_filter.to_event_filter(),
+                    method_name: String::from("events_callback"),
+                },
+                CallbackInfo {
+                    filter: activated_filter.to_event_filter(),
+                    method_name: String::from("events_callback"),
+                },
+            ],
+        })
+        .await
+        .expect("Unable to call gateway.subscribe");
+
     ControllerSpawnWalletResponse {
         canister_id: res.canister_id,
     }
