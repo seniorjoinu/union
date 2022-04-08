@@ -11,6 +11,8 @@ pub struct Chunk {
 
 #[derive(Clone, Default, CandidType, Deserialize)]
 pub struct Batch {
+    pub key: Key,
+    pub content_type: String,
     pub chunk_ids: HashSet<ChunkId>,
     pub locked: bool,
 }
@@ -36,9 +38,14 @@ pub struct StreamingState {
 }
 
 impl StreamingState {
-    pub fn create_batch(&mut self) -> BatchId {
+    pub fn create_batch(&mut self, key: Key, content_type: String) -> BatchId {
         let id = self.generate_batch_id();
-        self.batches.insert(id.clone(), Batch::default());
+        self.batches.insert(id.clone(), Batch {
+            key,
+            content_type,
+            chunk_ids: HashSet::new(),
+            locked: false,
+        });
 
         id
     }
@@ -113,6 +120,16 @@ impl StreamingState {
         self.batches
             .get(batch_id)
             .ok_or_else(|| StreamingError::BatchNotFound(batch_id.clone()))
+    }
+
+    pub fn get_batches(&self) -> Result<Vec<(BatchId, Batch)>, StreamingError> {
+        let mut result: Vec<(BatchId, Batch)> = vec![];
+
+        for (key, val) in self.batches.iter() {
+            result.push((key.clone(), val.clone()));
+        }
+
+        Ok(result)
     }
 
     pub fn get_chunk(&self, chunk_id: &ChunkId) -> Result<&Chunk, StreamingError> {

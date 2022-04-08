@@ -322,11 +322,25 @@ type BatchId = nat;
 type ChunkId = nat;
 type Key = text;
 
-type SendBatchRequest = record {
-    batch_id : BatchId;
+type Batch = record {
     key : Key;
     content_type : text;
+    chunk_ids : vec ChunkId;
+    locked : bool;
+};
+
+type GetBatchesResponse = record {
+    batches : vec record { 0 : BatchId; 1 : Batch };
+};
+
+type SendBatchRequest = record {
+    batch_id : BatchId;
     target_canister : principal;
+};
+
+type CreateBatchRequest = record {
+    key : Key;
+    content_type : text;
 };
 
 type CreateBatchResponse = record {
@@ -402,7 +416,8 @@ service : (principal) -> {
     "get_roles_attached_to_permissions" : (GetRolesAttachedToPermissionsRequest) -> (GetRolesAttachedToPermissionsResponse) query;
     "get_permissions_attached_to_roles" : (GetPermissionsAttachedToRolesRequest) -> (GetPermissionsAttachedToRolesResponse) query;
 
-    "create_batch" : () -> (CreateBatchResponse);
+    "get_batches" : () -> (GetBatchesResponse) query;
+    "create_batch" : (CreateBatchRequest) -> (CreateBatchResponse);
     "create_chunk" : (CreateChunkRequest) -> (CreateChunkResponse);
     "lock_batches" : (LockBatchesRequest) -> ();
     "delete_unlocked_batches" : (DeleteBatchesRequest) -> ();

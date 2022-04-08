@@ -1,7 +1,7 @@
 use crate::api::{
     ActivateProfileRequest, AddEnumeratedRolesRequest, AttachRoleToPermissionRequest,
     AuthorizeExecutionRequest, AuthorizeExecutionResponse, BatchOperation, CommitBatchArguments,
-    CreateAssetArguments, CreateBatchResponse, CreateChunkRequest, CreateChunkResponse,
+    CreateAssetArguments, GetBatchesResponse, CreateBatchRequest, CreateBatchResponse, CreateChunkRequest, CreateChunkResponse,
     CreatePermissionRequest, CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse,
     DeleteAssetArguments, DeleteBatchesRequest, DetachRoleFromPermissionRequest,
     EditProfileRequest, ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest,
@@ -624,15 +624,30 @@ fn post_upgrade_hook() {
 
 // ------------------ STREAMING ---------------------
 
+#[query]
+fn get_batches() -> GetBatchesResponse {
+    let state = get_state();
+
+    if !state.is_query_caller_authorized(&id(), &caller(), "get_batches") {
+        trap("Access denied");
+    }
+
+    let batches = state.streaming
+        .get_batches()
+        .expect("Unable to get batches");
+
+    GetBatchesResponse { batches }
+}
+
 #[update]
-fn create_batch() -> CreateBatchResponse {
+fn create_batch(req: CreateBatchRequest) -> CreateBatchResponse {
     let state = get_state();
 
     if !state.is_query_caller_authorized(&id(), &caller(), "create_batch") {
         trap("Access denied");
     }
 
-    let batch_id = state.streaming.create_batch();
+    let batch_id = state.streaming.create_batch(req.key, req.content_type);
 
     CreateBatchResponse { batch_id }
 }
@@ -763,8 +778,8 @@ async fn send_batch(req: SendBatchRequest) {
         .commit_batch(CommitBatchArguments {
             batch_id: resp.batch_id,
             operations: vec![BatchOperation::CreateAsset(CreateAssetArguments {
-                key: req.key,
-                content_type: req.content_type,
+                key: batch.key,
+                content_type: batch.content_type,
             })],
         })
         .await
