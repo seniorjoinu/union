@@ -58,7 +58,7 @@ export const Participants = () => {
         </Button>
       )}
       {fetching && <Text>fetching</Text>}
-      {!fetching && !roles.length && <Text>Users not exists</Text>}
+      {!fetching && !roles.length && <Text>Users does not exist</Text>}
       {!!roles.length && (
         <Items>
           {roles.map((p) => (

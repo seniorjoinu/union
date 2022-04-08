@@ -1,8 +1,8 @@
 use crate::api::{
     ActivateProfileRequest, AddEnumeratedRolesRequest, AttachRoleToPermissionRequest,
     AuthorizeExecutionRequest, AuthorizeExecutionResponse, BatchOperation, CommitBatchArguments,
-    CreateAssetArguments, GetBatchesResponse, CreateBatchRequest, CreateBatchResponse, CreateChunkRequest,
-    CreateChunkResponse, GetChunkRequest, GetChunkResponse,
+    CreateAssetArguments, SetAssetContentArguments, GetBatchesResponse, CreateBatchRequest, CreateBatchResponse,
+    CreateChunkRequest, CreateChunkResponse, GetChunkRequest, GetChunkResponse,
     CreatePermissionRequest, CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse,
     DeleteAssetArguments, DeleteBatchesRequest, DetachRoleFromPermissionRequest,
     EditProfileRequest, ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest,
@@ -790,16 +790,26 @@ async fn send_batch(req: SendBatchRequest) {
                         e
                     )
                 });
+        } else {
+            // FIXME get chunkid and save to variable for SetAssetContentArguments
         }
     }
 
     req.target_canister
         .commit_batch(CommitBatchArguments {
             batch_id: resp.batch_id,
-            operations: vec![BatchOperation::CreateAsset(CreateAssetArguments {
-                key: batch.key,
-                content_type: batch.content_type,
-            })],
+            operations: vec![
+                BatchOperation::CreateAsset(CreateAssetArguments {
+                    key: batch.key.clone(),
+                    content_type: batch.content_type,
+                }),
+                BatchOperation::SetAssetContent(SetAssetContentArguments {
+                    key: batch.key,
+                    content_encoding: String::from("identity"),
+                    chunk_ids: vec![], // FIXME get uploaded chunks ids (ids from `res`)
+                    sha256: None,
+                }),
+            ],
         })
         .await
         .expect("Unable to commit batch");

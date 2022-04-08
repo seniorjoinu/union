@@ -15,10 +15,12 @@ candid.IDL.Float32.valueToString = (x) =>
   `${x.toString().includes('.') ? x.toString() : `${x.toString()}.0`} : ${candid.IDL.Float32.name}`;
 candid.IDL.Float64.valueToString = (x) =>
   `${x.toString().includes('.') ? x.toString() : `${x.toString()}.0`} : ${candid.IDL.Float64.name}`;
+candid.IDL.Int.valueToString = (x) => `${x.toString()} : ${candid.IDL.Int.name}`;
 candid.IDL.Int8.valueToString = (x) => `${x.toString()} : ${candid.IDL.Int8.name}`;
 candid.IDL.Int16.valueToString = (x) => `${x.toString()} : ${candid.IDL.Int16.name}`;
 candid.IDL.Int32.valueToString = (x) => `${x.toString()} : ${candid.IDL.Int32.name}`;
 candid.IDL.Int64.valueToString = (x) => `${x.toString()} : ${candid.IDL.Int64.name}`;
+candid.IDL.Nat.valueToString = (x) => `${x.toString()} : ${candid.IDL.Nat.name}`;
 candid.IDL.Nat8.valueToString = (x) => `${x.toString()} : ${candid.IDL.Nat8.name}`;
 candid.IDL.Nat16.valueToString = (x) => `${x.toString()} : ${candid.IDL.Nat16.name}`;
 candid.IDL.Nat32.valueToString = (x) => `${x.toString()} : ${candid.IDL.Nat32.name}`;

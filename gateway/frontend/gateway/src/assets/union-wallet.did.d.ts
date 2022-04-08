@@ -10,10 +10,17 @@ export interface AttachRoleToPermissionRequest {
 }
 export interface AuthorizeExecutionRequest { 'task_id' : TaskId }
 export type AuthorizeExecutionResponse = ExecuteResponse;
+export interface Batch {
+  'key' : Key,
+  'content_type' : string,
+  'locked' : boolean,
+  'chunk_ids' : Array<ChunkId>,
+}
 export type BatchId = bigint;
 export type CallResult = { 'Ok' : string } |
   { 'Err' : [RejectionCode, string] };
 export type ChunkId = bigint;
+export interface CreateBatchRequest { 'key' : Key, 'content_type' : string }
 export interface CreateBatchResponse { 'batch_id' : BatchId }
 export interface CreateChunkRequest {
   'content' : Array<number>,
@@ -54,6 +61,9 @@ export interface FractionOf {
   'fraction' : number,
   'enumerated' : Array<RoleId>,
 }
+export interface GetBatchesResponse { 'batches' : Array<[BatchId, Batch]> }
+export interface GetChunkRequest { 'chunk_id' : ChunkId }
+export interface GetChunkResponse { 'chunk_content' : Array<number> }
 export interface GetHistoryEntriesRequest { 'ids' : Array<HistoryEntryId> }
 export interface GetHistoryEntriesResponse { 'entries' : Array<HistoryEntry> }
 export interface GetHistoryEntryIdsResponse { 'ids' : Array<HistoryEntryId> }
@@ -181,9 +191,7 @@ export interface SchedulingOptions {
   'delay_nano' : bigint,
 }
 export interface SendBatchRequest {
-  'key' : Key,
   'batch_id' : BatchId,
-  'content_type' : string,
   'target_canister' : Principal,
 }
 export interface SubtractEnumeratedRolesRequest {
@@ -219,7 +227,7 @@ export interface _SERVICE {
   'authorize_execution' : (arg_0: AuthorizeExecutionRequest) => Promise<
       AuthorizeExecutionResponse
     >,
-  'create_batch' : () => Promise<CreateBatchResponse>,
+  'create_batch' : (arg_0: CreateBatchRequest) => Promise<CreateBatchResponse>,
   'create_chunk' : (arg_0: CreateChunkRequest) => Promise<CreateChunkResponse>,
   'create_permission' : (arg_0: CreatePermissionRequest) => Promise<
       CreatePermissionResponse
@@ -235,6 +243,8 @@ export interface _SERVICE {
   'edit_profile' : (arg_0: EditProfileRequest) => Promise<undefined>,
   'execute' : (arg_0: ExecuteRequest) => Promise<ExecuteResponse>,
   'export_candid' : () => Promise<string>,
+  'get_batches' : () => Promise<GetBatchesResponse>,
+  'get_chunk' : (arg_0: GetChunkRequest) => Promise<GetChunkResponse>,
   'get_history_entries' : (arg_0: GetHistoryEntriesRequest) => Promise<
       GetHistoryEntriesResponse
     >,

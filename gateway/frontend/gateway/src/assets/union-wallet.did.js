@@ -18,6 +18,11 @@ export const idlFactory = ({ IDL }) => {
     'Executed' : HistoryEntryId,
   });
   const AuthorizeExecutionResponse = ExecuteResponse;
+  const Key = IDL.Text;
+  const CreateBatchRequest = IDL.Record({
+    'key' : Key,
+    'content_type' : IDL.Text,
+  });
   const BatchId = IDL.Nat;
   const CreateBatchResponse = IDL.Record({ 'batch_id' : BatchId });
   const CreateChunkRequest = IDL.Record({
@@ -107,6 +112,17 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
     'program' : Program,
   });
+  const Batch = IDL.Record({
+    'key' : Key,
+    'content_type' : IDL.Text,
+    'locked' : IDL.Bool,
+    'chunk_ids' : IDL.Vec(ChunkId),
+  });
+  const GetBatchesResponse = IDL.Record({
+    'batches' : IDL.Vec(IDL.Tuple(BatchId, Batch)),
+  });
+  const GetChunkRequest = IDL.Record({ 'chunk_id' : ChunkId });
+  const GetChunkResponse = IDL.Record({ 'chunk_content' : IDL.Vec(IDL.Nat8) });
   const GetHistoryEntriesRequest = IDL.Record({
     'ids' : IDL.Vec(HistoryEntryId),
   });
@@ -207,11 +223,8 @@ export const idlFactory = ({ IDL }) => {
   const RemovePermissionResponse = IDL.Record({ 'permission' : Permission });
   const RemoveRoleRequest = IDL.Record({ 'role_id' : RoleId });
   const RemoveRoleResponse = IDL.Record({ 'role' : Role });
-  const Key = IDL.Text;
   const SendBatchRequest = IDL.Record({
-    'key' : Key,
     'batch_id' : BatchId,
-    'content_type' : IDL.Text,
     'target_canister' : IDL.Principal,
   });
   const SubtractEnumeratedRolesRequest = IDL.Record({
@@ -242,7 +255,7 @@ export const idlFactory = ({ IDL }) => {
         [AuthorizeExecutionResponse],
         [],
       ),
-    'create_batch' : IDL.Func([], [CreateBatchResponse], []),
+    'create_batch' : IDL.Func([CreateBatchRequest], [CreateBatchResponse], []),
     'create_chunk' : IDL.Func([CreateChunkRequest], [CreateChunkResponse], []),
     'create_permission' : IDL.Func(
         [CreatePermissionRequest],
@@ -260,6 +273,8 @@ export const idlFactory = ({ IDL }) => {
     'edit_profile' : IDL.Func([EditProfileRequest], [], []),
     'execute' : IDL.Func([ExecuteRequest], [ExecuteResponse], []),
     'export_candid' : IDL.Func([], [IDL.Text], ['query']),
+    'get_batches' : IDL.Func([], [GetBatchesResponse], ['query']),
+    'get_chunk' : IDL.Func([GetChunkRequest], [GetChunkResponse], ['query']),
     'get_history_entries' : IDL.Func(
         [GetHistoryEntriesRequest],
         [GetHistoryEntriesResponse],

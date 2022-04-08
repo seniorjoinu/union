@@ -6,7 +6,7 @@ import { HistoryEntry } from 'wallet-ts';
 const Result = styled(Text)`
   display: flex;
   flex-direction: column;
-  white-space: pre;
+  white-space: pre-wrap;
   word-break: break-word;
 `;
 
