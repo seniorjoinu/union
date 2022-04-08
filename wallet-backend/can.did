@@ -333,6 +333,14 @@ type GetBatchesResponse = record {
     batches : vec record { 0 : BatchId; 1 : Batch };
 };
 
+type GetChunkRequest = record {
+    chunk_id : ChunkId;
+};
+
+type GetChunkResponse = record {
+    chunk_content : blob;
+};
+
 type SendBatchRequest = record {
     batch_id : BatchId;
     target_canister : principal;
@@ -417,6 +425,7 @@ service : (principal) -> {
     "get_permissions_attached_to_roles" : (GetPermissionsAttachedToRolesRequest) -> (GetPermissionsAttachedToRolesResponse) query;
 
     "get_batches" : () -> (GetBatchesResponse) query;
+    "get_chunk" : (GetChunkRequest) -> (GetChunkResponse) query;
     "create_batch" : (CreateBatchRequest) -> (CreateBatchResponse);
     "create_chunk" : (CreateChunkRequest) -> (CreateChunkResponse);
     "lock_batches" : (LockBatchesRequest) -> ();

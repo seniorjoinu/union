@@ -279,6 +279,16 @@ pub struct CommitBatchArguments {
 // -------------- STREAMING -------------------
 
 #[derive(CandidType, Deserialize)]
+pub struct GetChunkRequest {
+    pub chunk_id: ChunkId,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetChunkResponse {
+    pub chunk_content: ByteBuf,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct GetBatchesResponse {
     pub batches: Vec<(BatchId, Batch)>,
 }

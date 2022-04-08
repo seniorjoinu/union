@@ -1,7 +1,8 @@
 use crate::api::{
     ActivateProfileRequest, AddEnumeratedRolesRequest, AttachRoleToPermissionRequest,
     AuthorizeExecutionRequest, AuthorizeExecutionResponse, BatchOperation, CommitBatchArguments,
-    CreateAssetArguments, GetBatchesResponse, CreateBatchRequest, CreateBatchResponse, CreateChunkRequest, CreateChunkResponse,
+    CreateAssetArguments, GetBatchesResponse, CreateBatchRequest, CreateBatchResponse, CreateChunkRequest,
+    CreateChunkResponse, GetChunkRequest, GetChunkResponse,
     CreatePermissionRequest, CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse,
     DeleteAssetArguments, DeleteBatchesRequest, DetachRoleFromPermissionRequest,
     EditProfileRequest, ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest,
@@ -624,6 +625,8 @@ fn post_upgrade_hook() {
 
 // ------------------ STREAMING ---------------------
 
+// TODO need use standart certified_assets API.
+// TODO Need open PR for making methods public to cdk-rs/certified_assets and use them here
 #[query]
 fn get_batches() -> GetBatchesResponse {
     let state = get_state();
@@ -637,6 +640,22 @@ fn get_batches() -> GetBatchesResponse {
         .expect("Unable to get batches");
 
     GetBatchesResponse { batches }
+}
+
+#[query]
+fn get_chunk(req: GetChunkRequest) -> GetChunkResponse {
+    let state = get_state();
+
+    let chunk_content = ByteBuf::from(
+        get_state()
+            .streaming
+            .get_chunk(&req.chunk_id)
+            .expect("Unable to get chunk")
+            .content
+            .as_ref(),
+    );
+
+    GetChunkResponse { chunk_content }
 }
 
 #[update]
