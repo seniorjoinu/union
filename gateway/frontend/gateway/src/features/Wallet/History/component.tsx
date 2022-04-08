@@ -62,14 +62,14 @@ export function History({ createLink, ...p }: HistoryProps) {
 
   return (
     <Container {...p}>
-      <Title variant='h2'>История произвольных вызовов</Title>
+      <Title variant='h2'>Execution history</Title>
       {!!createLink && !!rnp && (
         <Button forwardedAs={NavLink} to={createLink}>
-          + Создать произвольный вызов
+          + Create execution
         </Button>
       )}
       {progress && <span>Fetching...</span>}
-      {!progress && !entries.length && <span>История пуста</span>}
+      {!progress && !entries.length && <span>History is empty</span>}
       {entries.map(([taskId, entry]) => (
         <NavLink
           key={String(entry.id)}

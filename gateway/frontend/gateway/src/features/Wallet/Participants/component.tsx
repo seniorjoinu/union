@@ -47,19 +47,18 @@ export const Participants = () => {
 
   return (
     <Container>
-      <Title variant='h2'>Профили пользователей</Title>
-      {/* Самостоятельное вступление пока не предусмотрено */}
+      <Title variant='h2'>User profiles</Title>
       {/* {
         !current.fetching.get_my_roles && !current.roles.find(r => 'Profile' in r.role_type) &&
-          <Button>Вступить в Union</Button>
+          <Button>Join to Union</Button>
       } */}
       {!!rnp && (
         <Button forwardedAs={NavLink} to='invite'>
-          + Пригласить
+          + Invite
         </Button>
       )}
       {fetching && <Text>fetching</Text>}
-      {!fetching && !roles.length && <Text>Пользователи отсутствуют</Text>}
+      {!fetching && !roles.length && <Text>Users not exists</Text>}
       {!!roles.length && (
         <Items>
           {roles.map((p) => (

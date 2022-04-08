@@ -46,7 +46,7 @@ export function PermissionsAttacher({ role, ...p }: PermissionsAttacherProps) {
         render={({ field, fieldState: { error } }) => (
           <ListSelect
             {...field}
-            label='Добавление пермиссий'
+            label='Permissions addition'
             helperText={error?.message}
             from={permissions.map(({ id, name }) => ({
               id: id.toString(),
@@ -60,7 +60,7 @@ export function PermissionsAttacher({ role, ...p }: PermissionsAttacherProps) {
         disabled={!isValid}
         onClick={() => attach(getValues().permissionIds, [role.id])}
       >
-        Добавить пермиссии
+        Add permissions
       </Button>
     </Container>
   );

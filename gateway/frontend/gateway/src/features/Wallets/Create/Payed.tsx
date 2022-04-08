@@ -48,14 +48,14 @@ export interface PayedProps {
 
 export const Payed = ({ wallet }: PayedProps) => (
   <Container>
-    <Title variant='h3'>Заявка на создание юнион-кошелька</Title>
+    <Title variant='h3'>Union-wallet creation</Title>
     <Item variant='p2'>
-      Статус: <span>Оплачено</span>
+      Status: <span>Payed</span>
     </Item>
-    <Item variant='p2'>Идентификатор: -</Item>
+    <Item variant='p2'>Account: -</Item>
     {wallet && (
       <Button forwardedAs={NavLink} to={`/wallet/${wallet.toString()}`}>
-        Перейти в юнион-кошелек
+        Go to union-wallet
       </Button>
     )}
   </Container>

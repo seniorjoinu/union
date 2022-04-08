@@ -81,11 +81,11 @@ export const WalletsList = () => {
 
   return (
     <Container>
-      <Title variant='h2'>Ваши union-кошельки</Title>
+      <Title variant='h2'>Union-wallets</Title>
       <Panel>
         <Text>Spawned wallets {fetching.get_attached_union_wallets ? 'fetching' : ''}</Text>
         <Button forwardedAs={NavLink} to='/wallets/create'>
-          Create wallet
+          + Create wallet
         </Button>
       </Panel>
       <List>
@@ -97,7 +97,7 @@ export const WalletsList = () => {
               principal: <Text variant='p1'>{wallet.toString()}</Text>,
               isRoot: rootWallet == wallet.toString() && (
                 <Text variant='p1' color='grey'>
-                  Корневой
+                  Root
                 </Text>
               ),
               roleName: roleNames[wallet.toString()] && (

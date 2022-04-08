@@ -70,11 +70,11 @@ export const MyRolesAndPermissions = ({
 
   return (
     <Container>
-      <Title variant='h2'>Мои роли и пермиссии</Title>
-      <Title variant='h4'>Роли</Title>
+      <Title variant='h2'>My roles and permissions</Title>
+      <Title variant='h4'>Roles</Title>
       <Items>
         {fetching.get_my_roles && <Text>fetching</Text>}
-        {!fetching.get_my_roles && !roles.length && <Text>Роли отсутствуют</Text>}
+        {!fetching.get_my_roles && !roles.length && <Text>Roles does not exist</Text>}
         {roles.map((role, i) => (
           <RoleInfo
             key={`${role.id}${i}`}
@@ -84,10 +84,12 @@ export const MyRolesAndPermissions = ({
           />
         ))}
       </Items>
-      <Title variant='h4'>Пермиссии</Title>
+      <Title variant='h4'>Permissions</Title>
       <Items>
         {fetching.get_my_permissions && <Text>fetching</Text>}
-        {!fetching.get_my_permissions && !permissions.length && <Text>Пермиссии отсутствуют</Text>}
+        {!fetching.get_my_permissions && !permissions.length && (
+          <Text>Permissions does not exists</Text>
+        )}
         {permissions.map((permission, i) => (
           <PermissionInfo
             key={`${permission.id}${i}`}

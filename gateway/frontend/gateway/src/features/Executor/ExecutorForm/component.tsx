@@ -152,7 +152,7 @@ export function ExecutorForm({
 
   return (
     <Container {...p}>
-      {editable && <Title variant='h2'>Выполнение произвольного вызова</Title>}
+      {editable && <Title variant='h2'>Execution</Title>}
       <Controller
         name='title'
         control={control}
@@ -244,7 +244,7 @@ export function ExecutorForm({
               // eslint-disable-next-line react/no-array-index-key
               <ProgramSlice key={String(i)}>
                 <Row>
-                  <Text variant='h5'>Операция #{i + 1}</Text>
+                  <Text variant='h5'>Operation #{i + 1}</Text>
                   <RemoveButton
                     disabled={disabled}
                     onClick={() => field.onChange(field.value.filter((_, index) => index !== i))}
@@ -303,9 +303,7 @@ export function ExecutorForm({
                     />
                   )}
                 />
-                {!!field.value[i].args_encoded?.length && (
-                  <Text>Используется encoded аргумент</Text>
-                )}
+                {!!field.value[i].args_encoded?.length && <Text>Used encoded arguments</Text>}
                 <Controller
                   name={`program.${i}.args_candid`}
                   control={control}

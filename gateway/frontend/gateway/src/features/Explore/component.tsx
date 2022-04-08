@@ -63,7 +63,7 @@ export const Explore = () => {
 
   return (
     <Container>
-      <Title variant='h2'>Поиск кошельков</Title>
+      <Title variant='h2'>Explore wallets</Title>
       <List>
         {instances.map(({ canister_id }) => (
           <SimpleListItem
@@ -73,14 +73,14 @@ export const Explore = () => {
               principal: <Text variant='p1'>{canister_id.toString()}</Text>,
               isRoot: rootWallet == canister_id.toString() && (
                 <Text variant='p1' color='grey'>
-                  Корневой
+                  Root
                 </Text>
               ),
               attach: !!attached && (
                 <AttachButton onClick={(e) => handleAttach(e, canister_id)}>
                   {attached?.find((a) => a.toString() == canister_id.toString())
-                    ? 'Убрать из избранного'
-                    : 'В избранное'}
+                    ? 'Detach'
+                    : 'Attach'}
                 </AttachButton>
               ),
             }}

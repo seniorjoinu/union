@@ -57,7 +57,7 @@ export function RolesAttacher({ role, enumerated = [], ...p }: RolesAttacherProp
           <ListSelect
             {...field}
             helperText={error?.message}
-            label='Добавление ролей'
+            label='Roles addition'
             from={roles.map((r) => {
               const parsed = parseRole(r.role_type);
 
@@ -74,7 +74,7 @@ export function RolesAttacher({ role, enumerated = [], ...p }: RolesAttacherProp
         disabled={!isValid}
         onClick={() => addEnumeratedRoles(role, getValues().roleIds)}
       >
-        Добавить роли
+        Add roles
       </Button>
     </Container>
   );

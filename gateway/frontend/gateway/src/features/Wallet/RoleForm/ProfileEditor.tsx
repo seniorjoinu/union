@@ -44,13 +44,13 @@ export const ProfileEditor = ({ roleId, data }: ProfileEditorProps) => {
 
   return (
     <Container>
-      <Title variant='h2'>Редактирование профиля</Title>
+      <Title variant='h2'>Profile edit</Title>
       <Controller
         name='name'
         control={control}
         rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} label='Наименование профиля' />
+          <TextField {...field} helperText={error?.message} label='Name' />
         )}
       />
       <Controller
@@ -58,7 +58,7 @@ export const ProfileEditor = ({ roleId, data }: ProfileEditorProps) => {
         control={control}
         rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} label='Описание профиля' />
+          <TextField {...field} helperText={error?.message} label='Description' />
         )}
       />
       <Button
@@ -66,7 +66,7 @@ export const ProfileEditor = ({ roleId, data }: ProfileEditorProps) => {
         disabled={!isValid}
         onClick={() => editProfile(roleId, getValues(), data)}
       >
-        Сохранить
+        Save
       </Button>
     </Container>
   );

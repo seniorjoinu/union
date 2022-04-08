@@ -88,32 +88,32 @@ export const RoleDetailsView = ({
       <Controls>
         {detach && (
           <DetachButton size='S' onClick={detach}>
-            Отвязать
+            Detach
           </DetachButton>
         )}
         {edit && !('Everyone' in role.role_type) && (
           <DetachButton size='S' onClick={edit}>
-            Редактировать
+            Edit
           </DetachButton>
         )}
         {remove && (
           <RemoveButton size='S' onClick={remove}>
-            Удалить
+            Remove
           </RemoveButton>
         )}
       </Controls>
-      <Description variant={variant}>Имя: {parsedRole.title}</Description>
-      <Description variant={variant}>Описание: {parsedRole.description}</Description>
-      <Description variant={variant}>Тип: {parsedRole.type}</Description>
+      <Description variant={variant}>Name: {parsedRole.title}</Description>
+      <Description variant={variant}>Description: {parsedRole.description}</Description>
+      <Description variant={variant}>Type: {parsedRole.type}</Description>
       {!!parsedRole.principal && (
-        <Description variant={variant}>Принципал: {parsedRole.principal}</Description>
+        <Description variant={variant}>Principal: {parsedRole.principal}</Description>
       )}
       {!!parsedRole.threshold && (
-        <Description variant={variant}>Пороговое значение: {parsedRole.threshold}</Description>
+        <Description variant={variant}>Threshold: {parsedRole.threshold}</Description>
       )}
       {!!enumerated.length && (
         <>
-          <Title variant='h4'>Связанные роли</Title>
+          <Title variant='h4'>Linked roles</Title>
           <Items>
             {enumerated.map((e) => (
               <RoleDetailsView
@@ -130,7 +130,7 @@ export const RoleDetailsView = ({
       )}
       {!!permissions.length && (
         <>
-          <Title variant='h4'>Пермиссии</Title>
+          <Title variant='h4'>Permissions</Title>
           <Items>
             {permissions.map((permission) => (
               <PermissionDetailsView

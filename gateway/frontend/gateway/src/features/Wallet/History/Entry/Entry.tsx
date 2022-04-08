@@ -89,36 +89,32 @@ export const Entry = ({ entry, children, renderControls = () => null, ...p }: En
 
   return (
     <Container {...p}>
-      <Title variant='h2'>Произвольный вызов</Title>
+      <Title variant='h2'>Execution</Title>
       {renderControls({ isPending, entryAuthorizedByMe, hasAccess })}
-      <Text variant='p1'>Дата: {date.format('DD-MM-YYYY HH:mm:ss')}</Text>
-      <Text variant='p1'>Статус: {status}</Text>
+      <Text variant='p1'>Date: {date.format('DD-MM-YYYY HH:mm:ss')}</Text>
+      <Text variant='p1'>Status: {status}</Text>
       {executed && (
         <Text variant='p1'>
-          Выполнено в:{' '}
+          Executed at:{' '}
           {moment(Math.ceil(Number(executed[0]) / 10 ** 6)).format('DD-MM-YYYY HH:mm:ss')}
         </Text>
       )}
       {declined && (
         <Declined>
           <Text variant='p1'>
-            Отклонено в:{' '}
+            Rejected at:{' '}
             {moment(Math.ceil(Number(declined[0]) / 10 ** 6)).format('DD-MM-YYYY HH:mm:ss')}
           </Text>
-          <Text variant='p1'>Причина отклонения: {declined[1]}</Text>
+          <Text variant='p1'>Reason for rejection: {declined[1]}</Text>
         </Declined>
       )}
-      <Text variant='p1'>Доступ: {hasAccess ? 'Есть' : 'Нет'}</Text>
-      <Text variant='p1'>Подтверждено вами: {entryAuthorizedByMe ? 'Да' : 'Нет'}</Text>
+      <Text variant='p1'>Access: {hasAccess ? 'yes' : 'no'}</Text>
+      <Text variant='p1'>Approved by you: {entryAuthorizedByMe ? 'yes' : 'no'}</Text>
       {!!entry.authorized_by.length && (
         <Participants>
           <Text variant='p1'>
-            Подтвердили выполнение: {entry.authorized_by.length}{' '}
-            {caseByCount(entry.authorized_by.length, [
-              'пользователь',
-              'пользователя',
-              'пользователей',
-            ])}
+            Execution approvers: {entry.authorized_by.length}{' '}
+            {caseByCount(entry.authorized_by.length, ['user', 'user', 'users'])}
           </Text>
           {entry.authorized_by.map((p) => (
             <Text key={p.toString()} variant='p2' color='grey'>

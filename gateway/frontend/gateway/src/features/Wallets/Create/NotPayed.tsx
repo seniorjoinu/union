@@ -106,14 +106,14 @@ export const NotPayed = ({ onApproved }: NotPayedProps) => {
 
   return (
     <Container>
-      <Title variant='h3'>Заявка на создание юнион-кошелька</Title>
-      <Item variant='p2'>К оплате: 0.2 ICP</Item>
+      <Title variant='h3'>Union-wallet creation</Title>
+      <Item variant='p2'>To pay: 0.2 ICP</Item>
       <Item variant='p2'>
-        Статус: <span>Не оплачено</span>
+        Status: <span>Not payed</span>
       </Item>
-      <Item variant='p2'>Идентификатор: -</Item>
+      <Item variant='p2'>Account: -</Item>
       <Info variant='p2'>
-        Для оплаты перейдите в nns.ic0.app и переведите 0.2 ICP на аккаунт
+        Navigate to nns.ic0.app and transfer 0.2 ICP to account
         <br />-
       </Info>
       <Controller
@@ -121,7 +121,7 @@ export const NotPayed = ({ onApproved }: NotPayedProps) => {
         control={control}
         rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
-          <Select {...field} helperText={error?.message} title='Выберите версию'>
+          <Select {...field} helperText={error?.message} title='Select version'>
             {versions.map((v) => (
               <Option key={v} value={v}>
                 {v}
@@ -131,7 +131,7 @@ export const NotPayed = ({ onApproved }: NotPayedProps) => {
         )}
       />
       <Button disabled={!isValid} onClick={onCreate}>
-        Подтвердить оплату и создать кошелек
+        Approve payment and create wallet
       </Button>
     </Container>
   );

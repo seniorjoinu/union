@@ -84,30 +84,30 @@ export const PermissionDetailsView = ({
       <Controls>
         {detach && (
           <DetachButton size='S' onClick={detach}>
-            Отвязать
+            Detach
           </DetachButton>
         )}
         {edit && (
           <DetachButton size='S' onClick={edit}>
-            Редактировать
+            Edit
           </DetachButton>
         )}
         {remove && (
           <RemoveButton size='S' onClick={remove}>
-            Удалить
+            Remove
           </RemoveButton>
         )}
       </Controls>
-      <Title variant={variant}>Имя: {parsedPermission.name}</Title>
-      <Description variant={variant}>Тип: {parsedPermission.scope}</Description>
+      <Title variant={variant}>Name: {parsedPermission.name}</Title>
+      <Description variant={variant}>Type: {parsedPermission.scope}</Description>
       {!!parsedPermission.targets.length && (
         <>
-          <Title variant='h4'>Цели</Title>
+          <Title variant='h4'>Targets</Title>
           <Items>
             {parsedPermission.targets.map((target, i) => (
               // eslint-disable-next-line react/no-array-index-key
               <Item key={String(i)}>
-                <Text variant='p3'>Тип: {target.type}</Text>
+                <Text variant='p3'>Type: {target.type}</Text>
                 {!!(target.principal || target.canisterId) && (
                   <Description variant='p3'>
                     {target.principal || target.canisterId}:{target.method || '*'}
@@ -121,7 +121,7 @@ export const PermissionDetailsView = ({
       )}
       {!!roles.length && (
         <>
-          <Title variant='h4'>Роли</Title>
+          <Title variant='h4'>Roles</Title>
           <Items>
             {roles.map((role) => (
               <RoleDetailsView

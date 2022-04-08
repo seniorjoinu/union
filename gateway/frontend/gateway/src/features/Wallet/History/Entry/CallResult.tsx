@@ -40,15 +40,15 @@ export const CallResult = ({ entry, index, ...p }: CallResultProps) => {
     <Container {...p}>
       {ok && (
         <Result variant='p1' color='green'>
-          <Text variant='p1'>Результат:</Text>
+          <Text variant='p1'>Result:</Text>
           <Text variant='p1'>{ok}</Text>
         </Result>
       )}
       {err && (
         <Result variant='p1' color='red'>
-          <Text variant='p1'>Код ошибки: {Object.keys(err[0]).join()}</Text>
+          <Text variant='p1'>Error code: {Object.keys(err[0]).join()}</Text>
           <Text variant='p1'>
-            Причина: {'\n'}
+            Reason: {'\n'}
             {err[1]}
           </Text>
         </Result>

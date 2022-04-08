@@ -110,13 +110,13 @@ export const Invite = () => {
 
   return (
     <Container>
-      <Title variant='h2'>Приглашение</Title>
+      <Title variant='h2'>Inviting</Title>
       <Members>
         {members.map((m, i) => (
           // eslint-disable-next-line react/no-array-index-key
           <Member key={`member${i}`}>
             <TextField
-              label='Имя'
+              label='Name'
               value={m.name}
               onChange={(e) =>
                 setMembers((members) => {
@@ -127,7 +127,7 @@ export const Invite = () => {
               }
             />
             <TextField
-              label='Принципал'
+              label='Principal'
               value={m.principal}
               onChange={(e) =>
                 setMembers((members) => {
@@ -138,7 +138,7 @@ export const Invite = () => {
               }
             />
             <TextField
-              label='Описание'
+              label='Description'
               value={m.description}
               onChange={(e) =>
                 setMembers((members) => {
@@ -155,7 +155,7 @@ export const Invite = () => {
         </AddButton>
       </Members>
       <Button disabled={!isValid || submitting} onClick={onSubmit}>
-        Пригласить
+        Invite
       </Button>
     </Container>
   );

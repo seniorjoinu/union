@@ -58,7 +58,7 @@ export const AssetsCanisterUpdater = ({ ...p }: AssetsCanisterUpdaterProps) => {
           },
         }}
         render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} label='ID канистера' />
+          <TextField {...field} helperText={error?.message} label='Canister ID' />
         )}
       />
       <Controller
@@ -70,7 +70,7 @@ export const AssetsCanisterUpdater = ({ ...p }: AssetsCanisterUpdaterProps) => {
             type='file'
             accept='.wasm'
             helperText={error?.message}
-            label='Файл .wasm'
+            label='.wasm file'
             onChange={(e) => {
               const file = e.target.files?.item(0) || null;
 
@@ -80,7 +80,7 @@ export const AssetsCanisterUpdater = ({ ...p }: AssetsCanisterUpdaterProps) => {
         )}
       />
       <Button type='submit' disabled={!isValid} onClick={updateCanister}>
-        Загрузить
+        Install code
       </Button>
     </Container>
   );

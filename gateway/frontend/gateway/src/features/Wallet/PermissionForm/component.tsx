@@ -88,13 +88,13 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
 
   return (
     <Container>
-      <Title variant='h2'>{create ? 'Создание новой пермиссии' : 'Редактирование пермиссии'}</Title>
+      <Title variant='h2'>{create ? 'Create new permission' : 'Edit permission'}</Title>
       <Controller
         name='name'
         control={control}
         rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} label='Наименование пермиссии' />
+          <TextField {...field} helperText={error?.message} label='Name' />
         )}
       />
       <Controller
@@ -102,13 +102,13 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
         control={control}
         rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
-          <Select {...field} helperText={error?.message} title='Тип пермиссии'>
+          <Select {...field} helperText={error?.message} title='Permission type'>
             <Option value='Blacklist'>Blacklist</Option>
             <Option value='Whitelist'>Whitelist</Option>
           </Select>
         )}
       />
-      <Accordeon title={<AccordeonTitle variant='p1'>Candid кошелька</AccordeonTitle>}>
+      <Accordeon title={<AccordeonTitle variant='p1'>Candid of wallet</AccordeonTitle>}>
         <Controller
           name='targets'
           control={control}
@@ -131,7 +131,6 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
         rules={{
           // required: 'Required field',
           validate: {
-            // isNotEmpty: (value) => value.length > 0 || 'Список не может быть пустым',
             isPrincipal: (value) =>
               !value.length ||
               !value.find(
@@ -144,10 +143,10 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
           <MultiSelectSkeleton
             {...field}
             helperText={error?.message}
-            label='Целевой канистер'
+            label='Target canister'
             renderElement={(v) =>
               (!v.canisterId && !v.methodName
-                ? 'Пустая программа'
+                ? 'Empty program'
                 : `${v.canisterId || '*'}:${v.methodName || '*'}${v.methodName ? '()' : ''}`)
             }
           >
@@ -158,12 +157,12 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
                 <MultiSelectTextField
                   ref={(r) => r && (refs.current[0] = r)}
                   id='canisterId'
-                  label='Принципал канистера'
+                  label='Canister ID'
                 />
                 <MultiSelectTextField
                   ref={(r) => r && (refs.current[1] = r)}
                   id='methodName'
-                  label='Метод'
+                  label='Method name'
                 />
               </MultiSelectFields>
             )}
@@ -171,7 +170,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
         )}
       />
       <Button type='submit' disabled={!isValid || submitting} onClick={submit}>
-        {create ? 'Создать' : 'Обновить'}
+        {create ? 'Create' : 'Update'}
       </Button>
     </Container>
   );

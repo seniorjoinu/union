@@ -78,13 +78,13 @@ export const RoleForm = ({ create }: RoleFormProps) => {
 
   return (
     <Container>
-      <Title variant='h2'>{create ? 'Создание новой роли' : 'Редактирование роли'}</Title>
+      <Title variant='h2'>{create ? 'Create new role' : 'Edit role'}</Title>
       <Controller
         name='name'
         control={control}
         rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} label='Наименование роли' />
+          <TextField {...field} helperText={error?.message} label='Name' />
         )}
       />
       <Controller
@@ -92,7 +92,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
         control={control}
         rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} label='Описание роли' />
+          <TextField {...field} helperText={error?.message} label='Description' />
         )}
       />
       <Thresholds>
@@ -107,11 +107,11 @@ export const RoleForm = ({ create }: RoleFormProps) => {
                 const { type } = getValues();
 
                 if (type != 'QuantityOf') {
-                  return (value >= 0 && value <= 1) || 'Некорректное значение';
+                  return (value >= 0 && value <= 1) || 'Incorrect value';
                 }
 
                 if (value < 0) {
-                  return 'Значение должно быть положительно';
+                  return 'Value must be greather than 0';
                 }
 
                 return true;
@@ -122,7 +122,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
             <TextField
               {...field}
               helperText={error?.message}
-              label='Пороговая схема'
+              label='Threshold schema'
               type='number'
             />
           )}
@@ -132,9 +132,9 @@ export const RoleForm = ({ create }: RoleFormProps) => {
           control={control}
           rules={{ required: 'Required field' }}
           render={({ field, fieldState: { error } }) => (
-            <Select {...field} helperText={error?.message} title='Пороговая схема'>
-              <Option value='FractionOf'>Проценты</Option>
-              <Option value='QuantityOf'>Количество</Option>
+            <Select {...field} helperText={error?.message} title='Threshold schema'>
+              <Option value='FractionOf'>FractionOf</Option>
+              <Option value='QuantityOf'>QuantityOf</Option>
             </Select>
           )}
         />
@@ -149,7 +149,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
           <ListSelect
             {...field}
             helperText={error?.message}
-            label='Обладатели роли'
+            label='Role owners'
             from={roles.map((r) => {
               const parsed = parseRole(r.role_type);
 
@@ -162,7 +162,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
         )}
       />
       <Button type='submit' disabled={!isValid || submitting} onClick={submit}>
-        {create ? 'Создать' : 'Обновить'}
+        {create ? 'Create' : 'Update'}
       </Button>
     </Container>
   );

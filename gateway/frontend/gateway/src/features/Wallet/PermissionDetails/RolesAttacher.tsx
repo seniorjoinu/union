@@ -48,7 +48,7 @@ export function RolesAttacher({ permission, ...p }: RolesAttacherProps) {
           <ListSelect
             {...field}
             helperText={error?.message}
-            label='Добавление ролей'
+            label='Roles addition'
             from={roles.map((r) => {
               const parsed = parseRole(r.role_type);
 
@@ -65,7 +65,7 @@ export function RolesAttacher({ permission, ...p }: RolesAttacherProps) {
         disabled={!isValid}
         onClick={() => attach([permission.id], getValues().roleIds)}
       >
-        Добавить роли
+        Add roles
       </Button>
     </Container>
   );

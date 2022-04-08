@@ -56,15 +56,14 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
         rules={{
           required: 'Required field',
           validate: {
-            isFilled: (value) =>
-              !!value.replaceAll('_', '').match(/\d.\d+.\d+/) || 'Заполните версию',
+            isFilled: (value) => !!value.replaceAll('_', '').match(/\d.\d+.\d+/) || 'Fill version',
           },
         }}
         render={({ field, fieldState: { error } }) => (
           <MaskedTextField
             {...field}
             helperText={error?.message}
-            label='Наименование версии'
+            label='Version name'
             mask='9.99.99'
           />
         )}
@@ -75,11 +74,11 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
         rules={{
           required: 'Required field',
           validate: {
-            length: (value) => value.length > 10 || 'Описание должно быть длиннее 10 символов',
+            length: (value) => value.length > 10 || 'Description length must be greather than 10',
           },
         }}
         render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} label='Описание версии' />
+          <TextField {...field} helperText={error?.message} label='Description' />
         )}
       />
       <Controller
@@ -91,7 +90,7 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
             type='file'
             accept='.wasm'
             helperText={error?.message}
-            label='Файл .wasm'
+            label='.wasm file'
             onChange={(e) => {
               const file = e.target.files?.item(0) || null;
 
@@ -101,7 +100,7 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
         )}
       />
       <Button type='submit' disabled={!isValid} onClick={create}>
-        Создать
+        Create
       </Button>
     </Container>
   );

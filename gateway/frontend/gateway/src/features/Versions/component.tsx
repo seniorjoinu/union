@@ -90,7 +90,7 @@ export const Versions = ({ ...p }: VersionsProps) => {
 
   return (
     <Container {...p}>
-      <Title variant='h2'>Версии union-кошельков</Title>
+      <Title variant='h2'>Union-wallet versions</Title>
       {!!canisterToCreateVersion && (
         <AddButton forwardedAs={NavLink} to={`/wallet/${canisterToCreateVersion}/versions/create`}>
           Create version

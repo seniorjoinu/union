@@ -33,9 +33,9 @@ export const Assets = ({ ...p }: AssetsProps) => {
   console.log(p);
   return (
     <Container {...p}>
-      <Title variant='h2'>Создание и обновление канистеров</Title>
+      <Title variant='h2'>Asset canister setup</Title>
       <AssetsCanisterCreator />
-      <SubTitle variant='h4'>Загрузка wasm в созданный канистер</SubTitle>
+      <SubTitle variant='h4'>Install wasm to created asset canister</SubTitle>
       <AssetsCanisterUpdater />
     </Container>
   );

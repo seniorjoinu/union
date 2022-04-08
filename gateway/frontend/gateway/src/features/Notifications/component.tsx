@@ -90,7 +90,7 @@ export const Notifications = ({ ...p }: NotificationsProps) => {
 
   return (
     <Container {...p}>
-      <Title variant='h2'>Уведомления</Title>
+      <Title variant='h2'>Notifications</Title>
       {!!fetching.get_my_notifications && <Text>fetching</Text>}
       {!fetching.get_my_notifications && !notifications.length && (
         <Text>Notifications list is empty</Text>
@@ -103,12 +103,12 @@ export const Notifications = ({ ...p }: NotificationsProps) => {
         return (
           <Item key={String(id)}>
             <Text>
-              Вам назначена роль: {parsedRole?.title} ({String(role_id)})
+              Assigned role: {parsedRole?.title} ({String(role_id)})
             </Text>
-            <Text>Кошелек: {union_wallet_id.toString()}</Text>
+            <Text>Wallet: {union_wallet_id.toString()}</Text>
             {!accepted[String(id)] && parsedRole?.type == 'Profile' && (
               <AcceptButton onClick={() => handleAccept(String(id), canisterId, role_id)}>
-                Принять
+                Accept
               </AcceptButton>
             )}
           </Item>

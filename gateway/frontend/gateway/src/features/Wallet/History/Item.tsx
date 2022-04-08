@@ -60,11 +60,11 @@ export const Item = ({ entry, ...p }: ItemProps) => {
           <Title variant='p1'>
             {op.endpoint.canister_id.toString()}:{op.endpoint.method_name || '*'}()
           </Title>
-          <Title variant='p1'>{Number(op.cycles)} циклов</Title>
+          <Title variant='p1'>{Number(op.cycles)} cycles</Title>
         </Row>
       ))}
       <Row>
-        <Title variant='p1'>Вы обладаете {!hasAccess ? 'не ' : ''}пермиссией</Title>
+        <Title variant='p1'>You has {!hasAccess ? 'not ' : ''}permissions</Title>
         <Title variant='p1'>{status}</Title>
       </Row>
     </Container>

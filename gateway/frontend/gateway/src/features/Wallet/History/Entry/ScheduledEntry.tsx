@@ -74,7 +74,7 @@ export const ScheduledEntry = ({ navigateToEntry, ...p }: ScheduledEntryProps) =
           <Controls>
             {approveVisible && (
               <AproveButton onClick={authorizeExecution} disabled={!!fetching.authorize_execution}>
-                Подтвердить
+                Approve execution
               </AproveButton>
             )}
           </Controls>

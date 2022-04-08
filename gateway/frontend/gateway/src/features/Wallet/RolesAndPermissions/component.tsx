@@ -99,25 +99,25 @@ export const RolesAndPermissions = ({
 
   return (
     <Container>
-      <Title variant='h2'>Роли и пермиссии</Title>
+      <Title variant='h2'>Roles and permissions</Title>
       {!!rnp && (
         <Controls>
           <Button forwardedAs={NavLink} to='my'>
-            Мои роли
+            My roles
           </Button>
           <Button forwardedAs={NavLink} to='../role/create'>
-            + Создать новую роль
+            + Create new role
           </Button>
           <Button forwardedAs={NavLink} to='../permission/create'>
-            + Создать новую пермиссию
+            + Create new permission
           </Button>
         </Controls>
       )}
-      <Accordeon title='Профили' border='no-border'>
+      <Accordeon title='Profiles' border='no-border'>
         <Items>
           {(fetching.get_role_ids || fetching.get_roles) && <Text>fetching</Text>}
           {!(fetching.get_role_ids || fetching.get_roles) && !groups.Profile.length && (
-            <Text>Профили отсутствуют</Text>
+            <Text>Profiles does not exist</Text>
           )}
           {groups.Profile.map((role, i) => (
             <RoleInfo
@@ -130,11 +130,11 @@ export const RolesAndPermissions = ({
           ))}
         </Items>
       </Accordeon>
-      <Accordeon title='Роли' isDefaultOpened border='no-border'>
+      <Accordeon title='Roles' isDefaultOpened border='no-border'>
         <Items>
           {(fetching.get_role_ids || fetching.get_roles) && <Text>fetching</Text>}
           {!(fetching.get_role_ids || fetching.get_roles) && !groups.Another.length && (
-            <Text>Роли отсутствуют</Text>
+            <Text>Roles does not exist</Text>
           )}
           {groups.Another.map((role, i) => (
             <RoleInfo
@@ -147,11 +147,11 @@ export const RolesAndPermissions = ({
           ))}
         </Items>
       </Accordeon>
-      <Accordeon title='Пермиссии' isDefaultOpened border='no-border'>
+      <Accordeon title='Permissions' isDefaultOpened border='no-border'>
         <Items>
           {(fetching.get_permission_ids || fetching.get_permissions) && <Text>fetching</Text>}
           {!(fetching.get_permission_ids || fetching.get_permissions) && !permissions.length && (
-            <Text>Пермиссии отсутствуют</Text>
+            <Text>Permissions does not exist</Text>
           )}
           {permissions.map((permission, i) => (
             <PermissionInfo

@@ -24,7 +24,7 @@ export const AssetsCanisterCreator = ({ ...p }: AssetsCanisterCreatorProps) => {
   return (
     <Container {...p}>
       <Button type='submit' onClick={createCanister}>
-        + Создать asset канистер
+        + Create assets canister
       </Button>
     </Container>
   );
