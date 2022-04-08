@@ -12,6 +12,7 @@ const envs = {
   ...getCanisterIds(path.resolve('../../backend')),
   ...getCanisterIds(path.resolve('../../../deployer-backend')),
   ...getCanisterIds(path.resolve('../internet-identity')),
+  MANAGEMENT_CANISTER_ID: 'aaaaa-aa',
 };
 
 export default defineConfig({

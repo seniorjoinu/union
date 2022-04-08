@@ -54,7 +54,7 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
         name='version'
         control={control}
         rules={{
-          required: 'Обязательное поле',
+          required: 'Required field',
           validate: {
             isFilled: (value) =>
               !!value.replaceAll('_', '').match(/\d.\d+.\d+/) || 'Заполните версию',
@@ -73,7 +73,7 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
         name='description'
         control={control}
         rules={{
-          required: 'Обязательное поле',
+          required: 'Required field',
           validate: {
             length: (value) => value.length > 10 || 'Описание должно быть длиннее 10 символов',
           },
@@ -85,7 +85,7 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
       <Controller
         name='file'
         control={control}
-        rules={{ required: 'Обязательное поле' }}
+        rules={{ required: 'Required field' }}
         render={({ fieldState: { error } }) => (
           <TextField
             type='file'

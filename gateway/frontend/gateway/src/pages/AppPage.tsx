@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Header as H } from '../features/Header';
-import { SubHeader as SH } from '../features/SubHeader';
+import { WalletHeader as WH } from '../features/WalletHeader';
 
 const Header = styled(H)``;
-const SubHeader = styled(SH)``;
+const WalletHeader = styled(WH)``;
 
 const Fixed = styled.section`
   display: flex;
@@ -35,7 +35,7 @@ const Container = styled.main`
   ${Header} {
   }
 
-  ${SubHeader} {
+  ${WalletHeader} {
     border-bottom: 1px solid grey;
   }
 
@@ -61,7 +61,7 @@ export const AppPage = ({ children }: AppPageProps) => (
   <Container>
     <Fixed>
       <Header />
-      <SubHeader />
+      <WalletHeader />
     </Fixed>
     <Section>{children}</Section>
   </Container>

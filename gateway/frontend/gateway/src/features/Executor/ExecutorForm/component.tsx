@@ -157,14 +157,14 @@ export function ExecutorForm({
         name='title'
         control={control}
         rules={{
-          required: 'Обязательное поле',
+          required: 'Required field',
         }}
         render={({ field, fieldState: { error } }) => (
           <TextField
             {...field}
             helperText={error?.message}
             disabled={disabled}
-            label='Название действия'
+            label='Action name'
           />
         )}
       />
@@ -172,10 +172,15 @@ export function ExecutorForm({
         name='description'
         control={control}
         rules={{
-          required: 'Обязательное поле',
+          required: 'Required field',
         }}
         render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} disabled={disabled} label='Описание' />
+          <TextField
+            {...field}
+            helperText={error?.message}
+            disabled={disabled}
+            label='Description'
+          />
         )}
       />
       {editable && (
@@ -183,9 +188,9 @@ export function ExecutorForm({
           name='authorization_delay_nano'
           control={control}
           rules={{
-            required: 'Обязательное поле',
+            required: 'Required field',
             validate: {
-              gtNow: (value) => value >= 0 || 'Некорректная дата',
+              gtNow: (value) => value >= 0 || 'Incorrect date',
             },
           }}
           render={({ field, fieldState: { error } }) => (
@@ -208,7 +213,7 @@ export function ExecutorForm({
                 disabled={disabled}
                 helperText={error?.message}
                 type='datetime-local'
-                label='Ожидание до'
+                label='Wait until'
               />
               <TextField
                 {...field}
@@ -216,7 +221,7 @@ export function ExecutorForm({
                 disabled={disabled}
                 helperText={error?.message}
                 type='number'
-                label='В наносекундах'
+                label='In nanosecs'
               />
             </Row>
           )}
@@ -227,9 +232,9 @@ export function ExecutorForm({
         getValues={getValues}
         disabled={disabled}
         mode={mode}
-        label='Выполнить из под роли и пермиссии'
+        label='Execute under role and permission'
       />
-      {(editable || !!operationsLength) && <Text variant='h5'>Операции</Text>}
+      {(editable || !!operationsLength) && <Text variant='h5'>Operations</Text>}
       <Controller
         name='program'
         control={control}
@@ -251,11 +256,11 @@ export function ExecutorForm({
                   name={`program.${i}.endpoint.canister_id`}
                   control={control}
                   rules={{
-                    required: 'Обязательное поле',
+                    required: 'Required field',
                     validate: {
                       isPrincipal: (value) =>
                         (!!value && checkPrincipal(value.toString()) != null) ||
-                        'Некорректный принципал',
+                        'Incorrect principal',
                     },
                   }}
                   render={({ field, fieldState: { error } }) => (
@@ -263,7 +268,7 @@ export function ExecutorForm({
                       {...field}
                       helperText={error?.message}
                       disabled={disabled}
-                      label='Идентификатор канистера'
+                      label='Canister ID'
                     />
                   )}
                 />
@@ -271,14 +276,14 @@ export function ExecutorForm({
                   name={`program.${i}.endpoint.method_name`}
                   control={control}
                   rules={{
-                    required: 'Обязательное поле',
+                    required: 'Required field',
                   }}
                   render={({ field, fieldState: { error } }) => (
                     <TextField
                       {...field}
                       helperText={error?.message}
                       disabled={disabled}
-                      label='Наименование метода'
+                      label='Method name'
                     />
                   )}
                 />
@@ -286,7 +291,7 @@ export function ExecutorForm({
                   name={`program.${i}.cycles`}
                   control={control}
                   rules={{
-                    required: 'Обязательное поле',
+                    required: 'Required field',
                   }}
                   render={({ field, fieldState: { error } }) => (
                     <TextField
@@ -294,7 +299,7 @@ export function ExecutorForm({
                       helperText={error?.message}
                       disabled={disabled}
                       type='number'
-                      label='Сумма циклов для трансфера'
+                      label='Cyctes for transfer'
                     />
                   )}
                 />
@@ -306,7 +311,7 @@ export function ExecutorForm({
                   control={control}
                   rules={
                     {
-                      // required: 'Обязательное поле',
+                      // required: 'Required field',
                     }
                   }
                   render={({ field }) => (
@@ -318,7 +323,7 @@ export function ExecutorForm({
                           name={`program.${i}.args_candid.${j}`}
                           control={control}
                           rules={{
-                            required: 'Обязательное поле',
+                            required: 'Required field',
                           }}
                           render={({ field: didfield, fieldState: { error } }) => (
                             <Row>
@@ -326,7 +331,7 @@ export function ExecutorForm({
                                 {...didfield}
                                 helperText={error?.message}
                                 disabled={disabled}
-                                label={`Candid-аргумент вызова #${j + 1}`}
+                                label={`Candid-argument #${j + 1}`}
                               />
                               {editable && (
                                 <RemoveButton
@@ -347,7 +352,7 @@ export function ExecutorForm({
                           disabled={disabled}
                           onClick={() => field.onChange([...field.value, ''])}
                         >
-                          + добавить аргумент
+                          + add argument
                         </AddButton>
                       )}
                       <Result>{renderResult(i) || null}</Result>
@@ -361,7 +366,7 @@ export function ExecutorForm({
                 disabled={disabled}
                 onClick={() => field.onChange([...field.value, getEmptyProgram()])}
               >
-                + добавить операцию
+                + add operation
               </AddButton>
             )}
           </>
@@ -369,7 +374,7 @@ export function ExecutorForm({
       />
       {editable && (
         <Button type='submit' disabled={!isValid || submitting} onClick={submit}>
-          Выполнить
+          Execute
         </Button>
       )}
     </Container>

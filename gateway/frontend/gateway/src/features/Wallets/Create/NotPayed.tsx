@@ -119,7 +119,7 @@ export const NotPayed = ({ onApproved }: NotPayedProps) => {
       <Controller
         name='version'
         control={control}
-        rules={{ required: 'Обязательное поле' }}
+        rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
           <Select {...field} helperText={error?.message} title='Выберите версию'>
             {versions.map((v) => (

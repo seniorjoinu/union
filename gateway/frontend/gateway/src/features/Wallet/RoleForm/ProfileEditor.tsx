@@ -48,7 +48,7 @@ export const ProfileEditor = ({ roleId, data }: ProfileEditorProps) => {
       <Controller
         name='name'
         control={control}
-        rules={{ required: 'Обязательное поле' }}
+        rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
           <TextField {...field} helperText={error?.message} label='Наименование профиля' />
         )}
@@ -56,7 +56,7 @@ export const ProfileEditor = ({ roleId, data }: ProfileEditorProps) => {
       <Controller
         name='description'
         control={control}
-        rules={{ required: 'Обязательное поле' }}
+        rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
           <TextField {...field} helperText={error?.message} label='Описание профиля' />
         )}

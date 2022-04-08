@@ -41,7 +41,7 @@ export function PermissionsAttacher({ role, ...p }: PermissionsAttacherProps) {
         name='permissionIds'
         control={control}
         rules={{
-          required: 'Обязательное поле',
+          required: 'Required field',
         }}
         render={({ field, fieldState: { error } }) => (
           <ListSelect

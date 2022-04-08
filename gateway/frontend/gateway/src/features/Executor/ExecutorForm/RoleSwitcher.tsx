@@ -53,13 +53,13 @@ export const RoleSwitcher = ({
   const { canister, data } = useWallet(principal);
 
   const rnpField = control.register('rnp', {
-    required: 'Обязательное поле',
+    required: 'Required field',
   });
   const pid = control.register('rnp.permission_id', {
-    required: 'Обязательное поле',
+    required: 'Required field',
   });
   const rid = control.register('rnp.role_id', {
-    required: 'Обязательное поле',
+    required: 'Required field',
   });
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export const RoleSwitcher = ({
           name='rnp.role_id'
           control={control}
           rules={{
-            required: 'Обязательное поле',
+            required: 'Required field',
           }}
           render={({ field }) => (
             <Select
@@ -137,7 +137,7 @@ export const RoleSwitcher = ({
           name='rnp.permission_id'
           control={control}
           rules={{
-            required: 'Обязательное поле',
+            required: 'Required field',
           }}
           render={({ field }) => (
             <Select

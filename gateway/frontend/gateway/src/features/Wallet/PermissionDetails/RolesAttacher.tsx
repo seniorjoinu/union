@@ -42,7 +42,7 @@ export function RolesAttacher({ permission, ...p }: RolesAttacherProps) {
         name='roleIds'
         control={control}
         rules={{
-          required: 'Обязательное поле',
+          required: 'Required field',
         }}
         render={({ field, fieldState: { error } }) => (
           <ListSelect

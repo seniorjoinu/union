@@ -82,7 +82,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
       <Controller
         name='name'
         control={control}
-        rules={{ required: 'Обязательное поле' }}
+        rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
           <TextField {...field} helperText={error?.message} label='Наименование роли' />
         )}
@@ -90,7 +90,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
       <Controller
         name='description'
         control={control}
-        rules={{ required: 'Обязательное поле' }}
+        rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
           <TextField {...field} helperText={error?.message} label='Описание роли' />
         )}
@@ -100,7 +100,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
           name='threshold'
           control={control}
           rules={{
-            required: 'Обязательное поле',
+            required: 'Required field',
             min: 0,
             validate: {
               threshold: (value) => {
@@ -130,7 +130,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
         <Controller
           name='type'
           control={control}
-          rules={{ required: 'Обязательное поле' }}
+          rules={{ required: 'Required field' }}
           render={({ field, fieldState: { error } }) => (
             <Select {...field} helperText={error?.message} title='Пороговая схема'>
               <Option value='FractionOf'>Проценты</Option>
@@ -143,7 +143,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
         name='owners'
         control={control}
         rules={{
-          required: 'Обязательное поле',
+          required: 'Required field',
         }}
         render={({ field, fieldState: { error } }) => (
           <ListSelect

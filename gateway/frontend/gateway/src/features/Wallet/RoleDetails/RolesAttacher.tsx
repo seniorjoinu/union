@@ -51,7 +51,7 @@ export function RolesAttacher({ role, enumerated = [], ...p }: RolesAttacherProp
         name='roleIds'
         control={control}
         rules={{
-          required: 'Обязательное поле',
+          required: 'Required field',
         }}
         render={({ field, fieldState: { error } }) => (
           <ListSelect

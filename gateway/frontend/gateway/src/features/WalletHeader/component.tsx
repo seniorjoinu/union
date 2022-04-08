@@ -37,12 +37,12 @@ const Container = styled.div`
   }
 `;
 
-export interface SubHeaderProps {
+export interface WalletHeaderProps {
   className?: string;
   style?: React.CSSProperties;
 }
 
-export const SubHeader = ({ ...p }: SubHeaderProps) => {
+export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
   const param = useParams();
   const location = param['*'] || '';
 
@@ -54,6 +54,9 @@ export const SubHeader = ({ ...p }: SubHeaderProps) => {
       {isInsideWallet && walletId && (
         <>
           <Items>
+            <Item variant='p2' as={NavLink} to={`wallet/${walletId}/assets`}>
+              Assets
+            </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/participants`}>
               Participants
             </Item>

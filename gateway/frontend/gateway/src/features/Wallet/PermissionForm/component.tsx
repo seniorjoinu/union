@@ -92,7 +92,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
       <Controller
         name='name'
         control={control}
-        rules={{ required: 'Обязательное поле' }}
+        rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
           <TextField {...field} helperText={error?.message} label='Наименование пермиссии' />
         )}
@@ -100,7 +100,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
       <Controller
         name='scope'
         control={control}
-        rules={{ required: 'Обязательное поле' }}
+        rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
           <Select {...field} helperText={error?.message} title='Тип пермиссии'>
             <Option value='Blacklist'>Blacklist</Option>
@@ -119,7 +119,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
                 !value.find(
                   (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
                 ) ||
-                'Некорректный принципал',
+                'Incorrect principal',
             },
           }}
           render={({ field }) => <CanisterMethods {...field} />}
@@ -129,7 +129,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
         name='targets'
         control={control}
         rules={{
-          // required: 'Обязательное поле',
+          // required: 'Required field',
           validate: {
             // isNotEmpty: (value) => value.length > 0 || 'Список не может быть пустым',
             isPrincipal: (value) =>
@@ -137,7 +137,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
               !value.find(
                 (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
               ) ||
-              'Некорректный принципал',
+              'Incorrect principal',
           },
         }}
         render={({ field, fieldState: { error } }) => (

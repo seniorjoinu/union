@@ -1,6 +1,7 @@
 declare const process: {
   env: {
     [key: string]: any;
+    MANAGEMENT_CANISTER_ID: string;
     UNION_WALLET_FRONTEND_CANISTER_ID: string;
     UNION_DEPLOYER_CANISTER_ID: string;
     GATEWAY_CANISTER_ID: string;
