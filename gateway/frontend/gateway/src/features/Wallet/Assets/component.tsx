@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
 import { PageWrapper, Text, SubmitButton as B } from 'components';
 import { useWallet } from 'services';
+import deleteIcon from '../../../assets/delete.svg';
 import { useCurrentWallet } from '../context';
 import { useBatches } from '../useBatches';
 import { useBatchDownloader } from '../useBatchDownloader';
@@ -11,6 +12,14 @@ import { useCreateAssetsCanister } from './useSpawnCanister';
 
 const DeleteButton = styled(B)`
   color: red;
+`;
+const DeleteIcon = styled.img`
+  cursor: pointer;
+
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 `;
 const DownloadButton = styled(B)``;
 const LockButton = styled(B)``;
@@ -49,6 +58,14 @@ const Controls = styled.div`
   }
 `;
 
+const Buttons = styled(Controls)`
+  justify-content: flex-end;
+`;
+const SelectControls = styled(Controls)`
+  padding: 0 8px;
+  justify-content: space-between;
+`;
+
 const Items = styled.div`
   display: flex;
   flex-direction: column;
@@ -59,13 +76,11 @@ const Items = styled.div`
 `;
 
 const Container = styled(PageWrapper)`
-  ${Controls} {
-    justify-content: flex-end;
-  }
-
-  ${Button} {
+  ${SelectControls} {
     margin-bottom: 24px;
-    align-self: flex-end;
+  }
+  ${Buttons} {
+    margin-bottom: 24px;
   }
 `;
 
@@ -124,7 +139,7 @@ export const Assets = ({ ...p }: AssetsProps) => {
 
   return (
     <Container {...p} title='Asset batches'>
-      <Controls>
+      <Buttons>
         <Button forwardedAs={NavLink} to='create-batch'>
           + Create batch
         </Button>
@@ -132,8 +147,26 @@ export const Assets = ({ ...p }: AssetsProps) => {
         <Button forwardedAs={NavLink} to='install-code'>
           Install wasm to canister
         </Button>
-      </Controls>
-      <BatchSender visible={!!selectedIds.length} batchIds={selectedIds} />
+      </Buttons>
+      <SelectControls>
+        <input
+          type='checkbox'
+          onChange={(e) =>
+            setSelected(() =>
+              (selectedIds.length
+                ? {}
+                : batches.reduce((acc, next) => ({ ...acc, [Number(next[0])]: true }), {})),
+            )
+          }
+          checked={!!selectedIds.length}
+        />
+        <DeleteIcon
+          src={deleteIcon}
+          alt='delete'
+          aria-disabled={!selectedIds.length}
+          onClick={() => remove(selectedIds.map((s) => BigInt(s)))}
+        />
+      </SelectControls>
       {!!fetching.get_batches && <Text>fetching</Text>}
       {!fetching.get_batches && !batches.length && <Text>Batches does not exist</Text>}
       {!!batches.length && (
@@ -146,7 +179,7 @@ export const Assets = ({ ...p }: AssetsProps) => {
                 onChange={(e) =>
                   setSelected((selected) => ({ ...selected, [Number(id)]: !selected[Number(id)] }))
                 }
-                value={selected[Number(id)] as any}
+                checked={!!selected[Number(id)]}
               />
               <Text>ID: {id.toString()}</Text>
               <Text>Key: {batch.key}</Text>
@@ -171,6 +204,7 @@ export const Assets = ({ ...p }: AssetsProps) => {
           ))}
         </Items>
       )}
+      <BatchSender visible={!!selectedIds.length} batchIds={selectedIds} />
     </Container>
   );
 };
