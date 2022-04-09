@@ -1,11 +1,11 @@
 use crate::api::{
     ActivateProfileRequest, AddEnumeratedRolesRequest, AttachRoleToPermissionRequest,
     AuthorizeExecutionRequest, AuthorizeExecutionResponse, BatchOperation, CommitBatchArguments,
-    CreateAssetArguments, SetAssetContentArguments, GetBatchesResponse, CreateBatchRequest, CreateBatchResponse,
-    CreateChunkRequest, CreateChunkResponse, GetChunkRequest, GetChunkResponse,
-    CreatePermissionRequest, CreatePermissionResponse, CreateRoleRequest, CreateRoleResponse,
-    DeleteAssetArguments, DeleteBatchesRequest, DetachRoleFromPermissionRequest,
-    EditProfileRequest, ExecuteRequest, ExecuteResponse, GetHistoryEntriesRequest,
+    CreateAssetArguments, CreateBatchRequest, CreateBatchResponse, CreateChunkRequest,
+    CreateChunkResponse, CreatePermissionRequest, CreatePermissionResponse, CreateRoleRequest,
+    CreateRoleResponse, DeleteAssetArguments, DeleteBatchesRequest,
+    DetachRoleFromPermissionRequest, EditProfileRequest, ExecuteRequest, ExecuteResponse,
+    GetBatchesResponse, GetChunkRequest, GetChunkResponse, GetHistoryEntriesRequest,
     GetHistoryEntriesResponse, GetHistoryEntryIdsResponse, GetInfoResponse,
     GetMyPermissionsResponse, GetMyRolesResponse, GetPermissionIdsResponse,
     GetPermissionsAttachedToRolesRequest, GetPermissionsAttachedToRolesResponse,
@@ -15,8 +15,8 @@ use crate::api::{
     GetRolesResponse, GetScheduledForAuthorizationExecutionsRequest,
     GetScheduledForAuthorizationExecutionsResponse, LockBatchesRequest, ProfileActivatedEvent,
     ProfileCreatedEvent, RemovePermissionRequest, RemovePermissionResponse, RemoveRoleRequest,
-    RemoveRoleResponse, SendBatchRequest, SubtractEnumeratedRolesRequest, UpdateInfoRequest,
-    UpdatePermissionRequest, UpdateRoleRequest,
+    RemoveRoleResponse, SendBatchRequest, SetAssetContentArguments, SubtractEnumeratedRolesRequest,
+    UpdateInfoRequest, UpdatePermissionRequest, UpdateRoleRequest,
 };
 use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallEndpoint};
 use crate::common::permissions::PermissionId;
@@ -635,7 +635,8 @@ fn get_batches() -> GetBatchesResponse {
         trap("Access denied");
     }
 
-    let batches = state.streaming
+    let batches = state
+        .streaming
         .get_batches()
         .expect("Unable to get batches");
 
@@ -644,8 +645,6 @@ fn get_batches() -> GetBatchesResponse {
 
 #[query]
 fn get_chunk(req: GetChunkRequest) -> GetChunkResponse {
-    let state = get_state();
-
     let chunk_content = ByteBuf::from(
         get_state()
             .streaming
@@ -750,6 +749,8 @@ async fn send_batch(req: SendBatchRequest) {
         .to_candid_type()
         .expect("Unable to create batch at remote canister");
 
+    let mut target_chunk_ids = vec![];
+
     for chunk_id in &batch.chunk_ids {
         let chunk_content = ByteBuf::from(
             get_state()
@@ -769,29 +770,38 @@ async fn send_batch(req: SendBatchRequest) {
             .await
             .to_candid_type();
 
-        if let Err(e) = res {
-            req.target_canister
-                .commit_batch(CommitBatchArguments {
-                    batch_id: resp.batch_id.clone(),
-                    operations: vec![
-                        BatchOperation::CreateAsset(CreateAssetArguments {
-                            key: String::from("$$$.failed"),
-                            content_type: String::from("text/plain"),
-                        }),
-                        BatchOperation::DeleteAsset(DeleteAssetArguments {
-                            key: String::from("$$$.failed"),
-                        }),
-                    ],
-                })
-                .await
-                .unwrap_or_else(|_| {
-                    panic!(
-                        "[FATAL] Unable to cleanup after chunk creation error {:?}",
-                        e
-                    )
-                });
-        } else {
-            // FIXME get chunkid and save to variable for SetAssetContentArguments
+        match res {
+            Err(e) => {
+                req.target_canister
+                    .commit_batch(CommitBatchArguments {
+                        batch_id: resp.batch_id.clone(),
+                        operations: vec![
+                            BatchOperation::CreateAsset(CreateAssetArguments {
+                                key: String::from("$$$.failed"),
+                                content_type: String::from("text/plain"),
+                            }),
+                            BatchOperation::SetAssetContent(SetAssetContentArguments {
+                                key: String::from("$$$.failed"),
+                                content_encoding: String::from("identity"),
+                                chunk_ids: target_chunk_ids,
+                                sha256: None,
+                            }),
+                            BatchOperation::DeleteAsset(DeleteAssetArguments {
+                                key: String::from("$$$.failed"),
+                            }),
+                        ],
+                    })
+                    .await
+                    .unwrap_or_else(|_| {
+                        panic!(
+                            "[FATAL] Unable to cleanup after chunk creation error {:?}",
+                            e
+                        )
+                    });
+
+                return;
+            }
+            Ok((response,)) => target_chunk_ids.push(response.chunk_id),
         }
     }
 
@@ -806,7 +816,7 @@ async fn send_batch(req: SendBatchRequest) {
                 BatchOperation::SetAssetContent(SetAssetContentArguments {
                     key: batch.key,
                     content_encoding: String::from("identity"),
-                    chunk_ids: vec![], // FIXME get uploaded chunks ids (ids from `res`)
+                    chunk_ids: target_chunk_ids,
                     sha256: None,
                 }),
             ],
