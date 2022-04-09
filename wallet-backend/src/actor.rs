@@ -799,7 +799,7 @@ async fn send_batch(req: SendBatchRequest) {
                         )
                     });
 
-                return;
+                panic!("Unable to create chunk: {:?}", e);
             }
             Ok((response,)) => target_chunk_ids.push(response.chunk_id),
         }
