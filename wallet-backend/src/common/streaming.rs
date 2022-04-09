@@ -1,7 +1,7 @@
 use crate::common::rc_bytes::RcBytes;
 use candid::{CandidType, Deserialize, Nat};
 use serde_bytes::ByteBuf;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 
 #[derive(CandidType, Deserialize)]
 pub struct Chunk {
@@ -11,7 +11,9 @@ pub struct Chunk {
 
 #[derive(Clone, Default, CandidType, Deserialize)]
 pub struct Batch {
-    pub chunk_ids: HashSet<ChunkId>,
+    pub key: Key,
+    pub content_type: String,
+    pub chunk_ids: BTreeSet<ChunkId>,
     pub locked: bool,
 }
 
@@ -36,9 +38,17 @@ pub struct StreamingState {
 }
 
 impl StreamingState {
-    pub fn create_batch(&mut self) -> BatchId {
+    pub fn create_batch(&mut self, key: Key, content_type: String) -> BatchId {
         let id = self.generate_batch_id();
-        self.batches.insert(id.clone(), Batch::default());
+        self.batches.insert(
+            id.clone(),
+            Batch {
+                key,
+                content_type,
+                chunk_ids: BTreeSet::new(),
+                locked: false,
+            },
+        );
 
         id
     }
@@ -71,10 +81,7 @@ impl StreamingState {
         Ok(id)
     }
 
-    pub fn lock_batch(
-        &mut self,
-        batch_id: &BatchId,
-    ) -> Result<(), StreamingError> {
+    pub fn lock_batch(&mut self, batch_id: &BatchId) -> Result<(), StreamingError> {
         let batch = self
             .batches
             .get_mut(batch_id)
@@ -95,10 +102,7 @@ impl StreamingState {
         lock_assertion: bool,
     ) -> Result<(), StreamingError> {
         let batch = self.get_batch(batch_id)?;
-        assert_eq!(
-            batch.locked, lock_assertion,
-            "Invalid batch lock state"
-        );
+        assert_eq!(batch.locked, lock_assertion, "Invalid batch lock state");
 
         let batch = self.batches.remove(batch_id).unwrap();
 
@@ -113,6 +117,16 @@ impl StreamingState {
         self.batches
             .get(batch_id)
             .ok_or_else(|| StreamingError::BatchNotFound(batch_id.clone()))
+    }
+
+    pub fn get_batches(&self) -> Result<Vec<(BatchId, Batch)>, StreamingError> {
+        let mut result: Vec<(BatchId, Batch)> = vec![];
+
+        for (key, val) in self.batches.iter() {
+            result.push((key.clone(), val.clone()));
+        }
+
+        Ok(result)
     }
 
     pub fn get_chunk(&self, chunk_id: &ChunkId) -> Result<&Chunk, StreamingError> {

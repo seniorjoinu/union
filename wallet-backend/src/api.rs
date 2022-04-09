@@ -1,6 +1,6 @@
 use crate::common::permissions::{Permission, PermissionScope, PermissionTarget};
 use crate::common::roles::{Role, RoleType};
-use crate::common::streaming::{BatchId, ChunkId, Key};
+use crate::common::streaming::{BatchId, Batch, ChunkId, Key};
 use crate::state::UnionInfo;
 use crate::{HistoryEntry, HistoryEntryId, PermissionId, Principal, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize};
@@ -279,11 +279,30 @@ pub struct CommitBatchArguments {
 // -------------- STREAMING -------------------
 
 #[derive(CandidType, Deserialize)]
+pub struct GetChunkRequest {
+    pub chunk_id: ChunkId,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetChunkResponse {
+    pub chunk_content: ByteBuf,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetBatchesResponse {
+    pub batches: Vec<(BatchId, Batch)>,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct SendBatchRequest {
     pub batch_id: BatchId,
+    pub target_canister: Principal,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct CreateBatchRequest {
     pub key: Key,
     pub content_type: String,
-    pub target_canister: Principal,
 }
 
 #[derive(CandidType, Deserialize)]

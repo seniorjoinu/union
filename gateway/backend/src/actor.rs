@@ -212,6 +212,11 @@ fn events_callback(events: Vec<Event>) {
     }
 }
 
+#[query]
+fn get_controller() -> Principal {
+    get_state().controller
+}
+
 export_service!();
 
 #[query(name = "__get_candid_interface_tmp_hack")]

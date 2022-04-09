@@ -1,7 +1,1 @@
-node_modules
-.DS_Store
-dist
-*.local
-.dfx
-vite.config.ts.js
-yarn-*
+./internet-identity/*

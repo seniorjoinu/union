@@ -1,4 +1,5 @@
 # Union
+
 Sovereign organizations software
 
 ```shell
@@ -13,4 +14,23 @@ dfx canister call union-wallet execute '(record { title = "Add new role"; descri
 dfx canister call union-wallet get_history_entries '(record { ids = vec { 0 }; rnp = record { role_id = 1 : nat32; permission_id = 0 : nat16 } })'
 
 dfx canister call union-wallet get_roles '(record { ids = vec { 3 } : vec nat32; rnp = record { role_id = 1 : nat32; permission_id = 0 : nat16 } })'
+```
+
+## Quickstart
+
+```
+dfx start --clean
+./scripts/deploy.sh
+
+./scripts/setup.sh
+
+# Register via Internet Identity and get principal on frontend gateway
+./scripts/add-profile.sh --ii=*identity* --wallet=*root_wallet* --name=*name (default is Agent)*
+```
+
+## didc
+
+```
+curl -fsSL https://github.com/dfinity/candid/releases/download/2022-03-30/didc-macos > ./didc
+chmod -R 777 ./didc
 ```
