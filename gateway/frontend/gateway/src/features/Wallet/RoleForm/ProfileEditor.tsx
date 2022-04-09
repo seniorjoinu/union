@@ -1,21 +1,13 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
-import { Text, TextField as TF, Button as B } from 'components';
+import { PageWrapper, TextField as TF, Button as B } from 'components';
 import { ProfileFormData, useEditProfile } from './useEditProfile';
 
 const Button = styled(B)``;
-const Title = styled(Text)``;
 const TextField = styled(TF)``;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
-
+const Container = styled(PageWrapper)`
   ${TextField} {
     margin-bottom: 24px;
   }
@@ -43,8 +35,7 @@ export const ProfileEditor = ({ roleId, data }: ProfileEditorProps) => {
   const { editProfile } = useEditProfile();
 
   return (
-    <Container>
-      <Title variant='h2'>Profile edit</Title>
+    <Container title='Edit profile'>
       <Controller
         name='name'
         control={control}

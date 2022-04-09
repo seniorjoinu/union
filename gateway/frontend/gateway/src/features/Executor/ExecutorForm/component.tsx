@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
-import { Button as B, Text, TextField as TF, TextArea as TA } from 'components';
+import { PageWrapper, Button as B, Text, TextField as TF, TextArea as TA } from 'components';
 import { checkPrincipal } from 'toolkit';
 import { Principal } from '@dfinity/principal';
 import { ExecuteResponse } from 'wallet-ts';
@@ -13,7 +13,6 @@ import { RoleSwitcher as RS } from './RoleSwitcher';
 const RoleSwitcher = styled(RS)``;
 const TextField = styled(TF)``;
 const TextArea = styled(TA)``;
-const Title = styled(Text)``;
 const RemoveButton = styled(B)``;
 const AddButton = styled(B)``;
 const Button = styled(B)``;
@@ -51,14 +50,8 @@ const ProgramSlice = styled.div`
   border-radius: 4px;
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
+const Container = styled(PageWrapper)`
   padding-bottom: 32px;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
 
   ${TextField}, ${RoleSwitcher} {
     margin-bottom: 24px;
@@ -151,8 +144,7 @@ export function ExecutorForm({
   }, [disabled, getValues, isValid, fetching.execute, canister, onSubmit]);
 
   return (
-    <Container {...p}>
-      {editable && <Title variant='h2'>Execution</Title>}
+    <Container {...p} title={editable && 'Execution'}>
       <Controller
         name='title'
         control={control}

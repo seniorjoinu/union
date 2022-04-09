@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { Text, Button as B, Accordeon as A } from 'components';
+import { PageWrapper, Text, Button as B, Accordeon as A } from 'components';
 import { NavLink } from 'react-router-dom';
 import { useWallet } from 'services';
 import { Role } from 'wallet-ts';
@@ -34,16 +34,9 @@ const Items = styled.div`
   }
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
+const Container = styled(PageWrapper)`
   ${Title} {
     margin-bottom: 16px;
-
-    &:first-of-type {
-      margin-bottom: 64px;
-    }
   }
 
   ${Controls} {
@@ -98,8 +91,7 @@ export const RolesAndPermissions = ({
   const permissions = data.get_permissions?.permissions || [];
 
   return (
-    <Container>
-      <Title variant='h2'>Roles and permissions</Title>
+    <Container title='Roles and permissions'>
       {!!rnp && (
         <Controls>
           <Button forwardedAs={NavLink} to='my'>

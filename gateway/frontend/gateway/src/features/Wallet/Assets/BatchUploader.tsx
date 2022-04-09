@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { Controller, useForm } from 'react-hook-form';
-import { Text, TextField as TF, SubmitButton as B } from 'components';
+import { PageWrapper, Text, TextField as TF, SubmitButton as B } from 'components';
 import { useBatchUploader, Stats } from '../useBatchUploader';
 
 const Button = styled(B)``;
@@ -17,10 +17,7 @@ const Controls = styled.div`
   }
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
+const Container = styled(PageWrapper)`
   ${TextField} {
     margin-bottom: 24px;
   }
@@ -72,7 +69,7 @@ export const BatchUploader = ({ onUploaded, ...p }: BatchUploaderProps) => {
   }, [upload, getValues, onUploaded, setValue]);
 
   return (
-    <Container {...p}>
+    <Container {...p} title='Upload batches' withBack>
       <Controller
         name='folder'
         control={control}

@@ -1,10 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
-import { Button as B, Text } from 'components';
+import { PageWrapper, Button as B, Text } from 'components';
 import { Principal } from '@dfinity/principal';
 
-const Title = styled(Text)``;
 const Item = styled(Text)``;
 const Info = styled(Text)``;
 const Button = styled(B)``;
@@ -14,18 +13,12 @@ const Center = styled.div`
   flex-direction: column;
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
+const Container = styled(PageWrapper)`
   ${Center} {
     align-self: center;
     max-width: 700px;
   }
 
-  ${Title} {
-    margin-bottom: 32px;
-  }
   ${Item} {
     margin-bottom: 8px;
 
@@ -47,8 +40,7 @@ export interface PayedProps {
 }
 
 export const Payed = ({ wallet }: PayedProps) => (
-  <Container>
-    <Title variant='h3'>Union-wallet creation</Title>
+  <Container title='Union-wallet creation'>
     <Item variant='p2'>
       Status: <span>Payed</span>
     </Item>

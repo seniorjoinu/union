@@ -1,25 +1,19 @@
 import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { Text, Button as B } from 'components';
+import { PageWrapper, Button as B } from 'components';
 import { NavLink as N } from 'react-router-dom';
 import { HistoryEntry } from 'wallet-ts';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { Item as I } from './Item';
 
-const Title = styled(Text)``;
 const Button = styled(B)``;
 const Item = styled(I)``;
 const NavLink = styled(N)``;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
+const Container = styled(PageWrapper)`
   padding-bottom: 32px;
 
-  ${Title} {
-    margin-bottom: 64px;
-  }
   ${NavLink} {
     text-decoration: none;
   }
@@ -61,8 +55,7 @@ export function History({ createLink, ...p }: HistoryProps) {
   );
 
   return (
-    <Container {...p}>
-      <Title variant='h2'>Execution history</Title>
+    <Container {...p} title='Execution history'>
       {!!createLink && !!rnp && (
         <Button forwardedAs={NavLink} to={createLink}>
           + Create execution

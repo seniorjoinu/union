@@ -1,22 +1,20 @@
 import React from 'react';
 import styled from 'styled-components';
-import { TextField as TF, MaskedTextField as MTF, Text, Button as B } from 'components';
+import {
+  PageWrapper,
+  TextField as TF,
+  MaskedTextField as MTF,
+  Text,
+  Button as B,
+} from 'components';
 import { useForm, Controller } from 'react-hook-form';
 import { useCreateVersion, FormData } from './useCreateVersion';
 
 const Button = styled(B)``;
-const Title = styled(Text)``;
 const TextField = styled(TF)``;
 const MaskedTextField = styled(MTF)``;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
-
+const Container = styled(PageWrapper)`
   ${TextField}, ${MaskedTextField} {
     margin-bottom: 24px;
   }
@@ -49,7 +47,7 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
   const { create } = useCreateVersion({ getValues });
 
   return (
-    <Container {...p}>
+    <Container {...p} title='Create version'>
       <Controller
         name='version'
         control={control}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Text, Button as B, SimpleListItem } from 'components';
+import { PageWrapper, Text, Button as B, SimpleListItem } from 'components';
 import { initWalletController, useGateway } from 'services';
 import { parseRole } from '../Wallet/utils';
 
@@ -11,7 +11,6 @@ const RoleName = styled(Text)`
   border-radius: 4px;
   background-color: #dfdfdf;
 `;
-const Title = styled(Text)``;
 const List = styled.div`
   display: flex;
   flex-direction: column;
@@ -29,13 +28,7 @@ const Panel = styled.div`
 
 const Button = styled(B)``;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
+const Container = styled(PageWrapper)`
   ${List} {
     margin-top: 16px;
   }
@@ -80,8 +73,7 @@ export const WalletsList = () => {
   const rootWallet = data.get_controller?.toString() || '';
 
   return (
-    <Container>
-      <Title variant='h2'>Union-wallets</Title>
+    <Container title='Union-wallets'>
       <Panel>
         <Text>Spawned wallets {fetching.get_attached_union_wallets ? 'fetching' : ''}</Text>
         <Button forwardedAs={NavLink} to='/wallets/create'>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Text, Button as B } from 'components';
+import { PageWrapper, Text, Button as B } from 'components';
 import { initWalletController, useDeployer } from 'services';
 import styled from 'styled-components';
 import moment from 'moment';
@@ -8,7 +8,6 @@ import { NavLink } from 'react-router-dom';
 
 const AddButton = styled(B)``;
 const Button = styled(B)``;
-const Title = styled(Text)``;
 
 const Item = styled.div`
   display: flex;
@@ -22,13 +21,7 @@ const Item = styled.div`
   }
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
+const Container = styled(PageWrapper)`
   ${AddButton} {
     align-self: flex-start;
     margin-bottom: 16px;
@@ -89,8 +82,7 @@ export const Versions = ({ ...p }: VersionsProps) => {
   const progress = !!fetching.get_binary_versions || !!fetching.get_binary_version_infos;
 
   return (
-    <Container {...p}>
-      <Title variant='h2'>Union-wallet versions</Title>
+    <Container {...p} title='Union-wallet versions'>
       {!!canisterToCreateVersion && (
         <AddButton forwardedAs={NavLink} to={`/wallet/${canisterToCreateVersion}/versions/create`}>
           Create version

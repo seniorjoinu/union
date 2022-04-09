@@ -1,3 +1,4 @@
+export * from './PageWrapper';
 export * from './Progress';
 export * from './SimpleListItem';
 export * from './Text';

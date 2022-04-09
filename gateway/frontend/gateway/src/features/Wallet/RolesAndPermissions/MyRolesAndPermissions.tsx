@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
-import { Text } from 'components';
+import { PageWrapper, Text } from 'components';
 import { useCurrentWallet } from '../context';
 import { PermissionInfo as P } from './PermissionInfo';
 import { RoleInfo as R } from './RoleInfo';
@@ -24,16 +24,12 @@ const Items = styled.div`
   flex-direction: column;
 `;
 
-const Container = styled.div`
+const Container = styled(PageWrapper)`
   display: flex;
   flex-direction: column;
 
   ${Title} {
     margin-bottom: 16px;
-
-    &:first-of-type {
-      margin-bottom: 64px;
-    }
   }
 
   ${Controls} {
@@ -69,8 +65,7 @@ export const MyRolesAndPermissions = ({
   }, []);
 
   return (
-    <Container>
-      <Title variant='h2'>My roles and permissions</Title>
+    <Container title='My roles and permissions'>
       <Title variant='h4'>Roles</Title>
       <Items>
         {fetching.get_my_roles && <Text>fetching</Text>}

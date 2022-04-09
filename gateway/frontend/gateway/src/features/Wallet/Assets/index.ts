@@ -1,2 +1,3 @@
 export * from './component';
-export * from './AssetCanister';
+export * from './BatchUploader';
+export * from './AssetsCanisterUpdater';

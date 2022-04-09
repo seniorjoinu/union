@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
 import {
+  PageWrapper,
   Text,
   Select as LS,
   Option,
@@ -21,7 +22,6 @@ const CanisterMethods = styled(CM)``;
 const MultiSelectSkeleton = styled(MS)``;
 const Select = styled(LS)``;
 const Button = styled(B)``;
-const Title = styled(Text)``;
 const TextField = styled(TF)``;
 const MultiSelectTextField = styled(TF)``;
 
@@ -35,14 +35,7 @@ const MultiSelectFields = styled.div`
   }
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
-
+const Container = styled(PageWrapper)`
   ${AccordeonTitle} {
     padding: 8px 16px;
   }
@@ -87,8 +80,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
   }
 
   return (
-    <Container>
-      <Title variant='h2'>{create ? 'Create new permission' : 'Edit permission'}</Title>
+    <Container title={create ? 'Create new permission' : 'Edit permission'}>
       <Controller
         name='name'
         control={control}

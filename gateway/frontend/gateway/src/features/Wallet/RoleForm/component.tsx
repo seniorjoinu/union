@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
 import {
-  Text,
+  PageWrapper,
   Select as S,
   Option,
   TextField as TF,
@@ -17,7 +17,6 @@ import { FormData } from './types';
 const ListSelect = styled(LS)``;
 const Select = styled(S)``;
 const Button = styled(B)``;
-const Title = styled(Text)``;
 const TextField = styled(TF)``;
 const Thresholds = styled.div`
   display: flex;
@@ -29,14 +28,7 @@ const Thresholds = styled.div`
   }
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
-
+const Container = styled(PageWrapper)`
   ${TextField}, ${Select}, ${ListSelect} {
     margin-bottom: 24px;
   }
@@ -77,8 +69,7 @@ export const RoleForm = ({ create }: RoleFormProps) => {
   }
 
   return (
-    <Container>
-      <Title variant='h2'>{create ? 'Create new role' : 'Edit role'}</Title>
+    <Container title={create ? 'Create new role' : 'Edit role'}>
       <Controller
         name='name'
         control={control}

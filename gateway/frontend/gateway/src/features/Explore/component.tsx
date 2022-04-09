@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Text, SubmitButton as B, SimpleListItem } from 'components';
+import { useNavigate } from 'react-router-dom';
+import { PageWrapper, Text, SubmitButton as B, SimpleListItem } from 'components';
 import { useDeployer, useGateway } from 'services';
 
-const Title = styled(Text)``;
 const List = styled.div`
   display: flex;
   flex-direction: column;
@@ -17,13 +16,7 @@ const List = styled.div`
 
 const AttachButton = styled(B)``;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
+const Container = styled(PageWrapper)`
   ${List} {
     margin-top: 16px;
   }
@@ -62,8 +55,7 @@ export const Explore = () => {
   const rootWallet = gateway.data.get_controller?.toString() || '';
 
   return (
-    <Container>
-      <Title variant='h2'>Explore wallets</Title>
+    <Container title='Explore wallets'>
       <List>
         {instances.map(({ canister_id }) => (
           <SimpleListItem

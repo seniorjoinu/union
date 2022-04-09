@@ -1,13 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
-import { SubmitButton as B, Text, Select as S, Option } from 'components';
+import { PageWrapper, SubmitButton as B, Text, Select as S, Option } from 'components';
 import { useAuth, useDeployer, useGateway } from 'services';
 import { useForm, Controller } from 'react-hook-form';
 
 const Select = styled(S)``;
 const Button = styled(B)``;
-const Title = styled(Text)``;
 const Item = styled(Text)``;
 const Info = styled(Text)``;
 
@@ -16,18 +15,12 @@ const Center = styled.div`
   flex-direction: column;
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
+const Container = styled(PageWrapper)`
   ${Center} {
     align-self: center;
     max-width: 700px;
   }
 
-  ${Title} {
-    margin-bottom: 32px;
-  }
   ${Item} {
     margin-bottom: 8px;
 
@@ -105,8 +98,7 @@ export const NotPayed = ({ onApproved }: NotPayedProps) => {
   }, [setValue, getValues, versions]);
 
   return (
-    <Container>
-      <Title variant='h3'>Union-wallet creation</Title>
+    <Container title='Union-wallet creation'>
       <Item variant='p2'>To pay: 0.2 ICP</Item>
       <Item variant='p2'>
         Status: <span>Not payed</span>

@@ -1,22 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
-import { TextField as TF, Text, Button as B } from 'components';
+import { PageWrapper, TextField as TF, Text, Button as B } from 'components';
 import { useForm, Controller } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
 import { useUpdateAssetCanister, UpdateAssetCanisterFormData } from './useSpawnCanister';
 
 const Button = styled(B)``;
-const Title = styled(Text)``;
 const TextField = styled(TF)``;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
-
+const Container = styled(PageWrapper)`
   ${TextField} {
     margin-bottom: 24px;
   }
@@ -47,7 +39,7 @@ export const AssetsCanisterUpdater = ({ ...p }: AssetsCanisterUpdaterProps) => {
   const { updateCanister } = useUpdateAssetCanister({ getValues });
 
   return (
-    <Container {...p}>
+    <Container {...p} title='Install wasm to canister' withBack>
       <Controller
         name='canisterId'
         control={control}

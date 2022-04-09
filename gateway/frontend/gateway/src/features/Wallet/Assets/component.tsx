@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
-import { Text, SubmitButton as B } from 'components';
+import { PageWrapper, Text, SubmitButton as B } from 'components';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { useBatches } from '../useBatches';
 import { useBatchDownloader } from '../useBatchDownloader';
-import { BatchUploader as BU } from './BatchUploader';
 import { BatchSender as BS } from './BatchSender';
+import { useCreateAssetsCanister } from './useSpawnCanister';
 
 const DeleteButton = styled(B)`
   color: red;
@@ -15,7 +15,6 @@ const DeleteButton = styled(B)`
 const DownloadButton = styled(B)``;
 const LockButton = styled(B)``;
 const Button = styled(B)``;
-const BatchUploader = styled(BU)``;
 const BatchSender = styled(BS)<{ visible: boolean }>`
   position: fixed;
   bottom: 0;
@@ -28,8 +27,6 @@ const BatchSender = styled(BS)<{ visible: boolean }>`
   z-index: 3;
   background: white;
 `;
-
-const Title = styled(Text)``;
 
 const Item = styled.div`
   display: flex;
@@ -61,16 +58,9 @@ const Items = styled.div`
   }
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
-
-  ${BatchUploader} {
-    margin-bottom: 32px;
+const Container = styled(PageWrapper)`
+  ${Controls} {
+    justify-content: flex-end;
   }
 
   ${Button} {
@@ -88,6 +78,7 @@ export const Assets = ({ ...p }: AssetsProps) => {
   const [selected, setSelected] = useState<Record<number, boolean>>({});
   const { principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
+  const { createCanister } = useCreateAssetsCanister();
   const { remove } = useBatches();
   const { download } = useBatchDownloader();
 
@@ -118,7 +109,10 @@ export const Assets = ({ ...p }: AssetsProps) => {
     [canister],
   );
 
-  const batches = data.get_batches?.batches || [];
+  const batches = useMemo(
+    () => [...(data.get_batches?.batches || [])].sort((a, b) => Number(b[0]) - Number(a[0])),
+    [data.get_batches?.batches],
+  );
 
   const selectedIds = useMemo(
     () =>
@@ -129,12 +123,16 @@ export const Assets = ({ ...p }: AssetsProps) => {
   );
 
   return (
-    <Container {...p}>
-      <Title variant='h2'>Asset batches</Title>
-      <Button forwardedAs={NavLink} to='canister'>
-        Create/update canisters
-      </Button>
-      <BatchUploader onUploaded={() => canister.get_batches()} />
+    <Container {...p} title='Asset batches'>
+      <Controls>
+        <Button forwardedAs={NavLink} to='create-batch'>
+          + Create batch
+        </Button>
+        <Button onClick={createCanister}>+ Create canister</Button>
+        <Button forwardedAs={NavLink} to='install-code'>
+          Install wasm to canister
+        </Button>
+      </Controls>
       <BatchSender visible={!!selectedIds.length} batchIds={selectedIds} />
       {!!fetching.get_batches && <Text>fetching</Text>}
       {!fetching.get_batches && !batches.length && <Text>Batches does not exist</Text>}

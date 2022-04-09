@@ -42,7 +42,7 @@ const Container = styled.main`
   ${Section} {
     display: flex;
     flex-direction: column;
-    padding: 104px 128px 32px 128px;
+    padding: 104px 128px 128px 128px;
     z-index: 1;
 
     & > * {

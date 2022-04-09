@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Text } from 'components';
+import { Text, PageWrapper } from 'components';
 import { caseByCount } from 'toolkit';
 import moment from 'moment';
 import { HistoryEntry } from 'wallet-ts';
@@ -14,7 +14,6 @@ const Declined = styled(Text)`
   flex-direction: column;
   color: red;
 `;
-const Title = styled(Text)``;
 const Executor = styled(E)``;
 
 const Children = styled.div``;
@@ -26,13 +25,7 @@ const Participants = styled.div`
     margin-bottom: 8px;
   }
 `;
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
+const Container = styled(PageWrapper)`
   ${Executor} {
     margin-top: 32px;
   }
@@ -88,8 +81,7 @@ export const Entry = ({ entry, children, renderControls = () => null, ...p }: En
   const isPending = 'Pending' in entry.entry_type;
 
   return (
-    <Container {...p}>
-      <Title variant='h2'>Execution</Title>
+    <Container {...p} title='Execution'>
       {renderControls({ isPending, entryAuthorizedByMe, hasAccess })}
       <Text variant='p1'>Date: {date.format('DD-MM-YYYY HH:mm:ss')}</Text>
       <Text variant='p1'>Status: {status}</Text>

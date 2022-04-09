@@ -2,13 +2,12 @@ import React, { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
-import { Text, Button as B, TextField } from 'components';
+import { PageWrapper, Text, Button as B, TextField } from 'components';
 import { checkPrincipal } from 'toolkit';
 import { walletSerializer } from 'services';
 import { useCurrentWallet } from '../context';
 import { ExternalExecutorFormData } from '../../Executor';
 
-const Title = styled(Text)``;
 const Button = styled(B)``;
 const AddButton = styled(B)``;
 
@@ -30,14 +29,7 @@ const Member = styled.div`
   }
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 16px;
-  }
-
+const Container = styled(PageWrapper)`
   ${AddButton} {
     align-self: flex-start;
   }
@@ -109,8 +101,7 @@ export const Invite = () => {
   const isValid = !!members.find((m) => checkPrincipal(m.principal));
 
   return (
-    <Container>
-      <Title variant='h2'>Inviting</Title>
+    <Container title='Inviting'>
       <Members>
         {members.map((m, i) => (
           // eslint-disable-next-line react/no-array-index-key

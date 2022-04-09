@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useGateway, initWalletController } from 'services';
-import { Text, SubmitButton as B } from 'components';
+import { Text, PageWrapper, SubmitButton as B } from 'components';
 import styled from 'styled-components';
 import { Role } from 'wallet-ts';
 import { Principal } from '@dfinity/principal';
 import { parseRole } from '../Wallet/utils';
 
 const AcceptButton = styled(B)``;
-const Title = styled(Text)``;
 
 const Item = styled.div`
   display: flex;
@@ -21,14 +20,7 @@ const Item = styled.div`
   }
 `;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  ${Title} {
-    margin-bottom: 64px;
-  }
-
+const Container = styled(PageWrapper)`
   ${Item}:not(:last-child) {
     margin-bottom: 8px;
   }
@@ -89,8 +81,7 @@ export const Notifications = ({ ...p }: NotificationsProps) => {
   );
 
   return (
-    <Container {...p}>
-      <Title variant='h2'>Notifications</Title>
+    <Container {...p} title='Notifications'>
       {!!fetching.get_my_notifications && <Text>fetching</Text>}
       {!fetching.get_my_notifications && !notifications.length && (
         <Text>Notifications list is empty</Text>

@@ -23,7 +23,7 @@ export const useBatchDownloader = () => {
         const name = splitted[splitted.length - 1];
         const contents = await Promise.all(
           [...batch.chunk_ids]
-            .sort((a, b) => Number(a) - Number(b))
+            // .sort((a, b) => Number(a) - Number(b))
             .map(async (chunk_id) => (await canister.get_chunk({ chunk_id })).chunk_content),
         );
 
