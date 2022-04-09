@@ -30,7 +30,7 @@ const Container = styled.div`
 `;
 
 export interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   helperText?: string | undefined | null;
 }
 
@@ -52,7 +52,7 @@ export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
   ({ className, style, label, helperText, ...p }, ref) => (
     <Container className={className} style={style}>
-      <Label variant='p1'>{label}</Label>
+      {label && <Label variant='p1'>{label}</Label>}
       <Input {...p} as='textarea' ref={ref} />
       {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
     </Container>

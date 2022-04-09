@@ -65,61 +65,65 @@ export const useBatchUploader = (p?: Partial<UseBatchUploaderProps>) => {
 
         // FIXME чанки перемешиваются на выдаче - понять последовательность невозможно,
         // поэтому пока-что грузим чанки последовательно
-        // while (chunk_ids.length != numberOfChunks) {
-        //   if (start >= file.size) {
-        //     break;
-        //   }
-        //   const end = start + chunkSize;
-        //   const chunk = file.slice(start, end);
-        //   const buffer = await chunk.arrayBuffer();
-        //   const uintarr = new Uint8Array(buffer);
-        //   const content = [...uintarr];
-        //   const { chunk_id } = await canister.create_chunk({ batch_id, content });
-
-        //   start = start + chunkSize;
-        //   stats.uploaded += 1;
-        //   progress({ ...stats });
-
-        //   chunk_ids.push(chunk_id);
-        // }
-
+        // чтобы параллельная загрузка работала, нужно чанки просто грузить
+        // и делать в конце commit_batch([1, 2, 4, 3, 5])
+        // и передавать туда правльную последовательность чанков (как в CA)
+        // либо просто применить консистентное API с CA
         while (chunk_ids.length != numberOfChunks) {
-          const chunksPerOperationArr = Array(chunksPerOperation).fill(undefined);
+          if (start >= file.size) {
+            break;
+          }
+          const end = start + chunkSize;
+          const chunk = file.slice(start, end);
+          const buffer = await chunk.arrayBuffer();
+          const uintarr = new Uint8Array(buffer);
+          const content = [...uintarr];
+          const { chunk_id } = await canister.create_chunk({ batch_id, content });
 
-          const results = await Promise.all(
-            chunksPerOperationArr.map(async (_, index) => {
-              const localStart = start + chunkSize * index;
-              if (localStart >= file.size) {
-                return null;
-              }
+          start = start + chunkSize;
+          stats.uploaded += 1;
+          progress({ ...stats });
 
-              const end = start + chunkSize * (index + 1);
-              const chunk = file.slice(localStart, end);
-
-              const buffer = await chunk.arrayBuffer();
-              const uintarr = new Uint8Array(buffer);
-              const content = [...uintarr];
-
-              const { chunk_id } = await canister.create_chunk({ batch_id, content });
-              stats.uploaded += 1;
-
-              progress({ ...stats });
-
-              return { chunk_id };
-            }),
-          );
-
-          start = start + chunkSize * results.filter((r) => r).length;
-
-          results.forEach((chunkRes) => {
-            if (!chunkRes) {
-              return;
-            }
-
-            const { chunk_id } = chunkRes;
-            chunk_ids.push(chunk_id);
-          });
+          chunk_ids.push(chunk_id);
         }
+
+        // while (chunk_ids.length != numberOfChunks) {
+        //   const chunksPerOperationArr = Array(chunksPerOperation).fill(undefined);
+
+        //   const results = await Promise.all(
+        //     chunksPerOperationArr.map(async (_, index) => {
+        //       const localStart = start + chunkSize * index;
+        //       if (localStart >= file.size) {
+        //         return null;
+        //       }
+
+        //       const end = start + chunkSize * (index + 1);
+        //       const chunk = file.slice(localStart, end);
+
+        //       const buffer = await chunk.arrayBuffer();
+        //       const uintarr = new Uint8Array(buffer);
+        //       const content = [...uintarr];
+
+        //       const { chunk_id } = await canister.create_chunk({ batch_id, content });
+        //       stats.uploaded += 1;
+
+        //       progress({ ...stats });
+
+        //       return { chunk_id };
+        //     }),
+        //   );
+
+        //   start = start + chunkSize * results.filter((r) => r).length;
+
+        //   results.forEach((chunkRes) => {
+        //     if (!chunkRes) {
+        //       return;
+        //     }
+
+        //     const { chunk_id } = chunkRes;
+        //     chunk_ids.push(chunk_id);
+        //   });
+        // }
 
         console.log('!!!', chunk_ids);
 
