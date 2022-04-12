@@ -31,8 +31,6 @@ then
 	cd ../../../
 fi
 
-identity=$(dfx identity $args get-principal)
-
 log "Build root wallet..."
 cd wallet-backend
 rm -rf ./.dfx/local
@@ -56,17 +54,27 @@ gateway_backend=$(dfx canister $args id gateway)
 cd ../..
 log "Gateway backend deployed"
 
-log "Deploy frontend..."
+log "Building frontend..."
 cd gateway/frontend/gateway
 rm -rf ./.dfx/local
-yarn
-dfx deploy
-gateway_frontend=$(dfx canister $args id union-wallet-frontend)
-log "Frontend deployed"
+yarn && yarn build
+log "Frontend built"
 cd ../../../
+
+# log "Deploy frontend..."
+# cd gateway/frontend/gateway
+# rm -rf ./.dfx/local
+# yarn
+# dfx deploy
+# gateway_frontend=$(dfx canister $args id union-wallet-frontend)
+# log "Frontend deployed"
+# cd ../../../
 
 COLOR="92"
 log deployer=$deployer
 log gateway_backend=$gateway_backend
-log gateway_frontend="http://localhost:8000?canisterId=$gateway_frontend"
+# log gateway_frontend="http://localhost:8000?canisterId=$gateway_frontend"
 log internet-identity="http://localhost:8000?canisterId=$INTERNET_IDENTITY_CANISTER_ID"
+
+export deployer
+export gateway_backend

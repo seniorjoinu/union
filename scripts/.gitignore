@@ -1,0 +1,6 @@
+*.pem
+*.log
+*.txt
+uwc
+.env
+node_modules/

@@ -291,7 +291,7 @@ export function ExecutorForm({
                       helperText={error?.message}
                       disabled={disabled}
                       type='number'
-                      label='Cyctes for transfer'
+                      label='Cycles for transfer'
                     />
                   )}
                 />
