@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 set -e
+. ./scripts/log.sh
 
-echo "Deployer: Upload binary of wallet"
+# TODO get version and wasm_path args 
 version="0.0.1"
+wasm_path=./wallet-backend/target/wasm32-unknown-unknown/release/union-wallet-opt.wasm
 
-cd ./scripts/util/
-bash ./build.sh
-cd ../../
-
-echo "Deployer: Create first version of wallet"
+log "Deployer: Create first version of wallet"
 create_binary_version_args='(record { version = \"'$version'\"; description = \"Initial version\" })'
 dfx canister $args call $root_wallet "execute" "(record {
 	title = \"Create first version of wallet\";
@@ -33,11 +31,11 @@ dfx canister $args call $root_wallet "execute" "(record {
 	}
 })"
 
-rm ./scripts/execute_args.txt || echo ""
+rm ./scripts/upload_binary_execute_args.txt || echo ""
 
-echo "Deployer: Upload binary of wallet"
+log "Deployer: Upload binary of wallet"
 wallet_wasm_bytes=$(
-	./scripts/uwc did --mode file ./wallet-backend/target/wasm32-unknown-unknown/release/union-wallet-opt.wasm
+	./scripts/uwc did encode --mode file $wasm_path
 )
 
 candid_string='(record { version = \"'$version'\"; binary = blob \"'$wallet_wasm_bytes'\" })'
@@ -65,13 +63,13 @@ upload_binary_args="(record {
 	}
 })"
 
-echo $upload_binary_args > ./scripts/execute_args.txt
+echo $upload_binary_args > ./scripts/upload_binary_execute_args.txt
 
-./scripts/uwc canister $root_wallet "execute" ./scripts/execute_args.txt
+./scripts/uwc canister $root_wallet "execute" ./scripts/upload_binary_execute_args.txt
 
-rm ./scripts/execute_args.txt
+rm ./scripts/upload_binary_execute_args.txt
 
-echo "Deployer: Release first version of wallet"
+log "Deployer: Release first version of wallet"
 release_binary_version_args='(record { version = \"'$version'\" })'
 dfx canister $args call $root_wallet "execute" "(record {
 	title = \"Release first version of wallet\";

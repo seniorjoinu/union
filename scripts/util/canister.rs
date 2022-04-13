@@ -1,7 +1,7 @@
 use std::{sync::Arc, fs};
 use clap::{Parser};
 use candid::{IDLArgs};
-use ic_agent::{agent::AgentConfig, Identity, Agent, NonceFactory};
+use ic_agent::{agent::AgentConfig, Agent, NonceFactory};
 use ic_agent::agent::http_transport::ReqwestHttpReplicaV2Transport;
 use ic_types::Principal;
 use garcon::Delay;
@@ -39,8 +39,6 @@ pub async fn execute(opts: CanisterOpts) {
 	}
 	
 	let identity = utils::get_identity();
-	let my_principal = identity.sender().unwrap();
-	println!("My identity is: {:?}", my_principal.to_text());
 
 	let transport = ReqwestHttpReplicaV2Transport::create(url).unwrap();
 	let agent = Agent::new(AgentConfig {
@@ -59,8 +57,6 @@ pub async fn execute(opts: CanisterOpts) {
 			.to_bytes()
 			.expect("Cannot parse argument");
 	
-	println!("arg_value len {}", arg_value.len());
-
 	let blob = agent.update(&canister_id, method_name)
 			.with_arg(&arg_value)
 			.call_and_wait(waiter_with_exponential_backoff())
@@ -70,7 +66,7 @@ pub async fn execute(opts: CanisterOpts) {
 	let result_str = IDLArgs::from_bytes(&blob)
 		.expect("Unable to decode call result")
 		.to_string();
-	println!("Result {}", result_str);
+	println!("{:?}", result_str);
 }
 
 const RETRY_PAUSE: Duration = Duration::from_millis(200);

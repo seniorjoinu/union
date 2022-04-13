@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 set -e
-
-COLOR="96"
-function log {
-	C="\033[0;${COLOR}m"
-	NC='\033[0m' # No Color
-
-	echo -e "${C}$@${NC}"
-}
+. ./scripts/log.sh
 
 log "Start deploy infrastructure"
 
@@ -57,18 +50,10 @@ log "Gateway backend deployed"
 log "Building frontend..."
 cd gateway/frontend/gateway
 rm -rf ./.dfx/local
-yarn && yarn build
+yarn
+dfx build --all --check
 log "Frontend built"
 cd ../../../
-
-# log "Deploy frontend..."
-# cd gateway/frontend/gateway
-# rm -rf ./.dfx/local
-# yarn
-# dfx deploy
-# gateway_frontend=$(dfx canister $args id union-wallet-frontend)
-# log "Frontend deployed"
-# cd ../../../
 
 COLOR="92"
 log deployer=$deployer

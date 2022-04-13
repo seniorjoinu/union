@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+. ./scripts/log.sh
 
 # Target control schema
 #
@@ -19,14 +20,6 @@ set -e
 # Root wallet
 #8 # controller = deployer
 
-COLOR="96"
-function log {
-	C="\033[0;${COLOR}m"
-	NC='\033[0m' # No Color
-
-	echo -e "${C}$@${NC}"
-}
-
 args=
 # TODO uncomment in future - for using `./setup.sh --network ic`
 # args=$@
@@ -34,13 +27,7 @@ args=
 log "#6 Setup deployer spawn control to gateway_backend..."
 dfx canister $args call $deployer "transfer_spawn_control" "(record { new_controller = principal \"${gateway_backend}\" })"
 
-log "Deploy root wallet through gateway_backend..."
-spawn_result=$(dfx canister $args call $gateway_backend "controller_spawn_wallet" "(record { version = \"0.0.0\"; wallet_creator = principal \"${identity}\" })")
-echo spawn_result=$spawn_result
-root_wallet=$(echo $spawn_result | grep -Eo 'principal \"(\w|-)+\"' | grep -Eo '\"(\w|-)+\"' | grep -Eo '(\w|-)+')
-COLOR="92"
-log root_wallet=$root_wallet
-COLOR="96"
+source ./scripts/root-wallet-deploy.sh
 
 log "#7 Setup deployer binary control to root_wallet..."
 dfx canister $args call $deployer "transfer_binary_control" "(record { new_controller = principal \"${root_wallet}\" })"
@@ -58,16 +45,6 @@ cd deployer-backend
 dfx canister $args update-settings "$deployer" --controller "aaaaa-aa"
 cd ../
 
-# log "#3 Setup gateway_frontend canister controllers..."
-# cd gateway/frontend/gateway
-# dfx canister $args update-settings "$gateway_frontend" --controller "$root_wallet"
-# cd ../../../
-
 log "#8 root_wallet already has deployer as canister controller."
-
-
-COLOR="92"
-log root_wallet=$root_wallet
-log spawn_result=$spawn_result
 
 export root_wallet
