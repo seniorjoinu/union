@@ -41,12 +41,12 @@ cd ..
 log "Root wallet built"
 
 log "Deploy deployer..."
-cd deployer-backend
+cd deployer-backend/canister
 rm -rf ./.dfx/local
 dfx deploy $args --argument "(principal \"${identity}\", principal \"${identity}\")"
 deployer=$(dfx canister $args id union-deployer)
 log "Deployer deployed"
-cd ../
+cd ../../
 
 log "Deploy gateway backend..."
 cd gateway/backend
