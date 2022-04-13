@@ -1,20 +1,22 @@
 pub mod deployer;
 pub mod guards;
-pub mod management_canister_client;
 pub mod types;
 pub mod utils;
 
-use crate::common::types::Blob;
 use crate::common::utils::ToCandidType;
 use ic_cdk::export::candid::Principal;
-use management_canister_client::*;
+use shared::candid::Blob;
+use shared::management_canister_client::{
+    CanisterInstallMode, CanisterSettings, CreateCanisterRequest, IManagementCanisterClient,
+    InstallCodeRequest, UpdateSettingsRequest,
+};
 
 pub async fn deploy_canister_install_code_update_settings(
     this: Principal,
     args_raw: Blob,
     wasm: Blob,
+    cycles: u64,
 ) -> Principal {
-    let cycles = 1_000_000_000_000u64;
     let management_canister = Principal::management_canister();
 
     let (resp,) = management_canister

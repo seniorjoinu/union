@@ -1,10 +1,10 @@
-use crate::common::types::{
-    BinaryInstance, BinaryVersionInfo, BinaryVersionStatus, Blob, DeployerError,
-};
+use crate::common::types::DeployerError;
 use crate::common::utils::validate_and_trim_str;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use shared::candid::Blob;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use union_deployer_client::api::{BinaryInstance, BinaryVersionInfo, BinaryVersionStatus};
 
 #[derive(CandidType, Deserialize)]
 pub struct State {
@@ -191,7 +191,9 @@ impl State {
     }
 
     pub fn get_non_deleted_binary(&self, version: &str) -> Result<Blob, DeployerError> {
-        self.get_binary_version(version)?.check_not_deleted()?;
+        if self.get_binary_version(version)?.is_deleted() {
+            return Err(DeployerError::BinaryVersionHasWrongStatus);
+        }
 
         let binary = self
             .download_binary(version)?

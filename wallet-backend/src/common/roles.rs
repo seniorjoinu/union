@@ -1,5 +1,5 @@
-use crate::common::utils::{validate_and_trim_str, validate_f64, validate_u32, ValidationError};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use shared::validation::{validate_and_trim_str, validate_f64, validate_u32, ValidationError};
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 

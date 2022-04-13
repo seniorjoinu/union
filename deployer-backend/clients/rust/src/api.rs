@@ -1,21 +1,5 @@
-use crate::common::utils::ValidationError;
-use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
-
-pub type Blob = Vec<u8>;
-
-#[derive(Debug)]
-pub enum DeployerError {
-    BinaryVersionAlreadyExists,
-    BinaryVersionNotFound,
-    BinaryVersionHasWrongStatus,
-    BinaryIsImmutable,
-    UnableToDeleteLatestVersion,
-    MissingBinary,
-    InstanceAlreadyExists,
-    InstanceNotFound,
-    LatestVersionDoesNotExist,
-    ValidationError(ValidationError),
-}
+use candid::{CandidType, Deserialize, Principal};
+use shared::candid::Blob;
 
 #[derive(Clone, Copy, CandidType, Deserialize)]
 pub enum BinaryVersionStatus {
@@ -47,12 +31,8 @@ impl BinaryVersionInfo {
         }
     }
 
-    pub fn check_not_deleted(&self) -> Result<(), DeployerError> {
-        if matches!(self.status, BinaryVersionStatus::Deleted) {
-            Err(DeployerError::BinaryVersionHasWrongStatus)
-        } else {
-            Ok(())
-        }
+    pub fn is_deleted(&self) -> bool {
+        matches!(self.status, BinaryVersionStatus::Deleted)
     }
 }
 
@@ -65,7 +45,7 @@ pub struct BinaryInstance {
     pub upgraded_at: u64,
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(Clone, CandidType, Deserialize)]
 pub struct SpawnWalletRequest {
     pub version: String,
     pub wallet_creator: Principal,
@@ -159,4 +139,9 @@ pub struct TransferControlRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetLatestVersionResponse {
     pub version: String,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetControllerResponse {
+    pub controller: Principal,
 }

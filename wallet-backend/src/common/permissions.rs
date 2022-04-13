@@ -1,6 +1,6 @@
-use crate::common::execution_history::RemoteCallEndpoint;
 use crate::Program;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use shared::remote_call::RemoteCallEndpoint;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 
@@ -174,7 +174,7 @@ impl PermissionsState {
             .into_iter()
             .collect()
     }
-    
+
     pub fn get_permission_ids_by_permission_target(
         &self,
         permission_target: &PermissionTarget,
@@ -263,9 +263,9 @@ impl PermissionTarget {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::execution_history::RemoteCallEndpoint;
     use crate::common::permissions::{PermissionScope, PermissionTarget, PermissionsState};
     use ic_cdk::export::Principal;
+    use shared::remote_call::RemoteCallEndpoint;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     pub fn random_principal_test() -> Principal {
