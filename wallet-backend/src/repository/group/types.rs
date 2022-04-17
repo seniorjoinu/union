@@ -1,6 +1,6 @@
-use crate::repository::profile::ProfileId;
+use crate::state::profile::types::ProfileId;
 use candid::{CandidType, Deserialize, Nat, Principal};
-use shared::validation::{ValidationError};
+use shared::validation::ValidationError;
 use std::collections::HashMap;
 
 pub const NAME_MIN_LEN: usize = 1;
@@ -8,6 +8,8 @@ pub const NAME_MAX_LEN: usize = 100;
 pub const DESCRIPTION_MIN_LEN: usize = 0;
 pub const DESCRIPTION_MAX_LEN: usize = 300;
 pub const EVERYONE_GROUP_ID: GroupId = 0;
+
+pub const ZERO_NAT: Nat = Nat::default();
 
 pub type GroupId = u32;
 pub type Shares = Nat;

@@ -1,9 +1,9 @@
-use crate::repository::group::types::{
+use crate::state::group::types::{
     Group, GroupId, GroupRepositoryError, GroupType, GroupTypeExternal, PrivateGroup, PublicGroup,
     Shares, DESCRIPTION_MAX_LEN, DESCRIPTION_MIN_LEN, EVERYONE_GROUP_ID, NAME_MAX_LEN,
-    NAME_MIN_LEN,
+    NAME_MIN_LEN, ZERO_NAT,
 };
-use crate::repository::profile::ProfileId;
+use crate::state::profile::types::ProfileId;
 use candid::{CandidType, Deserialize, Principal};
 use shared::validation::validate_and_trim_str;
 use std::collections::hash_map::Entry;
@@ -153,7 +153,16 @@ impl GroupRepository {
         let group = self.get_group_mut(&group_id)?;
 
         match &mut group.group_type {
-            GroupType::Public(p) => p.transfer(from, to, qty),
+            GroupType::Public(p) => {
+                let sender_balance = p.transfer(from, to, qty)?;
+                self.add_to_index(to, group_id);
+
+                if sender_balance == ZERO_NAT {
+                    self.remove_from_index(&from, &group_id);
+                }
+
+                Ok(sender_balance)
+            }
             GroupType::Private(_) => Err(GroupRepositoryError::InvalidGroupType((
                 group_id,
                 GroupTypeExternal::Public,
@@ -174,8 +183,26 @@ impl GroupRepository {
         let group = self.get_group_mut(&group_id)?;
 
         match &mut group.group_type {
-            GroupType::Private(p) => p.burn(from, qty),
-            GroupType::Public(p) => p.burn(from, qty),
+            GroupType::Private(p) => {
+                let shares_left = p.burn(from, qty)?;
+
+                if shares_left == ZERO_NAT
+                    && self.unaccepted_balance_of(group_id, &from).unwrap() == ZERO_NAT
+                {
+                    self.remove_from_index(&from, &group_id);
+                }
+
+                Ok(shares_left)
+            }
+            GroupType::Public(p) => {
+                let shares_left = p.burn(from, qty)?;
+
+                if shares_left == ZERO_NAT {
+                    self.remove_from_index(&from, &group_id);
+                }
+
+                Ok(shares_left)
+            }
             _ => unreachable!(),
         }
     }
@@ -191,7 +218,15 @@ impl GroupRepository {
         let group = self.get_group_mut(&group_id)?;
 
         match &mut group.group_type {
-            GroupType::Private(p) => p.burn_unaccepted(from, qty),
+            GroupType::Private(p) => {
+                let shares_left = p.burn_unaccepted(from, qty)?;
+
+                if shares_left == ZERO_NAT && self.balance_of(group_id, &from)? == ZERO_NAT {
+                    self.remove_from_index(&from, &group_id);
+                }
+
+                Ok(shares_left)
+            }
             GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType((
                 group_id,
                 GroupTypeExternal::Private,

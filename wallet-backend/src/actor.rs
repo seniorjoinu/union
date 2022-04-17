@@ -41,8 +41,6 @@ pub mod api;
 pub mod common;
 pub mod guards;
 pub mod helpers;
-pub mod state;
-
 pub mod repository;
 
 // -------------- EXECUTION & HISTORY ----------------

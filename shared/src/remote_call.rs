@@ -6,7 +6,7 @@ use candid::{decode_args, CandidType, Deserialize, Principal};
 use ic_cdk::api::call::call_raw;
 use ic_cdk::id;
 
-#[derive(CandidType, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(CandidType, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct RemoteCallEndpoint {
     pub canister_id: Principal,
     pub method_name: String,

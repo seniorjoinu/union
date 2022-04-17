@@ -1,27 +1,24 @@
+use crate::repository::permission::types::{
+    Permission, PermissionId, PermissionRepositoryError, PermissionScope, PermissionTarget,
+};
 use crate::Program;
-use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use ic_cdk::export::candid::{CandidType, Deserialize};
 use shared::remote_call::RemoteCallEndpoint;
 use std::collections::hash_map::Entry;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 
-pub type PermissionId = u16;
-
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub enum PermissionsError {
-    PermissionDoesNotExist,
-    NotPermissionTarget,
-    ThereShouldBeAtLeastOnePermission,
-}
+pub mod types;
 
 #[derive(CandidType, Deserialize, Clone, Default, Debug)]
-pub struct PermissionsState {
+pub struct PermissionRepository {
     pub permissions: HashMap<PermissionId, Permission>,
     pub permission_ids_counter: PermissionId,
+
     // this list doesn't take into an account whitelist/blacklist logic
-    pub permissions_by_permission_target_index: HashMap<PermissionTarget, HashSet<PermissionId>>,
+    pub permissions_by_permission_target_index: HashMap<PermissionTarget, BTreeSet<PermissionId>>,
 }
 
-impl PermissionsState {
+impl PermissionRepository {
     pub fn create_permission(
         &mut self,
         name: String,
@@ -51,7 +48,7 @@ impl PermissionsState {
         new_name: Option<String>,
         new_targets: Option<Vec<PermissionTarget>>,
         new_scope: Option<PermissionScope>,
-    ) -> Result<(), PermissionsError> {
+    ) -> Result<(), PermissionRepositoryError> {
         let permission = self.get_permission_mut(permission_id)?;
 
         if let Some(name) = new_name {
@@ -83,15 +80,15 @@ impl PermissionsState {
     pub fn remove_permission(
         &mut self,
         permission_id: &PermissionId,
-    ) -> Result<Permission, PermissionsError> {
+    ) -> Result<Permission, PermissionRepositoryError> {
         if self.permissions.len() == 1 {
-            return Err(PermissionsError::ThereShouldBeAtLeastOnePermission);
+            return Err(PermissionRepositoryError::ThereShouldBeAtLeastOnePermission);
         }
 
         let permission = self
             .permissions
             .remove(permission_id)
-            .ok_or(PermissionsError::PermissionDoesNotExist)?;
+            .ok_or(PermissionRepositoryError::PermissionDoesNotExist)?;
 
         for target in &permission.targets {
             self.remove_permission_from_target_index(permission_id, target);
@@ -104,7 +101,7 @@ impl PermissionsState {
         &self,
         program: &Program,
         permission_id: &PermissionId,
-    ) -> Result<(), PermissionsError> {
+    ) -> Result<(), PermissionRepositoryError> {
         match program {
             Program::RemoteCallSequence(sequence) => {
                 for call in sequence {
@@ -123,7 +120,7 @@ impl PermissionsState {
         &self,
         endpoint_opt: Option<RemoteCallEndpoint>,
         permission_id: &PermissionId,
-    ) -> Result<(), PermissionsError> {
+    ) -> Result<(), PermissionRepositoryError> {
         let permission = self.get_permission(permission_id)?;
 
         let mut is_target = match endpoint_opt {
@@ -155,7 +152,7 @@ impl PermissionsState {
         if is_target {
             Ok(())
         } else {
-            Err(PermissionsError::NotPermissionTarget)
+            Err(PermissionRepositoryError::NotPermissionTarget)
         }
     }
 
@@ -178,7 +175,7 @@ impl PermissionsState {
     pub fn get_permission_ids_by_permission_target(
         &self,
         permission_target: &PermissionTarget,
-    ) -> Option<&HashSet<PermissionId>> {
+    ) -> Option<&BTreeSet<PermissionId>> {
         self.permissions_by_permission_target_index
             .get(permission_target)
     }
@@ -186,19 +183,19 @@ impl PermissionsState {
     fn get_permission_mut(
         &mut self,
         permission_id: &PermissionId,
-    ) -> Result<&mut Permission, PermissionsError> {
+    ) -> Result<&mut Permission, PermissionRepositoryError> {
         self.permissions
             .get_mut(permission_id)
-            .ok_or(PermissionsError::PermissionDoesNotExist)
+            .ok_or(PermissionRepositoryError::PermissionDoesNotExist)
     }
 
     pub fn get_permission(
         &self,
         permission_id: &PermissionId,
-    ) -> Result<&Permission, PermissionsError> {
+    ) -> Result<&Permission, PermissionRepositoryError> {
         self.permissions
             .get(permission_id)
-            .ok_or(PermissionsError::PermissionDoesNotExist)
+            .ok_or(PermissionRepositoryError::PermissionDoesNotExist)
     }
 
     fn add_permission_to_target_index(&mut self, id: PermissionId, target: PermissionTarget) {
@@ -230,40 +227,10 @@ impl PermissionsState {
     }
 }
 
-#[derive(CandidType, Deserialize, Clone, Debug)]
-pub struct Permission {
-    pub id: PermissionId,
-    pub name: String,
-    pub targets: HashSet<PermissionTarget>,
-    pub scope: PermissionScope,
-}
-
-#[derive(CandidType, Deserialize, Copy, Clone, Debug)]
-pub enum PermissionScope {
-    Whitelist,
-    Blacklist,
-}
-
-#[derive(CandidType, Deserialize, Clone, PartialEq, Eq, Hash, Debug)]
-pub enum PermissionTarget {
-    SelfEmptyProgram,
-    Canister(Principal),
-    Endpoint(RemoteCallEndpoint),
-}
-
-impl PermissionTarget {
-    pub fn to_canister(self) -> Option<PermissionTarget> {
-        match &self {
-            PermissionTarget::SelfEmptyProgram => None,
-            PermissionTarget::Canister(_) => Some(self),
-            PermissionTarget::Endpoint(e) => Some(PermissionTarget::Canister(e.canister_id)),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::common::permissions::{PermissionScope, PermissionTarget, PermissionsState};
+    use crate::repository::permission::types::{PermissionScope, PermissionTarget};
+    use crate::repository::permission::PermissionRepository;
     use ic_cdk::export::Principal;
     use shared::remote_call::RemoteCallEndpoint;
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -280,20 +247,20 @@ mod tests {
 
     #[test]
     pub fn permission_crud_works_fine() {
-        let mut permissions_state = PermissionsState::default();
+        let mut repository = PermissionRepository::default();
         let target_1 = PermissionTarget::Endpoint(RemoteCallEndpoint {
             canister_id: random_principal_test(),
             method_name: String::from("test_method"),
         });
         let target_2 = PermissionTarget::Canister(random_principal_test());
 
-        let permission_id_1 = permissions_state.create_permission(
+        let permission_id_1 = repository.create_permission(
             String::from("Permission 1"),
             vec![target_1.clone(), target_2.clone()],
             PermissionScope::Whitelist,
         );
 
-        let permission_1 = permissions_state
+        let permission_1 = repository
             .get_permission(&permission_id_1)
             .expect("Permission 1 should be possible to obtain");
         assert!(
@@ -310,14 +277,14 @@ mod tests {
             "There should be 2 targets in Permission 1"
         );
 
-        let permission_id_2 = permissions_state.create_permission(
+        let permission_id_2 = repository.create_permission(
             String::from("Permission 2"),
             vec![target_2.clone()],
             PermissionScope::Whitelist,
         );
 
         let canister_2_related_permissions =
-            permissions_state.get_permission_ids_by_permission_target_cloned(&target_2);
+            repository.get_permission_ids_by_permission_target_cloned(&target_2);
         assert_eq!(
             canister_2_related_permissions.len(),
             2,
@@ -332,12 +299,12 @@ mod tests {
             "Permission 2 should be in the list"
         );
 
-        permissions_state
+        repository
             .update_permission(&permission_id_1, None, Some(vec![target_1]), None)
             .expect("It should be possible to update permission 1");
 
         let canister_2_related_permissions =
-            permissions_state.get_permission_ids_by_permission_target_cloned(&target_2);
+            repository.get_permission_ids_by_permission_target_cloned(&target_2);
         assert_eq!(
             canister_2_related_permissions.len(),
             1,
@@ -348,12 +315,12 @@ mod tests {
             "Permission 2 should be in the list"
         );
 
-        permissions_state
+        repository
             .remove_permission(&permission_id_2)
             .expect("It should be possible to remove permission 2");
 
         let canister_2_related_permissions =
-            permissions_state.get_permission_ids_by_permission_target_cloned(&target_2);
+            repository.get_permission_ids_by_permission_target_cloned(&target_2);
 
         assert!(
             canister_2_related_permissions.is_empty(),

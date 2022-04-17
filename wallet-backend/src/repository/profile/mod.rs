@@ -1,7 +1,7 @@
-use crate::repository::group::types::{
+use crate::state::group::types::{
     DESCRIPTION_MAX_LEN, DESCRIPTION_MIN_LEN, NAME_MAX_LEN, NAME_MIN_LEN,
 };
-use crate::repository::profile::types::{Profile, ProfileId, ProfileRepositoryError};
+use crate::state::profile::types::{Profile, ProfileId, ProfileRepositoryError};
 use candid::{CandidType, Deserialize, Principal};
 use shared::validation::validate_and_trim_str;
 use std::collections::HashMap;

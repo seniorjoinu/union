@@ -1,14 +1,24 @@
-use crate::repository::profile::ProfileRepository;
-use candid::{CandidType, Deserialize};
 use crate::repository::group::GroupRepository;
+use crate::repository::permission::PermissionRepository;
+use crate::repository::profile::ProfileRepository;
+use crate::repository::streaming::StreamingRepository;
+use crate::repository::voting_config::VotingConfigRepository;
+use candid::{CandidType, Deserialize};
 
 pub mod group;
+pub mod permission;
 pub mod profile;
+pub mod streaming;
+pub mod voting;
+pub mod voting_config;
 
 #[derive(CandidType, Deserialize)]
 pub struct Repositories {
     pub profile: ProfileRepository,
     pub group: GroupRepository,
+    pub permission: PermissionRepository,
+    pub streaming: StreamingRepository,
+    pub voting_config: VotingConfigRepository,
 }
 
 impl Repositories {
@@ -16,6 +26,9 @@ impl Repositories {
         Self {
             profile: ProfileRepository::default(),
             group: GroupRepository::new(),
+            permission: PermissionRepository::default(),
+            streaming: StreamingRepository::default(),
+            voting_config: VotingConfigRepository::default(),
         }
     }
 }

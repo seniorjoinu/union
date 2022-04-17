@@ -1,35 +1,15 @@
 use crate::common::rc_bytes::RcBytes;
-use candid::{CandidType, Deserialize, Nat};
+use crate::repository::streaming::types::{
+    Batch, BatchId, Chunk, ChunkId, Key, StreamingRepositoryError,
+};
+use candid::{CandidType, Deserialize};
 use serde_bytes::ByteBuf;
 use std::collections::{BTreeSet, HashMap};
 
-#[derive(CandidType, Deserialize)]
-pub struct Chunk {
-    pub batch_id: BatchId,
-    pub content: RcBytes,
-}
-
-#[derive(Clone, Default, CandidType, Deserialize)]
-pub struct Batch {
-    pub key: Key,
-    pub content_type: String,
-    pub chunk_ids: BTreeSet<ChunkId>,
-    pub locked: bool,
-}
-
-pub type BatchId = Nat;
-pub type ChunkId = Nat;
-pub type Key = String;
-
-#[derive(Debug)]
-pub enum StreamingError {
-    BatchNotFound(BatchId),
-    BatchIsAlreadyLocked(BatchId),
-    ChunkNotFound(ChunkId),
-}
+pub mod types;
 
 #[derive(Default, CandidType, Deserialize)]
-pub struct StreamingState {
+pub struct StreamingRepository {
     pub chunks: HashMap<ChunkId, Chunk>,
     pub batches: HashMap<BatchId, Batch>,
 
@@ -37,7 +17,7 @@ pub struct StreamingState {
     pub batch_id_counter: BatchId,
 }
 
-impl StreamingState {
+impl StreamingRepository {
     pub fn create_batch(&mut self, key: Key, content_type: String) -> BatchId {
         let id = self.generate_batch_id();
         self.batches.insert(
@@ -57,16 +37,18 @@ impl StreamingState {
         &mut self,
         batch_id: BatchId,
         content: ByteBuf,
-    ) -> Result<ChunkId, StreamingError> {
+    ) -> Result<ChunkId, StreamingRepositoryError> {
         let id = self.generate_chunk_id();
 
         let batch = self
             .batches
             .get_mut(&batch_id)
-            .ok_or_else(|| StreamingError::BatchNotFound(batch_id.clone()))?;
+            .ok_or_else(|| StreamingRepositoryError::BatchNotFound(batch_id.clone()))?;
 
         if batch.locked {
-            return Err(StreamingError::BatchIsAlreadyLocked(batch_id.clone()));
+            return Err(StreamingRepositoryError::BatchIsAlreadyLocked(
+                batch_id.clone(),
+            ));
         }
 
         batch.chunk_ids.insert(id.clone());
@@ -81,14 +63,16 @@ impl StreamingState {
         Ok(id)
     }
 
-    pub fn lock_batch(&mut self, batch_id: &BatchId) -> Result<(), StreamingError> {
+    pub fn lock_batch(&mut self, batch_id: &BatchId) -> Result<(), StreamingRepositoryError> {
         let batch = self
             .batches
             .get_mut(batch_id)
-            .ok_or_else(|| StreamingError::BatchNotFound(batch_id.clone()))?;
+            .ok_or_else(|| StreamingRepositoryError::BatchNotFound(batch_id.clone()))?;
 
         if batch.locked {
-            return Err(StreamingError::BatchIsAlreadyLocked(batch_id.clone()));
+            return Err(StreamingRepositoryError::BatchIsAlreadyLocked(
+                batch_id.clone(),
+            ));
         }
 
         batch.locked = true;
@@ -100,7 +84,7 @@ impl StreamingState {
         &mut self,
         batch_id: &BatchId,
         lock_assertion: bool,
-    ) -> Result<(), StreamingError> {
+    ) -> Result<(), StreamingRepositoryError> {
         let batch = self.get_batch(batch_id)?;
         assert_eq!(batch.locked, lock_assertion, "Invalid batch lock state");
 
@@ -113,13 +97,13 @@ impl StreamingState {
         Ok(())
     }
 
-    pub fn get_batch(&self, batch_id: &BatchId) -> Result<&Batch, StreamingError> {
+    pub fn get_batch(&self, batch_id: &BatchId) -> Result<&Batch, StreamingRepositoryError> {
         self.batches
             .get(batch_id)
-            .ok_or_else(|| StreamingError::BatchNotFound(batch_id.clone()))
+            .ok_or_else(|| StreamingRepositoryError::BatchNotFound(batch_id.clone()))
     }
 
-    pub fn get_batches(&self) -> Result<Vec<(BatchId, Batch)>, StreamingError> {
+    pub fn get_batches(&self) -> Result<Vec<(BatchId, Batch)>, StreamingRepositoryError> {
         let mut result: Vec<(BatchId, Batch)> = vec![];
 
         for (key, val) in self.batches.iter() {
@@ -129,10 +113,10 @@ impl StreamingState {
         Ok(result)
     }
 
-    pub fn get_chunk(&self, chunk_id: &ChunkId) -> Result<&Chunk, StreamingError> {
+    pub fn get_chunk(&self, chunk_id: &ChunkId) -> Result<&Chunk, StreamingRepositoryError> {
         self.chunks
             .get(chunk_id)
-            .ok_or_else(|| StreamingError::ChunkNotFound(chunk_id.clone()))
+            .ok_or_else(|| StreamingRepositoryError::ChunkNotFound(chunk_id.clone()))
     }
 
     fn generate_chunk_id(&mut self) -> ChunkId {
