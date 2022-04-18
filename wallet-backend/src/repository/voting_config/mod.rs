@@ -3,11 +3,9 @@ use crate::repository::permission::types::PermissionId;
 use crate::repository::profile::types::ProfileId;
 use crate::repository::voting_config::types::{
     EditorConstraint, GroupOrProfile, LenInterval, ProposerConstraint, RoundSettings,
-    StartConstraint, ThresholdValue, VotesFormula, VotingConfig, VotingConfigId,
-    VotingConfigRepositoryError,
+    ThresholdValue, VotesFormula, VotingConfig, VotingConfigId, VotingConfigRepositoryError,
 };
 use candid::{CandidType, Deserialize};
-use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 pub mod types;
@@ -24,15 +22,14 @@ pub struct VotingConfigRepository {
 impl VotingConfigRepository {
     pub fn create_voting_config(
         &mut self,
-        mut name: String,
-        mut description: String,
+        name: String,
+        description: String,
         choices_count: Option<LenInterval>,
         winners_count: Option<LenInterval>,
         votes_formula: Option<VotesFormula>,
         permissions: BTreeSet<PermissionId>,
         proposers: BTreeSet<ProposerConstraint>,
         editors: BTreeSet<EditorConstraint>,
-        start: StartConstraint,
         round: RoundSettings,
         approval: ThresholdValue,
         quorum: ThresholdValue,
@@ -41,29 +38,25 @@ impl VotingConfigRepository {
         next_round: ThresholdValue,
     ) -> Result<VotingConfigId, VotingConfigRepositoryError> {
         let id = self.generate_voting_config_id();
+        let voting_config = VotingConfig::new(
+            id,
+            name,
+            description,
+            choices_count,
+            winners_count,
+            votes_formula,
+            permissions,
+            proposers,
+            editors,
+            round,
+            approval,
+            quorum,
+            rejection,
+            win,
+            next_round,
+        )?;
 
-        // ------------------ VALIDATION ----------------------
-
-        name = Self::process_name(name)?;
-        description = Self::process_description(description)?;
-
-        if let Some(cc) = &choices_count {
-            if !cc.is_valid() {
-                return Err(VotingConfigRepositoryError::ValidationError(
-                    ValidationError("Invalid choices count interval".to_string()),
-                ));
-            }
-        }
-
-        if let Some(wc) = &winners_count {
-            if !wc.is_valid() {
-                return Err(VotingConfigRepositoryError::ValidationError(
-                    ValidationError("Invalid winners count interval".to_string()),
-                ));
-            }
-        }
-
-        // ---------------------- INDEXING ----------------------
+        self.voting_configs.insert(id, voting_config);
 
         for permission_id in &permissions {
             self.add_to_permissions_index(id, *permission_id);
@@ -99,29 +92,6 @@ impl VotingConfigRepository {
             self.add_to_group_or_profile_index(id, *gop);
         }
 
-        // ---------------------- SAVING --------------------
-
-        let voting_config = VotingConfig {
-            id,
-            name,
-            description,
-            choices_count,
-            winners_count,
-            votes_formula,
-            permissions,
-            proposers,
-            editors,
-            start,
-            round,
-            approval,
-            quorum,
-            rejection,
-            win,
-            next_round,
-        };
-
-        self.voting_configs.insert(id, voting_config);
-
         Ok(id)
     }
 
@@ -136,7 +106,6 @@ impl VotingConfigRepository {
         permissions_opt: Option<BTreeSet<PermissionId>>,
         proposers_opt: Option<BTreeSet<ProposerConstraint>>,
         editors_opt: Option<BTreeSet<EditorConstraint>>,
-        start_opt: Option<StartConstraint>,
         round_opt: Option<RoundSettings>,
         approval_opt: Option<ThresholdValue>,
         quorum_opt: Option<ThresholdValue>,
@@ -146,152 +115,95 @@ impl VotingConfigRepository {
     ) -> Result<(), VotingConfigRepositoryError> {
         let voting_config = self.get_voting_config_mut(&id)?;
 
-        // ------------------ VALIDATION -------------------
+        // gathering new indexing data
 
-        if let Some(name) = name_opt {
-            voting_config.name = Self::process_name(name)?;
-        }
+        let new_permissions = if let Some(permissions) = &permissions_opt {
+            permissions.clone()
+        } else {
+            BTreeSet::new()
+        };
 
-        if let Some(description) = description_opt {
-            voting_config.description = Self::process_description(description)?;
-        }
+        let mut new_gops = BTreeSet::new();
 
-        if let Some(choices_count) = choices_count_opt {
-            if let Some(cc) = &choices_count {
-                if !cc.is_valid() {
-                    return Err(VotingConfigRepositoryError::ValidationError(
-                        ValidationError("Invalid choices count interval".to_string()),
-                    ));
-                }
-            }
-
-            voting_config.choices_count = choices_count;
-        }
-
-        if let Some(winners_count) = winners_count_opt {
-            if let Some(wc) = &winners_count {
-                if !wc.is_valid() {
-                    return Err(VotingConfigRepositoryError::ValidationError(
-                        ValidationError("Invalid winners count interval".to_string()),
-                    ));
-                }
-            }
-
-            voting_config.winners_count = winners_count;
-        }
-
-        if let Some(votes_formula) = votes_formula_opt {
-            voting_config.votes_formula = votes_formula;
-        }
-
-        // ------------------------ INDEXING --------------------------
-
-        if let Some(permissions) = permissions_opt {
-            for old_permission in &voting_config.permissions {
-                self.remove_from_permissions_index(&id, old_permission);
-            }
-
-            voting_config.permissions = permissions;
-
-            for new_permission in &voting_config.permissions {
-                self.add_to_permissions_index(id, *new_permission);
+        if let Some(proposers) = &proposers_opt {
+            for proposer in proposers {
+                new_gops.insert(proposer.to_group_or_profile());
             }
         }
 
-        if let Some(proposers) = proposers_opt {
-            for old_proposer in &voting_config.proposers {
-                self.remove_from_group_or_profile_index(&id, &old_proposer.to_group_or_profile());
-            }
-
-            voting_config.proposers = proposers;
-
-            for new_proposer in &voting_config.proposers {
-                self.add_to_group_or_profile_index(id, new_proposer.to_group_or_profile());
-            }
-        }
-
-        if let Some(editors) = editors_opt {
-            for old_editor in &voting_config.editors {
-                if let Some(gop) = &old_editor.to_group_or_profile() {
-                    self.remove_from_group_or_profile_index(&id, gop);
-                }
-            }
-
-            voting_config.editors = editors;
-
-            for new_editor in &voting_config.editors {
-                if let Some(gop) = new_editor.to_group_or_profile() {
-                    self.add_to_group_or_profile_index(id, gop);
+        if let Some(editors) = &editors_opt {
+            for editor in editors {
+                if let Some(gop) = editor.to_group_or_profile() {
+                    new_gops.insert(gop);
                 }
             }
         }
 
-        if let Some(start) = start_opt {
-            voting_config.start = start;
-        }
-
-        if let Some(round) = round_opt {
-            voting_config.round = round;
-        }
-
-        if let Some(approval) = approval_opt {
-            for gop in voting_config.approval.list_groups_and_profiles() {
-                self.remove_from_group_or_profile_index(&id, gop);
-            }
-
-            voting_config.approval = approval;
-
-            for gop in voting_config.approval.list_groups_and_profiles() {
-                self.add_to_group_or_profile_index(id, *gop);
+        if let Some(approval) = &approval_opt {
+            for gop in approval.list_groups_and_profiles() {
+                new_gops.insert(*gop);
             }
         }
 
-        if let Some(quorum) = quorum_opt {
-            for gop in voting_config.quorum.list_groups_and_profiles() {
-                self.remove_from_group_or_profile_index(&id, gop);
-            }
-
-            voting_config.quorum = quorum;
-
-            for gop in voting_config.quorum.list_groups_and_profiles() {
-                self.add_to_group_or_profile_index(id, *gop);
+        if let Some(quorum) = &quorum_opt {
+            for gop in quorum.list_groups_and_profiles() {
+                new_gops.insert(*gop);
             }
         }
 
-        if let Some(rejection) = rejection_opt {
-            for gop in voting_config.rejection.list_groups_and_profiles() {
-                self.remove_from_group_or_profile_index(&id, gop);
-            }
-
-            voting_config.rejection = rejection;
-
-            for gop in voting_config.rejection.list_groups_and_profiles() {
-                self.add_to_group_or_profile_index(id, *gop);
+        if let Some(rejection) = &rejection_opt {
+            for gop in rejection.list_groups_and_profiles() {
+                new_gops.insert(*gop);
             }
         }
 
-        if let Some(win) = win_opt {
-            for gop in voting_config.win.list_groups_and_profiles() {
-                self.remove_from_group_or_profile_index(&id, gop);
-            }
-
-            voting_config.win = win;
-
-            for gop in voting_config.win.list_groups_and_profiles() {
-                self.add_to_group_or_profile_index(id, *gop);
+        if let Some(win) = &win_opt {
+            for gop in win.list_groups_and_profiles() {
+                new_gops.insert(*gop);
             }
         }
 
-        if let Some(next_round) = next_round_opt {
-            for gop in voting_config.next_round.list_groups_and_profiles() {
-                self.remove_from_group_or_profile_index(&id, gop);
+        if let Some(next_round) = &next_round_opt {
+            for gop in next_round.list_groups_and_profiles() {
+                new_gops.insert(*gop);
             }
+        }
 
-            voting_config.next_round = next_round;
+        // updating and gathering old indexing data
 
-            for gop in voting_config.next_round.list_groups_and_profiles() {
-                self.add_to_group_or_profile_index(id, *gop);
-            }
+        let (old_permissions, old_gops) = voting_config.update(
+            name_opt,
+            description_opt,
+            choices_count_opt,
+            winners_count_opt,
+            votes_formula_opt,
+            permissions_opt,
+            proposers_opt,
+            editors_opt,
+            round_opt,
+            approval_opt,
+            quorum_opt,
+            rejection_opt,
+            win_opt,
+            next_round_opt,
+        )?;
+
+        // re-indexing
+
+        for permission in old_permissions {
+            self.remove_from_permissions_index(&id, &permission);
+        }
+
+        for permission in new_permissions {
+            self.add_to_permissions_index(id, permission);
+        }
+
+        for gop in old_gops {
+            self.remove_from_group_or_profile_index(&id, &gop);
+        }
+
+        for gop in new_gops {
+            self.add_to_group_or_profile_index(id, gop);
         }
 
         Ok(())
@@ -454,15 +366,5 @@ impl VotingConfigRepository {
         self.voting_config_id_counter += 1;
 
         id
-    }
-
-    fn process_name(name: String) -> Result<String, VotingConfigRepositoryError> {
-        validate_and_trim_str(name, 1, 100, "Name")
-            .map_err(VotingConfigRepositoryError::ValidationError)
-    }
-
-    fn process_description(description: String) -> Result<String, VotingConfigRepositoryError> {
-        validate_and_trim_str(description, 0, 500, "Description")
-            .map_err(VotingConfigRepositoryError::ValidationError)
     }
 }

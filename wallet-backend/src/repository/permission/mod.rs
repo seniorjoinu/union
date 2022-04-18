@@ -3,10 +3,8 @@ use crate::repository::permission::types::{
 };
 use crate::Program;
 use ic_cdk::export::candid::{CandidType, Deserialize};
-use shared::remote_call::RemoteCallEndpoint;
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeSet, HashMap};
-use crate::repository::voting::types::Program;
 
 pub mod types;
 
@@ -25,14 +23,9 @@ impl PermissionRepository {
         name: String,
         targets: Vec<PermissionTarget>,
         scope: PermissionScope,
-    ) -> PermissionId {
+    ) -> Result<PermissionId, PermissionRepositoryError> {
         let id = self.generate_permission_id();
-        let permission = Permission {
-            id,
-            name,
-            targets: targets.clone().into_iter().collect(),
-            scope,
-        };
+        let permission = Permission::new(id, name, targets.clone(), scope)?;
 
         self.permissions.insert(id, permission);
 
@@ -40,7 +33,7 @@ impl PermissionRepository {
             self.add_permission_to_target_index(id, target);
         }
 
-        id
+        Ok(id)
     }
 
     pub fn update_permission(
@@ -51,26 +44,14 @@ impl PermissionRepository {
         new_scope: Option<PermissionScope>,
     ) -> Result<(), PermissionRepositoryError> {
         let permission = self.get_permission_mut(permission_id)?;
+        let old_targets_opt = permission.update(new_name, new_targets.clone(), new_scope)?;
 
-        if let Some(name) = new_name {
-            permission.name = name;
-        }
-
-        if let Some(scope) = new_scope {
-            permission.scope = scope;
-        }
-
-        if let Some(targets) = new_targets {
-            let old_permission_targets =
-                std::mem::replace(&mut permission.targets, targets.into_iter().collect());
-
-            for old_target in &old_permission_targets {
+        if let Some(targets) = old_targets_opt {
+            for old_target in &targets {
                 self.remove_permission_from_target_index(permission_id, old_target);
             }
 
-            let permission = self.get_permission_mut(permission_id)?;
-
-            for target in permission.targets.clone() {
+            for target in new_targets.unwrap() {
                 self.add_permission_to_target_index(*permission_id, target);
             }
         }
@@ -82,10 +63,6 @@ impl PermissionRepository {
         &mut self,
         permission_id: &PermissionId,
     ) -> Result<Permission, PermissionRepositoryError> {
-        if self.permissions.len() == 1 {
-            return Err(PermissionRepositoryError::ThereShouldBeAtLeastOnePermission);
-        }
-
         let permission = self
             .permissions
             .remove(permission_id)
@@ -200,7 +177,7 @@ mod tests {
             String::from("Permission 1"),
             vec![target_1.clone(), target_2.clone()],
             PermissionScope::Whitelist,
-        );
+        ).unwrap();
 
         let permission_1 = repository
             .get_permission(&permission_id_1)
@@ -223,7 +200,7 @@ mod tests {
             String::from("Permission 2"),
             vec![target_2.clone()],
             PermissionScope::Whitelist,
-        );
+        ).unwrap();
 
         let canister_2_related_permissions =
             repository.get_permission_ids_by_permission_target_cloned(&target_2);

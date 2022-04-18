@@ -1,11 +1,9 @@
 use crate::repository::group::types::{
-    Group, GroupId, GroupRepositoryError, GroupType, GroupTypeExternal, PrivateGroup, PublicGroup,
-    Shares, DESCRIPTION_MAX_LEN, DESCRIPTION_MIN_LEN, EVERYONE_GROUP_ID, NAME_MAX_LEN,
-    NAME_MIN_LEN, ZERO_NAT,
+    Group, GroupId, GroupRepositoryError, GroupType, GroupTypeExternal, Shares, EVERYONE_GROUP_ID,
+    ZERO_NAT,
 };
 use crate::repository::profile::types::ProfileId;
 use candid::{CandidType, Deserialize, Principal};
-use shared::validation::validate_and_trim_str;
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeSet, HashMap};
 
@@ -37,6 +35,7 @@ impl GroupRepository {
         it
     }
 
+    #[inline(always)]
     pub fn create_group(
         &mut self,
         group_type: GroupTypeExternal,
@@ -44,23 +43,14 @@ impl GroupRepository {
         description: String,
     ) -> Result<GroupId, GroupRepositoryError> {
         let id = self.generate_group_id();
-        let group_type = match group_type {
-            GroupTypeExternal::Private => GroupType::Private(PrivateGroup::default()),
-            GroupTypeExternal::Public => GroupType::Public(PublicGroup::default()),
-        };
-
-        let group = Group {
-            id,
-            group_type,
-            name: Self::process_name(name)?,
-            description: Self::process_description(description)?,
-        };
+        let group = Group::new(id, group_type, name, description)?;
 
         self.groups.insert(id, group);
 
         Ok(id)
     }
 
+    #[inline(always)]
     pub fn update_group(
         &mut self,
         group_id: &GroupId,
@@ -68,14 +58,7 @@ impl GroupRepository {
         new_description: Option<String>,
     ) -> Result<(), GroupRepositoryError> {
         let group = self.get_group_mut(group_id)?;
-
-        if let Some(name) = new_name {
-            group.name = Self::process_name(name)?;
-        }
-
-        if let Some(description) = new_description {
-            group.description = Self::process_description(description)?;
-        }
+        group.update(new_name, new_description)?;
 
         Ok(())
     }
@@ -88,6 +71,7 @@ impl GroupRepository {
             .ok_or(GroupRepositoryError::GroupNotFound(group_id))
     }
 
+    #[inline(always)]
     pub fn mint_shares(
         &mut self,
         group_id: GroupId,
@@ -98,28 +82,14 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group_mut(&group_id)?;
-
-        match &mut group.group_type {
-            GroupType::Private(p) => {
-                if has_profile {
-                    p.mint_unaccepted(to, qty);
-                    Ok(())
-                } else {
-                    Err(GroupRepositoryError::UserShouldHaveAProfile(to))
-                }
-            }
-            GroupType::Public(p) => {
-                p.mint(to, qty);
-                Ok(())
-            }
-            GroupType::Everyone => unreachable!(),
-        }?;
+        group.mint_shares(to, qty, has_profile)?;
 
         self.add_to_index(to, group_id);
 
         Ok(())
     }
 
+    #[inline(always)]
     pub fn accept_shares(
         &mut self,
         group_id: GroupId,
@@ -129,18 +99,10 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group_mut(&group_id)?;
-
-        match &mut group.group_type {
-            GroupType::Private(p) => p.accept(profile_id, qty),
-            GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType((
-                group_id,
-                GroupTypeExternal::Private,
-                GroupTypeExternal::Public,
-            ))),
-            _ => unreachable!(),
-        }
+        group.accept_shares(profile_id, qty)
     }
 
+    #[inline(always)]
     pub fn transfer_shares(
         &mut self,
         group_id: GroupId,
@@ -151,27 +113,18 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group_mut(&group_id)?;
+        let sender_balance = group.transfer_shares(from, to, qty)?;
 
-        match &mut group.group_type {
-            GroupType::Public(p) => {
-                let sender_balance = p.transfer(from, to, qty)?;
-                self.add_to_index(to, group_id);
+        self.add_to_index(to, group_id);
 
-                if sender_balance == ZERO_NAT {
-                    self.remove_from_index(&from, &group_id);
-                }
-
-                Ok(sender_balance)
-            }
-            GroupType::Private(_) => Err(GroupRepositoryError::InvalidGroupType((
-                group_id,
-                GroupTypeExternal::Public,
-                GroupTypeExternal::Private,
-            ))),
-            _ => unreachable!(),
+        if sender_balance == ZERO_NAT {
+            self.remove_from_index(&from, &group_id);
         }
+
+        Ok(sender_balance)
     }
 
+    #[inline(always)]
     pub fn burn_shares(
         &mut self,
         group_id: GroupId,
@@ -181,11 +134,10 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group_mut(&group_id)?;
+        let shares_left = group.burn_shares(from, qty)?;
 
         match &mut group.group_type {
             GroupType::Private(p) => {
-                let shares_left = p.burn(from, qty)?;
-
                 if shares_left == ZERO_NAT
                     && self.unaccepted_balance_of(group_id, &from).unwrap() == ZERO_NAT
                 {
@@ -195,8 +147,6 @@ impl GroupRepository {
                 Ok(shares_left)
             }
             GroupType::Public(p) => {
-                let shares_left = p.burn(from, qty)?;
-
                 if shares_left == ZERO_NAT {
                     self.remove_from_index(&from, &group_id);
                 }
@@ -207,6 +157,7 @@ impl GroupRepository {
         }
     }
 
+    #[inline(always)]
     pub fn burn_unaccepted(
         &mut self,
         group_id: GroupId,
@@ -216,26 +167,15 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group_mut(&group_id)?;
-
-        match &mut group.group_type {
-            GroupType::Private(p) => {
-                let shares_left = p.burn_unaccepted(from, qty)?;
-
-                if shares_left == ZERO_NAT && self.balance_of(group_id, &from)? == ZERO_NAT {
-                    self.remove_from_index(&from, &group_id);
-                }
-
-                Ok(shares_left)
-            }
-            GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType((
-                group_id,
-                GroupTypeExternal::Private,
-                GroupTypeExternal::Public,
-            ))),
-            _ => unreachable!(),
+        let shares_left = group.burn_unaccepted(from, qty)?;
+        if shares_left == ZERO_NAT && self.balance_of(group_id, &from)? == ZERO_NAT {
+            self.remove_from_index(&from, &group_id);
         }
+
+        Ok(shares_left)
     }
 
+    #[inline(always)]
     pub fn balance_of(
         &self,
         group_id: GroupId,
@@ -244,14 +184,10 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group(&group_id)?;
-
-        match &group.group_type {
-            GroupType::Private(p) => Ok(p.balance_of(of)),
-            GroupType::Public(p) => Ok(p.balance_of(of)),
-            _ => unreachable!(),
-        }
+        group.balance_of(of)
     }
 
+    #[inline(always)]
     pub fn unaccepted_balance_of(
         &self,
         group_id: GroupId,
@@ -260,30 +196,18 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group(&group_id)?;
-
-        match &group.group_type {
-            GroupType::Private(p) => Ok(p.unaccepted_balance_of(of)),
-            GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType((
-                group_id,
-                GroupTypeExternal::Private,
-                GroupTypeExternal::Public,
-            ))),
-            _ => unreachable!(),
-        }
+        group.unaccepted_balance_of(of)
     }
 
+    #[inline(always)]
     pub fn total_supply(&self, group_id: GroupId) -> Result<Shares, GroupRepositoryError> {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group(&group_id)?;
-
-        match &group.group_type {
-            GroupType::Private(p) => Ok(p.total_supply()),
-            GroupType::Public(p) => Ok(p.total_supply()),
-            _ => unreachable!(),
-        }
+        group.total_supply()
     }
 
+    #[inline(always)]
     pub fn unaccepted_total_supply(
         &self,
         group_id: GroupId,
@@ -291,16 +215,7 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group(&group_id)?;
-
-        match &group.group_type {
-            GroupType::Private(p) => Ok(p.unaccepted_total_supply()),
-            GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType((
-                group_id,
-                GroupTypeExternal::Private,
-                GroupTypeExternal::Public,
-            ))),
-            _ => unreachable!(),
-        }
+        group.unaccepted_total_supply()
     }
 
     // --------------- PRIVATE ------------------
@@ -351,20 +266,5 @@ impl GroupRepository {
         } else {
             Ok(())
         }
-    }
-
-    fn process_name(name: String) -> Result<String, GroupRepositoryError> {
-        validate_and_trim_str(name, NAME_MIN_LEN, NAME_MAX_LEN, "Name")
-            .map_err(GroupRepositoryError::ValidationError)
-    }
-
-    fn process_description(description: String) -> Result<String, GroupRepositoryError> {
-        validate_and_trim_str(
-            description,
-            DESCRIPTION_MIN_LEN,
-            DESCRIPTION_MAX_LEN,
-            "Description",
-        )
-        .map_err(GroupRepositoryError::ValidationError)
     }
 }

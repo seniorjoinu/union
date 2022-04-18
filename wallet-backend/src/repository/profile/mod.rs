@@ -1,9 +1,5 @@
-use crate::repository::group::types::{
-    DESCRIPTION_MAX_LEN, DESCRIPTION_MIN_LEN, NAME_MAX_LEN, NAME_MIN_LEN,
-};
 use crate::repository::profile::types::{Profile, ProfileId, ProfileRepositoryError};
 use candid::{CandidType, Deserialize, Principal};
-use shared::validation::validate_and_trim_str;
 use std::collections::HashMap;
 
 pub mod types;
@@ -14,41 +10,29 @@ pub struct ProfileRepository {
 }
 
 impl ProfileRepository {
+    #[inline(always)]
     pub fn create_profile(
         &mut self,
         profile_id: ProfileId,
         name: String,
         description: String,
     ) -> Result<(), ProfileRepositoryError> {
-        self.profiles.insert(
-            profile_id,
-            Profile {
-                id: profile_id,
-                name: Self::process_name(name)?,
-                description: Self::process_description(description)?,
-            },
-        );
+        let profile = Profile::new(profile_id, name, description)?;
+        
+        self.profiles.insert(profile_id, profile);
 
         Ok(())
     }
-
+    
+    #[inline(always)]
     pub fn update_profile(
         &mut self,
         profile_id: ProfileId,
         new_name: Option<String>,
         new_description: Option<String>,
     ) -> Result<(), ProfileRepositoryError> {
-        let mut profile = self.get_profile_mut(&profile_id)?;
-
-        if let Some(name) = new_name {
-            profile.name = Self::process_name(name)?;
-        }
-
-        if let Some(description) = new_description {
-            profile.description = Self::process_description(description)?;
-        }
-
-        Ok(())
+        let profile = self.get_profile_mut(&profile_id)?;
+        profile.update(new_name, new_description)
     }
 
     pub fn delete_profile(
@@ -86,20 +70,5 @@ impl ProfileRepository {
         self.profiles
             .get(profile_id)
             .ok_or(ProfileRepositoryError::ProfileNotFound(*profile_id))
-    }
-
-    fn process_name(name: String) -> Result<String, ProfileRepositoryError> {
-        validate_and_trim_str(name, NAME_MIN_LEN, NAME_MAX_LEN, "Name")
-            .map_err(ProfileRepositoryError::ValidationError)
-    }
-
-    fn process_description(description: String) -> Result<String, ProfileRepositoryError> {
-        validate_and_trim_str(
-            description,
-            DESCRIPTION_MIN_LEN,
-            DESCRIPTION_MAX_LEN,
-            "Description",
-        )
-        .map_err(ProfileRepositoryError::ValidationError)
     }
 }

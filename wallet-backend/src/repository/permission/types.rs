@@ -1,7 +1,13 @@
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use shared::remote_call::RemoteCallEndpoint;
 use std::collections::BTreeSet;
+use shared::validation::{validate_and_trim_str, ValidationError};
 use crate::repository::voting::types::Program;
+
+const NAME_MIN_LEN: usize = 1;
+const NAME_MAX_LEN: usize = 100;
+const DESCRIPTION_MIN_LEN: usize = 0;
+const DESCRIPTION_MAX_LEN: usize = 300;
 
 pub type PermissionId = u16;
 
@@ -10,6 +16,7 @@ pub enum PermissionRepositoryError {
     PermissionDoesNotExist,
     NotPermissionTarget,
     ThereShouldBeAtLeastOnePermission,
+    ValidationError(ValidationError),
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
@@ -21,6 +28,46 @@ pub struct Permission {
 }
 
 impl Permission {
+    pub fn new(
+        id: PermissionId,
+        name: String,
+        targets: Vec<PermissionTarget>,
+        scope: PermissionScope,
+    ) -> Result<Self, PermissionRepositoryError> {
+        let permission = Permission {
+            id,
+            name: Self::process_name(name)?,
+            targets: targets.into_iter().collect(),
+            scope,
+        };
+        
+        Ok(permission)
+    }
+
+    pub fn update(
+        &mut self,
+        new_name: Option<String>,
+        new_targets: Option<Vec<PermissionTarget>>,
+        new_scope: Option<PermissionScope>,
+    ) -> Result<Option<BTreeSet<PermissionTarget>>, PermissionRepositoryError> {
+        if let Some(name) = new_name {
+            self.name = Self::process_name(name)?;
+        }
+
+        if let Some(scope) = new_scope {
+            self.scope = scope;
+        }
+
+        if let Some(targets) = new_targets {
+            let old_permission_targets =
+                std::mem::replace(&mut self.targets, targets.into_iter().collect());
+            
+            Ok(Some(old_permission_targets))
+        } else {
+            Ok(None)
+        }
+    }
+    
     pub fn is_program_allowed(
         &self,
         program: &Program,
@@ -74,6 +121,11 @@ impl Permission {
         }
 
         is_target
+    }
+
+    fn process_name(name: String) -> Result<String, PermissionRepositoryError> {
+        validate_and_trim_str(name, NAME_MIN_LEN, NAME_MAX_LEN, "Name")
+            .map_err(PermissionRepositoryError::ValidationError)
     }
 }
 

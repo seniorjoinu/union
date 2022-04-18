@@ -2,8 +2,14 @@ use crate::repository::group::types::{GroupId, Shares};
 use crate::repository::permission::types::PermissionId;
 use crate::repository::profile::types::ProfileId;
 use candid::{CandidType, Deserialize};
-use shared::validation::ValidationError;
+use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
+use std::mem;
+
+const NAME_MIN_LEN: usize = 1;
+const NAME_MAX_LEN: usize = 200;
+const DESCRIPTION_MIN_LEN: usize = 0;
+const DESCRIPTION_MAX_LEN: usize = 2000;
 
 pub type VotingConfigId = u64;
 
@@ -112,12 +118,6 @@ pub struct GroupCondition {
 }
 
 #[derive(Clone, CandidType, Deserialize)]
-pub enum StartConstraint {
-    ApprovalDelay(u64),
-    ExactDate,
-}
-
-#[derive(Clone, CandidType, Deserialize)]
 pub struct RoundSettings {
     pub round_duration: u64,
     pub round_delay: u64,
@@ -170,6 +170,187 @@ pub struct VotingConfig {
 }
 
 impl VotingConfig {
+    pub fn new(
+        id: VotingConfigId,
+        name: String,
+        description: String,
+        choices_count: Option<LenInterval>,
+        winners_count: Option<LenInterval>,
+        votes_formula: Option<VotesFormula>,
+        permissions: BTreeSet<PermissionId>,
+        proposers: BTreeSet<ProposerConstraint>,
+        editors: BTreeSet<EditorConstraint>,
+        round: RoundSettings,
+        approval: ThresholdValue,
+        quorum: ThresholdValue,
+        rejection: ThresholdValue,
+        win: ThresholdValue,
+        next_round: ThresholdValue,
+    ) -> Result<VotingConfig, VotingConfigRepositoryError> {
+        if let Some(cc) = &choices_count {
+            if !cc.is_valid() {
+                return Err(VotingConfigRepositoryError::ValidationError(
+                    ValidationError("Invalid choices count interval".to_string()),
+                ));
+            }
+        }
+
+        if let Some(wc) = &winners_count {
+            if !wc.is_valid() {
+                return Err(VotingConfigRepositoryError::ValidationError(
+                    ValidationError("Invalid winners count interval".to_string()),
+                ));
+            }
+        }
+
+        let voting_config = VotingConfig {
+            id,
+            name: Self::process_name(name)?,
+            description: Self::process_description(description)?,
+            choices_count,
+            winners_count,
+            votes_formula,
+            permissions,
+            proposers,
+            editors,
+            round,
+            approval,
+            quorum,
+            rejection,
+            win,
+            next_round,
+        };
+
+        Ok(voting_config)
+    }
+
+    pub fn update(
+        &mut self,
+        name_opt: Option<String>,
+        description_opt: Option<String>,
+        choices_count_opt: Option<Option<LenInterval>>,
+        winners_count_opt: Option<Option<LenInterval>>,
+        votes_formula_opt: Option<Option<VotesFormula>>,
+        permissions_opt: Option<BTreeSet<PermissionId>>,
+        proposers_opt: Option<BTreeSet<ProposerConstraint>>,
+        editors_opt: Option<BTreeSet<EditorConstraint>>,
+        round_opt: Option<RoundSettings>,
+        approval_opt: Option<ThresholdValue>,
+        quorum_opt: Option<ThresholdValue>,
+        rejection_opt: Option<ThresholdValue>,
+        win_opt: Option<ThresholdValue>,
+        next_round_opt: Option<ThresholdValue>,
+    ) -> Result<(BTreeSet<PermissionId>, BTreeSet<GroupOrProfile>), VotingConfigRepositoryError>
+    {
+        if let Some(name) = name_opt {
+            self.name = Self::process_name(name)?;
+        }
+
+        if let Some(description) = description_opt {
+            self.description = Self::process_description(description)?;
+        }
+
+        if let Some(choices_count) = choices_count_opt {
+            if let Some(cc) = &choices_count {
+                if !cc.is_valid() {
+                    return Err(VotingConfigRepositoryError::ValidationError(
+                        ValidationError("Invalid choices count interval".to_string()),
+                    ));
+                }
+            }
+
+            self.choices_count = choices_count;
+        }
+
+        if let Some(winners_count) = winners_count_opt {
+            if let Some(wc) = &winners_count {
+                if !wc.is_valid() {
+                    return Err(VotingConfigRepositoryError::ValidationError(
+                        ValidationError("Invalid winners count interval".to_string()),
+                    ));
+                }
+            }
+
+            self.winners_count = winners_count;
+        }
+
+        if let Some(votes_formula) = votes_formula_opt {
+            self.votes_formula = votes_formula;
+        }
+
+        let old_permissions = if let Some(permissions) = permissions_opt {
+            mem::replace(&mut self.permissions, permissions)
+        } else {
+            BTreeSet::new()
+        };
+
+        let mut old_gops = BTreeSet::new();
+
+        if let Some(proposers) = proposers_opt {
+            let old_proposers = mem::replace(&mut self.proposers, proposers);
+
+            for proposer in old_proposers {
+                old_gops.insert(proposer.to_group_or_profile());
+            }
+        }
+
+        if let Some(editors) = editors_opt {
+            let old_editors = mem::replace(&mut self.editors, editors);
+
+            for editor in old_editors {
+                if let Some(gop) = editor.to_group_or_profile() {
+                    old_gops.insert(gop);
+                }
+            }
+        }
+
+        if let Some(round) = round_opt {
+            self.round = round;
+        }
+
+        if let Some(approval) = approval_opt {
+            let old_approval = mem::replace(&mut self.approval, approval);
+
+            for gop in old_approval.list_groups_and_profiles() {
+                old_gops.insert(*gop);
+            }
+        }
+
+        if let Some(quorum) = quorum_opt {
+            let old_quorum = mem::replace(&mut self.quorum, quorum);
+
+            for gop in old_quorum.list_groups_and_profiles() {
+                old_gops.insert(*gop);
+            }
+        }
+
+        if let Some(rejection) = rejection_opt {
+            let old_rejection = mem::replace(&mut self.rejection, rejection);
+
+            for gop in old_rejection.list_groups_and_profiles() {
+                old_gops.insert(*gop);
+            }
+        }
+
+        if let Some(win) = win_opt {
+            let old_win = mem::replace(&mut self.win, win);
+
+            for gop in old_win.list_groups_and_profiles() {
+                old_gops.insert(*gop);
+            }
+        }
+
+        if let Some(next_round) = next_round_opt {
+            let old_next_round = mem::replace(&mut self.next_round, next_round);
+
+            for gop in old_next_round.list_groups_and_profiles() {
+                old_gops.insert(*gop);
+            }
+        }
+
+        Ok((old_permissions, old_gops))
+    }
+
     pub fn can_create_voting(
         &self,
         choices_len: usize,
@@ -211,5 +392,15 @@ impl VotingConfig {
         }
 
         Ok(())
+    }
+
+    fn process_name(name: String) -> Result<String, VotingConfigRepositoryError> {
+        validate_and_trim_str(name, 1, 100, "Name")
+            .map_err(VotingConfigRepositoryError::ValidationError)
+    }
+
+    fn process_description(description: String) -> Result<String, VotingConfigRepositoryError> {
+        validate_and_trim_str(description, 0, 500, "Description")
+            .map_err(VotingConfigRepositoryError::ValidationError)
     }
 }

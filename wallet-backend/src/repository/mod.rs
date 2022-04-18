@@ -2,6 +2,7 @@ use crate::repository::group::GroupRepository;
 use crate::repository::permission::PermissionRepository;
 use crate::repository::profile::ProfileRepository;
 use crate::repository::streaming::StreamingRepository;
+use crate::repository::voting::VotingRepository;
 use crate::repository::voting_config::VotingConfigRepository;
 use candid::{CandidType, Deserialize};
 
@@ -19,6 +20,7 @@ pub struct Repositories {
     pub permission: PermissionRepository,
     pub streaming: StreamingRepository,
     pub voting_config: VotingConfigRepository,
+    pub voting: VotingRepository,
 }
 
 impl Repositories {
@@ -29,6 +31,7 @@ impl Repositories {
             permission: PermissionRepository::default(),
             streaming: StreamingRepository::default(),
             voting_config: VotingConfigRepository::default(),
+            voting: VotingRepository::default(),
         }
     }
 }
