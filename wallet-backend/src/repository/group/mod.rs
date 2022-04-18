@@ -1,9 +1,9 @@
-use crate::state::group::types::{
+use crate::repository::group::types::{
     Group, GroupId, GroupRepositoryError, GroupType, GroupTypeExternal, PrivateGroup, PublicGroup,
     Shares, DESCRIPTION_MAX_LEN, DESCRIPTION_MIN_LEN, EVERYONE_GROUP_ID, NAME_MAX_LEN,
     NAME_MIN_LEN, ZERO_NAT,
 };
-use crate::state::profile::types::ProfileId;
+use crate::repository::profile::types::ProfileId;
 use candid::{CandidType, Deserialize, Principal};
 use shared::validation::validate_and_trim_str;
 use std::collections::hash_map::Entry;

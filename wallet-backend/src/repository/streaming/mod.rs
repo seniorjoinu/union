@@ -10,11 +10,11 @@ pub mod types;
 
 #[derive(Default, CandidType, Deserialize)]
 pub struct StreamingRepository {
-    pub chunks: HashMap<ChunkId, Chunk>,
-    pub batches: HashMap<BatchId, Batch>,
+    chunks: HashMap<ChunkId, Chunk>,
+    batches: HashMap<BatchId, Batch>,
 
-    pub chunk_id_counter: ChunkId,
-    pub batch_id_counter: BatchId,
+    chunk_id_counter: ChunkId,
+    batch_id_counter: BatchId,
 }
 
 impl StreamingRepository {

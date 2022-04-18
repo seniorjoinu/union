@@ -6,16 +6,17 @@ use ic_cdk::export::candid::{CandidType, Deserialize};
 use shared::remote_call::RemoteCallEndpoint;
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeSet, HashMap};
+use crate::repository::voting::types::Program;
 
 pub mod types;
 
 #[derive(CandidType, Deserialize, Clone, Default, Debug)]
 pub struct PermissionRepository {
-    pub permissions: HashMap<PermissionId, Permission>,
-    pub permission_ids_counter: PermissionId,
+    permissions: HashMap<PermissionId, Permission>,
+    permission_ids_counter: PermissionId,
 
     // this list doesn't take into an account whitelist/blacklist logic
-    pub permissions_by_permission_target_index: HashMap<PermissionTarget, BTreeSet<PermissionId>>,
+    permissions_by_permission_target_index: HashMap<PermissionTarget, BTreeSet<PermissionId>>,
 }
 
 impl PermissionRepository {
@@ -95,65 +96,6 @@ impl PermissionRepository {
         }
 
         Ok(permission)
-    }
-
-    pub fn is_program_allowed_by_permission(
-        &self,
-        program: &Program,
-        permission_id: &PermissionId,
-    ) -> Result<(), PermissionRepositoryError> {
-        match program {
-            Program::RemoteCallSequence(sequence) => {
-                for call in sequence {
-                    self.is_permission_target(Some(call.endpoint.clone()), permission_id)?;
-                }
-            }
-            Program::Empty => {
-                self.is_permission_target(None, permission_id)?;
-            }
-        };
-
-        Ok(())
-    }
-
-    pub fn is_permission_target(
-        &self,
-        endpoint_opt: Option<RemoteCallEndpoint>,
-        permission_id: &PermissionId,
-    ) -> Result<(), PermissionRepositoryError> {
-        let permission = self.get_permission(permission_id)?;
-
-        let mut is_target = match endpoint_opt {
-            Some(endpoint) => {
-                let target = PermissionTarget::Endpoint(endpoint);
-                let mut is_target = false;
-
-                if permission.targets.contains(&target) {
-                    is_target = true;
-                }
-
-                let canister_target = target.to_canister().unwrap();
-
-                if permission.targets.contains(&canister_target) {
-                    is_target = true;
-                }
-
-                is_target
-            }
-            None => permission
-                .targets
-                .contains(&PermissionTarget::SelfEmptyProgram),
-        };
-
-        if matches!(permission.scope, PermissionScope::Blacklist) {
-            is_target = !is_target;
-        }
-
-        if is_target {
-            Ok(())
-        } else {
-            Err(PermissionRepositoryError::NotPermissionTarget)
-        }
     }
 
     pub fn get_permission_ids_cloned(&self) -> Vec<PermissionId> {

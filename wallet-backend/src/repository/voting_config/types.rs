@@ -112,7 +112,7 @@ pub struct GroupCondition {
 }
 
 #[derive(Clone, CandidType, Deserialize)]
-pub enum StartCondition {
+pub enum StartConstraint {
     ApprovalDelay(u64),
     ExactDate,
 }
@@ -123,7 +123,7 @@ pub struct RoundSettings {
     pub round_delay: u64,
 }
 
-#[derive(Clone, CandidType, Deserialize)]
+#[derive(Debug, Clone, CandidType, Deserialize)]
 pub struct LenInterval {
     pub min: usize,
     pub max: usize,
@@ -133,9 +133,12 @@ impl LenInterval {
     pub fn is_valid(&self) -> bool {
         self.min >= 1 && self.min <= self.max
     }
+    pub fn contains(&self, num: usize) -> bool {
+        num >= self.min && num <= self.max
+    }
 }
 
-#[derive(Clone, CandidType, Deserialize)]
+#[derive(Debug, Clone, CandidType, Deserialize)]
 pub enum VotesFormula {
     Common,
     Quadratic,
@@ -156,7 +159,6 @@ pub struct VotingConfig {
     pub proposers: BTreeSet<ProposerConstraint>,
     pub editors: BTreeSet<EditorConstraint>,
 
-    pub start: StartCondition,
     pub round: RoundSettings,
 
     pub approval: ThresholdValue,
@@ -165,4 +167,49 @@ pub struct VotingConfig {
     pub rejection: ThresholdValue,
     pub win: ThresholdValue,
     pub next_round: ThresholdValue,
+}
+
+impl VotingConfig {
+    pub fn can_create_voting(
+        &self,
+        choices_len: usize,
+        winners_need: usize,
+        votes_formula: &VotesFormula,
+    ) -> Result<(), ValidationError> {
+        if choices_len < winners_need {
+            return Err(ValidationError(format!(
+                "Not enough choices (winners need: {}, choices: {})",
+                winners_need, choices_len
+            )));
+        }
+
+        if let Some(cc) = &self.choices_count {
+            if !cc.contains(choices_len) {
+                return Err(ValidationError(format!(
+                    "Invalid choices count: expected {:?} actual {}",
+                    cc, choices_len
+                )));
+            }
+        }
+
+        if let Some(wc) = &self.winners_count {
+            if !wc.contains(winners_need) {
+                return Err(ValidationError(format!(
+                    "Invalid winners count: expected {:?} actual {}",
+                    wc, winners_need
+                )));
+            }
+        }
+
+        if let Some(vf) = &self.votes_formula {
+            if !matches!(vf, votes_formula) {
+                return Err(ValidationError(format!(
+                    "Invalid votes formula: expected {:?} actual {:?}",
+                    vf, votes_formula
+                )));
+            }
+        }
+
+        Ok(())
+    }
 }

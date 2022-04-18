@@ -3,7 +3,7 @@ use crate::repository::permission::types::PermissionId;
 use crate::repository::profile::types::ProfileId;
 use crate::repository::voting_config::types::{
     EditorConstraint, GroupOrProfile, LenInterval, ProposerConstraint, RoundSettings,
-    StartCondition, ThresholdValue, VotesFormula, VotingConfig, VotingConfigId,
+    StartConstraint, ThresholdValue, VotesFormula, VotingConfig, VotingConfigId,
     VotingConfigRepositoryError,
 };
 use candid::{CandidType, Deserialize};
@@ -32,7 +32,7 @@ impl VotingConfigRepository {
         permissions: BTreeSet<PermissionId>,
         proposers: BTreeSet<ProposerConstraint>,
         editors: BTreeSet<EditorConstraint>,
-        start: StartCondition,
+        start: StartConstraint,
         round: RoundSettings,
         approval: ThresholdValue,
         quorum: ThresholdValue,
@@ -136,7 +136,7 @@ impl VotingConfigRepository {
         permissions_opt: Option<BTreeSet<PermissionId>>,
         proposers_opt: Option<BTreeSet<ProposerConstraint>>,
         editors_opt: Option<BTreeSet<EditorConstraint>>,
-        start_opt: Option<StartCondition>,
+        start_opt: Option<StartConstraint>,
         round_opt: Option<RoundSettings>,
         approval_opt: Option<ThresholdValue>,
         quorum_opt: Option<ThresholdValue>,
