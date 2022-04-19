@@ -23,7 +23,7 @@ pub enum Command {
 pub struct CandidEncodeOpts {
 	argument: String,
 
-	#[clap(long, possible_values(&["file", "blob", "content", "string"]))]
+	#[clap(long, possible_values(&["test", "check", "blob", "content", "hex"]))]
 	mode: String,
 }
 
@@ -37,7 +37,7 @@ pub struct CandidGetOpts {
 pub async fn execute(opts: CandidOpts) {
 	match opts.command {
 			Command::Encode(v) => encode(v).await,
-			Command::Get(v) => get(v).await,
+			Command::Get(v) => println!("{}", get(v).await),
 	}
 }
 
@@ -45,16 +45,22 @@ pub async fn encode(opts: CandidEncodeOpts) {
 	let arg = opts.argument;
 
 	let hex = match opts.mode.as_str() {
-		"file" => {
-			let bytes = utils::get_file_as_byte_vec(&utils::abspath(arg.as_str()).unwrap());
+		"test" => {
+			String::from("Not implemented")
+		},
+		"check" => {
+			let content = fs::read_to_string(utils::abspath(arg.as_str()).unwrap())
+					.expect("Something went wrong reading the file");
 
-			let res = hex::encode(bytes);
+			candid::pretty_parse::<IDLArgs>("Candid argument", content.as_str())
+					.expect("Cannot parse argument")
+					.to_bytes()
+					.expect("Cannot parse argument");
 
-			return std::io::stdout().write_all(res.as_bytes()).unwrap();
+			String::from("Success")
 		},
 		"blob" => {
 			let bytes = utils::get_file_as_byte_vec(&utils::abspath(arg.as_str()).unwrap());
-
 			let mut res = String::new();
 			for ch in bytes.iter() {
 					res.push_str(&candid::parser::pretty::pp_char(*ch));
@@ -62,28 +68,39 @@ pub async fn encode(opts: CandidEncodeOpts) {
 			res
 		},
 		"content" => {
-			// NOT USED
 			let content = fs::read_to_string(utils::abspath(arg.as_str()).unwrap())
 					.expect("Something went wrong reading the file");
 
-			candid::pretty_parse::<IDLArgs>("Candid argument", content.as_str())
+			let arg_string = candid::pretty_parse::<IDLArgs>("Candid argument", &content)
 				.map_err(|e| format!("Invalid Candid values: {}", e))
 				.unwrap()
-				.to_string()
+				.to_bytes()
+				.unwrap();
+
+			let mut res = String::new();
+			for ch in arg_string.iter() {
+				res.push_str(&candid::parser::pretty::pp_char(*ch));
+			}
+			res
 		},
-		_ => {
-			// NOT USED
-			candid::pretty_parse::<IDLArgs>("Candid argument", &arg)
-				.map_err(|e| format!("Invalid Candid values: {}", e))
-				.unwrap()
-				.to_string()
+		"hex" => {
+			let content = fs::read_to_string(utils::abspath(arg.as_str()).unwrap())
+					.expect("Something went wrong reading the file");
+
+			let bytes = candid::pretty_parse::<IDLArgs>("Candid argument", content.as_str())
+					.expect("Cannot parse argument")
+					.to_bytes()
+					.expect("Cannot parse argument");
+
+			hex::encode(bytes)
 		},
+		_ => String::from("Error"),
 	};
 
 	std::io::stdout().write_all(hex.as_bytes()).unwrap();
 }
 
-pub async fn get(opts: CandidGetOpts) {
+pub async fn get(opts: CandidGetOpts) -> String {
 	let arg = opts.argument;
 	let mut selectors = opts.selector.split('.');
 
@@ -95,7 +112,7 @@ pub async fn get(opts: CandidGetOpts) {
 
 	let decoded = match IDLArgs::from_bytes(&bytes) {
 		Ok(_v) => _v,
-		Err(_) => return,
+		Err(_) => panic!("Error parse bytes"),
 	};
 
 	let mut value: &IDLValue;
@@ -184,7 +201,7 @@ pub async fn get(opts: CandidGetOpts) {
 		}
 	});
 
-	println!("{:?}", value);
+	format!("{:?}", value)
 }
 
 fn parse_idl_number(x: String) -> usize {

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -e
+source .env
+. ./utils.sh
 
 identity=
-root_wallet=
 role_name="Agent"
 
 while getopts ":-:" optchar; do
@@ -14,12 +15,6 @@ while getopts ":-:" optchar; do
                     ;;
                 ii=*)
 										identity=${OPTARG#*=}
-                    ;;
-                wallet)
-										root_wallet="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
-                    ;;
-                wallet=*)
-										root_wallet=${OPTARG#*=}
                     ;;
                 name)
 										role_name="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 ))
@@ -43,10 +38,10 @@ args=
 [ -z "$identity" ] && echo "Princpal does not found" && exit;
 [ -z "$root_wallet" ] && echo "Wallet does not found" && exit;
 
-echo identity=$identity
-echo root_wallet=$root_wallet
+log "[add-profile]" identity=$identity
+log "[add-profile]" root_wallet=$root_wallet
 
-echo "Add internet-identity principal to root wallet"
+log "[add-profile] Add internet-identity principal to root wallet"
 create_role_program_args='(record {
 	role_type = variant {
 		Profile = record {
@@ -79,5 +74,5 @@ create_role_args="(record {
 		}
 	}
 })"
-echo payload=$create_role_args
+log "[add-profile]" payload=$create_role_args
 dfx canister $args call $root_wallet "execute" "$create_role_args"

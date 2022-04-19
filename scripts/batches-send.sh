@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 set -e
-. ./scripts/log.sh
+. ./utils.sh
 source .env
 
 args=
-log "Sending batches..."
-
-echo ${frontend_canister_id_did//\"/\\\"}
-
+log "[batches-send] Sending batches..."
 operations=""
 for i in ${!batch_ids[@]}
 do
 	element="${batch_ids[i]}"
-	send_batch_args='(record { batch_id = '$element'; target_canister = '${frontend_canister_id_did//\"/\\\"}' })'
+	send_batch_args='(record {
+		batch_id = '$element';
+		target_canister = '${frontend_canister_id_did//\"/\\\"}'
+	})'
 	operations+="
 		record {
 			endpoint = record {
@@ -43,4 +43,6 @@ send_batches_args="(record {
 
 dfx canister $args call $root_wallet "execute" "${send_batches_args}"
 
-log "Frontend canister ready"
+log "[batches-send] Frontend canister ready"
+log $(parse_principal $frontend_canister_id_escaped_did)
+# log gateway_frontend="http://localhost:8000?canisterId=$gateway_frontend"
