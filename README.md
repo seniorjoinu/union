@@ -20,12 +20,11 @@ dfx canister call union-wallet get_roles '(record { ids = vec { 3 } : vec nat32;
 
 ```
 dfx start --clean
-./scripts/deploy.sh
-
-./scripts/setup.sh
+./deploy.sh
 
 # Register via Internet Identity and get principal on frontend gateway
-./scripts/add-profile.sh --ii=*identity* --wallet=*root_wallet* --name=*name (default is Agent)*
+cd ./scripts
+./add-profile.sh --ii=*identity* --name=*name (default is Agent)*
 ```
 
 ## didc

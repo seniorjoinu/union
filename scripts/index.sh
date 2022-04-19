@@ -18,10 +18,10 @@ source ./infra-deploy.sh
 echo "export deployer=${deployer}" >> .env
 echo "export gateway_backend=${gateway_backend}" >> .env
 
+./version-deploy.sh
+
 source ./infra-setup.sh
 echo "export root_wallet=${root_wallet}" >> .env
-
-./version-deploy.sh
 
 source ./frontend-create.sh
 echo "export frontend_canister_id_did='${frontend_canister_id_did}'" >> .env

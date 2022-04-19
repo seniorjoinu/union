@@ -13,11 +13,7 @@ payload="(record { version = \"${version}\"; wallet_creator = principal \"${iden
 spawn_result=$(
 	dfx canister $args call $gateway_backend "controller_spawn_wallet" "${payload}"
 )
-echo spawn_result=$spawn_result
-echo spawn_result=$spawn_result
-echo spawn_result=$spawn_result
-echo parse_principal = $(parse_principal $spawn_result)
-root_wallet=$(echo $spawn_result | grep -Eo 'principal \"(\w|-)+\"' | grep -Eo '\"(\w|-)+\"' | grep -Eo '(\w|-)+')
+root_wallet=$(parse_principal $spawn_result)
 
 COLOR="92"
 log root_wallet=$root_wallet
