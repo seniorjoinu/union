@@ -13,7 +13,7 @@ pub mod streaming;
 pub mod voting;
 pub mod voting_config;
 
-#[derive(CandidType, Deserialize)]
+#[derive(Default, CandidType, Deserialize)]
 pub struct Repositories {
     pub profile: ProfileRepository,
     pub group: GroupRepository,
@@ -23,19 +23,6 @@ pub struct Repositories {
     pub voting: VotingRepository,
 }
 
-impl Repositories {
-    pub fn new() -> Self {
-        Self {
-            profile: ProfileRepository::default(),
-            group: GroupRepository::new(),
-            permission: PermissionRepository::default(),
-            streaming: StreamingRepository::default(),
-            voting_config: VotingConfigRepository::default(),
-            voting: VotingRepository::default(),
-        }
-    }
-}
-
 static mut REPOSITORIES: Option<Repositories> = None;
 
 pub fn get_repositories() -> &'static mut Repositories {
@@ -43,9 +30,17 @@ pub fn get_repositories() -> &'static mut Repositories {
         match REPOSITORIES.as_mut() {
             Some(r) => r,
             None => {
-                REPOSITORIES = Some(Repositories::new());
+                REPOSITORIES = Some(Repositories::default());
                 get_repositories()
             }
         }
     }
+}
+
+pub fn take_repositories() -> Option<Repositories> {
+    unsafe { REPOSITORIES.take() }
+}
+
+pub fn set_repositories(repositories: Option<Repositories>) {
+    unsafe { REPOSITORIES = repositories }
 }

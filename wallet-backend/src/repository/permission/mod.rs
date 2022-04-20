@@ -1,5 +1,7 @@
+use crate::common::utils::{Page, PageRequest, Pageable};
 use crate::repository::permission::types::{
-    Permission, PermissionId, PermissionRepositoryError, PermissionScope, PermissionTarget,
+    Permission, PermissionFilter, PermissionId, PermissionRepositoryError, PermissionScope,
+    PermissionTarget,
 };
 use crate::Program;
 use ic_cdk::export::candid::{CandidType, Deserialize};
@@ -75,28 +77,37 @@ impl PermissionRepository {
         Ok(permission)
     }
 
-    pub fn get_permission_ids_cloned(&self) -> Vec<PermissionId> {
-        self.permissions.keys().cloned().collect()
-    }
-
-    pub fn get_permission_ids_by_permission_target_cloned(
+    pub fn get_permissions_cloned(
         &self,
-        permission_target: &PermissionTarget,
-    ) -> Vec<PermissionId> {
-        self.permissions_by_permission_target_index
-            .get(permission_target)
-            .cloned()
-            .unwrap_or_default()
-            .into_iter()
-            .collect()
-    }
+        page_req: PageRequest<PermissionFilter, ()>,
+    ) -> Page<Permission> {
+        if let Some(filter_target) = page_req.filter.target {
+            let ids_opt = self
+                .permissions_by_permission_target_index
+                .get(&filter_target);
 
-    pub fn get_permission_ids_by_permission_target(
-        &self,
-        permission_target: &PermissionTarget,
-    ) -> Option<&BTreeSet<PermissionId>> {
-        self.permissions_by_permission_target_index
-            .get(permission_target)
+            match ids_opt {
+                Some(ids) => {
+                    let (has_next, iter) = ids.into_iter().get_page(&page_req);
+
+                    let data = iter
+                        .map(|id| self.get_permission(id).unwrap().clone())
+                        .collect();
+
+                    Page { has_next, data }
+                }
+                None => Page {
+                    data: Vec::new(),
+                    has_next: false,
+                },
+            }
+        } else {
+            let (has_next, iter) = self.permissions.iter().get_page(&page_req);
+
+            let data = iter.map(|(_, permission)| permission.clone()).collect();
+
+            Page { has_next, data }
+        }
     }
 
     fn get_permission_mut(
@@ -173,11 +184,13 @@ mod tests {
         });
         let target_2 = PermissionTarget::Canister(random_principal_test());
 
-        let permission_id_1 = repository.create_permission(
-            String::from("Permission 1"),
-            vec![target_1.clone(), target_2.clone()],
-            PermissionScope::Whitelist,
-        ).unwrap();
+        let permission_id_1 = repository
+            .create_permission(
+                String::from("Permission 1"),
+                vec![target_1.clone(), target_2.clone()],
+                PermissionScope::Whitelist,
+            )
+            .unwrap();
 
         let permission_1 = repository
             .get_permission(&permission_id_1)
@@ -196,11 +209,13 @@ mod tests {
             "There should be 2 targets in Permission 1"
         );
 
-        let permission_id_2 = repository.create_permission(
-            String::from("Permission 2"),
-            vec![target_2.clone()],
-            PermissionScope::Whitelist,
-        ).unwrap();
+        let permission_id_2 = repository
+            .create_permission(
+                String::from("Permission 2"),
+                vec![target_2.clone()],
+                PermissionScope::Whitelist,
+            )
+            .unwrap();
 
         let canister_2_related_permissions =
             repository.get_permission_ids_by_permission_target_cloned(&target_2);

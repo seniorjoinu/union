@@ -1,6 +1,7 @@
+use crate::common::utils::{Page, PageRequest, Pageable};
 use crate::repository::group::types::{
-    Group, GroupId, GroupRepositoryError, GroupType, GroupTypeExternal, Shares, EVERYONE_GROUP_ID,
-    ZERO_NAT,
+    Group, GroupExternal, GroupFilter, GroupId, GroupRepositoryError, GroupType, GroupTypeParam,
+    Shares, EVERYONE_GROUP_ID, ZERO_NAT,
 };
 use crate::repository::profile::types::ProfileId;
 use candid::{CandidType, Deserialize, Principal};
@@ -9,7 +10,7 @@ use std::collections::{BTreeSet, HashMap};
 
 pub mod types;
 
-#[derive(Default, CandidType, Deserialize)]
+#[derive(CandidType, Deserialize)]
 pub struct GroupRepository {
     groups: HashMap<GroupId, Group>,
     group_id_counter: GroupId,
@@ -17,8 +18,8 @@ pub struct GroupRepository {
     groups_by_principal_index: HashMap<Principal, BTreeSet<GroupId>>,
 }
 
-impl GroupRepository {
-    pub fn new() -> Self {
+impl Default for GroupRepository {
+    fn default() -> Self {
         let mut it = Self::default();
         let id = it.generate_group_id();
         assert_eq!(EVERYONE_GROUP_ID, id);
@@ -34,11 +35,13 @@ impl GroupRepository {
 
         it
     }
+}
 
+impl GroupRepository {
     #[inline(always)]
     pub fn create_group(
         &mut self,
-        group_type: GroupTypeExternal,
+        group_type: GroupTypeParam,
         name: String,
         description: String,
     ) -> Result<GroupId, GroupRepositoryError> {
@@ -63,6 +66,7 @@ impl GroupRepository {
         Ok(())
     }
 
+    #[inline(always)]
     pub fn delete_group(&mut self, group_id: GroupId) -> Result<Group, GroupRepositoryError> {
         Self::validate_group_id(group_id)?;
 
@@ -71,22 +75,21 @@ impl GroupRepository {
             .ok_or(GroupRepositoryError::GroupNotFound(group_id))
     }
 
-    #[inline(always)]
     pub fn mint_shares(
         &mut self,
         group_id: GroupId,
         to: Principal,
         qty: Shares,
         has_profile: bool,
-    ) -> Result<(), GroupRepositoryError> {
+    ) -> Result<Shares, GroupRepositoryError> {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group_mut(&group_id)?;
-        group.mint_shares(to, qty, has_profile)?;
+        let new_balance = group.mint_shares(to, qty, has_profile)?;
 
         self.add_to_index(to, group_id);
 
-        Ok(())
+        Ok(new_balance)
     }
 
     #[inline(always)]
@@ -102,7 +105,6 @@ impl GroupRepository {
         group.accept_shares(profile_id, qty)
     }
 
-    #[inline(always)]
     pub fn transfer_shares(
         &mut self,
         group_id: GroupId,
@@ -124,17 +126,17 @@ impl GroupRepository {
         Ok(sender_balance)
     }
 
-    #[inline(always)]
     pub fn burn_shares(
         &mut self,
         group_id: GroupId,
         from: Principal,
         qty: Shares,
+        private: bool,
     ) -> Result<Shares, GroupRepositoryError> {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group_mut(&group_id)?;
-        let shares_left = group.burn_shares(from, qty)?;
+        let shares_left = group.burn_shares(from, qty, private)?;
 
         match &mut group.group_type {
             GroupType::Private(p) => {
@@ -157,7 +159,6 @@ impl GroupRepository {
         }
     }
 
-    #[inline(always)]
     pub fn burn_unaccepted(
         &mut self,
         group_id: GroupId,
@@ -184,7 +185,7 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group(&group_id)?;
-        group.balance_of(of)
+        Ok(group.balance_of(of))
     }
 
     #[inline(always)]
@@ -204,7 +205,7 @@ impl GroupRepository {
         Self::validate_group_id(group_id)?;
 
         let group = self.get_group(&group_id)?;
-        group.total_supply()
+        Ok(group.total_supply())
     }
 
     #[inline(always)]
@@ -216,6 +217,61 @@ impl GroupRepository {
 
         let group = self.get_group(&group_id)?;
         group.unaccepted_total_supply()
+    }
+
+    pub fn get_groups_cloned(&self, page_req: PageRequest<GroupFilter, ()>) -> Page<GroupExternal> {
+        let (has_next, data) = if let Some(principal_filter) = page_req.filter.principal_id {
+            let ids_opt = self.groups_by_principal_index.get(&principal_filter);
+
+            match ids_opt {
+                Some(ids) => {
+                    let (has_next, iter) = ids.iter().get_page(&page_req);
+
+                    let data = iter
+                        .map(|it| self.get_group(it).unwrap().to_external())
+                        .collect::<Vec<_>>();
+
+                    (has_next, data)
+                }
+                None => (false, Vec::new()),
+            }
+        } else {
+            let (has_next, iter) = self.groups.iter().get_page(&page_req);
+
+            let mut data = iter
+                .map(|(_, group)| group.to_external())
+                .collect::<Vec<_>>();
+
+            (has_next, data)
+        };
+
+        data.push(self.get_group(&EVERYONE_GROUP_ID).unwrap().to_external());
+
+        Page { has_next, data }
+    }
+
+    #[inline(always)]
+    pub fn get_balances_of_group(
+        &self,
+        group_id: GroupId,
+        page_req: PageRequest<(), ()>,
+    ) -> Result<Page<(Principal, Shares)>, GroupRepositoryError> {
+        Self::validate_group_id(group_id)?;
+
+        let group = self.get_group(&group_id)?;
+        Ok(group.balances(page_req))
+    }
+
+    #[inline(always)]
+    pub fn get_unaccepted_balances_of_group(
+        &self,
+        group_id: GroupId,
+        page_req: PageRequest<(), ()>,
+    ) -> Result<Page<(Principal, Shares)>, GroupRepositoryError> {
+        Self::validate_group_id(group_id)?;
+
+        let group = self.get_group(&group_id)?;
+        group.unaccepted_balances(page_req)
     }
 
     // --------------- PRIVATE ------------------

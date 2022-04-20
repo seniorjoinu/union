@@ -151,3 +151,8 @@ impl PermissionTarget {
         }
     }
 }
+
+#[derive(CandidType, Deserialize)]
+pub struct PermissionFilter {
+    pub target: Option<PermissionTarget>,
+}

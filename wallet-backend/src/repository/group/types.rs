@@ -1,3 +1,4 @@
+use crate::common::utils::{Page, PageRequest};
 use crate::repository::profile::types::ProfileId;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use shared::validation::{validate_and_trim_str, ValidationError};
@@ -22,7 +23,22 @@ pub enum GroupRepositoryError {
     UserShouldHaveAProfile(ProfileId),
     NotEnoughShares(Principal, Shares, Shares),
     NotEnoughUnacceptedShares(Principal, Shares, Shares),
-    InvalidGroupType(GroupId, GroupTypeExternal, GroupTypeExternal),
+    InvalidGroupType(GroupId, GroupTypeParam, GroupTypeParam),
+}
+
+#[derive(CandidType, Deserialize)]
+pub enum GroupTypeExternal {
+    Everyone,
+    Private,
+    Public,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GroupExternal {
+    pub id: GroupId,
+    pub name: String,
+    pub description: String,
+    pub group_type: GroupTypeExternal,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -37,7 +53,7 @@ pub struct Group {
 impl Group {
     pub fn new(
         id: GroupId,
-        group_type: GroupTypeExternal,
+        group_type: GroupTypeParam,
         name: String,
         description: String,
     ) -> Result<Self, GroupRepositoryError> {
@@ -66,30 +82,26 @@ impl Group {
 
         Ok(())
     }
-    
+
     pub fn mint_shares(
         &mut self,
         to: Principal,
         qty: Shares,
         has_profile: bool,
-    ) -> Result<(), GroupRepositoryError> {
+    ) -> Result<Shares, GroupRepositoryError> {
         match &mut self.group_type {
             GroupType::Private(p) => {
                 if has_profile {
-                    p.mint_unaccepted(to, qty);
-                    Ok(())
+                    Ok(p.mint_unaccepted(to, qty))
                 } else {
                     Err(GroupRepositoryError::UserShouldHaveAProfile(to))
                 }
             }
-            GroupType::Public(p) => {
-                p.mint(to, qty);
-                Ok(())
-            }
+            GroupType::Public(p) => Ok(p.mint(to, qty)),
             GroupType::Everyone => unreachable!(),
         }
     }
-    
+
     pub fn accept_shares(
         &mut self,
         profile_id: ProfileId,
@@ -99,8 +111,8 @@ impl Group {
             GroupType::Private(p) => p.accept(profile_id, qty),
             GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType(
                 self.id,
-                GroupTypeExternal::Private,
-                GroupTypeExternal::Public,
+                GroupTypeParam::Private,
+                GroupTypeParam::Public,
             )),
             _ => unreachable!(),
         }
@@ -116,8 +128,8 @@ impl Group {
             GroupType::Public(p) => p.transfer(from, to, qty),
             GroupType::Private(_) => Err(GroupRepositoryError::InvalidGroupType(
                 self.id,
-                GroupTypeExternal::Public,
-                GroupTypeExternal::Private,
+                GroupTypeParam::Public,
+                GroupTypeParam::Private,
             )),
             _ => unreachable!(),
         }
@@ -127,10 +139,31 @@ impl Group {
         &mut self,
         from: Principal,
         qty: Shares,
+        private: bool,
     ) -> Result<Shares, GroupRepositoryError> {
         match &mut self.group_type {
-            GroupType::Private(p) => p.burn(from, qty),
-            GroupType::Public(p) => p.burn(from, qty),
+            GroupType::Private(p) => {
+                if private {
+                    p.burn(from, qty)
+                } else {
+                    Err(GroupRepositoryError::InvalidGroupType(
+                        self.id,
+                        GroupTypeParam::Public,
+                        GroupTypeParam::Private,
+                    ))
+                }
+            }
+            GroupType::Public(p) => {
+                if !private {
+                    p.burn(from, qty)
+                } else {
+                    Err(GroupRepositoryError::InvalidGroupType(
+                        self.id,
+                        GroupTypeParam::Private,
+                        GroupTypeParam::Public,
+                    ))
+                }
+            }
             _ => unreachable!(),
         }
     }
@@ -144,43 +177,37 @@ impl Group {
             GroupType::Private(p) => p.burn_unaccepted(from, qty),
             GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType(
                 self.id,
-                GroupTypeExternal::Private,
-                GroupTypeExternal::Public,
+                GroupTypeParam::Private,
+                GroupTypeParam::Public,
             )),
             _ => unreachable!(),
         }
     }
 
-    pub fn balance_of(
-        &self,
-        of: &Principal,
-    ) -> Result<Shares, GroupRepositoryError> {
+    pub fn balance_of(&self, of: &Principal) -> Shares {
         match &self.group_type {
-            GroupType::Private(p) => Ok(p.balance_of(of)),
-            GroupType::Public(p) => Ok(p.balance_of(of)),
+            GroupType::Private(p) => p.balance_of(of),
+            GroupType::Public(p) => p.balance_of(of),
             _ => unreachable!(),
         }
     }
 
-    pub fn unaccepted_balance_of(
-        &self,
-        of: &Principal,
-    ) -> Result<Shares, GroupRepositoryError> {
+    pub fn unaccepted_balance_of(&self, of: &Principal) -> Result<Shares, GroupRepositoryError> {
         match &self.group_type {
             GroupType::Private(p) => Ok(p.unaccepted_balance_of(of)),
             GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType(
                 self.id,
-                GroupTypeExternal::Private,
-                GroupTypeExternal::Public,
+                GroupTypeParam::Private,
+                GroupTypeParam::Public,
             )),
             _ => unreachable!(),
         }
     }
-    
-    pub fn total_supply(&self) -> Result<Shares, GroupRepositoryError> {
+
+    pub fn total_supply(&self) -> Shares {
         match &self.group_type {
-            GroupType::Private(p) => Ok(p.total_supply()),
-            GroupType::Public(p) => Ok(p.total_supply()),
+            GroupType::Private(p) => p.total_supply(),
+            GroupType::Public(p) => p.total_supply(),
             _ => unreachable!(),
         }
     }
@@ -190,13 +217,45 @@ impl Group {
             GroupType::Private(p) => Ok(p.unaccepted_total_supply()),
             GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType(
                 self.id,
-                GroupTypeExternal::Private,
-                GroupTypeExternal::Public,
+                GroupTypeParam::Private,
+                GroupTypeParam::Public,
             )),
             _ => unreachable!(),
         }
     }
-    
+
+    pub fn balances(&self, page_req: PageRequest<(), ()>) -> Page<(Principal, Shares)> {
+        match &self.group_type {
+            GroupType::Private(p) => p.balances(page_req),
+            GroupType::Public(p) => p.balances(page_req),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn unaccepted_balances(
+        &self,
+        page_req: PageRequest<(), ()>,
+    ) -> Result<Page<(Principal, Shares)>, GroupRepositoryError> {
+        match &self.group_type {
+            GroupType::Private(p) => Ok(p.unaccepted_balances(page_req)),
+            GroupType::Public(_) => Err(GroupRepositoryError::InvalidGroupType(
+                self.id,
+                GroupTypeParam::Private,
+                GroupTypeParam::Public,
+            )),
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn to_external(&self) -> GroupExternal {
+        GroupExternal {
+            id: self.id,
+            name: self.name.clone(),
+            description: self.description.clone(),
+            group_type: self.group_type.to_external(),
+        }
+    }
+
     fn process_name(name: String) -> Result<String, GroupRepositoryError> {
         validate_and_trim_str(name, NAME_MIN_LEN, NAME_MAX_LEN, "Name")
             .map_err(GroupRepositoryError::ValidationError)
@@ -220,17 +279,27 @@ pub enum GroupType {
     Private(PrivateGroup),
 }
 
+impl GroupType {
+    pub fn to_external(&self) -> GroupTypeExternal {
+        match &self {
+            GroupType::Everyone => GroupTypeExternal::Everyone,
+            GroupType::Public(_) => GroupTypeExternal::Public,
+            GroupType::Private(_) => GroupTypeExternal::Private,
+        }
+    }
+}
+
 #[derive(Debug, CandidType, Deserialize)]
-pub enum GroupTypeExternal {
+pub enum GroupTypeParam {
     Public,
     Private,
 }
 
-impl GroupTypeExternal {
+impl GroupTypeParam {
     pub fn to_group_type(self) -> GroupType {
         match self {
-            GroupTypeExternal::Private => GroupType::Private(PrivateGroup::default()),
-            GroupTypeExternal::Public => GroupType::Public(PublicGroup::default()),
+            GroupTypeParam::Private => GroupType::Private(PrivateGroup::default()),
+            GroupTypeParam::Public => GroupType::Public(PublicGroup::default()),
         }
     }
 }
@@ -242,9 +311,12 @@ pub struct PublicGroup {
 }
 
 impl PublicGroup {
-    pub fn mint(&mut self, to: Principal, qty: Shares) {
-        self.shares.insert(to, self.balance_of(&to) + qty.clone());
+    pub fn mint(&mut self, to: Principal, qty: Shares) -> Shares {
+        let new_balance = self.balance_of(&to) + qty.clone();
+        self.shares.insert(to, new_balance.clone());
         self.total_shares += qty;
+
+        new_balance
     }
 
     pub fn burn(&mut self, from: Principal, qty: Shares) -> Result<Shares, GroupRepositoryError> {
@@ -283,6 +355,21 @@ impl PublicGroup {
             None => Shares::default(),
         }
     }
+
+    pub fn balances(&self, page_req: PageRequest<(), ()>) -> Page<(Principal, Shares)> {
+        let mut take = self
+            .shares
+            .iter()
+            .skip(page_req.page_size * page_req.page_index)
+            .take(page_req.page_size)
+            .map(|(id, shares)| (*id, shares.clone()))
+            .peekable();
+
+        Page {
+            has_next: take.peek().is_some(),
+            data: take.collect(),
+        }
+    }
 }
 
 #[derive(Default, CandidType, Deserialize)]
@@ -295,11 +382,13 @@ pub struct PrivateGroup {
 }
 
 impl PrivateGroup {
-    pub fn mint_unaccepted(&mut self, to: ProfileId, qty: Shares) {
-        self.unaccepted_shares
-            .insert(to, self.balance_of(&to) + qty.clone());
+    pub fn mint_unaccepted(&mut self, to: ProfileId, qty: Shares) -> Shares {
+        let new_balance = self.balance_of(&to) + qty.clone();
+        self.unaccepted_shares.insert(to, new_balance.clone());
 
         self.total_unaccepted_shares += qty;
+
+        new_balance
     }
 
     pub fn burn(&mut self, from: ProfileId, qty: Shares) -> Result<Shares, GroupRepositoryError> {
@@ -369,8 +458,43 @@ impl PrivateGroup {
         }
     }
 
+    pub fn balances(&self, page_req: PageRequest<(), ()>) -> Page<(Principal, Shares)> {
+        let mut take = self
+            .shares
+            .iter()
+            .skip(page_req.page_size * page_req.page_index)
+            .take(page_req.page_size)
+            .map(|(id, shares)| (*id, shares.clone()))
+            .peekable();
+
+        Page {
+            has_next: take.peek().is_some(),
+            data: take.collect(),
+        }
+    }
+
+    pub fn unaccepted_balances(&self, page_req: PageRequest<(), ()>) -> Page<(Principal, Shares)> {
+        let mut take = self
+            .unaccepted_shares
+            .iter()
+            .skip(page_req.page_size * page_req.page_index)
+            .take(page_req.page_size)
+            .map(|(id, shares)| (*id, shares.clone()))
+            .peekable();
+
+        Page {
+            has_next: take.peek().is_some(),
+            data: take.collect(),
+        }
+    }
+
     fn mint(&mut self, to: ProfileId, qty: Shares) {
         self.shares.insert(to, self.balance_of(&to) + qty.clone());
         self.total_shares += qty;
     }
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GroupFilter {
+    pub principal_id: Option<Principal>,
 }

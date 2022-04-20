@@ -42,6 +42,7 @@ pub mod common;
 pub mod guards;
 pub mod helpers;
 pub mod repository;
+pub mod service;
 
 // -------------- EXECUTION & HISTORY ----------------
 

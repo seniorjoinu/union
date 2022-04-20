@@ -12,6 +12,7 @@ pub type ProfileId = Principal;
 pub enum ProfileRepositoryError {
     ValidationError(ValidationError),
     ProfileNotFound(ProfileId),
+    ProfileAlreadyExists(ProfileId),
 }
 
 #[derive(Clone, CandidType, Deserialize)]
@@ -32,7 +33,7 @@ impl Profile {
             name: Self::process_name(name)?,
             description: Self::process_description(description)?,
         };
-        
+
         Ok(profile)
     }
 
@@ -64,6 +65,6 @@ impl Profile {
             DESCRIPTION_MAX_LEN,
             "Description",
         )
-            .map_err(ProfileRepositoryError::ValidationError)
+        .map_err(ProfileRepositoryError::ValidationError)
     }
 }

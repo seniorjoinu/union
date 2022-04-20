@@ -1,3 +1,4 @@
+use crate::common::utils::{Page, PageRequest, Pageable};
 use crate::repository::profile::types::{Profile, ProfileId, ProfileRepositoryError};
 use candid::{CandidType, Deserialize, Principal};
 use std::collections::HashMap;
@@ -17,13 +18,17 @@ impl ProfileRepository {
         name: String,
         description: String,
     ) -> Result<(), ProfileRepositoryError> {
+        if self.has_profile(&profile_id) {
+            return Err(ProfileRepositoryError::ProfileAlreadyExists(profile_id));
+        }
+
         let profile = Profile::new(profile_id, name, description)?;
-        
+
         self.profiles.insert(profile_id, profile);
 
         Ok(())
     }
-    
+
     #[inline(always)]
     pub fn update_profile(
         &mut self,
@@ -53,6 +58,14 @@ impl ProfileRepository {
 
     pub fn has_profile(&self, principal_id: &Principal) -> bool {
         self.get_profile(principal_id).is_ok()
+    }
+
+    pub fn get_profiles_cloned(&self, page_req: PageRequest<(), ()>) -> Page<Profile> {
+        let (has_next, iter) = self.profiles.iter().get_page(&page_req);
+
+        let data = iter.map(|(_, profile)| profile.clone()).collect();
+
+        Page { has_next, data }
     }
 
     // ----------------- PRIVATE ---------------------
