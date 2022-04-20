@@ -4,6 +4,7 @@ use crate::repository::streaming::types::{
 use candid::{CandidType, Deserialize};
 use serde_bytes::ByteBuf;
 use std::collections::HashMap;
+use crate::common::utils::{Page, PageRequest, Pageable};
 
 pub mod types;
 
@@ -78,14 +79,14 @@ impl StreamingRepository {
             .ok_or_else(|| StreamingRepositoryError::BatchNotFound(batch_id.clone()))
     }
 
-    pub fn get_batches(&self) -> Result<Vec<(BatchId, Batch)>, StreamingRepositoryError> {
-        let mut result: Vec<(BatchId, Batch)> = vec![];
-
-        for (key, val) in self.batches.iter() {
-            result.push((key.clone(), val.clone()));
+    pub fn get_batches_cloned(&self, page_req: PageRequest<(), ()>) -> Page<(BatchId, Batch)> {
+        let (has_next, iter) = self.batches.iter().get_page(&page_req);
+        let data = iter.map(|(key, value)| (key.clone(), value.clone())).collect();
+        
+        Page {
+            has_next,
+            data,
         }
-
-        Ok(result)
     }
 
     pub fn get_chunk(&self, chunk_id: &ChunkId) -> Result<&Chunk, StreamingRepositoryError> {

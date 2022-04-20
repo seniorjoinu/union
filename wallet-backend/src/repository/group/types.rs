@@ -10,8 +10,6 @@ const DESCRIPTION_MIN_LEN: usize = 0;
 const DESCRIPTION_MAX_LEN: usize = 300;
 pub const EVERYONE_GROUP_ID: GroupId = 0;
 
-pub const ZERO_NAT: Nat = Nat::default();
-
 pub type GroupId = u32;
 pub type Shares = Nat;
 

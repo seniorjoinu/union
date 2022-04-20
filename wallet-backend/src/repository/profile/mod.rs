@@ -79,7 +79,7 @@ impl ProfileRepository {
             .ok_or(ProfileRepositoryError::ProfileNotFound(*profile_id))
     }
 
-    fn get_profile(&self, profile_id: &ProfileId) -> Result<&Profile, ProfileRepositoryError> {
+    pub fn get_profile(&self, profile_id: &ProfileId) -> Result<&Profile, ProfileRepositoryError> {
         self.profiles
             .get(profile_id)
             .ok_or(ProfileRepositoryError::ProfileNotFound(*profile_id))

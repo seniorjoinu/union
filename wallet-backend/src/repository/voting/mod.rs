@@ -1,11 +1,10 @@
 use crate::repository::voting::types::{
     ChoiceCreatePayload, StartCondition, Vote, Voting, VotingId, VotingRepositoryError,
-    VotingStatus, VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN, VOTING_NAME_MAX_LEN,
+    VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN, VOTING_NAME_MAX_LEN,
     VOTING_NAME_MIN_LEN,
 };
 use crate::repository::voting_config::types::{VotesFormula, VotingConfigId};
-use crate::Principal;
-use candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize, Principal};
 use std::collections::HashMap;
 
 pub mod types;
@@ -18,7 +17,6 @@ pub struct VotingRepository {
 }
 
 impl VotingRepository {
-    #[inline(always)]
     pub fn create_voting(
         &mut self,
         voting_config_id: VotingConfigId,
@@ -51,7 +49,6 @@ impl VotingRepository {
         Ok(id)
     }
 
-    #[inline(always)]
     pub fn update_voting(
         &mut self,
         voting_id: &VotingId,

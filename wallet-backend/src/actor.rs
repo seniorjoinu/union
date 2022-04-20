@@ -1,4 +1,4 @@
-use crate::api::{
+/*use crate::api::{
     ActivateProfileRequest, AddEnumeratedRolesRequest, AttachRoleToPermissionRequest,
     AuthorizeExecutionRequest, AuthorizeExecutionResponse, BatchOperation, CommitBatchArguments,
     CreateAssetArguments, CreateBatchRequest, CreateBatchResponse, CreateChunkRequest,
@@ -18,13 +18,8 @@ use crate::api::{
     RemoveRoleResponse, SendBatchRequest, SetAssetContentArguments, SubtractEnumeratedRolesRequest,
     UpdateInfoRequest, UpdatePermissionRequest, UpdateRoleRequest,
 };
-use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program};
-use crate::common::permissions::PermissionId;
 use crate::common::roles::{RoleId, RoleType};
 use crate::common::utils::IAssetCanister;
-use crate::guards::{only_gateway, only_self_guard};
-use crate::helpers::execute_program_and_log;
-use crate::state::{State, TaskType};
 use ic_cdk::api::time;
 use ic_cdk::export::Principal;
 use ic_cdk::storage::{stable_restore, stable_save};
@@ -36,14 +31,14 @@ use ic_event_hub::{implement_event_emitter, implement_subscribe, implement_unsub
 use serde_bytes::ByteBuf;
 use shared::candid::ToCandidType;
 use shared::validation::validate_and_trim_str;
-
+*/
 pub mod api;
 pub mod common;
 pub mod guards;
 pub mod helpers;
 pub mod repository;
 pub mod service;
-
+/*
 // -------------- EXECUTION & HISTORY ----------------
 
 #[update]
@@ -841,3 +836,4 @@ fn get_info() -> GetInfoResponse {
 
     GetInfoResponse { info }
 }
+*/

@@ -1,9 +1,10 @@
 use crate::common::utils::{Page, PageRequest, Pageable};
 use crate::repository::group::types::{
     Group, GroupExternal, GroupFilter, GroupId, GroupRepositoryError, GroupType, GroupTypeParam,
-    Shares, EVERYONE_GROUP_ID, ZERO_NAT,
+    Shares, EVERYONE_GROUP_ID,
 };
 use crate::repository::profile::types::ProfileId;
+use candid::types::Type::Nat;
 use candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeSet, HashMap};
@@ -119,7 +120,7 @@ impl GroupRepository {
 
         self.add_to_index(to, group_id);
 
-        if sender_balance == ZERO_NAT {
+        if sender_balance == Shares::default() {
             self.remove_from_index(&from, &group_id);
         }
 
@@ -140,8 +141,8 @@ impl GroupRepository {
 
         match &mut group.group_type {
             GroupType::Private(p) => {
-                if shares_left == ZERO_NAT
-                    && self.unaccepted_balance_of(group_id, &from).unwrap() == ZERO_NAT
+                if shares_left == Shares::default()
+                    && self.unaccepted_balance_of(group_id, &from).unwrap() == Shares::default()
                 {
                     self.remove_from_index(&from, &group_id);
                 }
@@ -149,7 +150,7 @@ impl GroupRepository {
                 Ok(shares_left)
             }
             GroupType::Public(p) => {
-                if shares_left == ZERO_NAT {
+                if shares_left == Shares::default() {
                     self.remove_from_index(&from, &group_id);
                 }
 
@@ -169,7 +170,9 @@ impl GroupRepository {
 
         let group = self.get_group_mut(&group_id)?;
         let shares_left = group.burn_unaccepted(from, qty)?;
-        if shares_left == ZERO_NAT && self.balance_of(group_id, &from)? == ZERO_NAT {
+        if shares_left == Shares::default()
+            && self.balance_of(group_id, &from)? == Shares::default()
+        {
             self.remove_from_index(&from, &group_id);
         }
 
@@ -220,7 +223,7 @@ impl GroupRepository {
     }
 
     pub fn get_groups_cloned(&self, page_req: PageRequest<GroupFilter, ()>) -> Page<GroupExternal> {
-        let (has_next, data) = if let Some(principal_filter) = page_req.filter.principal_id {
+        let (has_next, mut data) = if let Some(principal_filter) = page_req.filter.principal_id {
             let ids_opt = self.groups_by_principal_index.get(&principal_filter);
 
             match ids_opt {
@@ -238,7 +241,7 @@ impl GroupRepository {
         } else {
             let (has_next, iter) = self.groups.iter().get_page(&page_req);
 
-            let mut data = iter
+            let data = iter
                 .map(|(_, group)| group.to_external())
                 .collect::<Vec<_>>();
 
@@ -301,7 +304,7 @@ impl GroupRepository {
             .ok_or(GroupRepositoryError::GroupNotFound(*group_id))
     }
 
-    fn get_group(&self, group_id: &GroupId) -> Result<&Group, GroupRepositoryError> {
+    pub fn get_group(&self, group_id: &GroupId) -> Result<&Group, GroupRepositoryError> {
         self.groups
             .get(group_id)
             .ok_or(GroupRepositoryError::GroupNotFound(*group_id))

@@ -1,4 +1,4 @@
-use crate::get_state;
+/*use crate::get_state;
 use ic_cdk::{caller, id};
 
 pub fn only_self_guard() -> Result<(), String> {
@@ -16,3 +16,4 @@ pub fn only_gateway() -> Result<(), String> {
 
     Ok(())
 }
+*/

@@ -57,6 +57,8 @@ pub fn update_permission(
 pub fn delete_permission(
     permission_id: PermissionId,
 ) -> Result<Permission, PermissionServiceError> {
+    // TODO: check for existing voting configs
+    
     assert_permission_id(permission_id)?;
 
     get_repositories()
@@ -66,10 +68,28 @@ pub fn delete_permission(
 }
 
 #[inline(always)]
+pub fn assert_permission_exists(permission_id: &PermissionId) -> Result<(), PermissionServiceError> {
+    get_repositories()
+        .permission
+        .get_permission(permission_id)
+        .map(|_| ())
+        .map_err(PermissionServiceError::RepositoryError)
+}
+
+#[inline(always)]
 pub fn get_permissions(page_req: PageRequest<PermissionFilter, ()>) -> Page<Permission> {
     get_repositories()
         .permission
         .get_permissions_cloned(page_req)
+}
+
+#[inline(always)]
+pub fn get_permission(permission_id: &PermissionId) -> Result<Permission, PermissionServiceError> {
+    get_repositories()
+        .permission
+        .get_permission(permission_id)
+        .cloned()
+        .map_err(PermissionServiceError::RepositoryError)
 }
 
 fn assert_permission_id(id: PermissionId) -> Result<(), PermissionServiceError> {

@@ -1,9 +1,11 @@
+use crate::common::utils::{Page, PageRequest, Pageable};
 use crate::repository::group::types::GroupId;
 use crate::repository::permission::types::PermissionId;
 use crate::repository::profile::types::ProfileId;
 use crate::repository::voting_config::types::{
     EditorConstraint, GroupOrProfile, LenInterval, ProposerConstraint, RoundSettings,
-    ThresholdValue, VotesFormula, VotingConfig, VotingConfigId, VotingConfigRepositoryError,
+    ThresholdValue, VotesFormula, VotingConfig, VotingConfigFilter, VotingConfigId,
+    VotingConfigRepositoryError,
 };
 use candid::{CandidType, Deserialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -38,6 +40,41 @@ impl VotingConfigRepository {
         next_round: ThresholdValue,
     ) -> Result<VotingConfigId, VotingConfigRepositoryError> {
         let id = self.generate_voting_config_id();
+
+        for permission_id in &permissions {
+            self.add_to_permissions_index(id, *permission_id);
+        }
+
+        for proposer in &proposers {
+            self.add_to_group_or_profile_index(id, proposer.to_group_or_profile());
+        }
+
+        for editor in &editors {
+            if let Some(gop) = editor.to_group_or_profile() {
+                self.add_to_group_or_profile_index(id, gop);
+            }
+        }
+
+        for gop in approval.list_groups_and_profiles() {
+            self.add_to_group_or_profile_index(id, gop);
+        }
+
+        for gop in quorum.list_groups_and_profiles() {
+            self.add_to_group_or_profile_index(id, gop);
+        }
+
+        for gop in rejection.list_groups_and_profiles() {
+            self.add_to_group_or_profile_index(id, gop);
+        }
+
+        for gop in win.list_groups_and_profiles() {
+            self.add_to_group_or_profile_index(id, gop);
+        }
+
+        for gop in next_round.list_groups_and_profiles() {
+            self.add_to_group_or_profile_index(id, gop);
+        }
+
         let voting_config = VotingConfig::new(
             id,
             name,
@@ -57,40 +94,6 @@ impl VotingConfigRepository {
         )?;
 
         self.voting_configs.insert(id, voting_config);
-
-        for permission_id in &permissions {
-            self.add_to_permissions_index(id, *permission_id);
-        }
-
-        for proposer in &proposers {
-            self.add_to_group_or_profile_index(id, proposer.to_group_or_profile());
-        }
-
-        for editor in &editors {
-            if let Some(gop) = editor.to_group_or_profile() {
-                self.add_to_group_or_profile_index(id, gop);
-            }
-        }
-
-        for gop in approval.list_groups_and_profiles() {
-            self.add_to_group_or_profile_index(id, *gop);
-        }
-
-        for gop in quorum.list_groups_and_profiles() {
-            self.add_to_group_or_profile_index(id, *gop);
-        }
-
-        for gop in rejection.list_groups_and_profiles() {
-            self.add_to_group_or_profile_index(id, *gop);
-        }
-
-        for gop in win.list_groups_and_profiles() {
-            self.add_to_group_or_profile_index(id, *gop);
-        }
-
-        for gop in next_round.list_groups_and_profiles() {
-            self.add_to_group_or_profile_index(id, *gop);
-        }
 
         Ok(id)
     }
@@ -141,31 +144,31 @@ impl VotingConfigRepository {
 
         if let Some(approval) = &approval_opt {
             for gop in approval.list_groups_and_profiles() {
-                new_gops.insert(*gop);
+                new_gops.insert(gop);
             }
         }
 
         if let Some(quorum) = &quorum_opt {
             for gop in quorum.list_groups_and_profiles() {
-                new_gops.insert(*gop);
+                new_gops.insert(gop);
             }
         }
 
         if let Some(rejection) = &rejection_opt {
             for gop in rejection.list_groups_and_profiles() {
-                new_gops.insert(*gop);
+                new_gops.insert(gop);
             }
         }
 
         if let Some(win) = &win_opt {
             for gop in win.list_groups_and_profiles() {
-                new_gops.insert(*gop);
+                new_gops.insert(gop);
             }
         }
 
         if let Some(next_round) = &next_round_opt {
             for gop in next_round.list_groups_and_profiles() {
-                new_gops.insert(*gop);
+                new_gops.insert(gop);
             }
         }
 
@@ -235,26 +238,75 @@ impl VotingConfigRepository {
         }
 
         for gop in voting_config.approval.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, gop);
+            self.remove_from_group_or_profile_index(id, &gop);
         }
 
         for gop in voting_config.quorum.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, gop);
+            self.remove_from_group_or_profile_index(id, &gop);
         }
 
         for gop in voting_config.rejection.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, gop);
+            self.remove_from_group_or_profile_index(id, &gop);
         }
 
         for gop in voting_config.win.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, gop);
+            self.remove_from_group_or_profile_index(id, &gop);
         }
 
         for gop in voting_config.next_round.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, gop);
+            self.remove_from_group_or_profile_index(id, &gop);
         }
 
         Ok(voting_config)
+    }
+
+    pub fn get_voting_configs_cloned(
+        &self,
+        page_req: PageRequest<VotingConfigFilter, ()>,
+    ) -> Page<VotingConfig> {
+        if page_req.filter.permission.is_none() && page_req.filter.group_or_profile.is_none() {
+            let (has_next, iter) = self.voting_configs.iter().get_page(&page_req);
+
+            let data = iter.map(|(_, it)| it.clone()).collect();
+
+            return Page { has_next, data };
+        }
+
+        let ids_by_permission = if let Some(permission_id) = &page_req.filter.permission {
+            self.voting_configs_by_permission_index
+                .get(permission_id)
+                .cloned()
+                .unwrap_or_default()
+        } else {
+            BTreeSet::new()
+        };
+
+        let ids_by_gop = if let Some(gop) = &page_req.filter.group_or_profile {
+            self.voting_configs_by_group_or_profile_index
+                .get(gop)
+                .cloned()
+                .unwrap_or_default()
+        } else {
+            BTreeSet::new()
+        };
+
+        let ids = if !ids_by_permission.is_empty() && !ids_by_gop.is_empty() {
+            ids_by_gop
+                .intersection(&ids_by_permission)
+                .cloned()
+                .collect()
+        } else if !ids_by_permission.is_empty() {
+            ids_by_permission
+        } else {
+            ids_by_gop
+        };
+
+        let (has_next, iter) = ids.iter().get_page(&page_req);
+        let data = iter
+            .map(|id| self.get_voting_config_cloned(id).unwrap())
+            .collect();
+
+        Page { has_next, data }
     }
 
     pub fn get_voting_config_cloned(
@@ -262,39 +314,6 @@ impl VotingConfigRepository {
         id: &VotingConfigId,
     ) -> Result<VotingConfig, VotingConfigRepositoryError> {
         self.get_voting_config(id).cloned()
-    }
-
-    pub fn get_voting_config_ids_by_permission_id(
-        &self,
-        permission_id: &PermissionId,
-    ) -> Vec<VotingConfigId> {
-        self.voting_configs_by_permission_index
-            .get(permission_id)
-            .cloned()
-            .unwrap_or_default()
-            .into_iter()
-            .collect()
-    }
-
-    pub fn get_voting_config_ids_by_profile_id(
-        &self,
-        profile_id: ProfileId,
-    ) -> Vec<VotingConfigId> {
-        self.voting_configs_by_group_or_profile_index
-            .get(&GroupOrProfile::Profile(profile_id))
-            .cloned()
-            .unwrap_or_default()
-            .into_iter()
-            .collect()
-    }
-
-    pub fn get_voting_config_ids_by_group_id(&self, group_id: GroupId) -> Vec<VotingConfigId> {
-        self.voting_configs_by_group_or_profile_index
-            .get(&GroupOrProfile::Group(group_id))
-            .cloned()
-            .unwrap_or_default()
-            .into_iter()
-            .collect()
     }
 
     // ------------------- PRIVATE ----------------------

@@ -1,4 +1,4 @@
-use crate::common::permissions::{Permission, PermissionScope, PermissionTarget};
+/*use crate::common::permissions::{Permission, PermissionScope, PermissionTarget};
 use crate::common::roles::{Role, RoleType};
 use crate::common::streaming::{BatchId, Batch, ChunkId, Key};
 use crate::state::UnionInfo;
@@ -357,3 +357,4 @@ pub struct ProfileActivatedEvent {
     #[topic]
     pub profile_owner: Principal,
 }
+*/

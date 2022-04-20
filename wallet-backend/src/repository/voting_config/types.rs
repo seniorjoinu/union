@@ -26,7 +26,7 @@ pub enum ThresholdValue {
 }
 
 impl ThresholdValue {
-    pub fn list_groups_and_profiles(&self) -> BTreeSet<&GroupOrProfile> {
+    pub fn list_groups_and_profiles(&self) -> BTreeSet<GroupOrProfile> {
         let mut result = BTreeSet::new();
 
         self._list_groups_and_profiles(&mut result);
@@ -34,10 +34,10 @@ impl ThresholdValue {
         result
     }
 
-    fn _list_groups_and_profiles<'a>(&'a self, list: &'a mut BTreeSet<&'a GroupOrProfile>) {
+    fn _list_groups_and_profiles(&self, list: &mut BTreeSet<GroupOrProfile>) {
         match self.get_target() {
             Target::GroupOrProfile(r) => {
-                list.insert(r);
+                list.insert(*r);
             }
             Target::Thresholds(t) => {
                 for it in t {
@@ -138,7 +138,7 @@ impl LenInterval {
     }
 }
 
-#[derive(Debug, Clone, CandidType, Deserialize)]
+#[derive(Debug, Clone, Copy, CandidType, Deserialize)]
 pub enum VotesFormula {
     Common,
     Quadratic,
@@ -312,7 +312,7 @@ impl VotingConfig {
             let old_approval = mem::replace(&mut self.approval, approval);
 
             for gop in old_approval.list_groups_and_profiles() {
-                old_gops.insert(*gop);
+                old_gops.insert(gop);
             }
         }
 
@@ -320,7 +320,7 @@ impl VotingConfig {
             let old_quorum = mem::replace(&mut self.quorum, quorum);
 
             for gop in old_quorum.list_groups_and_profiles() {
-                old_gops.insert(*gop);
+                old_gops.insert(gop);
             }
         }
 
@@ -328,7 +328,7 @@ impl VotingConfig {
             let old_rejection = mem::replace(&mut self.rejection, rejection);
 
             for gop in old_rejection.list_groups_and_profiles() {
-                old_gops.insert(*gop);
+                old_gops.insert(gop);
             }
         }
 
@@ -336,7 +336,7 @@ impl VotingConfig {
             let old_win = mem::replace(&mut self.win, win);
 
             for gop in old_win.list_groups_and_profiles() {
-                old_gops.insert(*gop);
+                old_gops.insert(gop);
             }
         }
 
@@ -344,14 +344,14 @@ impl VotingConfig {
             let old_next_round = mem::replace(&mut self.next_round, next_round);
 
             for gop in old_next_round.list_groups_and_profiles() {
-                old_gops.insert(*gop);
+                old_gops.insert(gop);
             }
         }
 
         Ok((old_permissions, old_gops))
     }
 
-    pub fn can_create_voting(
+    pub fn voting_params_valid(
         &self,
         choices_len: usize,
         winners_need: usize,
@@ -403,4 +403,10 @@ impl VotingConfig {
         validate_and_trim_str(description, 0, 500, "Description")
             .map_err(VotingConfigRepositoryError::ValidationError)
     }
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct VotingConfigFilter {
+    pub group_or_profile: Option<GroupOrProfile>,
+    pub permission: Option<PermissionId>,
 }

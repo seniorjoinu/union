@@ -40,6 +40,8 @@ pub fn update_profile(
 
 #[inline(always)]
 pub fn delete_profile(profile_id: &ProfileId) -> Result<Profile, ProfileServiceError> {
+    // TODO: check for existing voting configs and private groups
+    
     get_repositories()
         .profile
         .delete_profile(profile_id)
@@ -59,4 +61,21 @@ pub fn get_profiles(page_req: PageRequest<(), ()>) -> Page<Profile> {
     get_repositories()
         .profile
         .get_profiles_cloned(page_req)
+}
+
+#[inline(always)]
+pub fn get_profile(profile_id: &ProfileId) -> Result<Profile, ProfileServiceError> {
+    get_repositories()
+        .profile
+        .get_profile_cloned(profile_id)
+        .map_err(ProfileServiceError::RepositoryError)
+}
+
+#[inline(always)]
+pub fn assert_profile_exists(profile_id: &ProfileId) -> Result<(), ProfileServiceError> {
+    get_repositories()
+        .profile
+        .get_profile(profile_id)
+        .map(|_| ())
+        .map_err(ProfileServiceError::RepositoryError)
 }

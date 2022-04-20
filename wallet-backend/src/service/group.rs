@@ -1,13 +1,13 @@
 use crate::common::utils::{Page, PageRequest};
 use crate::repository::get_repositories;
 use crate::repository::group::types::{
-    Group, GroupExternal, GroupId, GroupRepositoryError, GroupTypeParam, Shares, ZERO_NAT,
+    Group, GroupExternal, GroupFilter, GroupId, GroupRepositoryError, GroupTypeParam, Shares,
 };
 use crate::repository::profile::types::ProfileId;
 use candid::Principal;
 
 pub const HAS_PROFILE_GROUP_ID: GroupId = 1;
-pub const DEFAULT_SHARES: Shares = Shares::from(100);
+pub const DEFAULT_SHARES: u32 = 100;
 
 #[derive(Debug)]
 pub enum GroupServiceError {
@@ -32,7 +32,7 @@ pub fn _add_profile(profile_id: ProfileId) {
         .mint_shares(
             HAS_PROFILE_GROUP_ID,
             profile_id,
-            DEFAULT_SHARES.clone(),
+            Shares::from(DEFAULT_SHARES),
             true,
         )
         .unwrap();
@@ -49,7 +49,7 @@ pub fn _profile_exists(profile_id: &ProfileId) -> bool {
         .unaccepted_balance_of(HAS_PROFILE_GROUP_ID, profile_id)
         .unwrap();
 
-    balance + unaccepted_balance > ZERO_NAT
+    balance + unaccepted_balance > Shares::default()
 }
 
 #[inline(always)]
@@ -80,6 +80,8 @@ pub fn update_group(
 pub fn delete_group(group_id: GroupId) -> Result<Group, GroupServiceError> {
     assert_group_id(group_id)?;
 
+    // TODO: check for existing voting configs
+    
     get_repositories()
         .group
         .delete_group(group_id)
@@ -203,13 +205,31 @@ pub fn unaccepted_total_supply(group_id: GroupId) -> Result<Shares, GroupService
 }
 
 #[inline(always)]
-pub fn get_groups(page_req: PageRequest<(), ()>) -> Page<GroupExternal> {
+pub fn get_groups(page_req: PageRequest<GroupFilter, ()>) -> Page<GroupExternal> {
     get_repositories().group.get_groups_cloned(page_req)
 }
 
 #[inline(always)]
-pub fn get_my_groups(caller: &Principal) -> Vec<GroupExternal> {
-    get_repositories().group.get_groups_by_principal(caller)
+pub fn get_my_groups(caller: Principal, page_req: PageRequest<(), ()>) -> Page<GroupExternal> {
+    let page_req = PageRequest {
+        page_index: page_req.page_index,
+        page_size: page_req.page_size,
+        filter: GroupFilter {
+            principal_id: Some(caller),
+        },
+        sort: (),
+    };
+
+    get_repositories().group.get_groups_cloned(page_req)
+}
+
+#[inline(always)]
+pub fn get_group(group_id: &GroupId) -> Result<GroupExternal, GroupServiceError> {
+    get_repositories()
+        .group
+        .get_group(group_id)
+        .map(|it| it.to_external())
+        .map_err(GroupServiceError::RepositoryError)
 }
 
 #[inline(always)]
@@ -231,6 +251,15 @@ pub fn get_unaccepted_balances_of_group(
     get_repositories()
         .group
         .get_unaccepted_balances_of_group(group_id, page_req)
+        .map_err(GroupServiceError::RepositoryError)
+}
+
+#[inline(always)]
+pub fn assert_group_exists(group_id: &GroupId) -> Result<(), GroupServiceError> {
+    get_repositories()
+        .group
+        .get_group(group_id)
+        .map(|_| ())
         .map_err(GroupServiceError::RepositoryError)
 }
 

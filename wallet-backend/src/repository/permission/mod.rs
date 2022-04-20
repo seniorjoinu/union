@@ -3,7 +3,6 @@ use crate::repository::permission::types::{
     Permission, PermissionFilter, PermissionId, PermissionRepositoryError, PermissionScope,
     PermissionTarget,
 };
-use crate::Program;
 use ic_cdk::export::candid::{CandidType, Deserialize};
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeSet, HashMap};
@@ -81,10 +80,10 @@ impl PermissionRepository {
         &self,
         page_req: PageRequest<PermissionFilter, ()>,
     ) -> Page<Permission> {
-        if let Some(filter_target) = page_req.filter.target {
+        if let Some(filter_target) = &page_req.filter.target {
             let ids_opt = self
                 .permissions_by_permission_target_index
-                .get(&filter_target);
+                .get(filter_target);
 
             match ids_opt {
                 Some(ids) => {
@@ -163,102 +162,4 @@ mod tests {
     use crate::repository::permission::PermissionRepository;
     use ic_cdk::export::Principal;
     use shared::remote_call::RemoteCallEndpoint;
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    pub fn random_principal_test() -> Principal {
-        Principal::from_slice(
-            &SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos()
-                .to_be_bytes(),
-        )
-    }
-
-    #[test]
-    pub fn permission_crud_works_fine() {
-        let mut repository = PermissionRepository::default();
-        let target_1 = PermissionTarget::Endpoint(RemoteCallEndpoint {
-            canister_id: random_principal_test(),
-            method_name: String::from("test_method"),
-        });
-        let target_2 = PermissionTarget::Canister(random_principal_test());
-
-        let permission_id_1 = repository
-            .create_permission(
-                String::from("Permission 1"),
-                vec![target_1.clone(), target_2.clone()],
-                PermissionScope::Whitelist,
-            )
-            .unwrap();
-
-        let permission_1 = repository
-            .get_permission(&permission_id_1)
-            .expect("Permission 1 should be possible to obtain");
-        assert!(
-            matches!(permission_1.scope, PermissionScope::Whitelist),
-            "Permission 1 scope should equal to Whitelist"
-        );
-        assert_eq!(
-            permission_1.name, "Permission 1",
-            "Permission 1 name is wrong"
-        );
-        assert_eq!(
-            permission_1.targets.len(),
-            2,
-            "There should be 2 targets in Permission 1"
-        );
-
-        let permission_id_2 = repository
-            .create_permission(
-                String::from("Permission 2"),
-                vec![target_2.clone()],
-                PermissionScope::Whitelist,
-            )
-            .unwrap();
-
-        let canister_2_related_permissions =
-            repository.get_permission_ids_by_permission_target_cloned(&target_2);
-        assert_eq!(
-            canister_2_related_permissions.len(),
-            2,
-            "There should be 2 permissions about this target"
-        );
-        assert!(
-            canister_2_related_permissions.contains(&permission_id_1),
-            "Permission 1 should be in the list"
-        );
-        assert!(
-            canister_2_related_permissions.contains(&permission_id_2),
-            "Permission 2 should be in the list"
-        );
-
-        repository
-            .update_permission(&permission_id_1, None, Some(vec![target_1]), None)
-            .expect("It should be possible to update permission 1");
-
-        let canister_2_related_permissions =
-            repository.get_permission_ids_by_permission_target_cloned(&target_2);
-        assert_eq!(
-            canister_2_related_permissions.len(),
-            1,
-            "There should be 1 permission about this target"
-        );
-        assert!(
-            canister_2_related_permissions.contains(&permission_id_2),
-            "Permission 2 should be in the list"
-        );
-
-        repository
-            .remove_permission(&permission_id_2)
-            .expect("It should be possible to remove permission 2");
-
-        let canister_2_related_permissions =
-            repository.get_permission_ids_by_permission_target_cloned(&target_2);
-
-        assert!(
-            canister_2_related_permissions.is_empty(),
-            "There shouldn't be any permission about this target"
-        );
-    }
 }
