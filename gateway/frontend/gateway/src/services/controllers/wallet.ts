@@ -33,3 +33,12 @@ export const walletSerializer = idlFactory._fields.reduce((acc, next) => {
       func.argTypes.map((argType, index) => argType.valueToString(args[index])),
   };
 }, {} as { [key in keyof _SERVICE]: (...args: Parameters<_SERVICE[key]>) => string[] });
+
+export const walletEncoder = idlFactory._fields.reduce((acc, next) => {
+  const func = next[1] as IDL.FuncClass;
+
+  return {
+    ...acc,
+    [next[0]]: (...args: any[]) => IDL.encode(func.argTypes, args),
+  };
+}, {} as { [key in keyof _SERVICE]: (...args: Parameters<_SERVICE[key]>) => ArrayBuffer });

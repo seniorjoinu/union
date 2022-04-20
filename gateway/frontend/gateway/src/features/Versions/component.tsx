@@ -1,13 +1,27 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageWrapper, Text, Button as B } from 'components';
+import { PageWrapper, Text, SubmitButton as B } from 'components';
 import { initWalletController, useDeployer } from 'services';
 import styled from 'styled-components';
 import moment from 'moment';
 import { downloadFile } from 'toolkit';
 import { NavLink } from 'react-router-dom';
+import { useRemoveVersion } from '../Wallet/useVersion';
 
+const DeleteButton = styled(B)`
+  color: red;
+`;
 const AddButton = styled(B)``;
 const Button = styled(B)``;
+
+const Controls = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+
+  & > *:not(:last-child) {
+    margin-right: 8px;
+  }
+`;
 
 const Item = styled.div`
   display: flex;
@@ -38,8 +52,9 @@ export interface VersionsProps {
 }
 
 export const Versions = ({ ...p }: VersionsProps) => {
-  const [canisterToCreateVersion, setCanisterToCreateVersion] = useState('');
+  const [versionControllerCanister, setVersionControllerCanister] = useState('');
   const { canister, data, fetching } = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
+  const { remove } = useRemoveVersion();
 
   useEffect(() => {
     canister.get_binary_controller();
@@ -61,9 +76,9 @@ export const Versions = ({ ...p }: VersionsProps) => {
       if (!permissions.length) {
         return;
       }
-      setCanisterToCreateVersion(binaryController);
+      setVersionControllerCanister(binaryController);
     });
-  }, [data.get_binary_controller, setCanisterToCreateVersion]);
+  }, [data.get_binary_controller, versionControllerCanister]);
 
   const versions = useMemo(
     () =>
@@ -73,18 +88,32 @@ export const Versions = ({ ...p }: VersionsProps) => {
     [data.get_binary_version_infos?.infos],
   );
 
-  const handleDownload = useCallback((name: string, bytes: number[]) => {
-    const file = new File([new Uint8Array(bytes)], `${name}.wasm`, { type: 'application/wasm' });
+  const handleDownload = useCallback(
+    async (version: string) => {
+      const { binary } = await canister.download_binary({ version });
 
-    downloadFile(file);
-  }, []);
+      if (!binary[0]) {
+        return;
+      }
+
+      const file = new File([new Uint8Array(binary[0])], `${version}.wasm`, {
+        type: 'application/wasm',
+      });
+
+      downloadFile(file);
+    },
+    [canister],
+  );
 
   const progress = !!fetching.get_binary_versions || !!fetching.get_binary_version_infos;
 
   return (
     <Container {...p} title='Union-wallet versions'>
-      {!!canisterToCreateVersion && (
-        <AddButton forwardedAs={NavLink} to={`/wallet/${canisterToCreateVersion}/versions/create`}>
+      {!!versionControllerCanister && (
+        <AddButton
+          forwardedAs={NavLink}
+          to={`/wallet/${versionControllerCanister}/versions/create`}
+        >
           Create version
         </AddButton>
       )}
@@ -103,11 +132,16 @@ export const Versions = ({ ...p }: VersionsProps) => {
             Updated at:{' '}
             {moment(Math.ceil(Number(v.updated_at) / 10 ** 6)).format('DD-MM-YY HH:mm:ss')}
           </Text>
-          {!!v.binary[0] && (
-            <Button onClick={() => handleDownload(`wallet-${v.version}`, v.binary[0]!)}>
-              Download
-            </Button>
-          )}
+          <Controls>
+            {!!v.binary[0] && <Button onClick={() => handleDownload(v.version)}>Download</Button>}
+            {!('Deleted' in v.status) && !!versionControllerCanister && (
+              <DeleteButton
+                onClick={() => remove({ walletId: versionControllerCanister, version: v.version })}
+              >
+                Delete
+              </DeleteButton>
+            )}
+          </Controls>
         </Item>
       ))}
     </Container>

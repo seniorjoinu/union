@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
 import { PageWrapper, Button as B, Text, TextField as TF, TextArea as TA } from 'components';
-import { checkPrincipal } from 'toolkit';
+import { checkPrincipal, downloadFileContent, downloadFileBytes } from 'toolkit';
 import { Principal } from '@dfinity/principal';
 import { ExecuteResponse } from 'wallet-ts';
 import { useWallet } from 'services';
@@ -15,6 +15,7 @@ const TextField = styled(TF)``;
 const TextArea = styled(TA)``;
 const RemoveButton = styled(B)``;
 const AddButton = styled(B)``;
+const DownloadButton = styled(B)``;
 const Button = styled(B)``;
 
 const Result = styled.div`
@@ -38,7 +39,7 @@ const Row = styled.div`
     margin-left: 8px;
   }
 
-  ${RemoveButton} {
+  ${RemoveButton}, ${DownloadButton} {
     align-self: flex-end;
   }
 `;
@@ -295,7 +296,14 @@ export function ExecutorForm({
                     />
                   )}
                 />
-                {!!field.value[i].args_encoded?.length && <Text>Used encoded arguments</Text>}
+                {!!field.value[i].args_encoded?.length && (
+                  <Text>
+                    Used encoded arguments
+                    <DownloadButton onClick={() => downloadFileBytes(field.value[i].args_encoded!)}>
+                      Download
+                    </DownloadButton>
+                  </Text>
+                )}
                 <Controller
                   name={`program.${i}.args_candid`}
                   control={control}
@@ -323,7 +331,7 @@ export function ExecutorForm({
                                 disabled={disabled}
                                 label={`Candid-argument #${j + 1}`}
                               />
-                              {editable && (
+                              {editable ? (
                                 <RemoveButton
                                   disabled={disabled}
                                   onClick={() =>
@@ -332,6 +340,10 @@ export function ExecutorForm({
                                 >
                                   -
                                 </RemoveButton>
+                              ) : (
+                                <DownloadButton onClick={() => downloadFileContent(didfield.value)}>
+                                  Download
+                                </DownloadButton>
                               )}
                             </Row>
                           )}

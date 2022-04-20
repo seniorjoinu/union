@@ -8,7 +8,7 @@ import {
   Button as B,
 } from 'components';
 import { useForm, Controller } from 'react-hook-form';
-import { useCreateVersion, FormData } from './useCreateVersion';
+import { useCreateVersion, FormData } from '../useVersion';
 
 const Button = styled(B)``;
 const TextField = styled(TF)``;
@@ -97,7 +97,7 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
           />
         )}
       />
-      <Button type='submit' disabled={!isValid} onClick={create}>
+      <Button type='submit' disabled={!isValid} onClick={() => create()}>
         Create
       </Button>
     </Container>

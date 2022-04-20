@@ -1,12 +1,13 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Button as B } from 'components';
+import { PageWrapper, SubmitButton as B } from 'components';
 import { NavLink as N } from 'react-router-dom';
 import { HistoryEntry } from 'wallet-ts';
 import { useWallet } from 'services';
 import { useCurrentWallet } from '../context';
 import { Item as I } from './Item';
 
+const LoadMoreButton = styled(B)``;
 const Button = styled(B)``;
 const Item = styled(I)``;
 const NavLink = styled(N)``;
@@ -23,20 +24,46 @@ const Container = styled(PageWrapper)`
   ${Button} {
     align-self: flex-end;
   }
+  ${LoadMoreButton} {
+    margin-top: 16px;
+    align-self: center;
+  }
 `;
+
+const DEFAULT_PAGE_SIZE = 3;
 
 export interface HistoryProps extends IClassName {
   createLink?: string;
 }
 
 export function History({ createLink, ...p }: HistoryProps) {
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const { rnp, principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
 
   useEffect(() => {
     canister.get_scheduled_for_authorization_executions({ task_ids: [] });
-    canister.get_history_entry_ids().then(({ ids }) => canister.get_history_entries({ ids }));
+    canister.get_history_entry_ids();
   }, [canister]);
+
+  const ids = useMemo(
+    () => (data.get_history_entry_ids?.ids || []).sort((a, b) => Number(b) - Number(a)),
+    [data.get_history_entry_ids?.ids],
+  );
+
+  useEffect(() => {
+    canister
+      .get_history_entries({ ids: ids.slice(0, DEFAULT_PAGE_SIZE) })
+      .then(({ entries }) => setHistory(entries));
+  }, [ids]);
+
+  const loadMore = useCallback(async () => {
+    const { entries } = await canister.get_history_entries({
+      ids: ids.slice(history.length, history.length + DEFAULT_PAGE_SIZE),
+    });
+
+    setHistory((history) => [...history, ...entries]);
+  }, [history, ids, setHistory]);
 
   const progress =
     !!fetching.get_history_entry_ids ||
@@ -44,7 +71,6 @@ export function History({ createLink, ...p }: HistoryProps) {
     !!fetching.get_scheduled_for_authorization_executions;
 
   const scheduled = data.get_scheduled_for_authorization_executions?.entries || [];
-  const history = data.get_history_entries?.entries || [];
 
   const entries: [bigint | null, HistoryEntry][] = useMemo(
     () =>
@@ -71,6 +97,7 @@ export function History({ createLink, ...p }: HistoryProps) {
           <Item entry={entry} />
         </NavLink>
       ))}
+      {history.length < ids.length && <LoadMoreButton onClick={loadMore}>Load more</LoadMoreButton>}
     </Container>
   );
 }

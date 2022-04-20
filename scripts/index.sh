@@ -32,3 +32,5 @@ source ./batches-create.sh
 echo "export batch_ids=${exportable_batch_ids}" >> .env
 
 ./batches-send.sh
+
+./batches-delete.sh

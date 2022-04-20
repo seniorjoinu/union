@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ExternalExecutor, InternalExecutor, Executor } from '../Executor';
 import { Provider } from './context';
+import { Stats, InfoForm } from './Stats';
 import { Assets, AssetsCanisterUpdater, BatchesUploader } from './Assets';
 import { RolesAndPermissions, MyRolesAndPermissions } from './RolesAndPermissions';
 import { RoleForm } from './RoleForm';
@@ -32,6 +33,8 @@ export const Wallet = () => {
     <Provider principal={principal}>
       <Container>
         <Routes>
+          <Route path='/wallet' element={<Stats />} />
+          <Route path='/wallet/edit-info' element={<InfoForm />} />
           <Route path='/assets' element={<Assets />} />
           <Route path='/assets/create-batch' element={<BatchesUploader />} />
           <Route path='/assets/install-code' element={<AssetsCanisterUpdater />} />

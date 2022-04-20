@@ -3,30 +3,17 @@ export const isLocalhost = () =>
 
 export const randomBigInt = () => BigInt(String(Math.random()).replace('0.', ''));
 
-export interface UploadResult {
-  file: File;
-  target: any;
-}
+export const downloadFileContent = (content: string, name = 'content.txt') => {
+  const blob = new Blob([content], { type: 'plain/text' });
+  const file = new File([blob], name, { type: blob.type });
+  return downloadFile(file);
+};
 
-export const readPhotos = (uploadedFiles: Array<File>) =>
-  Promise.all(uploadedFiles.map((f) => readFile(f))).then((targets) => {
-    const files = targets.map((t) => t.file);
-    const previews = targets.filter((t) => !!t.target.result).map((t) => t.target.result as string);
-
-    return { files, previews };
-  });
-
-export const readFile = (file: File) =>
-  new Promise<UploadResult>((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = (readerEvent: ProgressEvent) => {
-      resolve({ target: readerEvent.target as any, file });
-    };
-
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+export const downloadFileBytes = (content: number[], name = 'content.txt') => {
+  const arr = new Uint8Array(content);
+  const file = new File([arr], name, { type: 'plain/text' });
+  return downloadFile(file);
+};
 
 export const downloadFile = (file: File) => {
   const url = window.URL.createObjectURL(file);

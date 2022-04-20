@@ -18,6 +18,7 @@ const Accordeon = styled(A)``;
 const Controls = styled.div`
   display: flex;
   flex-direction: row;
+  justify-content: flex-end;
 
   & > *:not(:last-child) {
     margin-right: 16px;
