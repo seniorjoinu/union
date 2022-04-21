@@ -1,11 +1,12 @@
 use crate::repository::group::types::{GroupId, Shares};
 use crate::repository::permission::types::Permission;
 use crate::repository::profile::types::ProfileId;
-use crate::repository::voting_config::types::{GroupOrProfile, VotesFormula, VotingConfigId};
+use crate::repository::voting_config::types::{GroupOrProfile, VotesFormula};
 use candid::{CandidType, Deserialize, Principal};
-use shared::remote_call::RemoteCallPayload;
+use shared::remote_call::Program;
+use shared::types::wallet::{ChoiceExternal, ChoiceId, GroupOrProfile, VotingConfigId, VotingId};
 use shared::validation::{validate_and_trim_str, ValidationError};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::mem;
 
 const VOTING_CHOICE_NAME_MIN_LEN: usize = 1;
@@ -17,9 +18,6 @@ pub const VOTING_NAME_MIN_LEN: usize = 1;
 pub const VOTING_NAME_MAX_LEN: usize = 200;
 pub const VOTING_DESCRIPTION_MIN_LEN: usize = 0;
 pub const VOTING_DESCRIPTION_MAX_LEN: usize = 2000;
-
-pub type VotingId = u64;
-pub type ChoiceId = usize;
 
 #[derive(Debug)]
 pub enum VotingRepositoryError {
@@ -45,45 +43,58 @@ pub enum StartCondition {
     ExactDate(u64),
 }
 
-#[derive(CandidType, Deserialize, Debug, Clone)]
-pub enum Program {
-    Empty,
-    RemoteCallSequence(Vec<RemoteCallPayload>),
-}
-
-impl Program {
-    pub fn validate(&self) -> Result<(), VotingRepositoryError> {
-        match self {
-            Program::Empty => Ok(()),
-            Program::RemoteCallSequence(seq) => {
-                for call in seq {
-                    call.args
-                        .validate()
-                        .map_err(|e| VotingRepositoryError::ValidationError(ValidationError(e)))?;
-                }
-
-                Ok(())
-            }
-        }
-    }
-}
-
 #[derive(Clone, CandidType, Deserialize)]
 pub struct Choice {
     pub name: String,
     pub description: String,
     pub program: Program,
-    pub total_shares: BTreeMap<GroupOrProfile, Shares>,
+    pub voted_shares_sum: BTreeMap<GroupOrProfile, Shares>,
     pub shares_by_voter: BTreeMap<GroupOrProfile, HashMap<Principal, Shares>>,
 }
 
 impl Choice {
+    pub fn validate(&mut self) -> Result<(), ValidationError> {
+        self.name = validate_and_trim_str(
+            mem::replace(&mut self.name, String::new()),
+            VOTING_CHOICE_NAME_MIN_LEN,
+            VOTING_CHOICE_NAME_MAX_LEN,
+            "Name",
+        )?;
+
+        self.description = validate_and_trim_str(
+            mem::replace(&mut self.description, String::new()),
+            VOTING_CHOICE_DESCRIPTION_MIN_LEN,
+            VOTING_CHOICE_DESCRIPTION_MAX_LEN,
+            "Name",
+        )?;
+
+        Ok(())
+    }
+
+    pub fn from_external(external: ChoiceExternal) -> Self {
+        Self {
+            name: external.name,
+            description: external.description,
+            program: external.program,
+            voted_shares_sum: BTreeMap::new(),
+            shares_by_voter: BTreeMap::new(),
+        }
+    }
+    
+    pub fn to_external_cloned(&self) -> ChoiceExternal {
+        ChoiceExternal {
+            name: self.name.clone(),
+            description: self.description.clone(),
+            program: self.program.clone()
+        }
+    }
+    
     pub fn new(name: String, description: String, program: Program) -> Self {
         Self {
             name,
             description,
             program,
-            total_shares: BTreeMap::new(),
+            voted_shares_sum: BTreeMap::new(),
             shares_by_voter: BTreeMap::new(),
         }
     }
@@ -93,13 +104,13 @@ impl Choice {
             name: String::from("Reject"),
             description: String::from("Against all. I don't support this voting at all."),
             program: Program::Empty,
-            total_shares: BTreeMap::new(),
+            voted_shares_sum: BTreeMap::new(),
             shares_by_voter: BTreeMap::new(),
         }
     }
 
     pub fn get_total_shares(&self, gop: &GroupOrProfile) -> Shares {
-        self.total_shares.get(gop).cloned().unwrap_or_default()
+        self.voted_shares_sum.get(gop).cloned().unwrap_or_default()
     }
 
     pub fn get_shares_of_voter(&self, gop: &GroupOrProfile, voter: &Principal) -> Shares {
@@ -118,7 +129,7 @@ impl Choice {
             .or_default()
             .insert(voter, shares.clone());
 
-        self.total_shares
+        self.voted_shares_sum
             .insert(gop, self.get_total_shares(&gop) + shares);
     }
 
@@ -126,55 +137,8 @@ impl Choice {
         let prev_shares_opt = self.shares_by_voter.entry(gop).or_default().remove(voter);
 
         if let Some(prev_shares) = prev_shares_opt {
-            self.total_shares
+            self.voted_shares_sum
                 .insert(gop, self.get_total_shares(&gop) - prev_shares);
-        }
-    }
-}
-
-#[derive(Clone, CandidType, Deserialize)]
-pub struct ChoiceCreatePayload {
-    pub name: String,
-    pub description: String,
-    pub program: Program,
-}
-
-impl ChoiceCreatePayload {
-    pub fn validate(&mut self, permissions: Vec<&Permission>) -> Result<(), ValidationError> {
-        self.name = validate_and_trim_str(
-            mem::replace(&mut self.name, String::new()),
-            VOTING_CHOICE_NAME_MIN_LEN,
-            VOTING_CHOICE_NAME_MAX_LEN,
-            "Name",
-        )?;
-
-        self.description = validate_and_trim_str(
-            mem::replace(&mut self.description, String::new()),
-            VOTING_CHOICE_DESCRIPTION_MIN_LEN,
-            VOTING_CHOICE_DESCRIPTION_MAX_LEN,
-            "Name",
-        )?;
-
-        if !permissions
-            .iter()
-            .any(|it| it.is_program_allowed(&self.program))
-        {
-            return Err(ValidationError(format!(
-                "The program of custom choice '{}' is not allowed by the voting config config",
-                &self.name
-            )));
-        }
-
-        Ok(())
-    }
-
-    pub fn to_choice(self) -> Choice {
-        Choice {
-            name: self.name,
-            description: self.description,
-            program: self.program,
-            total_shares: BTreeMap::new(),
-            shares_by_voter: BTreeMap::new(),
         }
     }
 }
@@ -185,7 +149,7 @@ pub struct Vote {
     pub vote_type: VoteType,
 }
 
-#[derive(Clone, CandidType, Deserialize)]
+#[derive(Debug, Clone, Copy, CandidType, Deserialize)]
 pub enum Voter {
     Profile(ProfileId),
     Group((GroupId, Principal)),
@@ -210,6 +174,8 @@ pub struct Voting {
     pub name: String,
     pub description: String,
 
+    pub total_supplies: BTreeMap<GroupOrProfile, Shares>,
+
     pub start_condition: StartCondition,
     pub votes_formula: VotesFormula,
 
@@ -229,10 +195,18 @@ impl Voting {
         start_condition: StartCondition,
         votes_formula: VotesFormula,
         winners_need: usize,
-        custom_choices: Vec<ChoiceCreatePayload>,
+        custom_choices: Vec<ChoiceExternal>,
         proposer: Principal,
         timestamp: u64,
     ) -> Result<Self, VotingRepositoryError> {
+        let mut choices = BTreeMap::new();
+        
+        for (id, c) in custom_choices.into_iter().enumerate() {
+            let mut choice = Choice::from_external(c);
+            choice.validate().map_err(VotingRepositoryError::ValidationError)?;
+            choices.insert(id, choice);
+        }
+        
         let voting = Self {
             id,
             voting_config_id,
@@ -248,14 +222,12 @@ impl Voting {
             start_condition,
             votes_formula,
 
+            total_supplies: BTreeMap::new(),
+
             winners_need,
             winners: BTreeMap::new(),
 
-            custom_choices: custom_choices
-                .into_iter()
-                .map(|it| it.to_choice())
-                .enumerate()
-                .collect(),
+            custom_choices: choices,
             rejection_choice: Choice::rejection(),
         };
 
@@ -269,7 +241,7 @@ impl Voting {
         new_start_condition: Option<StartCondition>,
         new_votes_formula: Option<VotesFormula>,
         new_winners_need: Option<usize>,
-        new_custom_choices: Option<Vec<ChoiceCreatePayload>>,
+        new_custom_choices: Option<Vec<ChoiceExternal>>,
         timestamp: u64,
     ) -> Result<(), VotingRepositoryError> {
         if !matches!(self.status, VotingStatus::Created) {
@@ -309,14 +281,34 @@ impl Voting {
         Ok(())
     }
 
-    pub fn cast_vote(&mut self, vote: Vote, timestamp: u64) -> Result<(), VotingRepositoryError> {
+    pub fn cast_vote(
+        &mut self,
+        vote: Vote,
+        gop_total_supply: Shares,
+        timestamp: u64,
+    ) -> Result<(), VotingRepositoryError> {
         if !matches!(self.status, VotingStatus::Round(_)) {
             return Err(VotingRepositoryError::VotingInInvalidStatus(self.id));
         }
 
         let (gop, principal) = match vote.voter {
-            Voter::Profile(p) => (GroupOrProfile::Profile(p), p),
-            Voter::Group((g, p)) => (GroupOrProfile::Group(g), p),
+            Voter::Profile(p) => {
+                self.total_supplies.insert(GroupOrProfile::Group(g), gop_total_supply);
+                
+                (GroupOrProfile::Profile(p), p)
+            },
+            Voter::Group((g, p)) => {
+                let group_total_supply_old =
+                    self.total_supplies.get(&GroupOrProfile::Group(g)).cloned().unwrap_or_default();
+
+                assert!(
+                    group_total_supply_old == Shares::default()
+                        || group_total_supply_old == gop_total_supply
+                );
+                self.total_supplies.insert(GroupOrProfile::Group(g), gop_total_supply);
+
+                (GroupOrProfile::Group(g), p)
+            }
         };
 
         self.clear_prev_votes(gop, &principal);

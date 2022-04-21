@@ -81,7 +81,7 @@ pub fn delete_group(group_id: GroupId) -> Result<Group, GroupServiceError> {
     assert_group_id(group_id)?;
 
     // TODO: check for existing voting configs
-    
+
     get_repositories()
         .group
         .delete_group(group_id)

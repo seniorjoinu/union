@@ -1,10 +1,12 @@
+use crate::repository::group::types::Shares;
 use crate::repository::voting::types::{
-    ChoiceCreatePayload, StartCondition, Vote, Voting, VotingId, VotingRepositoryError,
+    ChoiceExternal, StartCondition, Vote, Voting, VotingId, VotingRepositoryError,
     VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN, VOTING_NAME_MAX_LEN,
     VOTING_NAME_MIN_LEN,
 };
 use crate::repository::voting_config::types::{VotesFormula, VotingConfigId};
 use candid::{CandidType, Deserialize, Principal};
+use std::borrow::Borrow;
 use std::collections::HashMap;
 
 pub mod types;
@@ -25,7 +27,7 @@ impl VotingRepository {
         start_condition: StartCondition,
         votes_formula: VotesFormula,
         winners_need: usize,
-        custom_choices: Vec<ChoiceCreatePayload>,
+        custom_choices: Vec<ChoiceExternal>,
         proposer: Principal,
         timestamp: u64,
     ) -> Result<VotingId, VotingRepositoryError> {
@@ -57,7 +59,7 @@ impl VotingRepository {
         new_start_condition: Option<StartCondition>,
         new_votes_formula: Option<VotesFormula>,
         new_winners_need: Option<usize>,
-        new_custom_choices: Option<Vec<ChoiceCreatePayload>>,
+        new_custom_choices: Option<Vec<ChoiceExternal>>,
         timestamp: u64,
     ) -> Result<(), VotingRepositoryError> {
         let voting = self.get_voting_mut(voting_id)?;
@@ -87,11 +89,14 @@ impl VotingRepository {
         &mut self,
         voting_id: &VotingId,
         vote: Vote,
+        gop_total_supply: Shares,
         timestamp: u64,
     ) -> Result<(), VotingRepositoryError> {
         let voting = self.get_voting_mut(voting_id)?;
 
-        voting.cast_vote(vote, timestamp)
+        voting.cast_vote(vote, gop_total_supply, timestamp)?;
+
+        Ok(())
     }
 
     #[inline(always)]
@@ -162,11 +167,10 @@ impl VotingRepository {
     }
 
     #[inline(always)]
-    pub fn get_voting_cloned(&self, voting_id: &VotingId) -> Result<Voting, VotingRepositoryError> {
+    pub fn get_voting(&mut self, id: &VotingId) -> Result<&Voting, VotingRepositoryError> {
         self.votings
-            .get(voting_id)
-            .cloned()
-            .ok_or(VotingRepositoryError::VotingNotFound(*voting_id))
+            .get(id)
+            .ok_or(VotingRepositoryError::VotingNotFound(*id))
     }
 
     #[inline(always)]

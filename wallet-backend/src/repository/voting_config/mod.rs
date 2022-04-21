@@ -3,7 +3,7 @@ use crate::repository::group::types::GroupId;
 use crate::repository::permission::types::PermissionId;
 use crate::repository::profile::types::ProfileId;
 use crate::repository::voting_config::types::{
-    EditorConstraint, GroupOrProfile, LenInterval, ProposerConstraint, RoundSettings,
+    EditorConstraint, GroupOrProfile, LenInterval, ActorConstraint, RoundSettings,
     ThresholdValue, VotesFormula, VotingConfig, VotingConfigFilter, VotingConfigId,
     VotingConfigRepositoryError,
 };
@@ -30,7 +30,7 @@ impl VotingConfigRepository {
         winners_count: Option<LenInterval>,
         votes_formula: Option<VotesFormula>,
         permissions: BTreeSet<PermissionId>,
-        proposers: BTreeSet<ProposerConstraint>,
+        proposers: BTreeSet<ActorConstraint>,
         editors: BTreeSet<EditorConstraint>,
         round: RoundSettings,
         approval: ThresholdValue,
@@ -107,7 +107,7 @@ impl VotingConfigRepository {
         winners_count_opt: Option<Option<LenInterval>>,
         votes_formula_opt: Option<Option<VotesFormula>>,
         permissions_opt: Option<BTreeSet<PermissionId>>,
-        proposers_opt: Option<BTreeSet<ProposerConstraint>>,
+        proposers_opt: Option<BTreeSet<ActorConstraint>>,
         editors_opt: Option<BTreeSet<EditorConstraint>>,
         round_opt: Option<RoundSettings>,
         approval_opt: Option<ThresholdValue>,

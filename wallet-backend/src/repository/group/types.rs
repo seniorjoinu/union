@@ -3,15 +3,13 @@ use crate::repository::profile::types::ProfileId;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::HashMap;
+use shared::types::wallet::{GroupId, Shares};
 
 const NAME_MIN_LEN: usize = 1;
 const NAME_MAX_LEN: usize = 100;
 const DESCRIPTION_MIN_LEN: usize = 0;
 const DESCRIPTION_MAX_LEN: usize = 300;
 pub const EVERYONE_GROUP_ID: GroupId = 0;
-
-pub type GroupId = u32;
-pub type Shares = Nat;
 
 #[derive(Debug)]
 pub enum GroupRepositoryError {

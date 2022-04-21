@@ -2,9 +2,11 @@ use crate::common::utils::{Page, PageRequest};
 use crate::repository::get_repositories;
 use crate::repository::group::types::Shares;
 use crate::repository::permission::types::{PermissionId, PermissionTarget};
-use crate::repository::voting::types::{ChoiceCreatePayload, Program, StartCondition, Voting};
+use crate::repository::voting::types::{
+    ChoiceExternal, Program, StartCondition, Voter, Voting,
+};
 use crate::repository::voting_config::types::{
-    EditorConstraint, FractionOf, GroupCondition, GroupOrProfile, LenInterval, ProposerConstraint,
+    ActorConstraint, EditorConstraint, FractionOf, GroupCondition, GroupOrProfile, LenInterval,
     QuantityOf, RoundSettings, Target, ThresholdValue, VotesFormula, VotingConfig,
     VotingConfigFilter, VotingConfigId, VotingConfigRepositoryError,
 };
@@ -17,6 +19,7 @@ use crate::service::profile::ProfileServiceError;
 use candid::Principal;
 use shared::time::mins;
 use shared::validation::ValidationError;
+use std::collections::vec_deque::Iter;
 use std::collections::BTreeSet;
 
 const DEFAULT_VOTING_CONFIG_ID: VotingConfigId = 0;
@@ -33,7 +36,7 @@ pub fn _init_default_voting_config() {
             None,
             Some(VotesFormula::Common),
             vec![DEFAULT_PERMISSION_ID].into_iter().collect(),
-            vec![ProposerConstraint::Group(GroupCondition { id: HAS_PROFILE_GROUP_ID, min_shares: Shares::from(DEFAULT_SHARES) })].into_iter().collect(),
+            vec![ActorConstraint::Group(GroupCondition { id: HAS_PROFILE_GROUP_ID, min_shares: Shares::from(DEFAULT_SHARES) })].into_iter().collect(),
             vec![EditorConstraint::Proposer].into_iter().collect(),
             RoundSettings {
                 round_delay: 0,
@@ -76,6 +79,8 @@ pub enum VotingConfigServiceError {
     ProgramNotAllowed(Program),
     ProposerNotAllowed(Principal),
     EditorNotAllowed(Principal),
+    VoterNotAllowed(Voter),
+    VoterDoesNotBelongToGroup(Voter),
 }
 
 pub fn create_voting_config(
@@ -85,7 +90,7 @@ pub fn create_voting_config(
     winners_count: Option<LenInterval>,
     votes_formula: Option<VotesFormula>,
     permissions: BTreeSet<PermissionId>,
-    proposers: BTreeSet<ProposerConstraint>,
+    proposers: BTreeSet<ActorConstraint>,
     editors: BTreeSet<EditorConstraint>,
     round: RoundSettings,
     approval: ThresholdValue,
@@ -156,7 +161,7 @@ pub fn update_voting_config(
     winners_count_opt: Option<Option<LenInterval>>,
     votes_formula_opt: Option<Option<VotesFormula>>,
     permissions_opt: Option<BTreeSet<PermissionId>>,
-    proposers_opt: Option<BTreeSet<ProposerConstraint>>,
+    proposers_opt: Option<BTreeSet<ActorConstraint>>,
     editors_opt: Option<BTreeSet<EditorConstraint>>,
     round_opt: Option<RoundSettings>,
     approval_opt: Option<ThresholdValue>,
@@ -268,74 +273,24 @@ pub fn assert_can_create_voting(
     voting_config_id: &VotingConfigId,
     votes_formula: &VotesFormula,
     winners_need: usize,
-    custom_choices: &Vec<ChoiceCreatePayload>,
+    custom_choices: &Vec<ChoiceExternal>,
     proposer: Principal,
 ) -> Result<(), VotingConfigServiceError> {
     let voting_config = get_voting_config(voting_config_id)?;
 
     voting_config
-        .voting_params_valid(custom_choices.len(), winners_need, votes_formula)
+        .assert_voting_params_valid(custom_choices.len(), winners_need, votes_formula)
         .map_err(VotingConfigServiceError::ValidationError)?;
 
-    // checking if all listed programs are valid
-
-    let mut programs = custom_choices
-        .iter()
-        .map(|it| (&it.program, false))
-        .collect::<Vec<_>>();
-
-    for id in &voting_config.permissions {
-        let permission = PermissionService::get_permission(id)
-            .map_err(VotingConfigServiceError::PermissionServiceError)?;
-
-        for it in programs.iter_mut() {
-            if permission.is_program_allowed(it.0) {
-                it.1 = true;
-            }
-        }
-    }
-
-    if let Some(failed) = programs.iter().find(|&it| !it.1) {
-        return Err(VotingConfigServiceError::ProgramNotAllowed(
-            failed.0.clone(),
-        ));
-    }
-
-    // checking if the proposer has a right to propose a voting
-    let mut proposer_valid = false;
-
-    // TODO: move to a separate function
-    for constraint in &voting_config.proposers {
-        match constraint {
-            ProposerConstraint::Profile(p) => {
-                if *p == proposer {
-                    proposer_valid = true;
-                    break;
-                }
-            }
-            ProposerConstraint::Group(g) => {
-                let balance = GroupService::balance_of(g.id, &proposer).unwrap();
-
-                if balance >= g.min_shares {
-                    proposer_valid = true;
-                    break;
-                }
-            }
-        };
-    }
-
-    if !proposer_valid {
-        Err(VotingConfigServiceError::ProposerNotAllowed(proposer))
-    } else {
-        Ok(())
-    }
+    assert_choices_valid(&voting_config, custom_choices)?;
+    assert_proposer_valid(&voting_config, &proposer)
 }
 
 pub fn assert_can_update_voting(
     voting: &Voting,
     new_votes_formula: &Option<VotesFormula>,
     new_winners_need: Option<usize>,
-    new_custom_choices: &Option<Vec<ChoiceCreatePayload>>,
+    new_custom_choices: &Option<Vec<ChoiceExternal>>,
     editor: Principal,
 ) -> Result<(), VotingConfigServiceError> {
     let voting_config = get_voting_config(&voting.voting_config_id)?;
@@ -359,43 +314,150 @@ pub fn assert_can_update_voting(
     };
 
     voting_config
-        .voting_params_valid(choices_len, winners_len, formula)
+        .assert_voting_params_valid(choices_len, winners_len, formula)
         .map_err(VotingConfigServiceError::ValidationError)?;
 
     if let Some(custom_choices) = new_custom_choices {
-        // checking if all listed programs are valid
+        assert_choices_valid(&voting_config, custom_choices)?;
+    }
 
-        let mut programs = custom_choices
-            .iter()
-            .map(|it| (&it.program, false))
-            .collect::<Vec<_>>();
+    assert_editor_valid(&voting_config, editor, voting.proposer)
+}
 
-        for id in &voting_config.permissions {
-            let permission = PermissionService::get_permission(id)
-                .map_err(VotingConfigServiceError::PermissionServiceError)?;
+pub fn assert_can_delete_voting(
+    voting: &Voting,
+    deleter: Principal,
+) -> Result<(), VotingConfigServiceError> {
+    let voting_config = get_voting_config(&voting.voting_config_id)?;
 
-            for it in programs.iter_mut() {
-                if permission.is_program_allowed(it.0) {
-                    it.1 = true;
+    assert_editor_valid(&voting_config, deleter, voting.proposer)
+}
+
+pub fn assert_can_vote(voting: &Voting, voter: &Voter) -> Result<(), VotingConfigServiceError> {
+    let voting_config = get_voting_config(&voting.voting_config_id)?;
+
+    // check if voter has the profile or belongs to the provided group
+    match voter {
+        Voter::Group((g, p)) => {
+            let balance = GroupService::balance_of(*g, p)
+                .map_err(VotingConfigServiceError::GroupServiceError)?;
+
+            if balance == Shares::default() {
+                return Err(VotingConfigServiceError::VoterDoesNotBelongToGroup(*voter));
+            }
+        }
+        Voter::Profile(p) => {
+            ProfileService::get_profile(p)
+                .map_err(VotingConfigServiceError::ProfileServiceError)?;
+        }
+    };
+    
+    // check if this profile or group was listed in ANY of thresholds
+    let mut can_vote = false;
+    let mut all_gops = voting_config.approval.list_groups_and_profiles();
+    all_gops.extend(voting_config.quorum.list_groups_and_profiles());
+    all_gops.extend(voting_config.rejection.list_groups_and_profiles());
+    all_gops.extend(voting_config.win.list_groups_and_profiles());
+    all_gops.extend(voting_config.next_round.list_groups_and_profiles());
+    
+    for gop in &all_gops {
+        match gop {
+            GroupOrProfile::Group(g1) => if let Voter::Group((g2, _)) = voter {
+                if g1 == g2 {
+                    can_vote = true;
+                    break;
+                }
+            },
+            GroupOrProfile::Profile(p1) => if let Voter::Profile(p2) = voter {
+                if p1 == p2 {
+                    can_vote = true;
+                    break;
                 }
             }
         }
+    }
 
-        if let Some(failed) = programs.iter().find(|&it| !it.1) {
-            return Err(VotingConfigServiceError::ProgramNotAllowed(
-                failed.0.clone(),
-            ));
+    if can_vote {
+        Ok(())
+    } else {
+        Err(VotingConfigServiceError::VoterNotAllowed(*voter))
+    }
+}
+
+fn assert_choices_valid(
+    voting_config: &VotingConfig,
+    choices: &[ChoiceExternal],
+) -> Result<(), VotingConfigServiceError> {
+    let mut programs = choices
+        .iter()
+        .map(|it| (&it.program, false))
+        .collect::<Vec<_>>();
+
+    for id in &voting_config.permissions {
+        let permission = PermissionService::get_permission(id)
+            .map_err(VotingConfigServiceError::PermissionServiceError)?;
+
+        for it in programs.iter_mut() {
+            if permission.is_program_allowed(it.0) {
+                it.1 = true;
+            }
         }
     }
 
-    // checking if the editor has a right to edit the voting
+    if let Some(failed) = programs.iter().find(|&it| !it.1) {
+        return Err(VotingConfigServiceError::ProgramNotAllowed(
+            failed.0.clone(),
+        ));
+    }
+
+    Ok(())
+}
+
+fn assert_proposer_valid(
+    voting_config: &VotingConfig,
+    proposer: &Principal,
+) -> Result<(), VotingConfigServiceError> {
+    let mut proposer_valid = false;
+
+    // TODO: move to a separate function
+    for constraint in &voting_config.proposers {
+        match constraint {
+            ActorConstraint::Profile(p) => {
+                if p == proposer {
+                    proposer_valid = true;
+                    break;
+                }
+            }
+            ActorConstraint::Group(g) => {
+                let balance = GroupService::balance_of(g.id, proposer).unwrap();
+
+                if balance >= g.min_shares {
+                    proposer_valid = true;
+                    break;
+                }
+            }
+        };
+    }
+
+    if !proposer_valid {
+        Err(VotingConfigServiceError::ProposerNotAllowed(*proposer))
+    } else {
+        Ok(())
+    }
+}
+
+fn assert_editor_valid(
+    voting_config: &VotingConfig,
+    editor: Principal,
+    proposer: Principal,
+) -> Result<(), VotingConfigServiceError> {
     let mut editor_valid = false;
 
     // TODO: move to a separate function
     for constraint in &voting_config.editors {
         match constraint {
             EditorConstraint::Proposer => {
-                if editor == voting.proposer {
+                if editor == proposer {
                     editor_valid = true;
                     break;
                 }

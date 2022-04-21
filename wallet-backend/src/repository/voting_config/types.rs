@@ -1,7 +1,7 @@
-use crate::repository::group::types::{GroupId, Shares};
 use crate::repository::permission::types::PermissionId;
 use crate::repository::profile::types::ProfileId;
 use candid::{CandidType, Deserialize};
+use shared::types::wallet::{GroupId, GroupOrProfile, Shares, VotingConfigId};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
 use std::mem;
@@ -10,8 +10,6 @@ const NAME_MIN_LEN: usize = 1;
 const NAME_MAX_LEN: usize = 200;
 const DESCRIPTION_MIN_LEN: usize = 0;
 const DESCRIPTION_MAX_LEN: usize = 2000;
-
-pub type VotingConfigId = u64;
 
 #[derive(Debug)]
 pub enum VotingConfigRepositoryError {
@@ -73,23 +71,17 @@ pub enum Target {
     GroupOrProfile(GroupOrProfile),
 }
 
-#[derive(Copy, Clone, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
-pub enum GroupOrProfile {
-    Group(GroupId),
-    Profile(ProfileId),
-}
-
 #[derive(Clone, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
-pub enum ProposerConstraint {
+pub enum ActorConstraint {
     Group(GroupCondition),
     Profile(ProfileId),
 }
 
-impl ProposerConstraint {
+impl ActorConstraint {
     pub fn to_group_or_profile(&self) -> GroupOrProfile {
         match self {
-            ProposerConstraint::Profile(p) => GroupOrProfile::Profile(*p),
-            ProposerConstraint::Group(g) => GroupOrProfile::Group(g.id),
+            ActorConstraint::Profile(p) => GroupOrProfile::Profile(*p),
+            ActorConstraint::Group(g) => GroupOrProfile::Group(g.id),
         }
     }
 }
@@ -156,7 +148,7 @@ pub struct VotingConfig {
 
     pub permissions: BTreeSet<PermissionId>,
 
-    pub proposers: BTreeSet<ProposerConstraint>,
+    pub proposers: BTreeSet<ActorConstraint>,
     pub editors: BTreeSet<EditorConstraint>,
 
     pub round: RoundSettings,
@@ -178,7 +170,7 @@ impl VotingConfig {
         winners_count: Option<LenInterval>,
         votes_formula: Option<VotesFormula>,
         permissions: BTreeSet<PermissionId>,
-        proposers: BTreeSet<ProposerConstraint>,
+        proposers: BTreeSet<ActorConstraint>,
         editors: BTreeSet<EditorConstraint>,
         round: RoundSettings,
         approval: ThresholdValue,
@@ -232,7 +224,7 @@ impl VotingConfig {
         winners_count_opt: Option<Option<LenInterval>>,
         votes_formula_opt: Option<Option<VotesFormula>>,
         permissions_opt: Option<BTreeSet<PermissionId>>,
-        proposers_opt: Option<BTreeSet<ProposerConstraint>>,
+        proposers_opt: Option<BTreeSet<ActorConstraint>>,
         editors_opt: Option<BTreeSet<EditorConstraint>>,
         round_opt: Option<RoundSettings>,
         approval_opt: Option<ThresholdValue>,
@@ -351,7 +343,7 @@ impl VotingConfig {
         Ok((old_permissions, old_gops))
     }
 
-    pub fn voting_params_valid(
+    pub fn assert_voting_params_valid(
         &self,
         choices_len: usize,
         winners_need: usize,

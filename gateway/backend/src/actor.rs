@@ -67,6 +67,9 @@ pub async fn spawn_union_wallet(req: SpawnUnionWalletRequest) -> SpawnUnionWalle
 
 #[update]
 pub async fn upgrade_union_wallet(req: UpgradeUnionWalletRequest) {
+    // TODO: doesn't work
+    // [Canister rdmx6-jaaaa-aaaaa-aaadq-cai] Panicked at 'called `Result::unwrap()` on an `Err` value: PoisonError { .. }', .cargo/registry/src/github.com-1ecc6299db9ec823/ic-cdk-0.5.0/src/api/call.rs:103:27
+
     let upgrade_req = UpgradeWalletVersionRequest {
         canister_id: caller(),
         new_version: req.new_version,
