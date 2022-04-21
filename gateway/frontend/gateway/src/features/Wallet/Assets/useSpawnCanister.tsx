@@ -2,13 +2,14 @@ import React, { useCallback } from 'react';
 import { IDL } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import { useCurrentWallet } from '../context';
-import { useCreateCanister, useUpdateCanister } from '../useManagementCanister';
+import { useCreateCanister, useUpdateCanister, UpdateFormData } from '../useManagementCanister';
 
 export const useCreateAssetsCanister = () => useCreateCanister({});
 
 export interface UpdateAssetCanisterFormData {
   canisterId: string;
   file: File | null;
+  mode: UpdateFormData['mode'];
 }
 
 export interface UseUpdateAssetCanisterProps {

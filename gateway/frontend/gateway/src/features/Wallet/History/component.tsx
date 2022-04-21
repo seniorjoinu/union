@@ -30,7 +30,7 @@ const Container = styled(PageWrapper)`
   }
 `;
 
-const DEFAULT_PAGE_SIZE = 3;
+const DEFAULT_PAGE_SIZE = 1;
 
 export interface HistoryProps extends IClassName {
   createLink?: string;

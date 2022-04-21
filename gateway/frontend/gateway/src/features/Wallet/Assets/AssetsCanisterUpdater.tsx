@@ -1,15 +1,16 @@
 import React from 'react';
 import styled from 'styled-components';
-import { PageWrapper, TextField as TF, Text, Button as B } from 'components';
+import { PageWrapper, TextField as TF, Select as S, Option, Button as B } from 'components';
 import { useForm, Controller } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
 import { useUpdateAssetCanister, UpdateAssetCanisterFormData } from './useSpawnCanister';
 
+const Select = styled(S)``;
 const Button = styled(B)``;
 const TextField = styled(TF)``;
 
 const Container = styled(PageWrapper)`
-  ${TextField} {
+  ${TextField}, ${Select} {
     margin-bottom: 24px;
   }
 
@@ -33,6 +34,7 @@ export const AssetsCanisterUpdater = ({ ...p }: AssetsCanisterUpdaterProps) => {
     defaultValues: {
       canisterId: '',
       file: null,
+      mode: 'install',
     },
     mode: 'onTouched',
   });
@@ -51,6 +53,18 @@ export const AssetsCanisterUpdater = ({ ...p }: AssetsCanisterUpdaterProps) => {
         }}
         render={({ field, fieldState: { error } }) => (
           <TextField {...field} helperText={error?.message} label='Canister ID' />
+        )}
+      />
+      <Controller
+        name='mode'
+        control={control}
+        rules={{ required: 'Required field' }}
+        render={({ field, fieldState: { error } }) => (
+          <Select {...field} helperText={error?.message} title='Mode'>
+            <Option value='install'>install</Option>
+            <Option value='reinstall'>reinstall</Option>
+            <Option value='upgrade'>upgrade</Option>
+          </Select>
         )}
       />
       <Controller

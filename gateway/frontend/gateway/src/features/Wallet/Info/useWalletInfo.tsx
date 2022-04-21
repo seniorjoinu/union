@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWallet, walletEncoder } from 'services';
+import { gatewaySerializer, useWallet, walletEncoder } from 'services';
 import { ExternalExecutorFormData } from '../../Executor';
 import { useCurrentWallet } from '../context';
 
@@ -65,6 +65,54 @@ export const useSetInfo = ({ getValues }: UseSetInfoProps) => {
 
   return {
     setInfo,
+  };
+};
+
+export interface UpgradeFormData {
+  version: string;
+}
+
+export interface UseUpgradeWalletProps {
+  getValues(): UpgradeFormData;
+}
+
+export const useUpgradeWallet = ({ getValues }: UseUpgradeWalletProps) => {
+  const { principal, rnp } = useCurrentWallet();
+  const nav = useNavigate();
+
+  const upgradeWalletVersion = useCallback(
+    async (verbose?: { title?: string; description?: string }) => {
+      if (!rnp) {
+        return;
+      }
+
+      const { version } = getValues();
+
+      const payload: ExternalExecutorFormData = {
+        title: verbose?.title || 'Upgrade wallet binary',
+        description: verbose?.description || `Upgrade wallet binary to version "${version}"`,
+        rnp,
+        program: [
+          {
+            endpoint: {
+              canister_id: process.env.GATEWAY_CANISTER_ID,
+              method_name: 'upgrade_union_wallet',
+            },
+            cycles: '0',
+            args_candid: gatewaySerializer.upgrade_union_wallet({
+              new_version: version,
+            }),
+          },
+        ],
+      };
+
+      nav(`/wallet/${principal}/execute`, { state: payload });
+    },
+    [getValues, principal, rnp],
+  );
+
+  return {
+    upgradeWalletVersion,
   };
 };
 

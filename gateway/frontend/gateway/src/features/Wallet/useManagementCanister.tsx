@@ -42,6 +42,7 @@ export interface UpdateFormData {
   canisterId: string;
   file: File | null;
   args: number[];
+  mode: 'install' | 'reinstall' | 'upgrade';
 }
 
 export interface UseUpdateCanisterProps {
@@ -62,7 +63,7 @@ export const useUpdateCanister = ({ getValues }: UseUpdateCanisterProps) => {
       return Promise.reject('Wrong wallet canister id');
     }
 
-    const { canisterId: rawCanisterId, file, args } = getValues();
+    const { canisterId: rawCanisterId, file, args, mode } = getValues();
     const canisterId = checkPrincipal(rawCanisterId);
 
     if (!canisterId) {
@@ -76,10 +77,11 @@ export const useUpdateCanister = ({ getValues }: UseUpdateCanisterProps) => {
     }
 
     const encoded = managementEncoder.install_code({
-      mode: { install: null },
+      // @ts-expect-error
+      mode: { [mode]: null },
       canister_id: canisterId,
       wasm_module: binary,
-      arg: [],
+      arg: args,
     });
 
     const payload: ExternalExecutorFormData = {

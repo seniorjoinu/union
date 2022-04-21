@@ -5,6 +5,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { PageWrapper, Text, Button as B, SimpleListItem } from 'components';
 import { initWalletController, useGateway } from 'services';
 import { parseRole } from '../Wallet/utils';
+import { WalletInfo } from './WalletInfo';
 
 const RoleName = styled(Text)`
   padding: 0 8px;
@@ -86,7 +87,7 @@ export const WalletsList = () => {
             key={wallet.toString()}
             item={{
               id: wallet.toString(),
-              principal: <Text variant='p1'>{wallet.toString()}</Text>,
+              principal: <WalletInfo canisterId={wallet.toString()} />,
               isRoot: rootWallet == wallet.toString() && (
                 <Text variant='p1' color='grey'>
                   Root

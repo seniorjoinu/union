@@ -4,6 +4,7 @@ import { Principal } from '@dfinity/principal';
 import { useNavigate } from 'react-router-dom';
 import { PageWrapper, Text, SubmitButton as B, SimpleListItem } from 'components';
 import { useDeployer, useGateway } from 'services';
+import { WalletInfo } from '../Wallets';
 
 const List = styled.div`
   display: flex;
@@ -62,7 +63,7 @@ export const Explore = () => {
             key={canister_id.toString()}
             item={{
               id: canister_id.toString(),
-              principal: <Text variant='p1'>{canister_id.toString()}</Text>,
+              principal: <WalletInfo canisterId={canister_id.toString()} />,
               isRoot: rootWallet == canister_id.toString() && (
                 <Text variant='p1' color='grey'>
                   Root

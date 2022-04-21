@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { PageWrapper, Text, SubmitButton as SB, ImageFile as IF } from 'components';
-import { useWallet } from 'services';
+import { useDeployer, useWallet } from 'services';
 import { downloadFileContent } from 'toolkit';
 import { NavLink } from 'react-router-dom';
+import { Principal } from '@dfinity/principal';
 import { useCurrentWallet } from '../context';
 
 const ImageFile = styled(IF)``;
@@ -32,17 +33,19 @@ const Container = styled(PageWrapper)`
   }
 `;
 
-export interface StatsProps {
+export interface InfoProps {
   className?: string;
   style?: React.CSSProperties;
 }
 
-export const Stats = ({ ...p }: StatsProps) => {
+export const Info = ({ ...p }: InfoProps) => {
   const { principal } = useCurrentWallet();
   const { canister, fetching, data } = useWallet(principal);
+  const deployer = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
 
   useEffect(() => {
     canister.get_info();
+    deployer.canister.get_instances({ ids: [Principal.fromText(principal)] });
   }, []);
 
   const downloadCandid = useCallback(async () => {
@@ -70,6 +73,9 @@ export const Stats = ({ ...p }: StatsProps) => {
         <Button forwardedAs={NavLink} to='edit-info'>
           Edit info
         </Button>
+        <Button forwardedAs={NavLink} to='upgrade-version'>
+          Upgrade version
+        </Button>
         <Button onClick={downloadCandid}>Download can.did</Button>
       </Controls>
       {!!fetching.get_info && <Text>fetching...</Text>}
@@ -79,6 +85,7 @@ export const Stats = ({ ...p }: StatsProps) => {
           <Field>ID: {principal.toString()}</Field>
           <Field>Name: {info.name}</Field>
           <Field>Description: {info.description}</Field>
+          <Field>Version: {deployer.data.get_instances?.instances[0].binary_version || '?'}</Field>
           <Field>Balance: ?</Field>
           <Field>Storage: ?</Field>
           {/* <Text>Description: {info.logo}</Text> */}

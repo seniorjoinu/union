@@ -47,7 +47,7 @@ export const useBatchUploader = (p?: Partial<UseBatchUploaderProps>) => {
         const payload = { key, source: [] };
         const { batch_id } = await canister.create_batch({
           key: payload.key,
-          content_type: file.type,
+          content_type: file.type.includes('javascript') ? 'application/javascript' : file.type,
         });
 
         const numberOfChunks = Math.ceil(file.size / chunkSize);
