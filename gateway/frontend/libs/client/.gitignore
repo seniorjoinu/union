@@ -3,6 +3,7 @@
 .cache
 .vscode
 dist
+storybook-static
 *.txt
 node_modules
 coverage
