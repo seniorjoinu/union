@@ -1,8 +1,8 @@
-use crate::common::utils::ToDecodedCandidType;
-use crate::{get_state, CandidCallResult, HistoryEntry, Program, ToCandidType};
-use ic_cdk::api::call::call_raw;
+use crate::{get_state, HistoryEntry, Program};
 use ic_cdk::api::time;
 use ic_cdk::spawn;
+use shared::candid::CandidCallResult;
+use shared::candid::ToDecodedCandidType;
 
 pub fn execute_program_and_log(mut entry: HistoryEntry) {
     spawn(async {
@@ -24,16 +24,7 @@ pub async fn execute_program(program: &Program) -> Vec<CandidCallResult<String>>
             let mut should_continue = true;
 
             for call_payload in call_sequence {
-                let response = call_raw(
-                    call_payload.endpoint.canister_id,
-                    call_payload.endpoint.method_name.as_str(),
-                    // TODO: maybe it is safe to throw here, idk
-                    call_payload.args.serialize_args().expect("Execution error"),
-                    call_payload.cycles,
-                )
-                .await
-                .to_candid_type()
-                .to_decoded();
+                let response = call_payload.do_call_raw().await.to_decoded();
 
                 if response.is_err() {
                     should_continue = false;

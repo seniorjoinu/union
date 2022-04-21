@@ -13,9 +13,9 @@
       "type": "custom"
     },
     "deployer": {
-      "build": "../deployer-backend/build.sh",
-      "candid": "../deployer-backend/can.did",
-      "wasm": "../deployer-backend/target/wasm32-unknown-unknown/release/union-deployer-opt.wasm",
+      "build": "../deployer-backend/canister/build.sh",
+      "candid": "../deployer-backend/canister/can.did",
+      "wasm": "../deployer-backend/canister/target/wasm32-unknown-unknown/release/union-deployer-opt.wasm",
       "type": "custom"
     }
   },

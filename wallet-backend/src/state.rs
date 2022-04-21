@@ -2,9 +2,10 @@ use crate::common::execution_history::{ExecutionHistoryError, ExecutionHistorySt
 use crate::common::permissions::{Permission, PermissionScope, PermissionsError, PermissionsState};
 use crate::common::roles::{Profile, Role, RoleType, RolesError, RolesState, HAS_PROFILE_ROLE_ID};
 use crate::common::streaming::StreamingState;
-use crate::common::utils::ValidationError;
-use crate::{HistoryEntry, PermissionId, Program, RemoteCallEndpoint, RoleId};
+use crate::{HistoryEntry, PermissionId, Program, RoleId};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use shared::remote_call::RemoteCallEndpoint;
+use shared::validation::ValidationError;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, HashSet};
 

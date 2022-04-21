@@ -1,4 +1,5 @@
 use ic_cdk::export::candid::{CandidType, Deserialize, Nat, Principal};
+use union_deployer_client::api::SpawnWalletRequest;
 
 pub type BillId = Nat;
 pub type RoleId = u32;
@@ -11,7 +12,7 @@ pub enum GatewayError {
 
 #[derive(CandidType, Deserialize)]
 pub enum BillType {
-    SpawnUnionWallet(DeployerSpawnWalletRequest),
+    SpawnUnionWallet(SpawnWalletRequest),
 }
 
 #[derive(CandidType, Deserialize)]
@@ -33,16 +34,4 @@ pub struct Bill {
 #[derive(CandidType, Deserialize)]
 pub struct BillPaymentProof {
     pub bill_id: BillId,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct DeployerSpawnWalletRequest {
-    pub version: String,
-    pub wallet_creator: Principal,
-    pub gateway: Principal,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct DeployerSpawnWalletResponse {
-    pub canister_id: Principal,
 }

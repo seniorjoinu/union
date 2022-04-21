@@ -2,22 +2,23 @@ mod common;
 
 use crate::common::deployer::State;
 use crate::common::guards::{only_binary_controller, only_spawn_controller};
-use crate::common::types::{
-    CreateBinaryVersionRequest, DeleteBinaryVersionRequest, DownloadBinaryRequest,
-    DownloadBinaryResponse, GetBinaryVersionInfosRequest, GetBinaryVersionInfosResponse,
-    GetBinaryVersionsResponse, GetInstanceIdsResponse, GetInstancesRequest, GetInstancesResponse,
-    GetLatestVersionResponse, ReleaseBinaryVersionRequest, SpawnWalletRequest, SpawnWalletResponse,
-    TransferControlRequest, UpdateBinaryVersionDescriptionRequest, UpgradeWalletVersionRequest,
-    UploadBinaryRequest,
-};
 use crate::common::upgrade_canister;
 use common::deploy_canister_install_code_update_settings;
+use ic_cdk::api::call::msg_cycles_available;
 use ic_cdk::api::time;
 use ic_cdk::export::candid::{encode_args, export_service};
 use ic_cdk::export::Principal;
 use ic_cdk::id;
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
+use union_deployer_client::api::{
+    CreateBinaryVersionRequest, DeleteBinaryVersionRequest, DownloadBinaryRequest,
+    DownloadBinaryResponse, GetBinaryVersionInfosRequest, GetBinaryVersionInfosResponse,
+    GetBinaryVersionsResponse, GetControllerResponse, GetInstanceIdsResponse, GetInstancesRequest,
+    GetInstancesResponse, GetLatestVersionResponse, ReleaseBinaryVersionRequest,
+    SpawnWalletRequest, SpawnWalletResponse, TransferControlRequest,
+    UpdateBinaryVersionDescriptionRequest, UpgradeWalletVersionRequest, UploadBinaryRequest,
+};
 
 #[update(guard = "only_binary_controller")]
 fn transfer_binary_control(req: TransferControlRequest) {
@@ -31,6 +32,9 @@ fn transfer_spawn_control(req: TransferControlRequest) {
 
 #[update(guard = "only_spawn_controller")]
 async fn spawn_wallet(req: SpawnWalletRequest) -> SpawnWalletResponse {
+    let cycles = msg_cycles_available();
+    assert!(cycles >= 1_000_000_000_000, "Insufficient cycles to spawn");
+
     let binary = get_state()
         .get_non_deleted_binary(&req.version)
         .expect("Unable to find binary version");
@@ -39,6 +43,7 @@ async fn spawn_wallet(req: SpawnWalletRequest) -> SpawnWalletResponse {
         id(),
         encode_args((req.wallet_creator, req.gateway)).expect("Unable to encode args"),
         binary,
+        cycles,
     )
     .await;
 
@@ -162,13 +167,17 @@ fn get_latest_version() -> GetLatestVersionResponse {
 }
 
 #[query]
-fn get_binary_controller() -> Principal {
-    get_state().binary_controller
+fn get_binary_controller() -> GetControllerResponse {
+    let controller = get_state().binary_controller;
+
+    GetControllerResponse { controller }
 }
 
 #[query]
-fn get_spawn_controller() -> Principal {
-    get_state().spawn_controller
+fn get_spawn_controller() -> GetControllerResponse {
+    let controller = get_state().spawn_controller;
+
+    GetControllerResponse { controller }
 }
 
 // ---------------- STATE ----------------

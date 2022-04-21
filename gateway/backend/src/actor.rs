@@ -4,14 +4,11 @@ use crate::common::api::{
     ProfileActivatedEvent, ProfileActivatedEventFilter, ProfileCreatedEvent,
     ProfileCreatedEventFilter, ProveBillPaidRequest, ProveBillPaidResponse,
     SpawnUnionWalletRequest, SpawnUnionWalletResponse, TransferControlRequest,
-    UpgradeUnionWalletRequest, UpgradeWalletVersionRequest,
+    UpgradeUnionWalletRequest,
 };
 use crate::common::gateway::{ProfileCreatedNotification, State};
-use crate::common::types::{
-    BillId, BillType, DeployerSpawnWalletRequest, DeployerSpawnWalletResponse,
-};
+use crate::common::types::{BillId, BillType};
 use crate::guards::{not_anonymous, only_controller, only_mentioned_union_wallet};
-use ic_cdk::api::call::call_with_payment;
 use ic_cdk::api::time;
 use ic_cdk::export::candid::export_service;
 use ic_cdk::export::Principal;
@@ -20,6 +17,8 @@ use ic_cdk::{call, caller, id};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
 use ic_event_hub::api::IEventHubClient;
 use ic_event_hub::types::{CallbackInfo, Event, IEvent, IEventFilter, SubscribeRequest};
+use union_deployer_client::api::{SpawnWalletRequest, UpgradeWalletVersionRequest};
+use union_deployer_client::client::IDeployerBackend;
 
 pub mod common;
 pub mod guards;
@@ -50,7 +49,7 @@ pub fn get_attached_union_wallets() -> GetAttachedUnionWalletsResponse {
 pub async fn spawn_union_wallet(req: SpawnUnionWalletRequest) -> SpawnUnionWalletResponse {
     let bill_id = BillId::from(0);
 
-    let deployer_req = DeployerSpawnWalletRequest {
+    let deployer_req = SpawnWalletRequest {
         wallet_creator: req.wallet_creator,
         version: req.version,
         gateway: id(),
@@ -73,13 +72,11 @@ pub async fn upgrade_union_wallet(req: UpgradeUnionWalletRequest) {
         new_version: req.new_version,
     };
 
-    call::<(UpgradeWalletVersionRequest,), ()>(
-        get_state().deployer_canister_id,
-        "upgrade_wallet_version",
-        (upgrade_req,),
-    )
-    .await
-    .expect("Unable to call deployer.upgrade_wallet_version");
+    get_state()
+        .deployer_canister_id
+        .upgrade_wallet_version(upgrade_req)
+        .await
+        .expect("Unable to call deployer.upgrade_wallet_version");
 }
 
 #[update(guard = "only_controller")]
@@ -88,20 +85,17 @@ pub async fn controller_spawn_wallet(
 ) -> ControllerSpawnWalletResponse {
     let wallet_creator = req.wallet_creator;
 
-    let deployer_req = DeployerSpawnWalletRequest {
+    let deployer_req = SpawnWalletRequest {
         wallet_creator,
         version: req.version,
         gateway: id(),
     };
 
-    let (res,): (DeployerSpawnWalletResponse,) = call_with_payment(
-        get_state().deployer_canister_id,
-        "spawn_wallet",
-        (deployer_req,),
-        1_000_000_000_000,
-    )
-    .await
-    .expect("Unable to call deployer.spawn_wallet");
+    let (res,) = get_state()
+        .deployer_canister_id
+        .spawn_wallet(deployer_req, 1_000_000_000_000)
+        .await
+        .expect("Unable to call deployer.spawn_wallet");
 
     get_state().attach_user_to_union_wallet(wallet_creator, res.canister_id);
 
@@ -147,14 +141,11 @@ pub async fn prove_bill_paid(req: ProveBillPaidRequest) -> ProveBillPaidResponse
 
     match &bill.bill_type {
         BillType::SpawnUnionWallet(spawn_request) => {
-            let (res,): (ProveBillPaidResponse,) = call_with_payment(
-                get_state().deployer_canister_id,
-                "spawn_wallet",
-                (spawn_request,),
-                1_000_000_000_000,
-            )
-            .await
-            .expect("Unable to call deployer.spawn_wallet");
+            let (res,) = get_state()
+                .deployer_canister_id
+                .spawn_wallet(spawn_request.clone(), 1_000_000_000_000)
+                .await
+                .expect("Unable to call deployer.spawn_wallet");
 
             get_state().attach_user_to_union_wallet(caller, res.canister_id);
 
@@ -181,7 +172,9 @@ pub async fn prove_bill_paid(req: ProveBillPaidRequest) -> ProveBillPaidResponse
                 .await
                 .expect("Unable to call gateway.subscribe");
 
-            res
+            ProveBillPaidResponse {
+                canister_id: res.canister_id,
+            }
         }
     }
 }

@@ -18,10 +18,10 @@ use crate::api::{
     RemoveRoleResponse, SendBatchRequest, SetAssetContentArguments, SubtractEnumeratedRolesRequest,
     UpdateInfoRequest, UpdatePermissionRequest, UpdateRoleRequest,
 };
-use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program, RemoteCallEndpoint};
+use crate::common::execution_history::{HistoryEntry, HistoryEntryId, Program};
 use crate::common::permissions::PermissionId;
 use crate::common::roles::{RoleId, RoleType};
-use crate::common::utils::{validate_and_trim_str, CandidCallResult, IAssetCanister, ToCandidType};
+use crate::common::utils::IAssetCanister;
 use crate::guards::{only_gateway, only_self_guard};
 use crate::helpers::execute_program_and_log;
 use crate::state::{State, TaskType};
@@ -34,6 +34,8 @@ use ic_cron::implement_cron;
 use ic_cron::types::{Iterations, SchedulingOptions};
 use ic_event_hub::{implement_event_emitter, implement_subscribe, implement_unsubscribe};
 use serde_bytes::ByteBuf;
+use shared::candid::ToCandidType;
+use shared::validation::validate_and_trim_str;
 
 pub mod api;
 pub mod common;

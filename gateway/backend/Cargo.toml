@@ -1,7 +1,7 @@
 [package]
 name = "union-gateway"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
 [profile.release]
 lto = true
@@ -13,9 +13,11 @@ path = "src/actor.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-ic-cdk = "0.4.0"
-ic-cdk-macros = "0.4.0"
-serde = "1.0"
-candid = "0.7.11"
+ic-cdk = "0.5.0"
+ic-cdk-macros = "0.5.0"
+serde = "1.0.136"
+candid = "0.7.14"
 ic-event-hub-macros = "0.3.1"
 ic-event-hub = "0.3.1"
+shared = { path = "../../shared" }
+union-deployer-client = { path = "../../deployer-backend/clients/rust" }
