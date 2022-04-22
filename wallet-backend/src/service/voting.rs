@@ -1,14 +1,14 @@
 use crate::repository::get_repositories;
-use crate::repository::group::types::Shares;
 use crate::repository::voting::types::{
-    ChoiceExternal, StartCondition, Vote, VoteType, Voter, Voting, VotingId, VotingRepositoryError,
+    StartCondition, Vote, VoteType, Voter, VotingRepositoryError,
 };
-use crate::repository::voting_config::types::{VotesFormula, VotingConfigId};
+use crate::repository::voting_config::types::VotesFormula;
 use crate::service::group::DEFAULT_SHARES;
 use crate::service::voting_config as VotingConfigService;
 use crate::service::voting_config::VotingConfigServiceError;
 use ic_cdk::api::time;
 use ic_cdk::caller;
+use shared::types::wallet::{ChoiceExternal, Shares, VotingConfigId, VotingId};
 
 #[derive(Debug)]
 pub enum VotingServiceError {

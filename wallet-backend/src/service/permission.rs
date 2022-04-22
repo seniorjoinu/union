@@ -1,4 +1,4 @@
-use crate::common::utils::{Page, PageRequest};
+use shared::pageable::{Page, PageRequest};
 use crate::repository::get_repositories;
 use crate::repository::permission::types::{
     Permission, PermissionFilter, PermissionId, PermissionRepositoryError, PermissionScope,

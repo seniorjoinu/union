@@ -1,14 +1,10 @@
-use crate::common::utils::{Page, PageRequest};
 use crate::repository::get_repositories;
-use crate::repository::group::types::Shares;
-use crate::repository::permission::types::{PermissionId, PermissionTarget};
-use crate::repository::voting::types::{
-    ChoiceExternal, Program, StartCondition, Voter, Voting,
-};
+use crate::repository::permission::types::PermissionId;
+use crate::repository::voting::types::{Voter, Voting, };
 use crate::repository::voting_config::types::{
-    ActorConstraint, EditorConstraint, FractionOf, GroupCondition, GroupOrProfile, LenInterval,
+    ActorConstraint, EditorConstraint, FractionOf, GroupCondition, LenInterval,
     QuantityOf, RoundSettings, Target, ThresholdValue, VotesFormula, VotingConfig,
-    VotingConfigFilter, VotingConfigId, VotingConfigRepositoryError,
+    VotingConfigFilter, VotingConfigRepositoryError,
 };
 use crate::service::group as GroupService;
 use crate::service::group::{GroupServiceError, DEFAULT_SHARES, HAS_PROFILE_GROUP_ID};
@@ -19,8 +15,10 @@ use crate::service::profile::ProfileServiceError;
 use candid::Principal;
 use shared::time::mins;
 use shared::validation::ValidationError;
-use std::collections::vec_deque::Iter;
 use std::collections::BTreeSet;
+use shared::pageable::{Page, PageRequest};
+use shared::remote_call::Program;
+use shared::types::wallet::{ChoiceExternal, GroupOrProfile, Shares, VotingConfigId};
 
 const DEFAULT_VOTING_CONFIG_ID: VotingConfigId = 0;
 // TODO: set this to at least 1 day

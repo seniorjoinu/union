@@ -4,7 +4,7 @@ use crate::repository::streaming::types::{
 use candid::{CandidType, Deserialize};
 use serde_bytes::ByteBuf;
 use std::collections::HashMap;
-use crate::common::utils::{Page, PageRequest, Pageable};
+use shared::pageable::{Page, PageRequest, Pageable};
 
 pub mod types;
 

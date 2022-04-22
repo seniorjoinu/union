@@ -1,12 +1,9 @@
-use crate::repository::group::types::{GroupId, Shares};
-use crate::repository::permission::types::Permission;
-use crate::repository::profile::types::ProfileId;
-use crate::repository::voting_config::types::{GroupOrProfile, VotesFormula};
+use crate::repository::voting_config::types::VotesFormula;
 use candid::{CandidType, Deserialize, Principal};
 use shared::remote_call::Program;
-use shared::types::wallet::{ChoiceExternal, ChoiceId, GroupOrProfile, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceExternal, ChoiceId, GroupId, GroupOrProfile, ProfileId, Shares, VotingConfigId, VotingId};
 use shared::validation::{validate_and_trim_str, ValidationError};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, HashMap};
 use std::mem;
 
 const VOTING_CHOICE_NAME_MIN_LEN: usize = 1;
@@ -269,11 +266,15 @@ impl Voting {
         }
 
         if let Some(custom_choices) = new_custom_choices {
-            self.custom_choices = custom_choices
-                .into_iter()
-                .map(|it| it.to_choice())
-                .enumerate()
-                .collect();
+            let mut choices = BTreeMap::new();
+
+            for (id, c) in custom_choices.into_iter().enumerate() {
+                let mut choice = Choice::from_external(c);
+                choice.validate().map_err(VotingRepositoryError::ValidationError)?;
+                choices.insert(id, choice);
+            }
+            
+            self.custom_choices = choices;
         }
 
         self.updated_at = timestamp;
@@ -293,21 +294,23 @@ impl Voting {
 
         let (gop, principal) = match vote.voter {
             Voter::Profile(p) => {
-                self.total_supplies.insert(GroupOrProfile::Group(g), gop_total_supply);
+                let gop = GroupOrProfile::Profile(p);
                 
-                (GroupOrProfile::Profile(p), p)
+                self.total_supplies.insert(gop, gop_total_supply);
+                (gop, p)
             },
             Voter::Group((g, p)) => {
-                let group_total_supply_old =
-                    self.total_supplies.get(&GroupOrProfile::Group(g)).cloned().unwrap_or_default();
+                let gop = GroupOrProfile::Group(g);
+                
+                let group_total_supply_old = self.total_supplies.get(&gop).cloned().unwrap_or_default();
 
                 assert!(
                     group_total_supply_old == Shares::default()
                         || group_total_supply_old == gop_total_supply
                 );
-                self.total_supplies.insert(GroupOrProfile::Group(g), gop_total_supply);
+                self.total_supplies.insert(gop, gop_total_supply);
 
-                (GroupOrProfile::Group(g), p)
+                (gop, p)
             }
         };
 

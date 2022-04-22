@@ -1,11 +1,85 @@
-type RoleId = nat32;
-type PermissionId = nat16;
-type HistoryEntryId = nat64;
-type TaskId = nat64;
+// ------------------ SHARES MOVE --------------------
+
+type GroupId = nat32;
+type Shares = nat;
+
+type GetSharesInfoOfAtRequest = record {
+    group_id : GroupId;
+    of : principal;
+    at : nat64;
+};
+
+type SharesInfo = record {
+    balance : Shares;
+    total_supply : Shares;
+};
+
+type GetSharesInfoOfAtResponse = record {
+    info_opt : opt SharesInfo;
+};
+
+// ------------------ VOTING EXECUTION -------------------
+
+type VotingConfigId = nat32;
+type VotingId = nat64;
+type ChoiceId = nat32;
 
 type RemoteCallEndpoint = record {
     canister_id : principal;
     method_name : text;
+};
+
+type TimeInterval = record {
+    from : nat64;
+    to : nat64;
+};
+
+type VotingExecutionRecordFilter = record {
+    voting_config_id : opt VotingConfigId;
+    canister_id : opt principal;
+    endpoint : opt RemoteCallEndpoint;
+    time_interval : opt TimeInterval;
+};
+
+type VotingExecutionRecordPageRequest = record {
+    page_index : nat32;
+    page_size : nat32;
+    filter : VotingExecutionRecordFilter;
+    sort : empty;
+};
+
+type GetVotingExecutionRecordsRequest = record {
+    page_req : VotingExecutionRecordPageRequest;
+};
+
+type VotingExecutionRecordExternal = record {
+    voting_id : VotingId;
+    voting_config_id : VotingConfigId;
+    name : text;
+    description : text;
+    timestamp : nat64;
+    winners_count : nat32;
+};
+
+type VotingExecutionRecordPage = record {
+    data : vec VotingExecutionRecordExternal;
+    has_next : bool;
+};
+
+type GetVotingExecutionRecordsResponse = record {
+    page : VotingExecutionRecordPage;
+};
+
+type PageRequest = record {
+    page_index : nat32;
+    page_size : nat32;
+    filter : empty;
+    sort : empty;
+};
+
+type GetVotingExecutionRecordWinnersRequest = record {
+    voting_id : VotingId;
+    page_req : PageRequest;
 };
 
 type RemoteCallArgs = variant {
@@ -24,417 +98,63 @@ type Program = variant {
     RemoteCallSequence : vec RemoteCallPayload;
 };
 
-type RoleAndPermission = record {
-    role_id : RoleId;
-    permission_id : PermissionId;
-};
-
-type ExecuteRequest = record {
-    title : text;
+type ChoiceExternal = record {
+    name : text;
     description : text;
     program : Program;
-    authorization_delay_nano : nat64;
-    rnp : RoleAndPermission;
 };
 
-type ExecuteResponse = variant {
-    Executed : HistoryEntryId;
-    ScheduledForAuthorization : TaskId;
+type VotingExecutionRecordWinnersPage = record {
+    data : vec record { 0 : ChoiceId; 1 : ChoiceExternal; };
+    has_next : bool;
 };
 
-type AuthorizeExecutionRequest = record {
-    task_id : TaskId;
+type GetVotingExecutionRecordWinnersResponse = record {
+    page : VotingExecutionRecordWinnersPage;
 };
 
-type AuthorizeExecutionResponse = ExecuteResponse;
-
-type ScheduledTask = record {
-    id : TaskId;
-    payload : Task;
-    scheduled_at : nat64;
-    rescheduled_at : opt nat64;
-    scheduling_options : SchedulingOptions;
-    delay_passed : bool;
+type GetVotingExecutionRecordResultsRequest = record {
+    voting_id : VotingId;
+    page_req : PageRequest;
 };
 
-type Task = record {
-    data : blob;
-};
-
-type SchedulingOptions = record {
-    delay_nano : nat64;
-    interval_nano : nat64;
-    iterations : Iterations;
-};
-
-type Iterations = variant {
-    Infinite;
-    Exact : nat64;
-};
-
-type GetHistoryEntryIdsResponse = record {
-    ids : vec HistoryEntryId;
-};
-
-type GetHistoryEntriesRequest = record {
-    ids : vec HistoryEntryId;
-};
-
-type GetHistoryEntriesResponse = record {
-    entries : vec HistoryEntry;
-};
-
-type HistoryEntry = record {
-    id : HistoryEntryId;
-    entry_type : HistoryEntryType;
-    title : text;
-    description : text;
-    program : Program;
-    timestamp : nat64;
-    role_id : RoleId;
-    permission_id : PermissionId;
-    authorized_by : vec principal;
-};
-
-type HistoryEntryType = variant {
-    Pending;
-    Executed : record { 0 : nat64; 1 : vec CallResult };
-    Declined : record { 0 : nat64; 1 : text };
-};
-
-type CallResult = variant {
-    Ok : text;
-    Err : record { 0 : RejectionCode; 1 : text };
-};
-
-type RejectionCode = variant {
+type CandidRejectionCode = variant {
     NoError;
-
     SysFatal;
     SysTransient;
     DestinationInvalid;
     CanisterReject;
     CanisterError;
-
     Unknown;
 };
 
-type GetScheduledForAuthorizationExecutionsRequest = record {
-    task_ids : opt vec TaskId;
+type RawCandidCallResult = variant {
+    Ok : blob;
+    Err : record { 0 : CandidRejectionCode; 1 : text; };
+}
+
+type ProgramExecutionResult = variant {
+    Empty;
+    RemoteCallSequence : vec RawCandidCallResult;
 };
 
-type GetScheduledForAuthorizationExecutionsResponse = record {
-    entries : vec record { 0 : TaskId; 1 : HistoryEntry };
+type VotingExecutionRecordResultsPage = record {
+    data : vec record { 0 : ChoiceId; 1 : ProgramExecutionResult; };
+    has_next : bool;
 };
 
-// ---------------- ROLES -------------------
-
-type CreateRoleRequest = record {
-    role_type : RoleType;
+type GetVotingExecutionRecordResultsResponse = record {
+    page : VotingExecutionRecordResultsPage;
 };
 
-type CreateRoleResponse = record {
-    role_id : RoleId;
-};
-
-type UpdateRoleRequest = record {
-    role_id : RoleId;
-    new_role_type : RoleType;
-};
-
-type RemoveRoleRequest = record {
-    role_id : RoleId;
-};
-
-type RemoveRoleResponse = record {
-    role : Role;
-};
-
-type EditProfileRequest = record {
-    role_id : RoleId;
-    new_name : opt text;
-    new_description : opt text;
-};
-
-type ActivateProfileRequest = record {
-    role_id : RoleId;
-};
-
-type AddEnumeratedRolesRequest = record {
-    role_id : RoleId;
-    enumerated_roles_to_add : vec RoleId;
-};
-
-type SubtractEnumeratedRolesRequest = record {
-    role_id : RoleId;
-    enumerated_roles_to_subtract : vec RoleId;
-};
-
-type GetRoleIdsResponse = record {
-    ids : vec RoleId;
-};
-
-type GetRolesRequest = record {
-    ids : vec RoleId;
-};
-
-type GetRolesResponse = record {
-    roles : vec Role;
-};
-
-type GetMyRolesResponse = record {
-    roles : vec Role;
-};
-
-type Role = record {
-    id : RoleId;
-    role_type : RoleType;
-};
-
-type Profile = record {
-    principal_id : principal;
-    name : text;
-    description : text;
-    active : bool;
-};
-
-type QuantityOf = record {
-    name : text;
-    description : text;
-    quantity : nat32;
-    enumerated : vec RoleId;
-};
-
-type FractionOf = record {
-    name : text;
-    description : text;
-    fraction : float64;
-    enumerated : vec RoleId;
-};
-
-type RoleType = variant {
-    Everyone;
-    Profile : Profile;
-    QuantityOf : QuantityOf;
-    FractionOf : FractionOf;
-};
-
-// ------------------ PERMISSIONS -----------------
-
-type CreatePermissionRequest = record {
-    name : text;
-    targets : vec PermissionTarget;
-    scope : PermissionScope;
-};
-
-type CreatePermissionResponse = record {
-    permission_id : PermissionId;
-};
-
-type UpdatePermissionRequest = record {
-    permission_id : PermissionId;
-    new_name : opt text;
-    new_targets : opt vec PermissionTarget;
-    new_scope : opt PermissionScope;
-};
-
-type RemovePermissionRequest = record {
-    permission_id : PermissionId;
-};
-
-type RemovePermissionResponse = record {
-    permission : Permission;
-};
-
-type GetPermissionIdsResponse = record {
-    ids : vec PermissionId;
-};
-
-type GetPermissionsRequest = record {
-    ids : vec PermissionId;
-};
-
-type GetPermissionsResponse = record {
-    permissions : vec Permission;
-};
-
-type GetPermissionsByPermissionTargetRequest = record {
-    target : PermissionTarget;
-};
-
-type GetPermissionsByPermissionTargetResponse = record {
-    ids : vec PermissionId;
-};
-
-type GetMyPermissionsResponse = record {
-    permissions : vec Permission;
-};
-
-type Permission = record {
-    id : PermissionId;
-    name : text;
-    targets : vec PermissionTarget;
-    scope : PermissionScope;
-};
-
-type PermissionTarget = variant {
-    SelfEmptyProgram;
-    Canister : principal;
-    Endpoint : RemoteCallEndpoint;
-};
-
-type PermissionScope = variant {
-    Whitelist;
-    Blacklist;
-};
-
-// ------------------ ROLES & PERMISSIONS ----------------
-
-type AttachRoleToPermissionRequest = record {
-    role_id : RoleId;
-    permission_id : PermissionId;
-};
-
-type DetachRoleFromPermissionRequest = record {
-    role_id : RoleId;
-    permission_id : PermissionId;
-};
-
-type GetRolesAttachedToPermissionsRequest = record {
-    permission_ids : vec PermissionId;
-};
-
-type GetRolesAttachedToPermissionsResponse = record {
-    result : vec record { 0 : PermissionId; 1 : vec RoleId };
-};
-
-type GetPermissionsAttachedToRolesRequest = record {
-    role_ids : vec RoleId;
-};
-
-type GetPermissionsAttachedToRolesResponse = record {
-    result : vec record { 0 : RoleId; 1 : vec PermissionId };
-};
-
-// ------------------- STREAMING -------------------
-
-type BatchId = nat;
-type ChunkId = nat;
-type Key = text;
-
-type Batch = record {
-    key : Key;
-    content_type : text;
-    chunk_ids : vec ChunkId;
-    locked : bool;
-};
-
-type GetBatchesResponse = record {
-    batches : vec record { 0 : BatchId; 1 : Batch };
-};
-
-type GetChunkRequest = record {
-    chunk_id : ChunkId;
-};
-
-type GetChunkResponse = record {
-    chunk_content : blob;
-};
-
-type SendBatchRequest = record {
-    batch_id : BatchId;
-    target_canister : principal;
-};
-
-type CreateBatchRequest = record {
-    key : Key;
-    content_type : text;
-};
-
-type CreateBatchResponse = record {
-    batch_id : BatchId;
-};
-
-type CreateChunkRequest = record {
-    batch_id : BatchId;
-    content : blob;
-};
-
-type CreateChunkResponse = record {
-    chunk_id : ChunkId;
-};
-
-type LockBatchesRequest = record {
-    batch_ids : vec BatchId;
-};
-
-type DeleteBatchesRequest = record {
-    batch_ids : vec BatchId;
-};
-
-// ---------------------- INFO --------------------
-
-type File = record {
-    mime_type : text;
-    content : blob;
-};
-
-type UnionInfo = record {
-    name : text;
-    description : text;
-    logo : opt File;
-};
-
-type UpdateInfoRequest = record {
-    new_info : UnionInfo;
-};
-
-type GetInfoResponse = record {
-    info : UnionInfo;
-};
+// ------------------ SERVICE ------------------
 
 service : (principal) -> {
-    "execute" : (ExecuteRequest) -> (ExecuteResponse);
-    "authorize_execution" : (AuthorizeExecutionRequest) -> (AuthorizeExecutionResponse);
-    "get_scheduled_for_authorization_executions" : (GetScheduledForAuthorizationExecutionsRequest) -> (GetScheduledForAuthorizationExecutionsResponse) query;
-    "get_history_entry_ids" : () -> (GetHistoryEntryIdsResponse) query;
-    "get_history_entries" : (GetHistoryEntriesRequest) -> (GetHistoryEntriesResponse) query;
+    // ------------------ SHARES MOVE --------------------
+    "get_shares_info_of_at" : (GetSharesInfoOfAtRequest) -> (GetSharesInfoOfAtResponse) query;
 
-    "create_role" : (CreateRoleRequest) -> (CreateRoleResponse);
-    "update_role" : (UpdateRoleRequest) -> ();
-    "remove_role" : (RemoveRoleRequest) -> (RemoveRoleResponse);
-    "edit_profile" : (EditProfileRequest) -> ();
-    "activate_profile" : (ActivateProfileRequest) -> ();
-    "add_enumerated_roles" : (AddEnumeratedRolesRequest) -> ();
-    "subtract_enumerated_roles" : (SubtractEnumeratedRolesRequest) -> ();
-    "get_role_ids" : () -> (GetRoleIdsResponse) query;
-    "get_roles" : (GetRolesRequest) -> (GetRolesResponse) query;
-    "get_my_roles" : () -> (GetMyRolesResponse) query;
-
-    "create_permission" : (CreatePermissionRequest) -> (CreatePermissionResponse);
-    "update_permission" : (UpdatePermissionRequest) -> ();
-    "remove_permission" : (RemovePermissionRequest) -> (RemovePermissionResponse);
-    "get_permission_ids" : () -> (GetPermissionIdsResponse) query;
-    "get_permissions" : (GetPermissionsRequest) -> (GetPermissionsResponse) query;
-    "get_my_permissions" : () -> (GetMyPermissionsResponse) query;
-    "get_permissions_by_permission_target" : (GetPermissionsByPermissionTargetRequest) -> (GetPermissionsByPermissionTargetResponse) query;
-
-    "attach_role_to_permission" : (AttachRoleToPermissionRequest) -> ();
-    "detach_role_from_permission" : (DetachRoleFromPermissionRequest) -> ();
-    "get_roles_attached_to_permissions" : (GetRolesAttachedToPermissionsRequest) -> (GetRolesAttachedToPermissionsResponse) query;
-    "get_permissions_attached_to_roles" : (GetPermissionsAttachedToRolesRequest) -> (GetPermissionsAttachedToRolesResponse) query;
-
-    "get_batches" : () -> (GetBatchesResponse) query;
-    "get_chunk" : (GetChunkRequest) -> (GetChunkResponse) query;
-    "create_batch" : (CreateBatchRequest) -> (CreateBatchResponse);
-    "create_chunk" : (CreateChunkRequest) -> (CreateChunkResponse);
-    "lock_batches" : (LockBatchesRequest) -> ();
-    "delete_unlocked_batches" : (DeleteBatchesRequest) -> ();
-    "delete_batches" : (DeleteBatchesRequest) -> ();
-    "send_batch" : (SendBatchRequest) -> ();
-
-    "update_info" : (UpdateInfoRequest) -> ();
-    "get_info" : () -> (GetInfoResponse) query;
-
-    "export_candid" : () -> (text) query;
+    // ----------------- VOTING EXECUTION ----------------
+    "get_voting_execution_records" : (GetVotingExecutionRecordsRequest) -> (GetVotingExecutionRecordsResponse) query;
+    "get_voting_execution_record_winners" : (GetVotingExecutionRecordWinnersRequest) -> (GetVotingExecutionRecordWinnersResponse) query;
+    "get_voting_execution_record_results" : (GetVotingExecutionRecordResultsRequest) -> (GetVotingExecutionRecordResultsResponse) query;
 }

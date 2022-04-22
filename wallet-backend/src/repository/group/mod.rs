@@ -1,13 +1,12 @@
-use crate::common::utils::{Page, PageRequest, Pageable};
 use crate::repository::group::types::{
-    Group, GroupExternal, GroupFilter, GroupId, GroupRepositoryError, GroupType, GroupTypeParam,
-    Shares, EVERYONE_GROUP_ID,
+    Group, GroupExternal, GroupFilter, GroupRepositoryError, GroupType, GroupTypeParam,
+    EVERYONE_GROUP_ID,
 };
-use crate::repository::profile::types::ProfileId;
-use candid::types::Type::Nat;
 use candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeSet, HashMap};
+use shared::pageable::{Page, PageRequest, Pageable};
+use shared::types::wallet::{GroupId, ProfileId, Shares};
 
 pub mod types;
 

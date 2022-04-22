@@ -1,7 +1,8 @@
-use crate::common::utils::{Page, PageRequest, Pageable};
-use crate::repository::profile::types::{Profile, ProfileId, ProfileRepositoryError};
+use crate::repository::profile::types::{Profile, ProfileRepositoryError};
 use candid::{CandidType, Deserialize, Principal};
 use std::collections::HashMap;
+use shared::pageable::{Page, PageRequest, Pageable};
+use shared::types::wallet::ProfileId;
 
 pub mod types;
 

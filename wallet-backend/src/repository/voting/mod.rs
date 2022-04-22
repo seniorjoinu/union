@@ -1,13 +1,8 @@
-use crate::repository::group::types::Shares;
-use crate::repository::voting::types::{
-    ChoiceExternal, StartCondition, Vote, Voting, VotingId, VotingRepositoryError,
-    VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN, VOTING_NAME_MAX_LEN,
-    VOTING_NAME_MIN_LEN,
-};
-use crate::repository::voting_config::types::{VotesFormula, VotingConfigId};
+use crate::repository::voting::types::{StartCondition, Vote, Voting, VotingRepositoryError};
+use crate::repository::voting_config::types::VotesFormula;
 use candid::{CandidType, Deserialize, Principal};
-use std::borrow::Borrow;
 use std::collections::HashMap;
+use shared::types::wallet::{ChoiceExternal, Shares, VotingConfigId, VotingId};
 
 pub mod types;
 

@@ -1,4 +1,3 @@
-use crate::common::utils::{Page, PageRequest, Pageable};
 use crate::repository::permission::types::{
     Permission, PermissionFilter, PermissionId, PermissionRepositoryError, PermissionScope,
     PermissionTarget,
@@ -6,6 +5,7 @@ use crate::repository::permission::types::{
 use ic_cdk::export::candid::{CandidType, Deserialize};
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeSet, HashMap};
+use shared::pageable::{Page, PageRequest, Pageable};
 
 pub mod types;
 
@@ -154,12 +154,4 @@ impl PermissionRepository {
 
         id
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::repository::permission::types::{PermissionScope, PermissionTarget};
-    use crate::repository::permission::PermissionRepository;
-    use ic_cdk::export::Principal;
-    use shared::remote_call::RemoteCallEndpoint;
 }

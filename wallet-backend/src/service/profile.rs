@@ -1,7 +1,8 @@
 use candid::Principal;
-use crate::common::utils::{Page, PageRequest};
+use shared::pageable::{Page, PageRequest};
+use shared::types::wallet::ProfileId;
 use crate::repository::get_repositories;
-use crate::repository::profile::types::{ProfileId, ProfileRepositoryError, Profile};
+use crate::repository::profile::types::{ProfileRepositoryError, Profile};
 use crate::service::group as GroupService;
 
 #[derive(Debug)]

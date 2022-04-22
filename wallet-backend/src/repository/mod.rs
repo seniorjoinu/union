@@ -5,6 +5,8 @@ use crate::repository::streaming::StreamingRepository;
 use crate::repository::voting::VotingRepository;
 use crate::repository::voting_config::VotingConfigRepository;
 use candid::{CandidType, Deserialize};
+use ic_cdk::storage::{stable_restore, stable_save};
+use ic_cdk_macros::{post_upgrade, pre_upgrade};
 
 pub mod group;
 pub mod permission;
@@ -43,4 +45,16 @@ pub fn take_repositories() -> Option<Repositories> {
 
 pub fn set_repositories(repositories: Option<Repositories>) {
     unsafe { REPOSITORIES = repositories }
+}
+
+#[post_upgrade]
+fn post_upgrade_hook() {
+    let (repos, ) = stable_restore().expect("Unable to stable restore");
+
+    set_repositories(repos);
+}
+
+#[pre_upgrade]
+fn pre_upgrade_hook() {
+    stable_save((take_repositories(), )).expect("Unable to stable save");
 }

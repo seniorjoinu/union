@@ -1,9 +1,8 @@
-use crate::common::utils::{Page, PageRequest};
-use crate::repository::profile::types::ProfileId;
-use candid::{CandidType, Deserialize, Nat, Principal};
+use candid::{CandidType, Deserialize, Principal};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::HashMap;
-use shared::types::wallet::{GroupId, Shares};
+use shared::pageable::{Page, PageRequest, Pageable};
+use shared::types::wallet::{GroupId, ProfileId, Shares};
 
 const NAME_MIN_LEN: usize = 1;
 const NAME_MAX_LEN: usize = 100;
@@ -353,17 +352,12 @@ impl PublicGroup {
     }
 
     pub fn balances(&self, page_req: PageRequest<(), ()>) -> Page<(Principal, Shares)> {
-        let mut take = self
-            .shares
-            .iter()
-            .skip(page_req.page_size * page_req.page_index)
-            .take(page_req.page_size)
-            .map(|(id, shares)| (*id, shares.clone()))
-            .peekable();
+        let (has_next, iter) = self.shares.iter().get_page(&page_req);
+        let data = iter.map(|(id, it)| (*id, it.clone())).collect();
 
         Page {
-            has_next: take.peek().is_some(),
-            data: take.collect(),
+            has_next,
+            data,
         }
     }
 }
@@ -455,32 +449,22 @@ impl PrivateGroup {
     }
 
     pub fn balances(&self, page_req: PageRequest<(), ()>) -> Page<(Principal, Shares)> {
-        let mut take = self
-            .shares
-            .iter()
-            .skip(page_req.page_size * page_req.page_index)
-            .take(page_req.page_size)
-            .map(|(id, shares)| (*id, shares.clone()))
-            .peekable();
+        let (has_next, iter) = self.shares.iter().get_page(&page_req);
+        let data = iter.map(|(id, it)| (*id, it.clone())).collect();
 
         Page {
-            has_next: take.peek().is_some(),
-            data: take.collect(),
+            has_next,
+            data,
         }
     }
 
     pub fn unaccepted_balances(&self, page_req: PageRequest<(), ()>) -> Page<(Principal, Shares)> {
-        let mut take = self
-            .unaccepted_shares
-            .iter()
-            .skip(page_req.page_size * page_req.page_index)
-            .take(page_req.page_size)
-            .map(|(id, shares)| (*id, shares.clone()))
-            .peekable();
+        let (has_next, iter) = self.unaccepted_shares.iter().get_page(&page_req);
+        let data = iter.map(|(id, it)| (*id, it.clone())).collect();
 
         Page {
-            has_next: take.peek().is_some(),
-            data: take.collect(),
+            has_next,
+            data,
         }
     }
 

@@ -11,16 +11,6 @@ pub enum VotingExecutionRepositoryError {
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct VotingExecutionRecordExternal {
-    pub voting_id: VotingId,
-    pub voting_config_id: VotingConfigId,
-    pub name: String,
-    pub description: String,
-    pub timestamp: u64,
-    pub winners_count: usize,
-}
-
-#[derive(CandidType, Deserialize)]
 pub struct VotingExecutionRecord {
     pub voting_id: VotingId,
     pub voting_config_id: VotingConfigId,
@@ -83,18 +73,4 @@ impl VotingExecutionRecord {
     pub fn add_result(&mut self, choice_id: ChoiceId, result: ProgramExecutionResult) {
         self.results.insert(choice_id, result);
     }
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct TimeInterval {
-    pub from: u64,
-    pub to: u64,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct VotingExecutionRecordFilter {
-    pub voting_config_id: Option<VotingConfigId>,
-    pub canister_id: Option<Principal>,
-    pub endpoint: Option<RemoteCallEndpoint>,
-    pub time_interval: Option<TimeInterval>,
 }

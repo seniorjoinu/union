@@ -1,5 +1,6 @@
 use crate::repository::voting_execution::types::{
-    VotingExecutionRecord, VotingExecutionRecordFilter, VotingExecutionRepositoryError,
+    VotingExecutionRecord, VotingExecutionRecordExternal, VotingExecutionRecordFilter,
+    VotingExecutionRepositoryError,
 };
 use candid::{CandidType, Deserialize, Principal};
 use shared::pageable::{Page, PageRequest, Pageable};
@@ -106,7 +107,10 @@ impl VotingExecutionRepository {
         Ok(())
     }
 
-    pub fn get_records_cloned(&self, page_req: PageRequest<VotingExecutionRecordFilter, ()>) {
+    pub fn get_records_cloned(
+        &self,
+        page_req: PageRequest<VotingExecutionRecordFilter, ()>,
+    ) -> Page<VotingExecutionRecordExternal> {
         let set_1_opt = if let Some(voting_config_id) = &page_req.filter.voting_config_id {
             self.records_by_voting_config_index.get(voting_config_id)
         } else {
@@ -126,14 +130,69 @@ impl VotingExecutionRepository {
         };
 
         let set_4_opt = if let Some(interval) = &page_req.filter.time_interval {
-            self.records_by_timestamp_index
-                .get_interval(&interval.from, &interval.to)
+            Some(
+                self.records_by_timestamp_index
+                    .get_interval(&interval.from, &interval.to)
+                    .into_iter()
+                    .map(|it| it.clone())
+                    .collect::<BTreeSet<_>>(),
+            )
         } else {
-            Vec::new()
+            None
         };
 
-        // TODO: solve this
-        // TODO: fix others (they're probably wrong because of how 'has_next' works)
+        if set_1_opt.is_none() && set_2_opt.is_none() && set_3_opt.is_none() && set_4_opt.is_none()
+        {
+            let (has_next, iter) = self.records.iter().get_page(&page_req);
+            let data = iter.map(|(_, it)| it.to_external_cloned()).collect();
+
+            return Page { has_next, data };
+        }
+
+        let mut total_set = BTreeSet::new();
+
+        if let Some(set_1) = set_1_opt {
+            if !set_1.is_empty() {
+                total_set.extend(set_1);
+            }
+        }
+
+        if let Some(set_2) = set_2_opt {
+            if total_set.is_empty() {
+                if !set_2.is_empty() {
+                    total_set.extend(set_2);
+                }
+            } else if !set_2.is_empty() {
+                total_set = total_set.intersection(set_2).map(|it| *it).collect();
+            }
+        }
+
+        if let Some(set_3) = set_3_opt {
+            if total_set.is_empty() {
+                if !set_3.is_empty() {
+                    total_set.extend(set_3);
+                }
+            } else if !set_3.is_empty() {
+                total_set = total_set.intersection(set_3).map(|it| *it).collect();
+            }
+        }
+
+        if let Some(set_4) = set_4_opt {
+            if total_set.is_empty() {
+                if !set_4.is_empty() {
+                    total_set.extend(&set_4);
+                }
+            } else if !set_4.is_empty() {
+                total_set = total_set.intersection(&set_4).map(|it| *it).collect();
+            }
+        }
+
+        let (has_next, iter) = total_set.iter().get_page(&page_req);
+        let data = iter
+            .map(|id| self.get(id).unwrap().to_external_cloned())
+            .collect();
+
+        Page { has_next, data }
     }
 
     pub fn get_winners_cloned(

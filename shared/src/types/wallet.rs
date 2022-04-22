@@ -44,8 +44,6 @@ pub struct VotingExecutedWinnerEvent {
 pub struct VotingExecutedResultEvent {
     pub voting_id: VotingId,
     pub choice_id: ChoiceId,
-    pub total_supplies: BTreeMap<GroupOrProfile, Shares>,
-    pub voted_shares_sum: BTreeMap<GroupOrProfile, Shares>,
     pub result: ProgramExecutionResult,
 }
 
@@ -61,7 +59,7 @@ pub struct PrincipalShareholder {
     pub new_balance: Shares,
 }
 
-#[derive(Event)]
+#[derive(Event, Deserialize, CandidType, Clone)]
 pub struct SharesMoveEvent {
     pub timestamp: u64,
     pub group_id: GroupId,

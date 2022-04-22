@@ -1,0 +1,16 @@
+[package]
+name = "history-ledger-client"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+path = "./src/lib.rs"
+
+[dependencies]
+ic-cdk = "0.5.0"
+candid = "0.7.14"
+async-trait = "0.1.53"
+serde = "1.0.136"
+shared = { path = "../../../shared" }

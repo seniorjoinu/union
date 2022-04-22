@@ -1,10 +1,10 @@
-use crate::common::utils::{Page, PageRequest};
 use crate::repository::get_repositories;
 use crate::repository::group::types::{
-    Group, GroupExternal, GroupFilter, GroupId, GroupRepositoryError, GroupTypeParam, Shares,
+    Group, GroupExternal, GroupFilter, GroupRepositoryError, GroupTypeParam,
 };
-use crate::repository::profile::types::ProfileId;
 use candid::Principal;
+use shared::pageable::{Page, PageRequest};
+use shared::types::wallet::{GroupId, ProfileId, Shares};
 
 pub const HAS_PROFILE_GROUP_ID: GroupId = 1;
 pub const DEFAULT_SHARES: u32 = 100;

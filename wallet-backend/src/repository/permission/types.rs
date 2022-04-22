@@ -1,8 +1,7 @@
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
-use shared::remote_call::RemoteCallEndpoint;
+use shared::remote_call::{Program, RemoteCallEndpoint};
 use std::collections::BTreeSet;
 use shared::validation::{validate_and_trim_str, ValidationError};
-use crate::repository::voting::types::Program;
 
 const NAME_MIN_LEN: usize = 1;
 const NAME_MAX_LEN: usize = 100;

@@ -1,7 +1,6 @@
 use crate::repository::permission::types::PermissionId;
-use crate::repository::profile::types::ProfileId;
 use candid::{CandidType, Deserialize};
-use shared::types::wallet::{GroupId, GroupOrProfile, Shares, VotingConfigId};
+use shared::types::wallet::{GroupId, GroupOrProfile, ProfileId, Shares, VotingConfigId};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
 use std::mem;

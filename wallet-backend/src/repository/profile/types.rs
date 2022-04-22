@@ -1,4 +1,4 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize};
 use shared::types::wallet::ProfileId;
 use shared::validation::{validate_and_trim_str, ValidationError};
 

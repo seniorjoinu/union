@@ -1,14 +1,13 @@
-use crate::common::utils::{Page, PageRequest, Pageable};
-use crate::repository::group::types::GroupId;
 use crate::repository::permission::types::PermissionId;
-use crate::repository::profile::types::ProfileId;
 use crate::repository::voting_config::types::{
-    EditorConstraint, GroupOrProfile, LenInterval, ActorConstraint, RoundSettings,
-    ThresholdValue, VotesFormula, VotingConfig, VotingConfigFilter, VotingConfigId,
+    EditorConstraint, LenInterval, ActorConstraint, RoundSettings,
+    ThresholdValue, VotesFormula, VotingConfig, VotingConfigFilter,
     VotingConfigRepositoryError,
 };
 use candid::{CandidType, Deserialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use shared::pageable::{Page, PageRequest, Pageable};
+use shared::types::wallet::{GroupOrProfile, VotingConfigId};
 
 pub mod types;
 

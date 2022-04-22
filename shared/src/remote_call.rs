@@ -3,8 +3,8 @@ use crate::types::Blob;
 use crate::validation::ValidationError;
 use candid::parser::value::IDLValue;
 use candid::ser::IDLBuilder;
-use candid::utils::ArgumentDecoder;
-use candid::{decode_args, CandidType, Deserialize, Principal};
+use candid::utils::{ArgumentDecoder, ArgumentEncoder};
+use candid::{decode_args, encode_args, CandidType, Deserialize, Principal};
 use ic_cdk::api::call::call_raw;
 use ic_cdk::id;
 
@@ -89,6 +89,22 @@ impl RemoteCallPayload {
                 method_name: String::from(method_name),
             },
             args,
+            cycles,
+        }
+    }
+
+    pub fn new_encode<Tuple: ArgumentEncoder>(
+        canister_id: Principal,
+        method_name: &str,
+        args: Tuple,
+        cycles: u64,
+    ) -> Self {
+        Self {
+            endpoint: RemoteCallEndpoint {
+                canister_id,
+                method_name: String::from(method_name),
+            },
+            args: RemoteCallArgs::Encoded(encode_args(args).expect("Unable to encode args")),
             cycles,
         }
     }
