@@ -1,25 +1,28 @@
 use crate::repository::group::GroupRepository;
 use crate::repository::permission::PermissionRepository;
 use crate::repository::profile::ProfileRepository;
+use crate::repository::settings::SettingsRepository;
 use crate::repository::streaming::StreamingRepository;
 use crate::repository::voting::VotingRepository;
 use crate::repository::voting_config::VotingConfigRepository;
-use candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{post_upgrade, pre_upgrade};
 
 pub mod group;
 pub mod permission;
 pub mod profile;
+pub mod settings;
 pub mod streaming;
 pub mod voting;
 pub mod voting_config;
 
-#[derive(Default, CandidType, Deserialize)]
+#[derive(CandidType, Deserialize)]
 pub struct Repositories {
     pub profile: ProfileRepository,
     pub group: GroupRepository,
     pub permission: PermissionRepository,
+    pub settings: SettingsRepository,
     pub streaming: StreamingRepository,
     pub voting_config: VotingConfigRepository,
     pub voting: VotingRepository,
@@ -27,16 +30,22 @@ pub struct Repositories {
 
 static mut REPOSITORIES: Option<Repositories> = None;
 
-pub fn get_repositories() -> &'static mut Repositories {
+pub fn init_repositories(gateway: Principal, history_ledger: Principal, timestamp: u64) {
     unsafe {
-        match REPOSITORIES.as_mut() {
-            Some(r) => r,
-            None => {
-                REPOSITORIES = Some(Repositories::default());
-                get_repositories()
-            }
-        }
+        REPOSITORIES = Some(Repositories {
+            profile: ProfileRepository::default(),
+            group: GroupRepository::default(),
+            permission: PermissionRepository::default(),
+            settings: SettingsRepository::new(gateway, history_ledger, timestamp),
+            streaming: StreamingRepository::default(),
+            voting_config: VotingConfigRepository::default(),
+            voting: VotingRepository::default(),
+        })
     }
+}
+
+pub fn get_repositories() -> &'static mut Repositories {
+    unsafe { REPOSITORIES.as_mut().unwrap() }
 }
 
 pub fn take_repositories() -> Option<Repositories> {
@@ -45,16 +54,4 @@ pub fn take_repositories() -> Option<Repositories> {
 
 pub fn set_repositories(repositories: Option<Repositories>) {
     unsafe { REPOSITORIES = repositories }
-}
-
-#[post_upgrade]
-fn post_upgrade_hook() {
-    let (repos, ) = stable_restore().expect("Unable to stable restore");
-
-    set_repositories(repos);
-}
-
-#[pre_upgrade]
-fn pre_upgrade_hook() {
-    stable_save((take_repositories(), )).expect("Unable to stable save");
 }

@@ -1,6 +1,6 @@
 use crate::repository::get_repositories;
 use crate::repository::permission::types::PermissionId;
-use crate::repository::voting::types::{Voter, Voting, };
+use crate::repository::voting::types::{Voter, Voting, VotingStatus};
 use crate::repository::voting_config::types::{
     ActorConstraint, EditorConstraint, FractionOf, GroupCondition, LenInterval,
     QuantityOf, RoundSettings, Target, ThresholdValue, VotesFormula, VotingConfig,
@@ -32,7 +32,6 @@ pub fn _init_default_voting_config() {
             String::from("This voting config is default and non-deletable. It allows to perform ANY action if 100% of registered profiles are agree with it. Use it in cases, when the union is stuck due to wrong settings."),
             None,
             None,
-            Some(VotesFormula::Common),
             vec![DEFAULT_PERMISSION_ID].into_iter().collect(),
             vec![ActorConstraint::Group(GroupCondition { id: HAS_PROFILE_GROUP_ID, min_shares: Shares::from(DEFAULT_SHARES) })].into_iter().collect(),
             vec![EditorConstraint::Proposer].into_iter().collect(),
@@ -86,7 +85,6 @@ pub fn create_voting_config(
     description: String,
     choices_count: Option<LenInterval>,
     winners_count: Option<LenInterval>,
-    votes_formula: Option<VotesFormula>,
     permissions: BTreeSet<PermissionId>,
     proposers: BTreeSet<ActorConstraint>,
     editors: BTreeSet<EditorConstraint>,
@@ -137,7 +135,6 @@ pub fn create_voting_config(
             description,
             choices_count,
             winners_count,
-            votes_formula,
             permissions,
             proposers,
             editors,
@@ -157,7 +154,6 @@ pub fn update_voting_config(
     description_opt: Option<String>,
     choices_count_opt: Option<Option<LenInterval>>,
     winners_count_opt: Option<Option<LenInterval>>,
-    votes_formula_opt: Option<Option<VotesFormula>>,
     permissions_opt: Option<BTreeSet<PermissionId>>,
     proposers_opt: Option<BTreeSet<ActorConstraint>>,
     editors_opt: Option<BTreeSet<EditorConstraint>>,
@@ -227,7 +223,6 @@ pub fn update_voting_config(
             description_opt,
             choices_count_opt,
             winners_count_opt,
-            votes_formula_opt,
             permissions_opt,
             proposers_opt,
             editors_opt,
@@ -269,7 +264,6 @@ pub fn get_voting_config(id: &VotingConfigId) -> Result<VotingConfig, VotingConf
 
 pub fn assert_can_create_voting(
     voting_config_id: &VotingConfigId,
-    votes_formula: &VotesFormula,
     winners_need: usize,
     custom_choices: &Vec<ChoiceExternal>,
     proposer: Principal,
@@ -277,7 +271,7 @@ pub fn assert_can_create_voting(
     let voting_config = get_voting_config(voting_config_id)?;
 
     voting_config
-        .assert_voting_params_valid(custom_choices.len(), winners_need, votes_formula)
+        .assert_voting_params_valid(custom_choices.len(), winners_need)
         .map_err(VotingConfigServiceError::ValidationError)?;
 
     assert_choices_valid(&voting_config, custom_choices)?;
@@ -286,7 +280,6 @@ pub fn assert_can_create_voting(
 
 pub fn assert_can_update_voting(
     voting: &Voting,
-    new_votes_formula: &Option<VotesFormula>,
     new_winners_need: Option<usize>,
     new_custom_choices: &Option<Vec<ChoiceExternal>>,
     editor: Principal,
@@ -296,7 +289,7 @@ pub fn assert_can_update_voting(
     let choices_len = if let Some(custom_choices) = new_custom_choices {
         custom_choices.len()
     } else {
-        voting.custom_choices.len()
+        voting.choices.len()
     };
 
     let winners_len = if let Some(winners_need) = new_winners_need {
@@ -305,14 +298,8 @@ pub fn assert_can_update_voting(
         voting.winners_need
     };
 
-    let formula = if let Some(votes_formula) = new_votes_formula {
-        votes_formula
-    } else {
-        &voting.votes_formula
-    };
-
     voting_config
-        .assert_voting_params_valid(choices_len, winners_len, formula)
+        .assert_voting_params_valid(choices_len, winners_len)
         .map_err(VotingConfigServiceError::ValidationError)?;
 
     if let Some(custom_choices) = new_custom_choices {

@@ -1,9 +1,11 @@
 use crate::repository::get_repositories;
 use crate::repository::voting::types::{
-    StartCondition, Vote, VoteType, Voter, VotingRepositoryError,
+    StartCondition, Vote, VoteType, Voter, VotingRepositoryError, VotingStatus,
 };
 use crate::repository::voting_config::types::VotesFormula;
 use crate::service::group::DEFAULT_SHARES;
+use crate::service::history_ledger as HistoryLedgerService;
+use crate::service::history_ledger::HistoryLedgerServiceError;
 use crate::service::voting_config as VotingConfigService;
 use crate::service::voting_config::VotingConfigServiceError;
 use ic_cdk::api::time;
@@ -14,6 +16,7 @@ use shared::types::wallet::{ChoiceExternal, Shares, VotingConfigId, VotingId};
 pub enum VotingServiceError {
     RepositoryError(VotingRepositoryError),
     VotingConfigServiceError(VotingConfigServiceError),
+    HistoryLedgerServiceError(HistoryLedgerServiceError),
     NotEnoughShares,
     InvalidVoteCaster,
 }
@@ -23,13 +26,11 @@ pub fn create_voting(
     name: String,
     description: String,
     start_condition: StartCondition,
-    votes_formula: VotesFormula,
     winners_need: usize,
     custom_choices: Vec<ChoiceExternal>,
 ) -> Result<VotingId, VotingServiceError> {
     VotingConfigService::assert_can_create_voting(
         &voting_config_id,
-        &votes_formula,
         winners_need,
         &custom_choices,
         caller(),
@@ -43,13 +44,14 @@ pub fn create_voting(
             name,
             description,
             start_condition,
-            votes_formula,
             winners_need,
             custom_choices,
             caller(),
             time(),
         )
         .map_err(VotingServiceError::RepositoryError)
+
+    // TODO: maybe schedule a voting start
 }
 
 #[inline(always)]
@@ -58,7 +60,6 @@ pub fn update_voting(
     new_name: Option<String>,
     new_description: Option<String>,
     new_start_condition: Option<StartCondition>,
-    new_votes_formula: Option<VotesFormula>,
     new_winners_need: Option<usize>,
     new_custom_choices: Option<Vec<ChoiceExternal>>,
 ) -> Result<(), VotingServiceError> {
@@ -69,7 +70,6 @@ pub fn update_voting(
 
     VotingConfigService::assert_can_update_voting(
         voting,
-        &new_votes_formula,
         new_winners_need,
         &new_custom_choices,
         caller(),
@@ -83,7 +83,6 @@ pub fn update_voting(
             new_name,
             new_description,
             new_start_condition,
-            new_votes_formula,
             new_winners_need,
             new_custom_choices,
             time(),
@@ -107,34 +106,43 @@ pub fn delete_voting(voting_id: &VotingId) -> Result<(), VotingServiceError> {
         .map_err(VotingServiceError::RepositoryError)
 }
 
-pub fn cast_vote(voting_id: &VotingId, vote: Vote) -> Result<(), VotingServiceError> {
+pub async fn cast_vote(voting_id: &VotingId, vote: Vote) -> Result<(), VotingServiceError> {
     let voting = get_repositories()
         .voting
         .get_voting(voting_id)
         .map_err(VotingServiceError::RepositoryError)?;
 
+    let zero_shares = Shares::default();
+
     let (voter_shares, gop_total_supply) = match &vote.voter {
-        Voter::Group((_, p)) => {
+        Voter::Group((g, p)) => {
             if p != &caller() {
                 return Err(VotingServiceError::InvalidVoteCaster);
             }
 
-            // TODO: fetch caller's real shares from the ledger
-            (Shares::default(), Shares::default())
+            let shares_info_opt = HistoryLedgerService::get_shares_info_of_at(*g, *p, time())
+                .await
+                .map_err(VotingServiceError::HistoryLedgerServiceError)?;
+
+            if let Some(shares_info) = shares_info_opt {
+                (shares_info.balance, shares_info.total_supply)
+            } else {
+                return Err(VotingServiceError::NotEnoughShares);
+            }
         }
         Voter::Profile(p) => {
             if p != &caller() {
                 return Err(VotingServiceError::InvalidVoteCaster);
             }
 
-            (Shares::from(DEFAULT_SHARES), Shares::from(DEFAULT_SHARES))
+            (zero_shares.clone(), zero_shares.clone())
         }
     };
 
     // check if the voter have enough shares for their vote
     match &vote.vote_type {
         VoteType::Rejection(shares) => {
-            if shares.0 < voter_shares.0 {
+            if shares.0 < voter_shares.0 || shares == &zero_shares {
                 return Err(VotingServiceError::NotEnoughShares);
             }
         }
@@ -144,7 +152,7 @@ pub fn cast_vote(voting_id: &VotingId, vote: Vote) -> Result<(), VotingServiceEr
                 sum += s.clone();
             }
 
-            if sum < voter_shares {
+            if sum < voter_shares || sum == zero_shares {
                 return Err(VotingServiceError::NotEnoughShares);
             }
         }
@@ -153,14 +161,91 @@ pub fn cast_vote(voting_id: &VotingId, vote: Vote) -> Result<(), VotingServiceEr
     VotingConfigService::assert_can_vote(voting, &vote.voter)
         .map_err(VotingServiceError::VotingConfigServiceError)?;
 
-    get_repositories()
+    let voting = get_repositories()
         .voting
         .cast_vote(voting_id, vote, gop_total_supply, time())
         .map_err(VotingServiceError::RepositoryError)?;
 
-    // TODO: process voting status
+    try_progress_voting_after_vote_casting(voting_id);
 
     Ok(())
+}
+
+fn try_progress_voting_after_vote_casting(voting_id: &VotingId) {
+    let voting = get_repositories().voting.get_voting_mut(voting_id).unwrap();
+
+    if !matches!(
+        voting.status,
+        VotingStatus::Created | VotingStatus::Round(_)
+    ) {
+        unreachable!();
+    }
+
+    let voting_config = get_repositories()
+        .voting_config
+        .get_voting_config_cloned(&voting.voting_config_id)
+        .unwrap();
+
+    if voting_config.rejection_reached(voting) {
+        get_repositories()
+            .voting
+            .reject_voting(voting_id, time())
+            .unwrap();
+
+        // TODO: schedule garbage collection
+
+        return;
+    }
+
+    match &voting.status {
+        VotingStatus::Created => {
+            if voting_config.approval_reached(voting) {
+                get_repositories()
+                    .voting
+                    .approve_voting(voting_id, time())
+                    .unwrap();
+
+                // TODO: schedule next round start
+                // TODO: schedule next round end
+
+                return;
+            }
+        }
+        VotingStatus::Round(r) => {
+            if voting_config.quorum_reached(voting) {
+                let winners = voting_config.win_reached(voting);
+                if !winners.is_empty() {
+                    let another_round = get_repositories()
+                        .voting
+                        .try_finish_by_vote_casting(voting_id, Some(winners), None, time())
+                        .unwrap();
+
+                    // TODO: deschedule prev round end
+
+                    if another_round {
+                        // TODO: schedule next round start
+                        // TODO: schedule next round end
+                    }
+                }
+
+                let next_round = voting_config.next_round_reached(voting);
+                if !next_round.is_empty() {
+                    let another_round = get_repositories()
+                        .voting
+                        .try_finish_by_vote_casting(voting_id, None, Some(next_round), time())
+                        .unwrap();
+
+                    // TODO: deschedule prev round end
+
+                    if another_round {
+                        // TODO: schedule next round start
+                        // TODO: schedule next round end
+                    }
+                }
+            }
+        }
+        _ => unreachable!(),
+    }
 }
 
 // TODO: allow subsequent choice appending

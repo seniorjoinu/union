@@ -132,7 +132,7 @@ impl VotingExecutionRepository {
         let set_4_opt = if let Some(interval) = &page_req.filter.time_interval {
             Some(
                 self.records_by_timestamp_index
-                    .get_interval(&interval.from, &interval.to)
+                    .get_by_interval(&interval.from, &interval.to)
                     .into_iter()
                     .map(|it| it.clone())
                     .collect::<BTreeSet<_>>(),

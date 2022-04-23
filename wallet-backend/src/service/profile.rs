@@ -1,9 +1,9 @@
+use crate::repository::get_repositories;
+use crate::repository::profile::types::{Profile, ProfileRepositoryError};
+use crate::service::group as GroupService;
 use candid::Principal;
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::ProfileId;
-use crate::repository::get_repositories;
-use crate::repository::profile::types::{ProfileRepositoryError, Profile};
-use crate::service::group as GroupService;
 
 #[derive(Debug)]
 pub enum ProfileServiceError {
@@ -42,7 +42,7 @@ pub fn update_profile(
 #[inline(always)]
 pub fn delete_profile(profile_id: &ProfileId) -> Result<Profile, ProfileServiceError> {
     // TODO: check for existing voting configs and private groups
-    
+
     get_repositories()
         .profile
         .delete_profile(profile_id)
@@ -59,9 +59,7 @@ pub fn get_my_profile(caller: &Principal) -> Result<Profile, ProfileServiceError
 
 #[inline(always)]
 pub fn get_profiles(page_req: PageRequest<(), ()>) -> Page<Profile> {
-    get_repositories()
-        .profile
-        .get_profiles_cloned(page_req)
+    get_repositories().profile.get_profiles_cloned(page_req)
 }
 
 #[inline(always)]

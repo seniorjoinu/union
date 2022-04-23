@@ -1,9 +1,17 @@
 use crate::repository::permission::types::PermissionId;
-use candid::{CandidType, Deserialize};
-use shared::types::wallet::{GroupId, GroupOrProfile, ProfileId, Shares, VotingConfigId};
+use crate::repository::voting::types::Voting;
+use bigdecimal::num_bigint::ToBigInt;
+use bigdecimal::{BigDecimal, ToPrimitive};
+use candid::parser::value::IDLValueVisitor;
+use candid::types::{Serializer, Type};
+use candid::{CandidType, Deserialize, Nat};
+use serde::Deserializer;
+use shared::types::wallet::{ChoiceId, GroupId, GroupOrProfile, ProfileId, Shares, VotingConfigId};
 use shared::validation::{validate_and_trim_str, ValidationError};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::mem;
+use std::ops::Div;
+use std::str::FromStr;
 
 const NAME_MIN_LEN: usize = 1;
 const NAME_MAX_LEN: usize = 200;
@@ -14,6 +22,65 @@ const DESCRIPTION_MAX_LEN: usize = 2000;
 pub enum VotingConfigRepositoryError {
     VotingConfigNotFound(VotingConfigId),
     ValidationError(ValidationError),
+}
+
+#[derive(Default, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub struct Fraction(pub BigDecimal);
+
+impl From<Nat> for Fraction {
+    fn from(nat: Nat) -> Self {
+        Self(BigDecimal::new(nat.0.to_bigint().unwrap(), 0))
+    }
+}
+
+impl Into<Nat> for Fraction {
+    fn into(self) -> Nat {
+        let (b, _) = self.0.with_scale(0).into_bigint_and_exponent();
+
+        Nat(b.to_biguint().unwrap())
+    }
+}
+
+impl From<usize> for Fraction {
+    fn from(it: usize) -> Self {
+        Self(BigDecimal::from(it as u64))
+    }
+}
+
+impl Into<usize> for Fraction {
+    fn into(self) -> usize {
+        self.0.to_usize().unwrap()
+    }
+}
+
+impl Div for Fraction {
+    type Output = Fraction;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        Fraction(self.0 / rhs.0)
+    }
+}
+
+impl CandidType for Fraction {
+    fn _ty() -> Type {
+        Type::Text
+    }
+
+    fn idl_serialize<S>(&self, serializer: S) -> Result<(), S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.to_string().idl_serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Fraction {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        String::deserialize(deserializer).map(|it| Fraction(BigDecimal::from_str(&it).unwrap()))
+    }
 }
 
 #[derive(Clone, CandidType, Deserialize)]
@@ -29,6 +96,45 @@ impl ThresholdValue {
         self._list_groups_and_profiles(&mut result);
 
         result
+    }
+
+    pub fn is_reached(
+        &self,
+        total: &BTreeMap<GroupOrProfile, Shares>,
+        voted: &BTreeMap<GroupOrProfile, Shares>,
+    ) -> bool {
+        let (voted_shares, total_shares) = match self.get_target() {
+            Target::GroupOrProfile(gop) => {
+                let voted_shares = voted.get(gop).cloned().unwrap_or_default();
+                let total_shares = total.get(gop).cloned().unwrap_or_default();
+
+                (voted_shares, total_shares)
+            },
+            Target::Thresholds(thresholds) => {
+                let mut voted_shares_usize = 0usize;
+                let total_shares = Shares::from(thresholds.len());
+
+                for th in thresholds {
+                    if th.is_reached(total, voted) {
+                        voted_shares_usize += 1;
+                    }
+                }
+                let votes_shares = Shares::from(voted_shares_usize);
+
+                (votes_shares, total_shares)
+            }
+        };
+        
+        match &self {
+            ThresholdValue::FractionOf(f) => {
+                let voted_fraction = Fraction::from(voted_shares) / Fraction::from(total_shares);
+
+                voted_fraction >= f.fraction
+            },
+            ThresholdValue::QuantityOf(q) => {
+                voted_shares >= q.quantity
+            }
+        }
     }
 
     fn _list_groups_and_profiles(&self, list: &mut BTreeSet<GroupOrProfile>) {
@@ -60,7 +166,7 @@ pub struct QuantityOf {
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct FractionOf {
-    pub fraction: f64,
+    pub fraction: Fraction,
     pub target: Target,
 }
 
@@ -143,7 +249,6 @@ pub struct VotingConfig {
 
     pub choices_count: Option<LenInterval>,
     pub winners_count: Option<LenInterval>,
-    pub votes_formula: Option<VotesFormula>,
 
     pub permissions: BTreeSet<PermissionId>,
 
@@ -167,7 +272,6 @@ impl VotingConfig {
         description: String,
         choices_count: Option<LenInterval>,
         winners_count: Option<LenInterval>,
-        votes_formula: Option<VotesFormula>,
         permissions: BTreeSet<PermissionId>,
         proposers: BTreeSet<ActorConstraint>,
         editors: BTreeSet<EditorConstraint>,
@@ -200,7 +304,6 @@ impl VotingConfig {
             description: Self::process_description(description)?,
             choices_count,
             winners_count,
-            votes_formula,
             permissions,
             proposers,
             editors,
@@ -221,7 +324,6 @@ impl VotingConfig {
         description_opt: Option<String>,
         choices_count_opt: Option<Option<LenInterval>>,
         winners_count_opt: Option<Option<LenInterval>>,
-        votes_formula_opt: Option<Option<VotesFormula>>,
         permissions_opt: Option<BTreeSet<PermissionId>>,
         proposers_opt: Option<BTreeSet<ActorConstraint>>,
         editors_opt: Option<BTreeSet<EditorConstraint>>,
@@ -263,10 +365,6 @@ impl VotingConfig {
             }
 
             self.winners_count = winners_count;
-        }
-
-        if let Some(votes_formula) = votes_formula_opt {
-            self.votes_formula = votes_formula;
         }
 
         let old_permissions = if let Some(permissions) = permissions_opt {
@@ -346,7 +444,6 @@ impl VotingConfig {
         &self,
         choices_len: usize,
         winners_need: usize,
-        votes_formula: &VotesFormula,
     ) -> Result<(), ValidationError> {
         if choices_len < winners_need {
             return Err(ValidationError(format!(
@@ -373,18 +470,43 @@ impl VotingConfig {
             }
         }
 
-        if let Some(vf) = &self.votes_formula {
-            if !matches!(vf, votes_formula) {
-                return Err(ValidationError(format!(
-                    "Invalid votes formula: expected {:?} actual {:?}",
-                    vf, votes_formula
-                )));
-            }
-        }
-
         Ok(())
     }
 
+    pub fn approval_reached(&self, voting: &Voting) -> bool {
+        self.approval.is_reached(&voting.total_supplies, &voting.total_non_rejection)
+    }
+
+    pub fn quorum_reached(&self, voting: &Voting) -> bool {
+        self.quorum.is_reached(&voting.total_supplies, &voting.total_non_rejection)
+    }
+
+    pub fn rejection_reached(&self, voting: &Voting) -> bool {
+        self.rejection.is_reached(&voting.total_supplies, &voting.rejection_choice.voted_shares_sum)
+    }
+
+    pub fn win_reached(&self, voting: &Voting) -> Vec<ChoiceId> {
+        let mut result = Vec::new();
+        for (id, choice) in &voting.choices {
+            if self.win.is_reached(&voting.total_non_rejection, &choice.voted_shares_sum) {
+                result.push(*id);
+            }
+        }
+        
+        result
+    }
+
+    pub fn next_round_reached(&self, voting: &Voting) -> Vec<ChoiceId> {
+        let mut result = Vec::new();
+        for (id, choice) in &voting.choices {
+            if self.next_round.is_reached(&voting.total_non_rejection, &choice.voted_shares_sum) {
+                result.push(*id);
+            }
+        }
+
+        result
+    }
+    
     fn process_name(name: String) -> Result<String, VotingConfigRepositoryError> {
         validate_and_trim_str(name, 1, 100, "Name")
             .map_err(VotingConfigRepositoryError::ValidationError)

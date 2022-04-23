@@ -3,6 +3,7 @@ use crate::service::permission::_init_default_permission;
 use crate::service::voting_config::_init_default_voting_config;
 
 pub mod group;
+pub mod history_ledger;
 pub mod permission;
 pub mod profile;
 pub mod query_config;

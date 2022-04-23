@@ -1,5 +1,6 @@
 use candid::{CandidType, Deserialize};
 use std::collections::BTreeSet;
+use std::collections::vec_deque::Iter;
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct TimestampedRecords<T: Ord> {
@@ -17,10 +18,14 @@ impl<T: Ord> TimestampedRecords<T> {
 }
 
 // TODO: not efficient enough for big data because of reallocations
-#[derive(Default, CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone)]
 pub struct SortedByTimestamp<T: Ord>(Vec<TimestampedRecords<T>>);
 
 impl<T: Ord> SortedByTimestamp<T> {
+    pub fn default() -> Self {
+        Self(vec![])
+    }
+    
     pub fn push(&mut self, timestamp: u64, data: T) {
         match self.0.binary_search_by(|it| it.timestamp.cmp(&timestamp)) {
             Ok(idx) => {
@@ -44,8 +49,20 @@ impl<T: Ord> SortedByTimestamp<T> {
             },
         }
     }
-
-    pub fn get_interval(&self, from: &u64, to: &u64) -> Vec<&T> {
+    
+    pub fn get_all(&self) -> Vec<&T> {
+        let mut result = vec![];
+        
+        for entry in &self.0 {
+            for record in &entry.records {
+                result.push(record);
+            }
+        }
+        
+        result
+    }
+    
+    pub fn get_by_interval(&self, from: &u64, to: &u64) -> Vec<&T> {
         assert!(from <= to);
         
         let from_idx = match self.0.binary_search_by(|it| it.timestamp.cmp(from)) {

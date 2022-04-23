@@ -130,12 +130,16 @@ impl Choice {
             .insert(gop, self.get_total_shares(&gop) + shares);
     }
 
-    pub fn remove_vote(&mut self, gop: GroupOrProfile, voter: &Principal) {
+    pub fn remove_vote(&mut self, gop: GroupOrProfile, voter: &Principal) -> Option<Shares> {
         let prev_shares_opt = self.shares_by_voter.entry(gop).or_default().remove(voter);
 
         if let Some(prev_shares) = prev_shares_opt {
             self.voted_shares_sum
-                .insert(gop, self.get_total_shares(&gop) - prev_shares);
+                .insert(gop, self.get_total_shares(&gop) - prev_shares.clone());
+            
+            Some(prev_shares)
+        } else {
+            None
         }
     }
 }
@@ -172,14 +176,15 @@ pub struct Voting {
     pub description: String,
 
     pub total_supplies: BTreeMap<GroupOrProfile, Shares>,
+    pub total_non_rejection: BTreeMap<GroupOrProfile, Shares>,
 
     pub start_condition: StartCondition,
-    pub votes_formula: VotesFormula,
 
     pub winners_need: usize,
     pub winners: BTreeMap<ChoiceId, Choice>,
+    pub losers: BTreeMap<ChoiceId, Choice>,
 
-    pub custom_choices: BTreeMap<ChoiceId, Choice>,
+    pub choices: BTreeMap<ChoiceId, Choice>,
     pub rejection_choice: Choice,
 }
 
@@ -190,7 +195,6 @@ impl Voting {
         name: String,
         description: String,
         start_condition: StartCondition,
-        votes_formula: VotesFormula,
         winners_need: usize,
         custom_choices: Vec<ChoiceExternal>,
         proposer: Principal,
@@ -217,14 +221,15 @@ impl Voting {
             description: Self::process_description(description)?,
 
             start_condition,
-            votes_formula,
 
             total_supplies: BTreeMap::new(),
+            total_non_rejection: BTreeMap::new(),
 
             winners_need,
             winners: BTreeMap::new(),
+            losers: BTreeMap::new(),
 
-            custom_choices: choices,
+            choices: choices,
             rejection_choice: Choice::rejection(),
         };
 
@@ -236,7 +241,6 @@ impl Voting {
         new_name: Option<String>,
         new_description: Option<String>,
         new_start_condition: Option<StartCondition>,
-        new_votes_formula: Option<VotesFormula>,
         new_winners_need: Option<usize>,
         new_custom_choices: Option<Vec<ChoiceExternal>>,
         timestamp: u64,
@@ -256,11 +260,7 @@ impl Voting {
         if let Some(start_condition) = new_start_condition {
             self.start_condition = start_condition;
         }
-
-        if let Some(votes_formula) = new_votes_formula {
-            self.votes_formula = votes_formula;
-        }
-
+        
         if let Some(winners_need) = new_winners_need {
             self.winners_need = winners_need;
         }
@@ -274,7 +274,7 @@ impl Voting {
                 choices.insert(id, choice);
             }
             
-            self.custom_choices = choices;
+            self.choices = choices;
         }
 
         self.updated_at = timestamp;
@@ -288,7 +288,7 @@ impl Voting {
         gop_total_supply: Shares,
         timestamp: u64,
     ) -> Result<(), VotingRepositoryError> {
-        if !matches!(self.status, VotingStatus::Round(_)) {
+        if !matches!(self.status, VotingStatus::Round(_) | VotingStatus::Created) {
             return Err(VotingRepositoryError::VotingInInvalidStatus(self.id));
         }
 
@@ -397,8 +397,13 @@ impl Voting {
     fn clear_prev_votes(&mut self, gop: GroupOrProfile, principal: &Principal) {
         self.rejection_choice.remove_vote(gop, principal);
 
-        for (_, choice) in &mut self.custom_choices {
-            choice.remove_vote(gop, principal);
+        for (_, choice) in &mut self.choices {
+            let voter_shares_opt = choice.remove_vote(gop, principal);
+            
+            if let Some(voter_shares) = voter_shares_opt {
+                let total_gop_shares = self.total_non_rejection.remove(&gop).unwrap_or_default();
+                self.total_non_rejection.insert(gop, total_gop_shares - voter_shares);
+            }
         }
     }
 
@@ -415,10 +420,13 @@ impl Voting {
             VoteType::Custom(votes) => {
                 for (choice_id, shares) in votes {
                     let choice = self
-                        .custom_choices
+                        .choices
                         .get_mut(&choice_id)
                         .ok_or(VotingRepositoryError::ChoiceNotFound(self.id, choice_id))?;
 
+                    let total_gop_shares = self.total_non_rejection.remove(&gop).unwrap_or_default();
+                    self.total_non_rejection.insert(gop, total_gop_shares + shares.clone());
+                    
                     choice.add_vote(gop, principal, shares);
                 }
             }

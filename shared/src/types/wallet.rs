@@ -17,7 +17,7 @@ pub struct ChoiceExternal {
     pub program: Program,
 }
 
-#[derive(Copy, Clone, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Hash, Copy, Clone, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
 pub enum GroupOrProfile {
     Group(GroupId),
     Profile(ProfileId),

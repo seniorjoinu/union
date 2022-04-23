@@ -1,8 +1,11 @@
-use crate::repository::voting::types::{StartCondition, Vote, Voting, VotingRepositoryError};
+use crate::repository::voting::types::{
+    StartCondition, Vote, Voting, VotingRepositoryError, VotingStatus,
+};
 use crate::repository::voting_config::types::VotesFormula;
 use candid::{CandidType, Deserialize, Principal};
-use std::collections::HashMap;
-use shared::types::wallet::{ChoiceExternal, Shares, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceExternal, ChoiceId, Shares, VotingConfigId, VotingId};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::mem;
 
 pub mod types;
 
@@ -20,7 +23,6 @@ impl VotingRepository {
         name: String,
         description: String,
         start_condition: StartCondition,
-        votes_formula: VotesFormula,
         winners_need: usize,
         custom_choices: Vec<ChoiceExternal>,
         proposer: Principal,
@@ -34,7 +36,6 @@ impl VotingRepository {
             name,
             description,
             start_condition,
-            votes_formula,
             winners_need,
             custom_choices,
             proposer,
@@ -52,7 +53,6 @@ impl VotingRepository {
         new_name: Option<String>,
         new_description: Option<String>,
         new_start_condition: Option<StartCondition>,
-        new_votes_formula: Option<VotesFormula>,
         new_winners_need: Option<usize>,
         new_custom_choices: Option<Vec<ChoiceExternal>>,
         timestamp: u64,
@@ -63,7 +63,6 @@ impl VotingRepository {
             new_name,
             new_description,
             new_start_condition,
-            new_votes_formula,
             new_winners_need,
             new_custom_choices,
             timestamp,
@@ -86,12 +85,12 @@ impl VotingRepository {
         vote: Vote,
         gop_total_supply: Shares,
         timestamp: u64,
-    ) -> Result<(), VotingRepositoryError> {
+    ) -> Result<&mut Voting, VotingRepositoryError> {
         let voting = self.get_voting_mut(voting_id)?;
 
         voting.cast_vote(vote, gop_total_supply, timestamp)?;
 
-        Ok(())
+        Ok(voting)
     }
 
     #[inline(always)]
@@ -128,14 +127,77 @@ impl VotingRepository {
     }
 
     #[inline(always)]
-    pub fn next_round(
+    pub fn try_finish_by_vote_casting(
         &mut self,
         voting_id: &VotingId,
+        winners_opt: Option<Vec<ChoiceId>>,
+        next_round_opt: Option<Vec<ChoiceId>>,
         timestamp: u64,
-    ) -> Result<(), VotingRepositoryError> {
+    ) -> Result<bool, VotingRepositoryError> {
         let voting = self.get_voting_mut(voting_id)?;
 
-        voting.next_round(timestamp)
+        assert_ne!(winners_opt.is_some(), next_round_opt.is_some());
+        assert!(matches!(voting.status, VotingStatus::Round(_)));
+
+        if let Some(winners) = winners_opt {
+            for choice_id in winners {
+                let choice = voting.choices.remove(&choice_id).unwrap();
+
+                // un-account voted shares
+                for (gop, voted_shares) in &choice.voted_shares_sum {
+                    let total_shares = voting.total_non_rejection.remove(gop).unwrap();
+                    voting
+                        .total_non_rejection
+                        .insert(*gop, total_shares - voted_shares.clone());
+                }
+
+                voting.winners.insert(choice_id, choice);
+
+                if voting.winners.len() == voting.winners_need {
+                    let rest_choices = mem::replace(&mut voting.choices, BTreeMap::new());
+                    voting.losers.extend(rest_choices);
+
+                    voting.finish_success(timestamp)?;
+                    // TODO: what if we have more winners than we need?
+                    return Ok(false);
+                }
+            }
+
+            voting.next_round(timestamp)?;
+            return Ok(true);
+        }
+
+        if let Some(next_round) = next_round_opt {
+            let choices = mem::replace(&mut voting.choices, BTreeMap::new());
+
+            for (id, choice) in choices {
+                if next_round.contains(&id) {
+                    voting.choices.insert(id, choice);
+                } else {
+                    // un-account voted shares
+                    for (gop, voted_shares) in &choice.voted_shares_sum {
+                        let total_shares = voting.total_non_rejection.remove(gop).unwrap();
+                        voting
+                            .total_non_rejection
+                            .insert(*gop, total_shares - voted_shares.clone());
+                    }
+
+                    voting.losers.insert(id, choice);
+                }
+            }
+
+            return if voting.choices.len() + voting.winners.len() < voting.winners_need {
+                voting.finish_fail(String::from("Not enough choices to continue"), timestamp)?;
+
+                Ok(false)
+            } else {
+                voting.next_round(timestamp)?;
+
+                Ok(true)
+            };
+        }
+
+        unreachable!();
     }
 
     #[inline(always)]
@@ -169,7 +231,7 @@ impl VotingRepository {
     }
 
     #[inline(always)]
-    fn get_voting_mut(&mut self, id: &VotingId) -> Result<&mut Voting, VotingRepositoryError> {
+    pub fn get_voting_mut(&mut self, id: &VotingId) -> Result<&mut Voting, VotingRepositoryError> {
         self.votings
             .get_mut(id)
             .ok_or(VotingRepositoryError::VotingNotFound(*id))
