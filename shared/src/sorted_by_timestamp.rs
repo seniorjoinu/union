@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize};
-use std::collections::BTreeSet;
 use std::collections::vec_deque::Iter;
+use std::collections::BTreeSet;
 
 #[derive(CandidType, Deserialize, Clone)]
 pub struct TimestampedRecords<T: Ord> {
@@ -21,11 +21,13 @@ impl<T: Ord> TimestampedRecords<T> {
 #[derive(CandidType, Deserialize, Clone)]
 pub struct SortedByTimestamp<T: Ord>(Vec<TimestampedRecords<T>>);
 
-impl<T: Ord> SortedByTimestamp<T> {
-    pub fn default() -> Self {
+impl<T: Ord> Default for SortedByTimestamp<T> {
+    fn default() -> Self {
         Self(vec![])
     }
-    
+}
+
+impl<T: Ord> SortedByTimestamp<T> {
     pub fn push(&mut self, timestamp: u64, data: T) {
         match self.0.binary_search_by(|it| it.timestamp.cmp(&timestamp)) {
             Ok(idx) => {
@@ -44,39 +46,39 @@ impl<T: Ord> SortedByTimestamp<T> {
                 if idx == 0 {
                     None
                 } else {
-                    Some(&self.0[idx-1].records)
+                    Some(&self.0[idx - 1].records)
                 }
-            },
+            }
         }
     }
-    
+
     pub fn get_all(&self) -> Vec<&T> {
         let mut result = vec![];
-        
+
         for entry in &self.0 {
             for record in &entry.records {
                 result.push(record);
             }
         }
-        
+
         result
     }
-    
+
     pub fn get_by_interval(&self, from: &u64, to: &u64) -> Vec<&T> {
         assert!(from <= to);
-        
+
         let from_idx = match self.0.binary_search_by(|it| it.timestamp.cmp(from)) {
             Ok(idx) => idx,
             Err(idx) => idx,
         };
-        
-        let to_idx = match self.0.binary_search_by(|it| it.timestamp.cmp(to)) { 
+
+        let to_idx = match self.0.binary_search_by(|it| it.timestamp.cmp(to)) {
             Ok(idx) => idx,
             Err(idx) => idx,
         };
-        
+
         let mut result = vec![];
-        
+
         for i in from_idx..to_idx {
             if let Some(entry) = self.0.get(i) {
                 for record in &entry.records {
@@ -84,7 +86,7 @@ impl<T: Ord> SortedByTimestamp<T> {
                 }
             }
         }
-        
+
         result
     }
 

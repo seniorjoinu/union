@@ -3,10 +3,11 @@ use crate::repository::voting::types::{
 };
 use crate::repository::voting_config::types::VotesFormula;
 use candid::{CandidType, Deserialize, Principal};
-use shared::types::wallet::{ChoiceExternal, ChoiceId, Shares, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceId, ChoiceView, Shares, VotingConfigId, VotingId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::mem;
 
+pub mod model;
 pub mod types;
 
 #[derive(Default, CandidType, Deserialize)]
@@ -24,7 +25,7 @@ impl VotingRepository {
         description: String,
         start_condition: StartCondition,
         winners_need: usize,
-        custom_choices: Vec<ChoiceExternal>,
+        custom_choices: Vec<ChoiceView>,
         proposer: Principal,
         timestamp: u64,
     ) -> Result<VotingId, VotingRepositoryError> {
@@ -54,7 +55,7 @@ impl VotingRepository {
         new_description: Option<String>,
         new_start_condition: Option<StartCondition>,
         new_winners_need: Option<usize>,
-        new_custom_choices: Option<Vec<ChoiceExternal>>,
+        new_custom_choices: Option<Vec<ChoiceView>>,
         timestamp: u64,
     ) -> Result<(), VotingRepositoryError> {
         let voting = self.get_voting_mut(voting_id)?;

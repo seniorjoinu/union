@@ -1,6 +1,8 @@
+type Id = nat64;
+
 // ------------------ SHARES MOVE --------------------
 
-type GroupId = nat32;
+type GroupId = Id;
 type Shares = nat;
 
 type GetSharesInfoOfAtRequest = record {
@@ -20,9 +22,9 @@ type GetSharesInfoOfAtResponse = record {
 
 // ------------------ VOTING EXECUTION -------------------
 
-type VotingConfigId = nat32;
-type VotingId = nat64;
-type ChoiceId = nat32;
+type VotingConfigId = Id;
+type VotingId = Id;
+type ChoiceId = Id;
 
 type RemoteCallEndpoint = record {
     canister_id : principal;
@@ -98,14 +100,14 @@ type Program = variant {
     RemoteCallSequence : vec RemoteCallPayload;
 };
 
-type ChoiceExternal = record {
+type ChoiceView = record {
     name : text;
     description : text;
     program : Program;
 };
 
 type VotingExecutionRecordWinnersPage = record {
-    data : vec record { 0 : ChoiceId; 1 : ChoiceExternal; };
+    data : vec record { 0 : ChoiceId; 1 : ChoiceView; };
     has_next : bool;
 };
 

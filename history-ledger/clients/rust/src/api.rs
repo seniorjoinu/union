@@ -2,7 +2,7 @@ use candid::{CandidType, Deserialize, Principal};
 use shared::pageable::{Page, PageRequest};
 use shared::remote_call::{ProgramExecutionResult, RemoteCallEndpoint};
 use shared::types::history_ledger::SharesInfo;
-use shared::types::wallet::{ChoiceExternal, ChoiceId, GroupId, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceId, ChoiceView, GroupId, VotingConfigId, VotingId};
 
 // ------------------ SHARES MOVE -------------------
 
@@ -62,7 +62,7 @@ pub struct GetVotingExecutionRecordWinnersRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct GetVotingExecutionRecordWinnersResponse {
-    pub page: Page<(ChoiceId, ChoiceExternal)>,
+    pub page: Page<(ChoiceId, ChoiceView)>,
 }
 
 #[derive(CandidType, Deserialize)]

@@ -3,10 +3,11 @@ use crate::repository::voting_execution::types::{
     VotingExecutionRepositoryError,
 };
 use candid::{CandidType, Deserialize, Principal};
+use history_ledger_client::api::{VotingExecutionRecordExternal, VotingExecutionRecordFilter};
 use shared::pageable::{Page, PageRequest, Pageable};
 use shared::remote_call::{Program, ProgramExecutionResult, RemoteCallEndpoint};
 use shared::sorted_by_timestamp::SortedByTimestamp;
-use shared::types::wallet::{ChoiceExternal, ChoiceId, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceId, ChoiceView, VotingConfigId, VotingId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 pub mod types;
@@ -55,7 +56,7 @@ impl VotingExecutionRepository {
         &mut self,
         voting_id: VotingId,
         choice_id: ChoiceId,
-        choice: ChoiceExternal,
+        choice: ChoiceView,
     ) -> Result<(), VotingExecutionRepositoryError> {
         let voting = self.get_mut(&voting_id)?;
 
@@ -199,7 +200,7 @@ impl VotingExecutionRepository {
         &self,
         voting_id: &VotingId,
         page_req: PageRequest<(), ()>,
-    ) -> Result<Page<(ChoiceId, ChoiceExternal)>, VotingExecutionRepositoryError> {
+    ) -> Result<Page<(ChoiceId, ChoiceView)>, VotingExecutionRepositoryError> {
         let voting = self.get(voting_id)?;
 
         let (has_next, iter) = voting.winners.iter().get_page(&page_req);

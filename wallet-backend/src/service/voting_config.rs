@@ -2,9 +2,9 @@ use crate::repository::get_repositories;
 use crate::repository::permission::types::PermissionId;
 use crate::repository::voting::types::{Voter, Voting, VotingStatus};
 use crate::repository::voting_config::types::{
-    ActorConstraint, EditorConstraint, FractionOf, GroupCondition, LenInterval,
-    QuantityOf, RoundSettings, Target, ThresholdValue, VotesFormula, VotingConfig,
-    VotingConfigFilter, VotingConfigRepositoryError,
+    ActorConstraint, EditorConstraint, FractionOf, GroupCondition, LenInterval, QuantityOf,
+    RoundSettings, Target, ThresholdValue, VotesFormula, VotingConfig, VotingConfigFilter,
+    VotingConfigRepositoryError,
 };
 use crate::service::group as GroupService;
 use crate::service::group::{GroupServiceError, DEFAULT_SHARES, HAS_PROFILE_GROUP_ID};
@@ -13,12 +13,12 @@ use crate::service::permission::{PermissionServiceError, DEFAULT_PERMISSION_ID};
 use crate::service::profile as ProfileService;
 use crate::service::profile::ProfileServiceError;
 use candid::Principal;
-use shared::time::mins;
-use shared::validation::ValidationError;
-use std::collections::BTreeSet;
 use shared::pageable::{Page, PageRequest};
 use shared::remote_call::Program;
-use shared::types::wallet::{ChoiceExternal, GroupOrProfile, Shares, VotingConfigId};
+use shared::time::mins;
+use shared::types::wallet::{ChoiceView, GroupOrProfile, Shares, VotingConfigId};
+use shared::validation::ValidationError;
+use std::collections::BTreeSet;
 
 const DEFAULT_VOTING_CONFIG_ID: VotingConfigId = 0;
 // TODO: set this to at least 1 day
@@ -265,7 +265,7 @@ pub fn get_voting_config(id: &VotingConfigId) -> Result<VotingConfig, VotingConf
 pub fn assert_can_create_voting(
     voting_config_id: &VotingConfigId,
     winners_need: usize,
-    custom_choices: &Vec<ChoiceExternal>,
+    custom_choices: &Vec<ChoiceView>,
     proposer: Principal,
 ) -> Result<(), VotingConfigServiceError> {
     let voting_config = get_voting_config(voting_config_id)?;
@@ -281,7 +281,7 @@ pub fn assert_can_create_voting(
 pub fn assert_can_update_voting(
     voting: &Voting,
     new_winners_need: Option<usize>,
-    new_custom_choices: &Option<Vec<ChoiceExternal>>,
+    new_custom_choices: &Option<Vec<ChoiceView>>,
     editor: Principal,
 ) -> Result<(), VotingConfigServiceError> {
     let voting_config = get_voting_config(&voting.voting_config_id)?;
@@ -336,7 +336,7 @@ pub fn assert_can_vote(voting: &Voting, voter: &Voter) -> Result<(), VotingConfi
                 .map_err(VotingConfigServiceError::ProfileServiceError)?;
         }
     };
-    
+
     // check if this profile or group was listed in ANY of thresholds
     let mut can_vote = false;
     let mut all_gops = voting_config.approval.list_groups_and_profiles();
@@ -344,19 +344,23 @@ pub fn assert_can_vote(voting: &Voting, voter: &Voter) -> Result<(), VotingConfi
     all_gops.extend(voting_config.rejection.list_groups_and_profiles());
     all_gops.extend(voting_config.win.list_groups_and_profiles());
     all_gops.extend(voting_config.next_round.list_groups_and_profiles());
-    
+
     for gop in &all_gops {
         match gop {
-            GroupOrProfile::Group(g1) => if let Voter::Group((g2, _)) = voter {
-                if g1 == g2 {
-                    can_vote = true;
-                    break;
+            GroupOrProfile::Group(g1) => {
+                if let Voter::Group((g2, _)) = voter {
+                    if g1 == g2 {
+                        can_vote = true;
+                        break;
+                    }
                 }
-            },
-            GroupOrProfile::Profile(p1) => if let Voter::Profile(p2) = voter {
-                if p1 == p2 {
-                    can_vote = true;
-                    break;
+            }
+            GroupOrProfile::Profile(p1) => {
+                if let Voter::Profile(p2) = voter {
+                    if p1 == p2 {
+                        can_vote = true;
+                        break;
+                    }
                 }
             }
         }
@@ -371,7 +375,7 @@ pub fn assert_can_vote(voting: &Voting, voter: &Voter) -> Result<(), VotingConfi
 
 fn assert_choices_valid(
     voting_config: &VotingConfig,
-    choices: &[ChoiceExternal],
+    choices: &[ChoiceView],
 ) -> Result<(), VotingConfigServiceError> {
     let mut programs = choices
         .iter()

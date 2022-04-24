@@ -2,6 +2,7 @@ use crate::service::group::_init_has_profile_group;
 use crate::service::permission::_init_default_permission;
 use crate::service::voting_config::_init_default_voting_config;
 
+pub mod cron;
 pub mod group;
 pub mod history_ledger;
 pub mod permission;

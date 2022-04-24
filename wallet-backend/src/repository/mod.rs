@@ -9,11 +9,13 @@ use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{post_upgrade, pre_upgrade};
 
+pub mod choice;
 pub mod group;
 pub mod permission;
 pub mod profile;
 pub mod settings;
 pub mod streaming;
+pub mod token;
 pub mod voting;
 pub mod voting_config;
 

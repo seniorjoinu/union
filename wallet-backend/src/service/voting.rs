@@ -2,15 +2,14 @@ use crate::repository::get_repositories;
 use crate::repository::voting::types::{
     StartCondition, Vote, VoteType, Voter, VotingRepositoryError, VotingStatus,
 };
-use crate::repository::voting_config::types::VotesFormula;
-use crate::service::group::DEFAULT_SHARES;
+use crate::service::cron as CronService;
 use crate::service::history_ledger as HistoryLedgerService;
 use crate::service::history_ledger::HistoryLedgerServiceError;
 use crate::service::voting_config as VotingConfigService;
 use crate::service::voting_config::VotingConfigServiceError;
 use ic_cdk::api::time;
 use ic_cdk::caller;
-use shared::types::wallet::{ChoiceExternal, Shares, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceView, Shares, VotingConfigId, VotingId};
 
 #[derive(Debug)]
 pub enum VotingServiceError {
@@ -27,7 +26,7 @@ pub fn create_voting(
     description: String,
     start_condition: StartCondition,
     winners_need: usize,
-    custom_choices: Vec<ChoiceExternal>,
+    custom_choices: Vec<ChoiceView>,
 ) -> Result<VotingId, VotingServiceError> {
     VotingConfigService::assert_can_create_voting(
         &voting_config_id,
@@ -37,7 +36,7 @@ pub fn create_voting(
     )
     .map_err(VotingServiceError::VotingConfigServiceError)?;
 
-    get_repositories()
+    let id = get_repositories()
         .voting
         .create_voting(
             voting_config_id,
@@ -49,9 +48,18 @@ pub fn create_voting(
             caller(),
             time(),
         )
-        .map_err(VotingServiceError::RepositoryError)
+        .map_err(VotingServiceError::RepositoryError)?;
 
-    // TODO: maybe schedule a voting start
+    let task_id = CronService::schedule_round_start(&id);
+
+    let voting = get_repositories()
+        .voting
+        .get_voting_mut(&id)
+        .map_err(VotingServiceError::RepositoryError)?;
+
+    voting.set_task_id(task_id);
+
+    Ok(id)
 }
 
 #[inline(always)]
@@ -61,7 +69,7 @@ pub fn update_voting(
     new_description: Option<String>,
     new_start_condition: Option<StartCondition>,
     new_winners_need: Option<usize>,
-    new_custom_choices: Option<Vec<ChoiceExternal>>,
+    new_custom_choices: Option<Vec<ChoiceView>>,
 ) -> Result<(), VotingServiceError> {
     let voting = get_repositories()
         .voting
@@ -205,8 +213,7 @@ fn try_progress_voting_after_vote_casting(voting_id: &VotingId) {
                     .approve_voting(voting_id, time())
                     .unwrap();
 
-                // TODO: schedule next round start
-                // TODO: schedule next round end
+                // TODO: schedule next round by approval delay
 
                 return;
             }
@@ -220,11 +227,10 @@ fn try_progress_voting_after_vote_casting(voting_id: &VotingId) {
                         .try_finish_by_vote_casting(voting_id, Some(winners), None, time())
                         .unwrap();
 
-                    // TODO: deschedule prev round end
+                    voting.deschedule_task_id();
 
                     if another_round {
-                        // TODO: schedule next round start
-                        // TODO: schedule next round end
+                        CronService::schedule_round_start(voting_id);
                     }
                 }
 
@@ -235,11 +241,10 @@ fn try_progress_voting_after_vote_casting(voting_id: &VotingId) {
                         .try_finish_by_vote_casting(voting_id, None, Some(next_round), time())
                         .unwrap();
 
-                    // TODO: deschedule prev round end
+                    voting.deschedule_task_id();
 
                     if another_round {
-                        // TODO: schedule next round start
-                        // TODO: schedule next round end
+                        CronService::schedule_round_start(voting_id);
                     }
                 }
             }

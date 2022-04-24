@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 use shared::remote_call::{ProgramExecutionResult, RemoteCallEndpoint};
-use shared::types::wallet::{ChoiceExternal, ChoiceId, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceId, ChoiceView, VotingConfigId, VotingId};
 use std::collections::BTreeMap;
 
 #[derive(Debug)]
@@ -18,7 +18,7 @@ pub struct VotingExecutionRecord {
     pub description: String,
     pub timestamp: u64,
     pub winners_count: usize,
-    pub winners: BTreeMap<ChoiceId, ChoiceExternal>,
+    pub winners: BTreeMap<ChoiceId, ChoiceView>,
     pub results: BTreeMap<ChoiceId, ProgramExecutionResult>,
 }
 
@@ -60,7 +60,7 @@ impl VotingExecutionRecord {
     }
 
     #[inline(always)]
-    pub fn add_winner(&mut self, choice_id: ChoiceId, choice: ChoiceExternal) {
+    pub fn add_winner(&mut self, choice_id: ChoiceId, choice: ChoiceView) {
         self.winners.insert(choice_id, choice);
     }
 

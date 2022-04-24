@@ -11,6 +11,12 @@ pub struct Page<T> {
     pub has_next: bool,
 }
 
+impl<T> Page<T> {
+    pub fn new(data: Vec<T>, has_next: bool) -> Self {
+        Self { data, has_next }
+    }
+}
+
 #[derive(CandidType, Deserialize)]
 pub struct PageRequest<F, S> {
     pub page_index: usize,
