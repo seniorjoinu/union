@@ -1,5 +1,5 @@
+use crate::repository::chunk::types::{Batch, BatchId, ChunkId, Key, StreamingError};
 use crate::repository::get_repositories;
-use crate::repository::streaming::types::{Batch, BatchId, ChunkId, Key, StreamingError};
 use serde_bytes::ByteBuf;
 use shared::pageable::{Page, PageRequest};
 

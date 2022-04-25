@@ -1,20 +1,20 @@
+use crate::repository::chunk::StreamingRepository;
 use crate::repository::group::GroupRepository;
 use crate::repository::permission::PermissionRepository;
 use crate::repository::profile::ProfileRepository;
 use crate::repository::settings::SettingsRepository;
-use crate::repository::streaming::StreamingRepository;
 use crate::repository::voting::VotingRepository;
 use crate::repository::voting_config::VotingConfigRepository;
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{post_upgrade, pre_upgrade};
 
+pub mod batch;
 pub mod choice;
+pub mod chunk;
 pub mod group;
 pub mod permission;
 pub mod profile;
-pub mod settings;
-pub mod streaming;
 pub mod token;
 pub mod voting;
 pub mod voting_config;
