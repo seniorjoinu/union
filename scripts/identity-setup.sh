@@ -9,5 +9,7 @@ log "[identity-setup] Your identity is $identity_name = $(dfx identity $args get
 
 identity=$(dfx identity $args get-principal)
 
+dfx identity get-wallet
+
 export identity
 

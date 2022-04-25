@@ -28,6 +28,7 @@ export interface GetBinaryVersionInfosResponse {
   'infos' : Array<BinaryVersionInfo>,
 }
 export interface GetBinaryVersionsResponse { 'versions' : Array<string> }
+export interface GetControllerResponse { 'controller' : Principal }
 export interface GetInstanceIdsResponse { 'ids' : Array<Principal> }
 export interface GetInstancesRequest { 'ids' : Array<Principal> }
 export interface GetInstancesResponse { 'instances' : Array<BinaryInstance> }
@@ -63,7 +64,7 @@ export interface _SERVICE {
       DownloadBinaryResponse
     >,
   'export_candid' : () => Promise<string>,
-  'get_binary_controller' : () => Promise<Principal>,
+  'get_binary_controller' : () => Promise<GetControllerResponse>,
   'get_binary_version_infos' : (arg_0: GetBinaryVersionInfosRequest) => Promise<
       GetBinaryVersionInfosResponse
     >,
@@ -73,7 +74,7 @@ export interface _SERVICE {
       GetInstancesResponse
     >,
   'get_latest_version' : () => Promise<GetLatestVersionResponse>,
-  'get_spawn_controller' : () => Promise<Principal>,
+  'get_spawn_controller' : () => Promise<GetControllerResponse>,
   'release_binary_version' : (arg_0: ReleaseBinaryVersionRequest) => Promise<
       undefined
     >,

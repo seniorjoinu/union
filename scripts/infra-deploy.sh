@@ -6,6 +6,7 @@ source .env
 log "Start deploy infrastructure"
 
 args=""
+wallet="--wallet=$(dfx identity get-wallet)"
 # TODO uncomment in future for using `./deploy.sh --network ic`
 # args=$@
 
@@ -32,16 +33,16 @@ dfx build --all --check
 log "[infra-deploy] Root wallet built"
 
 log "[infra-deploy] Deploy deployer..."
-cd "${root_folder}/deployer-backend"
+cd "${root_folder}/deployer-backend/canister"
 rm -rf ./.dfx/local
-dfx deploy $args --argument "(principal \"${identity}\", principal \"${identity}\")"
+dfx deploy $wallet $args --argument "(principal \"${identity}\", principal \"${identity}\")"
 deployer=$(dfx canister $args id union-deployer)
 log "[infra-deploy] Deployer deployed"
 
 log "[infra-deploy] Deploy gateway backend..."
 cd "${root_folder}/gateway/backend"
 rm -rf ./.dfx/local
-dfx deploy $args --argument "(principal \"${identity}\", principal \"${deployer}\")"
+dfx deploy $wallet $args --argument "(principal \"${identity}\", principal \"${deployer}\")"
 gateway_backend=$(dfx canister $args id gateway)
 log "[infra-deploy] Gateway backend deployed"
 

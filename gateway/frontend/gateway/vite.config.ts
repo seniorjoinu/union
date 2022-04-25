@@ -10,7 +10,7 @@ import config from './tsconfig.json';
 const envs = {
   ...getCanisterIds(__dirname),
   ...getCanisterIds(path.resolve('../../backend')),
-  ...getCanisterIds(path.resolve('../../../deployer-backend')),
+  ...getCanisterIds(path.resolve('../../../deployer-backend/canister')),
   ...getCanisterIds(path.resolve('../internet-identity')),
   MANAGEMENT_CANISTER_ID: 'aaaaa-aa',
 };

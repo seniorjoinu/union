@@ -41,7 +41,7 @@ cd "${root_folder}/gateway/backend"
 dfx canister $args update-settings "$gateway_backend" --controller "$root_wallet"
 
 log "[infra-setup] #5 Setup deployer canister controllers..."
-cd "${root_folder}/deployer-backend"
+cd "${root_folder}/deployer-backend/canister"
 dfx canister $args update-settings "$deployer" --controller "aaaaa-aa"
 
 log "[infra-setup] #8 root_wallet already has deployer as canister controller."

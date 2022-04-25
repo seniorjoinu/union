@@ -8,7 +8,7 @@ use crate::api::{
 };
 use async_trait::async_trait;
 use candid::Principal;
-use ic_cdk::call;
+use ic_cdk::{call, api::call::call_with_payment};
 use shared::candid::{CandidCallResult, ToCandidType};
 
 #[async_trait]
@@ -73,7 +73,7 @@ impl IDeployerBackend for Principal {
         req: SpawnWalletRequest,
         cycles: u64,
     ) -> CandidCallResult<(SpawnWalletResponse,)> {
-        call(*self, "spawn_wallet", (req,)).await.to_candid_type()
+        call_with_payment(*self, "spawn_wallet", (req,), cycles).await.to_candid_type()
     }
 
     async fn upgrade_wallet_version(

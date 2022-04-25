@@ -64,7 +64,7 @@ export const Versions = ({ ...p }: VersionsProps) => {
   }, []);
 
   useEffect(() => {
-    const binaryController = data.get_binary_controller?.toString();
+    const binaryController = data.get_binary_controller?.controller.toString();
 
     if (!binaryController) {
       return;

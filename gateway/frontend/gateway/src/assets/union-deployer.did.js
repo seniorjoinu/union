@@ -8,6 +8,7 @@ export const idlFactory = ({ IDL }) => {
   const DownloadBinaryResponse = IDL.Record({
     'binary' : IDL.Opt(IDL.Vec(IDL.Nat8)),
   });
+  const GetControllerResponse = IDL.Record({ 'controller' : IDL.Principal });
   const GetBinaryVersionInfosRequest = IDL.Record({
     'versions' : IDL.Vec(IDL.Text),
   });
@@ -73,7 +74,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'export_candid' : IDL.Func([], [IDL.Text], ['query']),
-    'get_binary_controller' : IDL.Func([], [IDL.Principal], ['query']),
+    'get_binary_controller' : IDL.Func([], [GetControllerResponse], ['query']),
     'get_binary_version_infos' : IDL.Func(
         [GetBinaryVersionInfosRequest],
         [GetBinaryVersionInfosResponse],
@@ -91,7 +92,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'get_latest_version' : IDL.Func([], [GetLatestVersionResponse], ['query']),
-    'get_spawn_controller' : IDL.Func([], [IDL.Principal], ['query']),
+    'get_spawn_controller' : IDL.Func([], [GetControllerResponse], ['query']),
     'release_binary_version' : IDL.Func([ReleaseBinaryVersionRequest], [], []),
     'spawn_wallet' : IDL.Func([SpawnWalletRequest], [SpawnWalletResponse], []),
     'transfer_binary_control' : IDL.Func([TransferControlRequest], [], []),
