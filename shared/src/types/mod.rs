@@ -30,13 +30,6 @@ impl<T: Copy> FromBlob for T {
     fn from(it: &Blob) -> Self {
         assert_eq!(it.len(), size_of::<Self>());
 
-        let layout = Layout::from_size_align(size_of::<Self>(), size_of::<Self>()).unwrap();
-
-        unsafe {
-            let ptr = alloc_zeroed(layout);
-            it.as_ptr().copy_to(ptr, size_of::<Self>());
-
-            (ptr as *mut Self).read()
-        }
+        unsafe { (it.clone().as_ptr() as *mut Self).read() }
     }
 }

@@ -1,111 +1,91 @@
+use crate::repository::streaming::model::{Batch, Chunk};
 use crate::repository::streaming::types::{
-    Batch, BatchId, Chunk, ChunkId, Key, StreamingRepositoryError,
+    BatchId, ChunkFilter, ChunkId, Key, StreamingError,
 };
 use candid::{CandidType, Deserialize};
 use serde_bytes::ByteBuf;
-use std::collections::HashMap;
+use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
+pub mod model;
 pub mod types;
 
 #[derive(Default, CandidType, Deserialize)]
-pub struct StreamingRepository {
+pub struct ChunkRepository {
     chunks: HashMap<ChunkId, Chunk>,
-    batches: HashMap<BatchId, Batch>,
+    id_gen: IdGenerator,
 
-    chunk_id_counter: ChunkId,
-    batch_id_counter: BatchId,
+    chunks_by_batch_index: BTreeMap<BatchId, BTreeSet<ChunkId>>,
 }
 
-impl StreamingRepository {
-    #[inline(always)]
-    pub fn create_batch(&mut self, key: Key, content_type: String) -> BatchId {
-        let id = self.generate_batch_id();
-        let batch = Batch::new(key, content_type);
-        
-        self.batches.insert(id.clone(), batch);
-
-        id
-    }
-
-    pub fn create_chunk(
-        &mut self,
-        batch_id: BatchId,
-        content: ByteBuf,
-    ) -> Result<ChunkId, StreamingRepositoryError> {
-        let chunk_id = self.generate_chunk_id();
-
-        let batch = self.get_batch_mut(&batch_id)?;
-        batch.add_chunk(batch_id.clone(), chunk_id.clone());
-        
-        let chunk = Chunk::new(batch_id, content);
-        self.chunks.insert(chunk_id.clone(), chunk);
-
-        Ok(chunk_id)
-    }
-
-    #[inline(always)]
-    pub fn lock_batch(&mut self, batch_id: BatchId) -> Result<(), StreamingRepositoryError> {
-        let batch = self.get_batch_mut(&batch_id)?;
-        batch.lock(batch_id)
-    }
-
-    pub fn delete_batch(
-        &mut self,
-        batch_id: &BatchId,
-        lock_assertion: bool,
-    ) -> Result<(), StreamingRepositoryError> {
-        let batch = self.get_batch(batch_id)?;
-        assert_eq!(batch.locked, lock_assertion, "Invalid batch lock state");
-
-        let batch = self.batches.remove(batch_id).unwrap();
-
-        for chunk_id in &batch.chunk_ids {
-            self.chunks.remove(chunk_id).unwrap();
+impl Repository<Chunk, ChunkId, ChunkFilter, ()> for ChunkRepository {
+    fn save(&mut self, mut it: Chunk) {
+        if it.is_transient() {
+            it._init_id(self.id_gen.generate());
         }
 
-        Ok(())
+        let id = it.get_id().unwrap();
+        self.chunks_by_batch_index
+            .entry(*it.get_batch_id())
+            .or_default()
+            .insert(id);
+        self.chunks.insert(id, it);
     }
 
-    pub fn get_batch(&self, batch_id: &BatchId) -> Result<&Batch, StreamingRepositoryError> {
-        self.batches
-            .get(batch_id)
-            .ok_or_else(|| StreamingRepositoryError::BatchNotFound(batch_id.clone()))
+    fn delete(&mut self, id: &ChunkId) -> Option<Chunk> {
+        let it = self.chunks.remove(id)?;
+        self.chunks_by_batch_index
+            .get_mut(it.get_batch_id())
+            .unwrap()
+            .remove(id);
+
+        Some(it)
     }
 
-    pub fn get_batch_mut(&mut self, batch_id: &BatchId) -> Result<&mut Batch, StreamingRepositoryError> {
-        self.batches
-            .get_mut(batch_id)
-            .ok_or_else(|| StreamingRepositoryError::BatchNotFound(batch_id.clone()))
+    fn get(&self, id: &ChunkId) -> Option<Chunk> {
+        self.chunks.get(id).cloned()
     }
 
-    pub fn get_batches_cloned(&self, page_req: PageRequest<(), ()>) -> Page<(BatchId, Batch)> {
-        let (has_next, iter) = self.batches.iter().get_page(&page_req);
-        let data = iter.map(|(key, value)| (key.clone(), value.clone())).collect();
-        
-        Page {
-            has_next,
-            data,
+    fn list(&self, page_req: &PageRequest<ChunkFilter, ()>) -> Page<Chunk> {
+        if let Some(index) = self.chunks_by_batch_index.get(&page_req.filter.batch_id) {
+            let (has_next, iter) = index.iter().get_page(page_req);
+            let data = iter.map(|(id)| self.get(id).unwrap()).collect();
+
+            Page::new(data, has_next)
+        } else {
+            Page::empty()
         }
     }
+}
 
-    pub fn get_chunk(&self, chunk_id: &ChunkId) -> Result<&Chunk, StreamingRepositoryError> {
-        self.chunks
-            .get(chunk_id)
-            .ok_or_else(|| StreamingRepositoryError::ChunkNotFound(chunk_id.clone()))
+#[derive(Default, CandidType, Deserialize)]
+pub struct BatchRepository {
+    batches: HashMap<BatchId, Batch>,
+    id_gen: IdGenerator,
+}
+
+impl Repository<Batch, BatchId, (), ()> for BatchRepository {
+    fn save(&mut self, mut it: Batch) {
+        if it.is_transient() {
+            it._init_id(self.id_gen.generate());
+        }
+
+        self.batches.insert(it.get_id().unwrap(), it);
     }
 
-    fn generate_chunk_id(&mut self) -> ChunkId {
-        let id = self.chunk_id_counter.clone();
-        self.chunk_id_counter += 1;
-
-        id
+    fn delete(&mut self, id: &BatchId) -> Option<Batch> {
+        self.batches.remove(id)
     }
 
-    fn generate_batch_id(&mut self) -> BatchId {
-        let id = self.batch_id_counter.clone();
-        self.batch_id_counter += 1;
+    fn get(&self, id: &BatchId) -> Option<Batch> {
+        self.batches.get(id).cloned()
+    }
 
-        id
+    fn list(&self, page_req: &PageRequest<(), ()>) -> Page<Batch> {
+        let (has_next, iter) = self.batches.iter().get_page(page_req);
+        let data = iter.map(|(_, it)| it.clone()).collect();
+        
+        Page::new(data, has_next)
     }
 }

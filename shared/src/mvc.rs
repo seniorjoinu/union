@@ -1,3 +1,4 @@
+use crate::pageable::{Page, PageRequest};
 use candid::{CandidType, Deserialize};
 
 pub type Id = u64;
@@ -22,8 +23,9 @@ pub trait Model<ID> {
     fn is_transient(&self) -> bool;
 }
 
-pub trait Repository<T: Model<ID>, ID> {
+pub trait Repository<T: Model<ID>, ID, F, S> {
     fn save(&mut self, it: T);
     fn delete(&mut self, id: &ID) -> Option<T>;
-    fn get(&self, id: &ID) -> Option<&T>;
+    fn get(&self, id: &ID) -> Option<T>;
+    fn list(&self, page_req: &PageRequest<F, S>) -> Page<T>;
 }

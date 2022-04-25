@@ -15,6 +15,13 @@ impl<T> Page<T> {
     pub fn new(data: Vec<T>, has_next: bool) -> Self {
         Self { data, has_next }
     }
+    
+    pub fn empty() -> Self {
+        Self {
+            data: Vec::new(),
+            has_next: false,
+        }
+    }
 }
 
 #[derive(CandidType, Deserialize)]

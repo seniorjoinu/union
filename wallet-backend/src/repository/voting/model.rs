@@ -11,6 +11,11 @@ use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::{BTreeMap, HashMap};
 use std::mem;
 
+// TODO: move to new tokens
+// TODO: add START status and START threshold
+// TODO: figure out how to check threshold reach with new tokens
+// TODO: add APPROVAL choice
+
 #[derive(Clone, CandidType, Deserialize)]
 pub struct Voting {
     pub id: VotingId,

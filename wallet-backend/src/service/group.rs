@@ -1,6 +1,6 @@
 use crate::repository::get_repositories;
 use crate::repository::group::types::{
-    Group, GroupExternal, GroupFilter, GroupRepositoryError, GroupTypeParam,
+    Group, GroupExternal, GroupFilter, GroupError, GroupTypeParam,
 };
 use candid::Principal;
 use shared::pageable::{Page, PageRequest};
@@ -9,9 +9,11 @@ use shared::types::wallet::{GroupId, ProfileId, Shares};
 pub const HAS_PROFILE_GROUP_ID: GroupId = 1;
 pub const DEFAULT_SHARES: u32 = 100;
 
+// TODO: DONT FORGET TO ADD EVERYONE GROUP
+
 #[derive(Debug)]
 pub enum GroupServiceError {
-    RepositoryError(GroupRepositoryError),
+    RepositoryError(GroupError),
     UnableToEditHasProfileGroup,
 }
 

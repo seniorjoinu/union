@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use shared::pageable::{Page, PageRequest, Pageable};
 use shared::types::wallet::{GroupOrProfile, VotingConfigId};
 
+pub mod model;
 pub mod types;
 
 #[derive(Default, CandidType, Deserialize)]

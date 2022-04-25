@@ -1,11 +1,11 @@
 use crate::repository::get_repositories;
-use crate::repository::streaming::types::{Batch, BatchId, ChunkId, Key, StreamingRepositoryError};
+use crate::repository::streaming::types::{Batch, BatchId, ChunkId, Key, StreamingError};
 use serde_bytes::ByteBuf;
 use shared::pageable::{Page, PageRequest};
 
 #[derive(Debug)]
 pub enum StreamingServiceError {
-    RepositoryError(StreamingRepositoryError),
+    RepositoryError(StreamingError),
 }
 
 #[inline(always)]

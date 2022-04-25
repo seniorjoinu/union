@@ -13,36 +13,11 @@ pub type ChoiceId = Id;
 pub type GroupId = Id;
 pub type ProfileId = Principal;
 pub type Shares = Nat;
-pub type TokenId = Id;
 
 #[derive(Hash, Copy, Clone, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
 pub enum GroupOrProfile {
     Group(GroupId),
     Profile(ProfileId),
-}
-
-impl Into<Blob> for GroupOrProfile {
-    fn into(self) -> Blob {
-        let p = unsafe {
-            std::slice::from_raw_parts((&self as *const Self) as *const u8, size_of::<Self>())
-        };
-        Vec::from(p)
-    }
-}
-
-impl From<&Blob> for GroupOrProfile {
-    fn from(it: &Blob) -> Self {
-        assert_eq!(it.len(), size_of::<Self>());
-
-        let layout = Layout::from_size_align(size_of::<Self>(), size_of::<Self>()).unwrap();
-
-        unsafe {
-            let ptr = std::alloc::alloc_zeroed(layout);
-            it.as_ptr().copy_to(ptr, size_of::<Self>());
-
-            (ptr as *mut Self).read()
-        }
-    }
 }
 
 #[derive(Event)]

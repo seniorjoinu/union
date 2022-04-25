@@ -1,45 +1,45 @@
-use crate::repository::token;
-use candid::{CandidType, Deserialize};
-use shared::mvc::Id;
-use shared::types::wallet::Shares;
-use shared::types::Blob;
-use std::collections::hash_map::Iter;
-use std::collections::HashMap;
+use candid::{CandidType, Deserialize, Principal};
+use shared::types::wallet::{ChoiceId, GroupId, GroupOrProfile, ProfileId, Shares, VotingId};
 
-#[derive(Debug)]
-pub enum TokenError<K> {
-    InsufficientBalance(K),
+#[derive(Copy, Clone, CandidType, Deserialize)]
+pub enum GroupSharesType {
+    Accepted,
+    Unaccepted,
 }
 
-#[derive(Default, Debug, CandidType, Deserialize)]
-pub struct Balances(HashMap<Blob, Shares>);
+#[derive(Copy, Clone, CandidType, Deserialize)]
+pub enum BalanceId {
+    PrivateGroupShares(GroupId, GroupSharesType, ProfileId),
+    PublicGroupShares(GroupId, Principal),
 
-impl Balances {
-    pub fn mint<K: Into<Blob>>(&mut self, k: K, qty: Shares) {
-        let new_balance = self.take_balance_of(&k) + qty;
-        self.0.insert(k.into(), new_balance);
-    }
+    ChoiceVotingPower(ChoiceId, GroupOrProfile, Principal),
+}
 
-    pub fn burn<K: Into<Blob>>(&mut self, k: K, qty: Shares) -> bool {
-        let old_balance = self.take_balance_of(&k);
-        if old_balance < qty {
-            self.0.insert(k.into(), old_balance);
-            false
-        } else {
-            self.0.insert(k.into(), old_balance - qty);
-            true
+impl BalanceId {
+    pub fn to_total_supply_id(self) -> TotalSupplyId {
+        match self {
+            BalanceId::PrivateGroupShares(g, t, _) => TotalSupplyId::PrivateGroupShares(g, t),
+            BalanceId::PublicGroupShares(g, _) => TotalSupplyId::PublicGroupShares(g),
+            BalanceId::ChoiceVotingPower(c, gop, _) => TotalSupplyId::ChoiceVotingPower(c, gop),
         }
     }
+}
 
-    fn take_balance_of<K: Into<Blob>>(&mut self, k: &K) -> Shares {
-        self.0.remove(k.into()).unwrap_or_default()
-    }
+#[derive(Copy, Clone, CandidType, Deserialize)]
+pub enum TotalSupplyId {
+    PrivateGroupShares(GroupId, GroupSharesType),
+    PublicGroupShares(GroupId),
 
-    pub fn balance_of<K: Into<Blob>>(&self, k: &K) -> Shares {
-        self.0.get(k.into()).cloned().unwrap_or_default()
-    }
+    TotalVotingPower(VotingId, GroupOrProfile),
+    UsedVotingPower(VotingId, GroupOrProfile),
 
-    pub fn iter(&self) -> Iter<Blob, Shares> {
-        self.0.iter()
-    }
+    ChoiceVotingPower(ChoiceId, GroupOrProfile),
+}
+
+#[derive(Copy, Clone, CandidType, Deserialize)]
+pub enum BalanceFilter {
+    SharesByGroup(GroupId, GroupSharesType),
+    SharesByPrincipal(Principal, GroupSharesType),
+
+    VotingPowerByPrincipal(Principal),
 }

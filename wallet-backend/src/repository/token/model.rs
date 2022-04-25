@@ -1,80 +1,58 @@
-use crate::repository::token::types::{Balances, TokenError};
-use candid::{CandidType, Deserialize};
+use crate::repository::token::types::BalanceId;
+use candid::{CandidType, Deserialize, Principal};
 use shared::mvc::Model;
 use shared::pageable::{Page, PageRequest, Pageable};
-use shared::types::wallet::{Shares, TokenId};
+use shared::types::wallet::{GroupId, GroupOrProfile, ProfileId, Shares, TokenId, VotingId};
 use shared::types::Blob;
+use shared::validation::ValidationError;
+use std::mem;
 
-#[derive(CandidType, Deserialize)]
-pub struct Token {
-    id: Option<TokenId>,
-    total_supply: Shares,
-    balances: Balances,
+#[derive(Clone, CandidType, Deserialize)]
+pub struct Balance<T: Copy> {
+    id: T,
+    value: Shares,
 }
 
-impl Token {
-    pub fn mint<K: Copy + Into<Blob>>(&mut self, to: K, qty: Shares) {
-        self.balances.mint(to, qty.clone());
-        self.total_supply += qty;
-    }
-
-    pub fn burn<K: Copy + Into<Blob>>(
-        &mut self,
-        from: K,
-        qty: Shares,
-    ) -> Result<(), TokenError<K>> {
-        if !self.balances.burn(from, qty.clone()) {
-            Err(TokenError::InsufficientBalance(from))
-        } else {
-            self.total_supply -= qty;
-            Ok(())
+impl<T: Copy> Balance<T> {
+    pub fn new(id: T) -> Self {
+        Self {
+            id,
+            value: Shares::default(),
         }
     }
 
-    pub fn transfer<K: Copy + Into<Blob>>(
-        &mut self,
-        from: K,
-        to: K,
-        qty: Shares,
-    ) -> Result<(), TokenError<K>> {
-        if !self.balances.burn(from, qty.clone()) {
-            Err(TokenError::InsufficientBalance(from))
+    pub fn mint(&mut self, qty: Shares) {
+        self.value += qty;
+    }
+
+    pub fn burn(&mut self, qty: Shares) -> bool {
+        if self.value < qty {
+            false
         } else {
-            self.balances.mint(to, qty);
-            Ok(())
+            self.value -= qty;
+            true
         }
     }
 
-    pub fn balance_of<K: Copy + Into<Blob>>(&self, k: &K) -> Shares {
-        self.balances.balance_of(k)
+    pub fn set(&mut self, value: Shares) -> Shares {
+        mem::replace(&mut self.value, value)
     }
 
-    pub fn total_supply(&self) -> Shares {
-        self.total_supply.clone()
-    }
-
-    pub fn balances<'a, K: Copy + From<&'a Blob>>(
-        &'a self,
-        page_req: PageRequest<(), ()>,
-    ) -> Page<(K, Shares)> {
-        let (has_next, iter) = self.balances.iter().get_page(&page_req);
-        let data = iter.map(|(blob, v)| (K::from(blob), v.clone())).collect();
-
-        Page::new(data, has_next)
+    pub fn get(&self) -> Shares {
+        self.value.clone()
     }
 }
 
-impl Model<TokenId> for Token {
-    fn get_id(&self) -> Option<TokenId> {
-        self.id
+impl<T: Copy> Model<T> for Balance<T> {
+    fn get_id(&self) -> Option<T> {
+        Some(self.id)
     }
 
-    fn _init_id(&mut self, id: TokenId) {
-        assert!(self.id.is_none());
-        self.id = Some(id);
+    fn _init_id(&mut self, id: T) {
+        unreachable!();
     }
 
     fn is_transient(&self) -> bool {
-        self.id.is_none()
+        false
     }
 }

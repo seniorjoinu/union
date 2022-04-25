@@ -48,6 +48,7 @@ pub mod guards;
 pub mod helpers;
 pub mod repository;
 pub mod service;
+pub mod settings;
 
 #[init]
 fn init(gateway: Principal, history_ledger: Principal, wallet_creator: Principal) {
