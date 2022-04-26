@@ -30,7 +30,7 @@ const Container = styled(PageWrapper)`
   }
 `;
 
-const DEFAULT_PAGE_SIZE = 1;
+const DEFAULT_PAGE_SIZE = 5;
 
 export interface HistoryProps extends IClassName {
   createLink?: string;
@@ -51,19 +51,23 @@ export function History({ createLink, ...p }: HistoryProps) {
     [data.get_history_entry_ids?.ids],
   );
 
-  useEffect(() => {
-    canister
-      .get_history_entries({ ids: ids.slice(0, DEFAULT_PAGE_SIZE) })
-      .then(({ entries }) => setHistory(entries));
-  }, [ids]);
-
   const loadMore = useCallback(async () => {
-    const { entries } = await canister.get_history_entries({
-      ids: ids.slice(history.length, history.length + DEFAULT_PAGE_SIZE),
-    });
+    const slicedIds = ids.slice(history.length, history.length + DEFAULT_PAGE_SIZE);
 
-    setHistory((history) => [...history, ...entries]);
+    Promise.all(
+      slicedIds.map((id) =>
+        canister.get_history_entries({
+          ids: [id],
+        }),
+      ),
+    )
+      .then((blocks) => blocks.map((b) => b.entries).flat())
+      .then((entries) => setHistory((history) => [...history, ...entries]));
   }, [history, ids, setHistory]);
+
+  useEffect(() => {
+    loadMore();
+  }, [ids]);
 
   const progress =
     !!fetching.get_history_entry_ids ||
