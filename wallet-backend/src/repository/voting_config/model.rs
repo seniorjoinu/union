@@ -6,7 +6,8 @@ use crate::repository::voting_config::types::{
     VOTING_CONFIG_NAME_MAX_LEN, VOTING_CONFIG_NAME_MIN_LEN,
 };
 use candid::{CandidType, Deserialize};
-use shared::types::wallet::{ChoiceId, VotingConfigId};
+use shared::mvc::Model;
+use shared::types::wallet::{ChoiceId, GroupOrProfile, VotingConfigId};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
 
@@ -18,7 +19,7 @@ use std::collections::BTreeSet;
 ///     this implies that only APPROVAL listed GOPs can vote when CREATED
 /// when PRE_ROUND() wait for cron -> ROUND()
 /// when CREATED or ROUND() - REJECTION listed GOPs can vote -> REJECTED
-/// when ROUND() - QUORUM, WIN or NEXT_ROUND listed GOPs can vote -> PRE_ROUND() | SUCCESS | FAILD
+/// when ROUND() - QUORUM, WIN or NEXT_ROUND listed GOPs can vote -> PRE_ROUND() | SUCCESS | FAIL
 /// when
 ///
 
@@ -217,6 +218,38 @@ impl VotingConfig {
         Ok(())
     }
 
+    pub fn get_permissions(&self) -> &BTreeSet<PermissionId> {
+        &self.permissions
+    }
+
+    pub fn get_proposers(&self) -> &BTreeSet<ActorConstraint> {
+        &self.proposers
+    }
+
+    pub fn get_editors(&self) -> &BTreeSet<EditorConstraint> {
+        &self.editors
+    }
+
+    pub fn get_approval(&self) -> &ThresholdValue {
+        &self.approval
+    }
+
+    pub fn get_rejection(&self) -> &ThresholdValue {
+        &self.rejection
+    }
+
+    pub fn get_quorum(&self) -> &ThresholdValue {
+        &self.quorum
+    }
+
+    pub fn get_win(&self) -> &ThresholdValue {
+        &self.win
+    }
+
+    pub fn get_next_round(&self) -> &ThresholdValue {
+        &self.next_round
+    }
+
     fn process_name(name: String) -> Result<String, ValidationError> {
         validate_and_trim_str(
             name,
@@ -233,5 +266,20 @@ impl VotingConfig {
             VOTING_CONFIG_DESCRIPTION_MAX_LEN,
             "Voting config description",
         )
+    }
+}
+
+impl Model<VotingConfigId> for VotingConfig {
+    fn get_id(&self) -> Option<VotingConfigId> {
+        self.id
+    }
+
+    fn _init_id(&mut self, id: VotingConfigId) {
+        assert!(self.is_transient());
+        self.id = Some(id);
+    }
+
+    fn is_transient(&self) -> bool {
+        self.id.is_none()
     }
 }

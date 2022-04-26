@@ -1,13 +1,14 @@
 use crate::repository::permission::types::PermissionId;
+use crate::repository::voting_config::model::VotingConfig;
 use crate::repository::voting_config::types::{
-    EditorConstraint, LenInterval, ActorConstraint, RoundSettings,
-    ThresholdValue, VotesFormula, VotingConfig, VotingConfigFilter,
-    VotingConfigRepositoryError,
+    ActorConstraint, EditorConstraint, LenInterval, RoundSettings, ThresholdValue,
+    VotingConfigFilter, VotingConfigRepositoryError,
 };
 use candid::{CandidType, Deserialize};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
 use shared::types::wallet::{GroupOrProfile, VotingConfigId};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 pub mod model;
 pub mod types;
@@ -15,321 +16,150 @@ pub mod types;
 #[derive(Default, CandidType, Deserialize)]
 pub struct VotingConfigRepository {
     voting_configs: HashMap<VotingConfigId, VotingConfig>,
-    voting_config_id_counter: VotingConfigId,
+    id_gen: IdGenerator,
 
     voting_configs_by_group_or_profile_index: BTreeMap<GroupOrProfile, BTreeSet<VotingConfigId>>,
     voting_configs_by_permission_index: BTreeMap<PermissionId, BTreeSet<VotingConfigId>>,
 }
 
-impl VotingConfigRepository {
-    pub fn create_voting_config(
-        &mut self,
-        name: String,
-        description: String,
-        choices_count: Option<LenInterval>,
-        winners_count: Option<LenInterval>,
-        permissions: BTreeSet<PermissionId>,
-        proposers: BTreeSet<ActorConstraint>,
-        editors: BTreeSet<EditorConstraint>,
-        round: RoundSettings,
-        approval: ThresholdValue,
-        quorum: ThresholdValue,
-        rejection: ThresholdValue,
-        win: ThresholdValue,
-        next_round: ThresholdValue,
-    ) -> Result<VotingConfigId, VotingConfigRepositoryError> {
-        let id = self.generate_voting_config_id();
+impl Repository<VotingConfig, VotingConfigId, VotingConfigFilter, ()> for VotingConfigRepository {
+    fn save(&mut self, mut it: VotingConfig) {
+        if it.is_transient() {
+            it._init_id(self.id_gen.generate());
+        } else {
+            let prev_it = self.get(&it.get_id().unwrap()).unwrap();
+            self.remove_from_indexes(&prev_it);
+        }
 
-        for permission_id in &permissions {
+        self.add_to_indexes(&it);
+        self.voting_configs.insert(it.get_id().unwrap(), it);
+    }
+
+    fn delete(&mut self, id: &VotingConfigId) -> Option<VotingConfig> {
+        let it = self.voting_configs.remove(id)?;
+        self.remove_from_indexes(&it);
+
+        Some(it)
+    }
+
+    fn get(&self, id: &VotingConfigId) -> Option<VotingConfig> {
+        self.voting_configs.get(id).cloned()
+    }
+
+    fn list(&self, page_req: &PageRequest<VotingConfigFilter, ()>) -> Page<VotingConfig> {
+        if page_req.filter.permission.is_none() && page_req.filter.group_or_profile.is_none() {
+            let (has_next, iter) = self.voting_configs.iter().get_page(page_req);
+            let data = iter.map(|(_, it)| it.clone()).collect();
+
+            return Page::new(data, has_next);
+        }
+
+        let mut index = if let Some(permission_id) = page_req.filter.permission {
+            self.voting_configs_by_permission_index
+                .get(&permission_id)
+                .cloned()
+                .unwrap_or_default()
+        } else {
+            BTreeSet::default()
+        };
+
+        let mut index2 = if let Some(gop) = page_req.filter.group_or_profile {
+            self.voting_configs_by_group_or_profile_index
+                .get(&gop)
+                .cloned()
+                .unwrap_or_default()
+        } else {
+            BTreeSet::default()
+        };
+
+        if !index.is_empty() {
+            index.append(&mut index2);
+        } else {
+            index = index.intersection(&index2).collect();
+        }
+
+        let (has_next, iter) = index.iter().get_page(page_req);
+        let data = iter.map(|id| self.get(id).unwrap()).collect();
+
+        Page::new(data, has_next)
+    }
+}
+
+impl VotingConfigRepository {
+    fn add_to_indexes(&mut self, voting_config: &VotingConfig) {
+        let id = voting_config.get_id().unwrap();
+
+        for permission_id in voting_config.get_permissions() {
             self.add_to_permissions_index(id, *permission_id);
         }
 
-        for proposer in &proposers {
+        for proposer in voting_config.get_proposers() {
             self.add_to_group_or_profile_index(id, proposer.to_group_or_profile());
         }
 
-        for editor in &editors {
+        for editor in voting_config.get_editors() {
             if let Some(gop) = editor.to_group_or_profile() {
                 self.add_to_group_or_profile_index(id, gop);
             }
         }
 
-        for gop in approval.list_groups_and_profiles() {
+        for gop in voting_config.get_approval().list_groups_and_profiles() {
             self.add_to_group_or_profile_index(id, gop);
         }
 
-        for gop in quorum.list_groups_and_profiles() {
+        for gop in voting_config.get_rejection().list_groups_and_profiles() {
             self.add_to_group_or_profile_index(id, gop);
         }
 
-        for gop in rejection.list_groups_and_profiles() {
+        for gop in voting_config.get_quorum().list_groups_and_profiles() {
             self.add_to_group_or_profile_index(id, gop);
         }
 
-        for gop in win.list_groups_and_profiles() {
+        for gop in voting_config.get_win().list_groups_and_profiles() {
             self.add_to_group_or_profile_index(id, gop);
         }
 
-        for gop in next_round.list_groups_and_profiles() {
+        for gop in voting_config.get_next_round().list_groups_and_profiles() {
             self.add_to_group_or_profile_index(id, gop);
         }
-
-        let voting_config = VotingConfig::new(
-            id,
-            name,
-            description,
-            choices_count,
-            winners_count,
-            permissions,
-            proposers,
-            editors,
-            round,
-            approval,
-            quorum,
-            rejection,
-            win,
-            next_round,
-        )?;
-
-        self.voting_configs.insert(id, voting_config);
-
-        Ok(id)
     }
 
-    pub fn update_voting_config(
-        &mut self,
-        id: VotingConfigId,
-        name_opt: Option<String>,
-        description_opt: Option<String>,
-        choices_count_opt: Option<Option<LenInterval>>,
-        winners_count_opt: Option<Option<LenInterval>>,
-        permissions_opt: Option<BTreeSet<PermissionId>>,
-        proposers_opt: Option<BTreeSet<ActorConstraint>>,
-        editors_opt: Option<BTreeSet<EditorConstraint>>,
-        round_opt: Option<RoundSettings>,
-        approval_opt: Option<ThresholdValue>,
-        quorum_opt: Option<ThresholdValue>,
-        rejection_opt: Option<ThresholdValue>,
-        win_opt: Option<ThresholdValue>,
-        next_round_opt: Option<ThresholdValue>,
-    ) -> Result<(), VotingConfigRepositoryError> {
-        let voting_config = self.get_voting_config_mut(&id)?;
+    fn remove_from_indexes(&mut self, voting_config: &VotingConfig) {
+        let id = voting_config.get_id().unwrap();
 
-        // gathering new indexing data
+        for permission_id in voting_config.get_permissions() {
+            self.remove_from_permissions_index(&id, permission_id);
+        }
 
-        let new_permissions = if let Some(permissions) = &permissions_opt {
-            permissions.clone()
-        } else {
-            BTreeSet::new()
-        };
+        for proposer in voting_config.get_proposers() {
+            self.remove_from_group_or_profile_index(&id, &proposer.to_group_or_profile());
+        }
 
-        let mut new_gops = BTreeSet::new();
-
-        if let Some(proposers) = &proposers_opt {
-            for proposer in proposers {
-                new_gops.insert(proposer.to_group_or_profile());
+        for editor in voting_config.get_editors() {
+            if let Some(gop) = editor.to_group_or_profile() {
+                self.remove_from_group_or_profile_index(&id, &gop);
             }
         }
 
-        if let Some(editors) = &editors_opt {
-            for editor in editors {
-                if let Some(gop) = editor.to_group_or_profile() {
-                    new_gops.insert(gop);
-                }
-            }
-        }
-
-        if let Some(approval) = &approval_opt {
-            for gop in approval.list_groups_and_profiles() {
-                new_gops.insert(gop);
-            }
-        }
-
-        if let Some(quorum) = &quorum_opt {
-            for gop in quorum.list_groups_and_profiles() {
-                new_gops.insert(gop);
-            }
-        }
-
-        if let Some(rejection) = &rejection_opt {
-            for gop in rejection.list_groups_and_profiles() {
-                new_gops.insert(gop);
-            }
-        }
-
-        if let Some(win) = &win_opt {
-            for gop in win.list_groups_and_profiles() {
-                new_gops.insert(gop);
-            }
-        }
-
-        if let Some(next_round) = &next_round_opt {
-            for gop in next_round.list_groups_and_profiles() {
-                new_gops.insert(gop);
-            }
-        }
-
-        // updating and gathering old indexing data
-
-        let (old_permissions, old_gops) = voting_config.update(
-            name_opt,
-            description_opt,
-            choices_count_opt,
-            winners_count_opt,
-            permissions_opt,
-            proposers_opt,
-            editors_opt,
-            round_opt,
-            approval_opt,
-            quorum_opt,
-            rejection_opt,
-            win_opt,
-            next_round_opt,
-        )?;
-
-        // re-indexing
-
-        for permission in old_permissions {
-            self.remove_from_permissions_index(&id, &permission);
-        }
-
-        for permission in new_permissions {
-            self.add_to_permissions_index(id, permission);
-        }
-
-        for gop in old_gops {
+        for gop in voting_config.get_approval().list_groups_and_profiles() {
             self.remove_from_group_or_profile_index(&id, &gop);
         }
 
-        for gop in new_gops {
-            self.add_to_group_or_profile_index(id, gop);
+        for gop in voting_config.get_rejection().list_groups_and_profiles() {
+            self.remove_from_group_or_profile_index(&id, &gop);
         }
 
-        Ok(())
-    }
-
-    pub fn delete_voting_config(
-        &mut self,
-        id: &VotingConfigId,
-    ) -> Result<VotingConfig, VotingConfigRepositoryError> {
-        let voting_config = self
-            .voting_configs
-            .remove(id)
-            .ok_or(VotingConfigRepositoryError::VotingConfigNotFound(*id))?;
-
-        // ------------------ INDEXING ----------------------
-
-        for permission_id in &voting_config.permissions {
-            self.remove_from_permissions_index(id, permission_id);
+        for gop in voting_config.get_quorum().list_groups_and_profiles() {
+            self.remove_from_group_or_profile_index(&id, &gop);
         }
 
-        for proposer in &voting_config.proposers {
-            self.remove_from_group_or_profile_index(id, &proposer.to_group_or_profile());
+        for gop in voting_config.get_win().list_groups_and_profiles() {
+            self.remove_from_group_or_profile_index(&id, &gop);
         }
 
-        for editor in &voting_config.editors {
-            if let Some(gop) = &editor.to_group_or_profile() {
-                self.remove_from_group_or_profile_index(id, gop);
-            }
+        for gop in voting_config.get_next_round().list_groups_and_profiles() {
+            self.remove_from_group_or_profile_index(&id, &gop);
         }
-
-        for gop in voting_config.approval.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, &gop);
-        }
-
-        for gop in voting_config.quorum.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, &gop);
-        }
-
-        for gop in voting_config.rejection.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, &gop);
-        }
-
-        for gop in voting_config.win.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, &gop);
-        }
-
-        for gop in voting_config.next_round.list_groups_and_profiles() {
-            self.remove_from_group_or_profile_index(id, &gop);
-        }
-
-        Ok(voting_config)
-    }
-
-    pub fn get_voting_configs_cloned(
-        &self,
-        page_req: PageRequest<VotingConfigFilter, ()>,
-    ) -> Page<VotingConfig> {
-        if page_req.filter.permission.is_none() && page_req.filter.group_or_profile.is_none() {
-            let (has_next, iter) = self.voting_configs.iter().get_page(&page_req);
-
-            let data = iter.map(|(_, it)| it.clone()).collect();
-
-            return Page { has_next, data };
-        }
-
-        let ids_by_permission = if let Some(permission_id) = &page_req.filter.permission {
-            self.voting_configs_by_permission_index
-                .get(permission_id)
-                .cloned()
-                .unwrap_or_default()
-        } else {
-            BTreeSet::new()
-        };
-
-        let ids_by_gop = if let Some(gop) = &page_req.filter.group_or_profile {
-            self.voting_configs_by_group_or_profile_index
-                .get(gop)
-                .cloned()
-                .unwrap_or_default()
-        } else {
-            BTreeSet::new()
-        };
-
-        let ids = if !ids_by_permission.is_empty() && !ids_by_gop.is_empty() {
-            ids_by_gop
-                .intersection(&ids_by_permission)
-                .cloned()
-                .collect()
-        } else if !ids_by_permission.is_empty() {
-            ids_by_permission
-        } else {
-            ids_by_gop
-        };
-
-        let (has_next, iter) = ids.iter().get_page(&page_req);
-        let data = iter
-            .map(|id| self.get_voting_config_cloned(id).unwrap())
-            .collect();
-
-        Page { has_next, data }
-    }
-
-    pub fn get_voting_config_cloned(
-        &self,
-        id: &VotingConfigId,
-    ) -> Result<VotingConfig, VotingConfigRepositoryError> {
-        self.get_voting_config(id).cloned()
-    }
-
-    // ------------------- PRIVATE ----------------------
-
-    fn get_voting_config(
-        &self,
-        id: &VotingConfigId,
-    ) -> Result<&VotingConfig, VotingConfigRepositoryError> {
-        self.voting_configs
-            .get(id)
-            .ok_or(VotingConfigRepositoryError::VotingConfigNotFound(*id))
-    }
-
-    fn get_voting_config_mut(
-        &mut self,
-        id: &VotingConfigId,
-    ) -> Result<&mut VotingConfig, VotingConfigRepositoryError> {
-        self.voting_configs
-            .get_mut(id)
-            .ok_or(VotingConfigRepositoryError::VotingConfigNotFound(*id))
     }
 
     fn add_to_permissions_index(
@@ -374,12 +204,5 @@ impl VotingConfigRepository {
             .get_mut(&gop)
             .unwrap()
             .remove(voting_config_id);
-    }
-
-    fn generate_voting_config_id(&mut self) -> VotingConfigId {
-        let id = self.voting_config_id_counter;
-        self.voting_config_id_counter += 1;
-
-        id
     }
 }
