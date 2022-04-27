@@ -20,7 +20,7 @@ pub struct QueryConfigRepository {
 }
 
 impl Repository<QueryConfig, QueryConfigId, QueryConfigFilter, ()> for QueryConfigRepository {
-    fn save(&mut self, mut it: QueryConfig) {
+    fn save(&mut self, mut it: QueryConfig) -> QueryConfigId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         } else {
@@ -29,7 +29,10 @@ impl Repository<QueryConfig, QueryConfigId, QueryConfigFilter, ()> for QueryConf
         }
 
         self.add_to_indexes(&it);
-        self.query_configs.insert(it.get_id().unwrap(), it);
+        let id = it.get_id().unwrap();
+        self.query_configs.insert(id, it);
+        
+        id
     }
 
     fn delete(&mut self, id: &QueryConfigId) -> Option<QueryConfig> {
@@ -83,6 +86,10 @@ impl Repository<QueryConfig, QueryConfigId, QueryConfigFilter, ()> for QueryConf
 }
 
 impl QueryConfigRepository {
+    pub fn count(&self) -> usize {
+        self.query_configs.len()
+    }
+    
     fn add_to_indexes(&mut self, query_config: &QueryConfig) {
         let id = query_config.get_id().unwrap();
 

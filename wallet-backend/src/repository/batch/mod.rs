@@ -15,12 +15,15 @@ pub struct BatchRepository {
 }
 
 impl Repository<Batch, BatchId, (), ()> for BatchRepository {
-    fn save(&mut self, mut it: Batch) {
+    fn save(&mut self, mut it: Batch) -> BatchId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         }
 
-        self.batches.insert(it.get_id().unwrap(), it);
+        let id = it.get_id().unwrap();
+        self.batches.insert(id, it);
+        
+        id
     }
 
     fn delete(&mut self, id: &BatchId) -> Option<Batch> {

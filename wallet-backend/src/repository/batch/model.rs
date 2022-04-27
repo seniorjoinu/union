@@ -21,17 +21,9 @@ impl Batch {
         }
     }
 
-    pub fn lock(&mut self, batch_id: BatchId) -> Result<(), ValidationError> {
-        if self.locked {
-            return Err(ValidationError(format!(
-                "Batch {} is already locked",
-                batch_id
-            )));
-        }
-
+    pub fn lock(&mut self) {
+        assert!(!self.locked);
         self.locked = true;
-
-        Ok(())
     }
 
     pub fn get_key(&self) -> &Key {

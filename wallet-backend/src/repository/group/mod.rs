@@ -15,12 +15,15 @@ pub struct GroupRepository {
 }
 
 impl Repository<Group, GroupId, (), ()> for GroupRepository {
-    fn save(&mut self, mut it: Group) {
+    fn save(&mut self, mut it: Group) -> GroupId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         }
 
-        self.groups.insert(it.get_id().unwrap(), it);
+        let id = it.get_id().unwrap();
+        self.groups.insert(id, it);
+        
+        id
     }
 
     fn delete(&mut self, id: &GroupId) -> Option<Group> {

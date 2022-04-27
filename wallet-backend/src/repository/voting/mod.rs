@@ -15,12 +15,15 @@ pub struct VotingRepository {
 }
 
 impl Repository<Voting, VotingId, (), ()> for VotingRepository {
-    fn save(&mut self, mut it: Voting) {
+    fn save(&mut self, mut it: Voting) -> VotingId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         }
 
-        self.votings.insert(it.get_id().unwrap(), it);
+        let id = it.get_id().unwrap();
+        self.votings.insert(id, it);
+        
+        id
     }
 
     fn delete(&mut self, id: &VotingId) -> Option<Voting> {

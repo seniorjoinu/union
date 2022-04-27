@@ -40,11 +40,21 @@ impl Choice {
     pub fn new_rejection(voting_id: VotingId) -> Self {
         Self::new(
             String::from("Reject"),
-            String::from("I don't support this voting at all."),
+            String::from("I don't support this voting"),
             Program::Empty,
             voting_id,
         )
         .unwrap()
+    }
+
+    pub fn new_approval(voting_id: VotingId) -> Self {
+        Self::new(
+            String::from("Approve"),
+            String::from("This voting makes sense to me"),
+            Program::Empty,
+            voting_id,
+        )
+            .unwrap()
     }
 
     pub fn update(

@@ -18,7 +18,7 @@ pub struct ChunkRepository {
 }
 
 impl Repository<Chunk, ChunkId, ChunkFilter, ()> for ChunkRepository {
-    fn save(&mut self, mut it: Chunk) {
+    fn save(&mut self, mut it: Chunk) -> ChunkId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         }
@@ -29,6 +29,8 @@ impl Repository<Chunk, ChunkId, ChunkFilter, ()> for ChunkRepository {
             .or_default()
             .insert(id);
         self.chunks.insert(id, it);
+
+        id
     }
 
     fn delete(&mut self, id: &ChunkId) -> Option<Chunk> {
@@ -53,6 +55,16 @@ impl Repository<Chunk, ChunkId, ChunkFilter, ()> for ChunkRepository {
             Page::new(data, has_next)
         } else {
             Page::empty()
+        }
+    }
+}
+
+impl ChunkRepository {
+    pub fn delete_all_by_batch(&mut self, batch_id: &BatchId) {
+        if let Some(index) = self.chunks_by_batch_index.remove(batch_id) {
+            for id in index {
+                self.chunks.remove(batch_id);
+            }
         }
     }
 }

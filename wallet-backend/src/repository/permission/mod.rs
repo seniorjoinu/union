@@ -20,7 +20,7 @@ pub struct PermissionRepository {
 }
 
 impl Repository<Permission, PermissionId, PermissionFilter, ()> for PermissionRepository {
-    fn save(&mut self, mut it: Permission) {
+    fn save(&mut self, mut it: Permission) -> PermissionId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         } else {
@@ -37,6 +37,8 @@ impl Repository<Permission, PermissionId, PermissionFilter, ()> for PermissionRe
         }
 
         self.permissions.insert(id, it);
+        
+        id
     }
 
     fn delete(&mut self, id: &PermissionId) -> Option<Permission> {

@@ -18,12 +18,15 @@ pub struct TokenRepository {
 }
 
 impl Repository<Token, TokenId, TokenFilter, ()> for TokenRepository {
-    fn save(&mut self, mut it: Token) {
+    fn save(&mut self, mut it: Token) -> TokenId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         }
 
-        self.tokens.insert(it.get_id().unwrap(), it);
+        let id = it.get_id().unwrap();
+        self.tokens.insert(id, it);
+        
+        id
     }
 
     fn delete(&mut self, id: &TokenId) -> Option<Token> {

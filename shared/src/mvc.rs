@@ -24,7 +24,7 @@ pub trait Model<ID> {
 }
 
 pub trait Repository<T: Model<ID>, ID, F, S> {
-    fn save(&mut self, it: T);
+    fn save(&mut self, it: T) -> ID;
     fn delete(&mut self, id: &ID) -> Option<T>;
     fn get(&self, id: &ID) -> Option<T>;
     fn list(&self, page_req: &PageRequest<F, S>) -> Page<T>;

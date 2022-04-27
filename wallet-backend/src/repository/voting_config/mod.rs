@@ -20,7 +20,7 @@ pub struct VotingConfigRepository {
 }
 
 impl Repository<VotingConfig, VotingConfigId, VotingConfigFilter, ()> for VotingConfigRepository {
-    fn save(&mut self, mut it: VotingConfig) {
+    fn save(&mut self, mut it: VotingConfig) -> VotingConfigId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         } else {
@@ -29,7 +29,10 @@ impl Repository<VotingConfig, VotingConfigId, VotingConfigFilter, ()> for Voting
         }
 
         self.add_to_indexes(&it);
-        self.voting_configs.insert(it.get_id().unwrap(), it);
+        let id = it.get_id().unwrap();
+        self.voting_configs.insert(id, it);
+        
+        id
     }
 
     fn delete(&mut self, id: &VotingConfigId) -> Option<VotingConfig> {

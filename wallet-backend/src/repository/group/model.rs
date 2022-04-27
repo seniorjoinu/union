@@ -12,7 +12,7 @@ pub struct Group {
     id: Option<GroupId>,
     name: String,
     description: String,
-    only_with_profile: bool,
+    private: bool,
     token: TokenId,
 }
 
@@ -20,12 +20,12 @@ impl Group {
     pub fn new(
         name: String,
         description: String,
-        only_with_profile: bool,
+        private: bool,
         token: TokenId,
     ) -> Result<Self, ValidationError> {
         let group = Self {
             id: None,
-            only_with_profile,
+            private,
             token,
             name: Self::process_name(name)?,
             description: Self::process_description(description)?,
@@ -50,16 +50,16 @@ impl Group {
         Ok(())
     }
 
-    pub fn set_only_with_profile(&mut self, value: bool) {
-        self.only_with_profile = value;
+    pub fn set_private(&mut self, value: bool) {
+        self.private = value;
     }
 
     pub fn get_token(&self) -> &TokenId {
         &self.token
     }
 
-    pub fn is_only_with_profile(&self) -> bool {
-        self.only_with_profile
+    pub fn is_private(&self) -> bool {
+        self.private
     }
 
     fn process_name(name: String) -> Result<String, ValidationError> {

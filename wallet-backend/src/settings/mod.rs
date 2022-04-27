@@ -1,22 +1,49 @@
 use candid::{CandidType, Deserialize, Principal};
 use shared::sorted_by_timestamp::SortedByTimestamp;
+use shared::validation::{validate_and_trim_str, ValidationError};
 
 #[derive(CandidType, Deserialize)]
 pub struct Settings {
     gateway: Principal,
     history_ledgers: SortedByTimestamp<Principal>,
+    name: String,
+    description: String,
 }
 
 impl Settings {
-    pub fn new(gateway: Principal, history_ledger: Principal, timestamp: u64) -> Self {
+    pub fn new(
+        gateway: Principal,
+        history_ledger: Principal,
+        name: String,
+        description: String,
+        timestamp: u64,
+    ) -> Result<Self, ValidationError> {
         let mut it = Self {
             gateway,
             history_ledgers: SortedByTimestamp::default(),
+            name: Self::process_name(name)?,
+            description: Self::process_description(description)?,
         };
 
         it.add_history_ledger(history_ledger, timestamp);
 
-        it
+        Ok(it)
+    }
+
+    pub fn update(
+        &mut self,
+        new_name: Option<String>,
+        new_description: Option<String>,
+    ) -> Result<(), ValidationError> {
+        if let Some(name) = new_name {
+            self.name = Self::process_name(name)?;
+        }
+
+        if let Some(description) = new_description {
+            self.description = Self::process_description(description)?;
+        }
+
+        Ok(())
     }
 
     pub fn add_history_ledger(&mut self, history_ledger: Principal, timestamp: u64) {
@@ -43,6 +70,14 @@ impl Settings {
 
     pub fn get() -> &'static mut Settings {
         get_settings()
+    }
+
+    fn process_name(name: String) -> Result<String, ValidationError> {
+        validate_and_trim_str(name, 1, 200, "Union name")
+    }
+
+    fn process_description(description: String) -> Result<String, ValidationError> {
+        validate_and_trim_str(description, 0, 2000, "Union description")
     }
 }
 

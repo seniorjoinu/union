@@ -6,12 +6,12 @@ use crate::repository::voting_config::types::{
     RoundSettings, Target, ThresholdValue, VotesFormula, VotingConfig, VotingConfigFilter,
     VotingConfigRepositoryError,
 };
-use crate::service::group as GroupService;
-use crate::service::group::{GroupServiceError, DEFAULT_SHARES, HAS_PROFILE_GROUP_ID};
-use crate::service::permission as PermissionService;
-use crate::service::permission::{PermissionServiceError, DEFAULT_PERMISSION_ID};
-use crate::service::profile as ProfileService;
-use crate::service::profile::ProfileServiceError;
+use crate::service::_group as GroupService;
+use crate::service::_group::{GroupServiceError, DEFAULT_SHARES, HAS_PROFILE_GROUP_ID};
+use crate::service::_permission as PermissionService;
+use crate::service::_permission::{PermissionServiceError, DEFAULT_PERMISSION_ID};
+use crate::service::_profile as ProfileService;
+use crate::service::_profile::ProfileServiceError;
 use candid::Principal;
 use shared::pageable::{Page, PageRequest};
 use shared::remote_call::Program;

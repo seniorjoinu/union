@@ -47,7 +47,7 @@ pub mod common;
 pub mod guards;
 pub mod helpers;
 pub mod repository;
-//pub mod service;
+pub mod service;
 pub mod settings;
 
 #[init]

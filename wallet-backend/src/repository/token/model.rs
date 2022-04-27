@@ -11,7 +11,6 @@ pub struct Token {
     id: Option<TokenId>,
     acceptable: bool,
     transferable: bool,
-    burnable: bool,
 
     total_supply: Shares,
     balances: HashMap<Principal, Shares>,
@@ -21,12 +20,11 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(acceptable: bool, transferable: bool, burnable: bool) -> Self {
+    pub fn new(acceptable: bool, transferable: bool) -> Self {
         Self {
             id: None,
             acceptable,
             transferable,
-            burnable,
             total_supply: Shares::default(),
             balances: HashMap::default(),
             unaccepted_total_supply: Shares::default(),
@@ -48,8 +46,6 @@ impl Token {
     }
 
     pub fn burn(&mut self, from: Principal, qty: Shares) -> Result<(), ValidationError> {
-        assert!(self.burnable);
-
         let balance = self.balance_of(&from);
         if balance < qty {
             Err(ValidationError(String::from("Insufficient balance")))
@@ -113,10 +109,6 @@ impl Token {
         }
     }
 
-    pub fn set_burnable(&mut self, value: bool) {
-        self.burnable = value;
-    }
-
     pub fn set_transferable(&mut self, value: bool) {
         self.transferable = value;
     }
@@ -132,10 +124,6 @@ impl Token {
 
     pub fn is_acceptable(&self) -> bool {
         self.acceptable
-    }
-
-    pub fn is_burnable(&self) -> bool {
-        self.burnable
     }
 
     pub fn is_transferable(&self) -> bool {

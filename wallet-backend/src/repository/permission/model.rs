@@ -80,7 +80,15 @@ impl Permission {
         true
     }
 
-    pub fn is_target(&self, endpoint_opt: Option<RemoteCallEndpoint>) -> bool {
+    pub fn get_targets(&self) -> &BTreeSet<PermissionTarget> {
+        &self.targets
+    }
+
+    pub fn get_scope(&self) -> &PermissionScope {
+        &self.scope
+    }
+
+    fn is_target(&self, endpoint_opt: Option<RemoteCallEndpoint>) -> bool {
         let mut is_target = match endpoint_opt {
             Some(endpoint) => {
                 let target = PermissionTarget::Endpoint(endpoint);
@@ -107,15 +115,7 @@ impl Permission {
 
         is_target
     }
-
-    pub fn get_targets(&self) -> &BTreeSet<PermissionTarget> {
-        &self.targets
-    }
-
-    pub fn get_scope(&self) -> &PermissionScope {
-        &self.scope
-    }
-
+    
     fn process_name(name: String) -> Result<String, ValidationError> {
         validate_and_trim_str(
             name,

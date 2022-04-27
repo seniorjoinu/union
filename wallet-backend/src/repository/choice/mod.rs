@@ -18,16 +18,20 @@ pub struct ChoiceRepository {
 }
 
 impl Repository<Choice, ChoiceId, ChoiceFilter, ()> for ChoiceRepository {
-    fn save(&mut self, mut it: Choice) {
+    fn save(&mut self, mut it: Choice) -> ChoiceId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         }
 
+        let id = it.get_id().unwrap();
+        
         self.choices_by_voting_index
             .entry(*it.get_voting_id())
             .or_default()
-            .insert(it.get_id().unwrap());
-        self.choices.insert(it.get_id().unwrap(), it);
+            .insert(id);
+        self.choices.insert(id, it);
+        
+        id
     }
 
     fn delete(&mut self, id: &ChoiceId) -> Option<Choice> {

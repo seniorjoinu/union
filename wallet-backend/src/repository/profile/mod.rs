@@ -14,8 +14,11 @@ pub struct ProfileRepository {
 }
 
 impl Repository<Profile, ProfileId, (), ()> for ProfileRepository {
-    fn save(&mut self, it: Profile) {
-        self.profiles.insert(it.id, it);
+    fn save(&mut self, it: Profile) -> ProfileId {
+        let id = it.id;
+        self.profiles.insert(id, it);
+        
+        id
     }
 
     fn delete(&mut self, id: &ProfileId) -> Option<Profile> {

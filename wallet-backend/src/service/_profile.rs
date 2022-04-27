@@ -1,6 +1,6 @@
 use crate::repository::get_repositories;
 use crate::repository::profile::types::{Profile, ProfileError};
-use crate::service::group as GroupService;
+use crate::service::_group as GroupService;
 use candid::Principal;
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::ProfileId;
