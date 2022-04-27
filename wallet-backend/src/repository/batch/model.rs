@@ -1,5 +1,4 @@
 use crate::repository::batch::types::{BatchId, Key};
-use crate::repository::chunk::types::ChunkId;
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
 use shared::validation::ValidationError;
@@ -20,23 +19,6 @@ impl Batch {
             content_type,
             locked: false,
         }
-    }
-
-    pub fn add_chunk(
-        &mut self,
-        batch_id: BatchId,
-        chunk_id: ChunkId,
-    ) -> Result<(), ValidationError> {
-        if self.locked {
-            return Err(ValidationError(format!(
-                "Batch {} is already locked",
-                batch_id
-            )));
-        }
-
-        self.chunk_ids.insert(chunk_id);
-
-        Ok(())
     }
 
     pub fn lock(&mut self, batch_id: BatchId) -> Result<(), ValidationError> {

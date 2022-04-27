@@ -5,9 +5,10 @@ use crate::repository::choice::types::{
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
 use shared::remote_call::Program;
-use shared::types::wallet::{ChoiceId, GroupOrProfile, TokenId, VotingId};
+use shared::types::wallet::{ChoiceId, GroupOrProfile, VotingId};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeMap;
+use crate::repository::token::types::TokenId;
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct Choice {
@@ -16,8 +17,7 @@ pub struct Choice {
     name: String,
     description: String,
     program: Program,
-    total_shares_by_gop: TokenId,
-    shares_by_gop: BTreeMap<GroupOrProfile, TokenId>,
+    voting_power_by_gop: BTreeMap<GroupOrProfile, TokenId>,
 }
 
 impl Choice {
@@ -26,7 +26,6 @@ impl Choice {
         description: String,
         program: Program,
         voting_id: VotingId,
-        token_id: TokenId,
     ) -> Result<Self, ValidationError> {
         Ok(Self {
             id: None,
@@ -34,18 +33,16 @@ impl Choice {
             name: Self::process_name(name)?,
             description: Self::process_description(description)?,
             program,
-            total_shares_by_gop: token_id,
-            shares_by_gop: BTreeMap::new(),
+            voting_power_by_gop: BTreeMap::new(),
         })
     }
 
-    pub fn new_rejection(voting_id: VotingId, token_id: TokenId) -> Self {
+    pub fn new_rejection(voting_id: VotingId) -> Self {
         Self::new(
             String::from("Reject"),
             String::from("I don't support this voting at all."),
             Program::Empty,
             voting_id,
-            token_id,
         )
         .unwrap()
     }
@@ -72,16 +69,12 @@ impl Choice {
     }
 
     pub fn set_shares_by_gop_token(&mut self, gop: GroupOrProfile, token_id: TokenId) {
-        assert!(!self.shares_by_gop.contains_key(&gop));
-        self.shares_by_gop.insert(gop, token_id);
+        assert!(!self.voting_power_by_gop.contains_key(&gop));
+        self.voting_power_by_gop.insert(gop, token_id);
     }
 
     pub fn get_shares_by_gop_token(&self, gop: &GroupOrProfile) -> Option<&TokenId> {
-        self.shares_by_gop.get(gop)
-    }
-
-    pub fn get_total_shares_by_gop_token(&self) -> &TokenId {
-        &self.total_shares_by_gop
+        self.voting_power_by_gop.get(gop)
     }
 
     pub fn get_voting_id(&self) -> &VotingId {

@@ -1,73 +1,57 @@
-use crate::cron_dequeue;
-use crate::repository::voting::types::{StartCondition, VotingStatus};
-use crate::repository::voting_config::types::VotesFormula;
+use crate::repository::voting::types::{
+    StartCondition, VotingStatus, VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN,
+    VOTING_NAME_MAX_LEN, VOTING_NAME_MIN_LEN,
+};
 use candid::{CandidType, Deserialize, Principal};
 use ic_cron::types::TaskId;
-use shared::remote_call::Program;
-use shared::types::wallet::{
-    ChoiceId, ChoiceView, GroupId, GroupOrProfile, ProfileId, Shares, VotingConfigId, VotingId,
-};
+use shared::mvc::Model;
+use shared::types::wallet::{ChoiceId, GroupOrProfile, Shares, VotingConfigId, VotingId};
 use shared::validation::{validate_and_trim_str, ValidationError};
-use std::collections::{BTreeMap, HashMap};
-use std::mem;
-
-// TODO: move to new tokens
-// TODO: add START status and START threshold
-// TODO: figure out how to check threshold reach with new tokens
-// TODO: add APPROVAL choice
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct Voting {
-    pub id: VotingId,
-    pub voting_config_id: VotingConfigId,
+    id: Option<VotingId>,
+    voting_config_id: VotingConfigId,
 
-    pub status: VotingStatus,
-    pub created_at: u64,
-    pub updated_at: u64,
-    pub proposer: Principal,
+    status: VotingStatus,
+    created_at: u64,
+    updated_at: u64,
+    proposer: Principal,
 
-    pub task_id: Option<TaskId>,
+    task_id: Option<TaskId>,
 
-    pub name: String,
-    pub description: String,
+    name: String,
+    description: String,
 
-    pub total_supplies: BTreeMap<GroupOrProfile, Shares>,
-    pub total_non_rejection: BTreeMap<GroupOrProfile, Shares>,
+    start_condition: StartCondition,
+    winners_need: usize,
 
-    pub start_condition: StartCondition,
+    total_voting_power: BTreeMap<GroupOrProfile, Shares>,
+    used_voting_power: BTreeMap<GroupOrProfile, Shares>,
 
-    pub winners_need: usize,
-    pub winners: BTreeMap<ChoiceId, Choice>,
-    pub losers: BTreeMap<ChoiceId, Choice>,
+    winners: BTreeSet<ChoiceId>,
+    losers: BTreeSet<ChoiceId>,
+    choices: BTreeSet<ChoiceId>,
 
-    pub choices: BTreeMap<ChoiceId, Choice>,
-    pub rejection_choice: Choice,
+    rejection_choice: ChoiceId,
+    approval_choice: ChoiceId,
 }
 
 impl Voting {
     pub fn new(
-        id: VotingId,
         voting_config_id: VotingConfigId,
         name: String,
         description: String,
         start_condition: StartCondition,
         winners_need: usize,
-        custom_choices: Vec<ChoiceView>,
         proposer: Principal,
+        rejection_choice: ChoiceId,
+        approval_choice: ChoiceId,
         timestamp: u64,
-    ) -> Result<Self, VotingRepositoryError> {
-        let mut choices = BTreeMap::new();
-
-        for (id, c) in custom_choices.into_iter().enumerate() {
-            let mut choice = Choice::from_external(c);
-            choice
-                .validate()
-                .map_err(VotingRepositoryError::ValidationError)?;
-            choices.insert(id, choice);
-        }
-
+    ) -> Result<Self, ValidationError> {
         let voting = Self {
-            id,
+            id: None,
             voting_config_id,
 
             created_at: timestamp,
@@ -80,16 +64,17 @@ impl Voting {
             description: Self::process_description(description)?,
 
             start_condition,
-
-            total_supplies: BTreeMap::new(),
-            total_non_rejection: BTreeMap::new(),
-
             winners_need,
-            winners: BTreeMap::new(),
-            losers: BTreeMap::new(),
 
-            choices: choices,
-            rejection_choice: Choice::rejection(),
+            total_voting_power: BTreeMap::new(),
+            used_voting_power: BTreeMap::new(),
+
+            winners: BTreeSet::new(),
+            losers: BTreeSet::new(),
+            choices: BTreeSet::new(),
+
+            rejection_choice,
+            approval_choice,
         };
 
         Ok(voting)
@@ -101,11 +86,13 @@ impl Voting {
         new_description: Option<String>,
         new_start_condition: Option<StartCondition>,
         new_winners_need: Option<usize>,
-        new_custom_choices: Option<Vec<ChoiceView>>,
         timestamp: u64,
-    ) -> Result<(), VotingRepositoryError> {
+    ) -> Result<(), ValidationError> {
         if !matches!(self.status, VotingStatus::Created) {
-            return Err(VotingRepositoryError::VotingInInvalidStatus(self.id));
+            return Err(ValidationError(format!(
+                "Invalid voting status {:?}",
+                self.status
+            )));
         }
 
         if let Some(name) = new_name {
@@ -124,209 +111,192 @@ impl Voting {
             self.winners_need = winners_need;
         }
 
-        if let Some(custom_choices) = new_custom_choices {
-            let mut choices = BTreeMap::new();
-
-            for (id, c) in custom_choices.into_iter().enumerate() {
-                let mut choice = Choice::from_external(c);
-                choice
-                    .validate()
-                    .map_err(VotingRepositoryError::ValidationError)?;
-                choices.insert(id, choice);
-            }
-
-            self.choices = choices;
-        }
-
         self.updated_at = timestamp;
 
         Ok(())
     }
 
-    pub fn cast_vote(
+    pub fn update_total_voting_power(
         &mut self,
-        vote: Vote,
-        gop_total_supply: Shares,
+        gop: GroupOrProfile,
+        total_voting_power: Shares,
         timestamp: u64,
-    ) -> Result<(), VotingRepositoryError> {
-        if !matches!(self.status, VotingStatus::Round(_) | VotingStatus::Created) {
-            return Err(VotingRepositoryError::VotingInInvalidStatus(self.id));
-        }
-
-        let (gop, principal) = match vote.voter {
-            Voter::Profile(p) => {
-                let gop = GroupOrProfile::Profile(p);
-
-                self.total_supplies.insert(gop, gop_total_supply);
-                (gop, p)
-            }
-            Voter::Group((g, p)) => {
-                let gop = GroupOrProfile::Group(g);
-
-                let group_total_supply_old =
-                    self.total_supplies.get(&gop).cloned().unwrap_or_default();
-
-                assert!(
-                    group_total_supply_old == Shares::default()
-                        || group_total_supply_old == gop_total_supply
-                );
-                self.total_supplies.insert(gop, gop_total_supply);
-
-                (gop, p)
-            }
-        };
-
-        self.clear_prev_votes(gop, &principal);
-        self.put_new_vote(gop, principal, vote.vote_type)?;
-
+    ) {
+        self.total_voting_power.insert(gop, total_voting_power);
         self.updated_at = timestamp;
-
-        Ok(())
     }
 
-    pub fn approve(&mut self, timestamp: u64) -> Result<(), VotingRepositoryError> {
-        if !matches!(self.status, VotingStatus::Created) {
-            return Err(VotingRepositoryError::VotingInInvalidStatus(self.id));
-        }
+    pub fn add_used_voting_power(
+        &mut self,
+        gop: GroupOrProfile,
+        voting_power: Shares,
+        timestamp: u64,
+    ) {
+        let prev_vp = self.used_voting_power.remove(&gop).unwrap_or_default();
+        self.used_voting_power.insert(gop, prev_vp + voting_power);
+        self.updated_at = timestamp;
+    }
+
+    pub fn approve(&mut self, timestamp: u64) {
+        assert!(matches!(self.status, VotingStatus::Created));
 
         self.status = VotingStatus::PreRound(1);
         self.updated_at = timestamp;
-
-        Ok(())
     }
 
-    pub fn reject(&mut self, timestamp: u64) -> Result<(), VotingRepositoryError> {
-        if !matches!(self.status, VotingStatus::Created | VotingStatus::Round(_)) {
-            return Err(VotingRepositoryError::VotingInInvalidStatus(self.id));
-        }
+    pub fn reject(&mut self, timestamp: u64) {
+        assert!(matches!(
+            self.status,
+            VotingStatus::Created | VotingStatus::Round(_)
+        ));
 
         self.status = VotingStatus::Rejected;
         self.updated_at = timestamp;
-
-        Ok(())
     }
 
-    pub fn start_round(&mut self, timestamp: u64) -> Result<(), VotingRepositoryError> {
+    pub fn start_round(&mut self, timestamp: u64) {
         match self.status {
             VotingStatus::PreRound(round) => {
                 self.status = VotingStatus::Round(round);
                 self.updated_at = timestamp;
-
-                Ok(())
             }
-            _ => Err(VotingRepositoryError::VotingInInvalidStatus(self.id)),
+            _ => unreachable!(),
         }
     }
 
-    pub fn next_round(&mut self, timestamp: u64) -> Result<(), VotingRepositoryError> {
+    pub fn next_round(&mut self, timestamp: u64) {
         match self.status {
             VotingStatus::Round(round) => {
                 self.status = VotingStatus::PreRound(round + 1);
                 self.updated_at = timestamp;
-
-                Ok(())
             }
-            _ => Err(VotingRepositoryError::VotingInInvalidStatus(self.id)),
+            _ => unreachable!(),
         }
     }
 
-    pub fn finish_success(&mut self, timestamp: u64) -> Result<(), VotingRepositoryError> {
-        if !matches!(self.status, VotingStatus::Round(_)) {
-            return Err(VotingRepositoryError::VotingInInvalidStatus(self.id));
-        }
+    pub fn finish_success(&mut self, timestamp: u64) {
+        assert!(matches!(self.status, VotingStatus::Round(_)));
 
         self.status = VotingStatus::Success;
         self.updated_at = timestamp;
-
-        Ok(())
     }
 
-    pub fn set_task_id(&mut self, task_id: TaskId) {
-        if self.task_id.is_some() {
-            unreachable!()
-        }
-
-        self.task_id = Some(task_id);
-    }
-
-    // TODO: move out of here
-    pub fn deschedule_task_id(&mut self) {
-        if let Some(task_id) = self.task_id {
-            cron_dequeue(task_id).unwrap();
-        }
-    }
-
-    pub fn finish_fail(
-        &mut self,
-        reason_msg: String,
-        timestamp: u64,
-    ) -> Result<(), VotingRepositoryError> {
-        if !matches!(self.status, VotingStatus::Round(_)) {
-            return Err(VotingRepositoryError::VotingInInvalidStatus(self.id));
-        }
+    pub fn finish_fail(&mut self, reason_msg: String, timestamp: u64) {
+        assert!(matches!(self.status, VotingStatus::Round(_)));
 
         self.status = VotingStatus::Fail(reason_msg);
         self.updated_at = timestamp;
-
-        Ok(())
     }
 
-    fn clear_prev_votes(&mut self, gop: GroupOrProfile, principal: &Principal) {
-        self.rejection_choice.remove_vote(gop, principal);
-
-        for (_, choice) in &mut self.choices {
-            let voter_shares_opt = choice.remove_vote(gop, principal);
-
-            if let Some(voter_shares) = voter_shares_opt {
-                let total_gop_shares = self.total_non_rejection.remove(&gop).unwrap_or_default();
-                self.total_non_rejection
-                    .insert(gop, total_gop_shares - voter_shares);
-            }
-        }
+    pub fn set_cron_task(&mut self, task_id: TaskId, timestamp: u64) {
+        self.task_id = Some(task_id);
+        self.updated_at = timestamp;
     }
 
-    fn put_new_vote(
-        &mut self,
-        gop: GroupOrProfile,
-        principal: Principal,
-        vote_type: VoteType,
-    ) -> Result<(), VotingRepositoryError> {
-        match vote_type {
-            VoteType::Rejection(shares) => {
-                self.rejection_choice.add_vote(gop, principal, shares);
-            }
-            VoteType::Custom(votes) => {
-                for (choice_id, shares) in votes {
-                    let choice = self
-                        .choices
-                        .get_mut(&choice_id)
-                        .ok_or(VotingRepositoryError::ChoiceNotFound(self.id, choice_id))?;
-
-                    let total_gop_shares =
-                        self.total_non_rejection.remove(&gop).unwrap_or_default();
-                    self.total_non_rejection
-                        .insert(gop, total_gop_shares + shares.clone());
-
-                    choice.add_vote(gop, principal, shares);
-                }
-            }
-        };
-
-        Ok(())
+    pub fn add_winner(&mut self, choice_id: ChoiceId, timestamp: u64) {
+        self.winners.insert(choice_id);
+        self.updated_at = timestamp;
     }
 
-    fn process_name(name: String) -> Result<String, VotingRepositoryError> {
-        validate_and_trim_str(name, VOTING_NAME_MIN_LEN, VOTING_NAME_MAX_LEN, "Name")
-            .map_err(VotingRepositoryError::ValidationError)
+    pub fn remove_winner(&mut self, choice_id: &ChoiceId, timestamp: u64) {
+        self.winners.remove(choice_id);
+        self.updated_at = timestamp;
     }
 
-    fn process_description(description: String) -> Result<String, VotingRepositoryError> {
+    pub fn add_loser(&mut self, choice_id: ChoiceId, timestamp: u64) {
+        self.losers.insert(choice_id);
+        self.updated_at = timestamp;
+    }
+
+    pub fn remove_loser(&mut self, choice_id: &ChoiceId, timestamp: u64) {
+        self.losers.remove(choice_id);
+        self.updated_at = timestamp;
+    }
+
+    pub fn add_choice(&mut self, choice_id: ChoiceId, timestamp: u64) {
+        self.choices.insert(choice_id);
+        self.updated_at = timestamp;
+    }
+
+    pub fn remove_choice(&mut self, choice_id: &ChoiceId, timestamp: u64) {
+        self.choices.remove(choice_id);
+        self.updated_at = timestamp;
+    }
+
+    pub fn get_winners(&self) -> &BTreeSet<ChoiceId> {
+        &self.winners
+    }
+
+    pub fn get_losers(&self) -> &BTreeSet<ChoiceId> {
+        &self.losers
+    }
+
+    pub fn get_choices(&self) -> &BTreeSet<ChoiceId> {
+        &self.choices
+    }
+
+    pub fn get_approval_choice(&self) -> &ChoiceId {
+        &self.approval_choice
+    }
+
+    pub fn get_rejection_choice(&self) -> &ChoiceId {
+        &self.rejection_choice
+    }
+
+    pub fn get_used_voting_power(&self) -> &BTreeMap<GroupOrProfile, Shares> {
+        &self.used_voting_power
+    }
+
+    pub fn get_total_voting_power(&self) -> &BTreeMap<GroupOrProfile, Shares> {
+        &self.total_voting_power
+    }
+
+    pub fn get_winners_need(&self) -> &usize {
+        &self.winners_need
+    }
+
+    pub fn get_start_condition(&self) -> &StartCondition {
+        &self.start_condition
+    }
+
+    pub fn get_status(&self) -> &VotingStatus {
+        &self.status
+    }
+
+    pub fn get_cron_task(&self) -> Option<TaskId> {
+        self.task_id
+    }
+
+    fn process_name(name: String) -> Result<String, ValidationError> {
+        validate_and_trim_str(
+            name,
+            VOTING_NAME_MIN_LEN,
+            VOTING_NAME_MAX_LEN,
+            "Voting name",
+        )
+    }
+
+    fn process_description(description: String) -> Result<String, ValidationError> {
         validate_and_trim_str(
             description,
             VOTING_DESCRIPTION_MIN_LEN,
             VOTING_DESCRIPTION_MAX_LEN,
-            "Description",
+            "Voting description",
         )
-        .map_err(VotingRepositoryError::ValidationError)
+    }
+}
+
+impl Model<VotingId> for Voting {
+    fn get_id(&self) -> Option<VotingId> {
+        self.id
+    }
+
+    fn _init_id(&mut self, id: VotingId) {
+        assert!(self.is_transient());
+        self.id = Some(id);
+    }
+
+    fn is_transient(&self) -> bool {
+        self.id.is_none()
     }
 }

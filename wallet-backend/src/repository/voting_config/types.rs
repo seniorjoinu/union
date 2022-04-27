@@ -1,15 +1,11 @@
 use crate::repository::permission::types::PermissionId;
-use crate::repository::voting::types::Voting;
 use bigdecimal::num_bigint::ToBigInt;
 use bigdecimal::{BigDecimal, ToPrimitive};
-use candid::parser::value::IDLValueVisitor;
 use candid::types::{Serializer, Type};
 use candid::{CandidType, Deserialize, Nat};
 use serde::Deserializer;
-use shared::types::wallet::{ChoiceId, GroupId, GroupOrProfile, ProfileId, Shares, VotingConfigId};
-use shared::validation::{validate_and_trim_str, ValidationError};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::mem;
+use shared::types::wallet::{GroupId, GroupOrProfile, ProfileId, Shares};
+use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Div;
 use std::str::FromStr;
 
@@ -17,12 +13,6 @@ pub const VOTING_CONFIG_NAME_MIN_LEN: usize = 1;
 pub const VOTING_CONFIG_NAME_MAX_LEN: usize = 200;
 pub const VOTING_CONFIG_DESCRIPTION_MIN_LEN: usize = 0;
 pub const VOTING_CONFIG_DESCRIPTION_MAX_LEN: usize = 2000;
-
-#[derive(Debug)]
-pub enum VotingConfigRepositoryError {
-    VotingConfigNotFound(VotingConfigId),
-    ValidationError(ValidationError),
-}
 
 #[derive(Default, Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Fraction(pub BigDecimal);
@@ -175,16 +165,16 @@ pub enum Target {
 }
 
 #[derive(Clone, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
-pub enum ActorConstraint {
+pub enum ProposerConstraint {
     Group(GroupCondition),
     Profile(ProfileId),
 }
 
-impl ActorConstraint {
+impl ProposerConstraint {
     pub fn to_group_or_profile(&self) -> GroupOrProfile {
         match self {
-            ActorConstraint::Profile(p) => GroupOrProfile::Profile(*p),
-            ActorConstraint::Group(g) => GroupOrProfile::Group(g.id),
+            ProposerConstraint::Profile(p) => GroupOrProfile::Profile(*p),
+            ProposerConstraint::Group(g) => GroupOrProfile::Group(g.id),
         }
     }
 }

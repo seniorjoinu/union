@@ -29,3 +29,7 @@ pub trait Repository<T: Model<ID>, ID, F, S> {
     fn get(&self, id: &ID) -> Option<T>;
     fn list(&self, page_req: &PageRequest<F, S>) -> Page<T>;
 }
+
+pub trait HasRepository<T: Model<ID>, ID, F, S, R: Repository<T, ID, F, S>> {
+    fn repo() -> &'static mut R;
+}

@@ -23,5 +23,5 @@ async-trait = "0.1.53"
 ic-event-hub = "0.3.1"
 ic-event-hub-macros = "0.3.1"
 shared = { path = "../shared" }
-history-ledger-client = { path = "../history-ledger/clients/rust" }
-bigdecimal = { version = "0.3.0", feature = ["serde"] }
+#history-ledger-client = { path = "../history-ledger/clients/rust" }
+bigdecimal = { version = "0.3.0" }

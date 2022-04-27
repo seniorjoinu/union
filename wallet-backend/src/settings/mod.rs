@@ -1,6 +1,7 @@
 use candid::{CandidType, Deserialize, Principal};
 use shared::sorted_by_timestamp::SortedByTimestamp;
 
+#[derive(CandidType, Deserialize)]
 pub struct Settings {
     gateway: Principal,
     history_ledgers: SortedByTimestamp<Principal>,
@@ -39,4 +40,26 @@ impl Settings {
     pub fn get_history_ledgers(&self) -> Vec<&Principal> {
         self.history_ledgers.get_all()
     }
+
+    pub fn get() -> &'static mut Settings {
+        get_settings()
+    }
+}
+
+static mut SETTINGS: Option<Settings> = None;
+
+pub fn init_settings(gateway: Principal, history_ledger: Principal, timestamp: u64) {
+    unsafe { SETTINGS = Some(Settings::new(gateway, history_ledger, timestamp)) }
+}
+
+fn get_settings() -> &'static mut Settings {
+    unsafe { SETTINGS.as_mut().unwrap() }
+}
+
+pub fn take_settings() -> Option<Settings> {
+    unsafe { SETTINGS.take() }
+}
+
+pub fn set_settings(settings: Option<Settings>) {
+    unsafe { SETTINGS = settings }
 }

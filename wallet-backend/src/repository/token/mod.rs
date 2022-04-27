@@ -1,9 +1,9 @@
 use crate::repository::token::model::Token;
 use crate::repository::token::types::{TokenFilter, TokenId};
 use crate::Principal;
+use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
-use shared::types::wallet::{GroupId, VotingId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 pub mod model;
@@ -22,7 +22,7 @@ impl Repository<Token, TokenId, TokenFilter, ()> for TokenRepository {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         }
-        
+
         self.tokens.insert(it.get_id().unwrap(), it);
     }
 
@@ -37,10 +37,13 @@ impl Repository<Token, TokenId, TokenFilter, ()> for TokenRepository {
     }
 
     fn list(&self, page_req: &PageRequest<TokenFilter, ()>) -> Page<Token> {
-        if let Some(index) = self.tokens_by_principal_index.get(&page_req.filter.principal_id) {
+        if let Some(index) = self
+            .tokens_by_principal_index
+            .get(&page_req.filter.principal_id)
+        {
             let (has_next, iter) = index.iter().get_page(page_req);
-            let data = iter.map(|id| self.get(id).unwrap());
-            
+            let data = iter.map(|id| self.get(id).unwrap()).collect();
+
             Page::new(data, has_next)
         } else {
             Page::empty()
@@ -60,7 +63,6 @@ impl TokenRepository {
         self.tokens_by_principal_index
             .get_mut(principal)
             .unwrap()
-            .remove(id)
-            .unwrap();
+            .remove(id);
     }
 }

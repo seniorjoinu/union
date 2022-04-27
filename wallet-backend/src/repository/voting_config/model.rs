@@ -1,27 +1,14 @@
 use crate::repository::permission::types::PermissionId;
-use crate::repository::voting::model::Voting;
 use crate::repository::voting_config::types::{
-    ActorConstraint, EditorConstraint, LenInterval, RoundSettings, ThresholdValue,
+    EditorConstraint, LenInterval, ProposerConstraint, RoundSettings, ThresholdValue,
     VOTING_CONFIG_DESCRIPTION_MAX_LEN, VOTING_CONFIG_DESCRIPTION_MIN_LEN,
     VOTING_CONFIG_NAME_MAX_LEN, VOTING_CONFIG_NAME_MIN_LEN,
 };
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
-use shared::types::wallet::{ChoiceId, GroupOrProfile, VotingConfigId};
+use shared::types::wallet::VotingConfigId;
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
-
-///
-/// VotingStatus { CREATED, PRE_ROUND(), ROUND(), REJECTED, SUCCESS, FAIL }
-/// only PROPOSERS can create -> CREATED
-/// only EDITORS can update -> CREATED
-/// when APPROVAL is reached -> PRE_ROUND()
-///     this implies that only APPROVAL listed GOPs can vote when CREATED
-/// when PRE_ROUND() wait for cron -> ROUND()
-/// when CREATED or ROUND() - REJECTION listed GOPs can vote -> REJECTED
-/// when ROUND() - QUORUM, WIN or NEXT_ROUND listed GOPs can vote -> PRE_ROUND() | SUCCESS | FAIL
-/// when
-///
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct VotingConfig {
@@ -34,7 +21,7 @@ pub struct VotingConfig {
 
     permissions: BTreeSet<PermissionId>,
 
-    proposers: BTreeSet<ActorConstraint>,
+    proposers: BTreeSet<ProposerConstraint>,
     editors: BTreeSet<EditorConstraint>,
     approval: ThresholdValue,
     rejection: ThresholdValue,
@@ -53,7 +40,7 @@ impl VotingConfig {
         choices_count: Option<LenInterval>,
         winners_count: Option<LenInterval>,
         permissions: BTreeSet<PermissionId>,
-        proposers: BTreeSet<ActorConstraint>,
+        proposers: BTreeSet<ProposerConstraint>,
         editors: BTreeSet<EditorConstraint>,
         round: RoundSettings,
         approval: ThresholdValue,
@@ -105,7 +92,7 @@ impl VotingConfig {
         choices_count_opt: Option<Option<LenInterval>>,
         winners_count_opt: Option<Option<LenInterval>>,
         permissions_opt: Option<BTreeSet<PermissionId>>,
-        proposers_opt: Option<BTreeSet<ActorConstraint>>,
+        proposers_opt: Option<BTreeSet<ProposerConstraint>>,
         editors_opt: Option<BTreeSet<EditorConstraint>>,
         round_opt: Option<RoundSettings>,
         approval_opt: Option<ThresholdValue>,
@@ -222,7 +209,7 @@ impl VotingConfig {
         &self.permissions
     }
 
-    pub fn get_proposers(&self) -> &BTreeSet<ActorConstraint> {
+    pub fn get_proposers(&self) -> &BTreeSet<ProposerConstraint> {
         &self.proposers
     }
 

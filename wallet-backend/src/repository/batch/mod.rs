@@ -3,6 +3,7 @@ use crate::repository::batch::types::BatchId;
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
 use std::collections::HashMap;
+use candid::{CandidType, Deserialize};
 
 pub mod model;
 pub mod types;

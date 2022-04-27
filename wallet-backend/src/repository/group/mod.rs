@@ -1,11 +1,9 @@
 use crate::repository::group::model::Group;
-use crate::repository::group::types::GroupType;
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
-use shared::types::wallet::{GroupId, ProfileId, Shares};
-use std::collections::hash_map::Entry;
-use std::collections::{BTreeSet, HashMap};
+use shared::types::wallet::GroupId;
+use std::collections::HashMap;
 
 pub mod model;
 pub mod types;

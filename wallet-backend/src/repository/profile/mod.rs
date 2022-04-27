@@ -1,5 +1,5 @@
 use crate::repository::profile::model::Profile;
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize};
 use shared::mvc::Repository;
 use shared::pageable::{Page, PageRequest, Pageable};
 use shared::types::wallet::ProfileId;

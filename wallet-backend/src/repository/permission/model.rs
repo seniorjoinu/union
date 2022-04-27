@@ -6,6 +6,7 @@ use shared::mvc::Model;
 use shared::remote_call::{Program, RemoteCallEndpoint};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
+use candid::{CandidType, Deserialize};
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct Permission {

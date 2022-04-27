@@ -32,8 +32,8 @@ use serde_bytes::ByteBuf;
 use shared::candid::ToCandidType;
 use shared::validation::validate_and_trim_str;
 */
-use crate::repository::{get_repositories, init_repositories, set_repositories, take_repositories};
-use crate::service::{init_services, profile as ProfileService};
+use crate::repository::{set_repositories, take_repositories};
+use crate::settings::{init_settings, set_settings, take_settings};
 use candid::Principal;
 use ic_cdk::api::time;
 use ic_cdk::storage::{stable_restore, stable_save};
@@ -47,27 +47,27 @@ pub mod common;
 pub mod guards;
 pub mod helpers;
 pub mod repository;
-pub mod service;
+//pub mod service;
 pub mod settings;
 
 #[init]
 fn init(gateway: Principal, history_ledger: Principal, wallet_creator: Principal) {
-    init_repositories(gateway, history_ledger, time());
-    init_services();
-
+    init_settings(gateway, history_ledger, time());
+    /*
     ProfileService::create_profile(
         wallet_creator,
         String::from("Wallet creator"),
         String::from("A person, who created this wallet"),
     )
-    .expect("Unable to create wallet creator profile");
+    .expect("Unable to create wallet creator profile");*/
 }
 
 #[post_upgrade]
 fn post_upgrade_hook() {
-    let (repos, cron, events) = stable_restore().expect("Unable to stable restore");
+    let (repos, cron, events, settings) = stable_restore().expect("Unable to stable restore");
 
     set_repositories(repos);
+    set_settings(settings);
     _put_cron_state(cron);
     _put_event_hub_state(events);
 }
@@ -78,6 +78,7 @@ fn pre_upgrade_hook() {
         take_repositories(),
         _take_cron_state(),
         _take_event_hub_state(),
+        take_settings(),
     ))
     .expect("Unable to stable save");
 }

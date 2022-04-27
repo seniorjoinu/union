@@ -1,11 +1,7 @@
 use crate::mvc::Id;
-use crate::remote_call::{Program, ProgramExecutionResult};
-use crate::types::Blob;
+use crate::remote_call::ProgramExecutionResult;
 use candid::{CandidType, Deserialize, Nat, Principal};
 use ic_event_hub_macros::Event;
-use std::alloc::Layout;
-use std::collections::BTreeMap;
-use std::mem::size_of;
 
 pub type VotingConfigId = Id;
 pub type VotingId = Id;
@@ -30,13 +26,13 @@ pub struct VotingExecutedMetaEvent {
     pub winners_count: usize,
 }
 
-#[derive(Event)]
+/*#[derive(Event)]
 pub struct VotingExecutedWinnerEvent {
     pub voting_id: VotingId,
     pub choice_id: ChoiceId,
     pub choice: Choice,
 }
-
+*/
 #[derive(Event)]
 pub struct VotingExecutedResultEvent {
     pub voting_id: VotingId,

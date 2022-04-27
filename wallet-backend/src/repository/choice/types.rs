@@ -1,5 +1,4 @@
 use shared::types::wallet::VotingId;
-use shared::validation::ValidationError;
 use candid::{CandidType, Deserialize};
 
 pub const VOTING_CHOICE_NAME_MIN_LEN: usize = 1;

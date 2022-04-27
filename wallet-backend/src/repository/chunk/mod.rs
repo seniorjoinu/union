@@ -1,5 +1,6 @@
+use crate::repository::batch::types::BatchId;
 use crate::repository::chunk::model::Chunk;
-use crate::repository::chunk::types::{BatchId, ChunkFilter, ChunkId, Key, StreamingError};
+use crate::repository::chunk::types::{ChunkFilter, ChunkId};
 use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
@@ -47,7 +48,7 @@ impl Repository<Chunk, ChunkId, ChunkFilter, ()> for ChunkRepository {
     fn list(&self, page_req: &PageRequest<ChunkFilter, ()>) -> Page<Chunk> {
         if let Some(index) = self.chunks_by_batch_index.get(&page_req.filter.batch_id) {
             let (has_next, iter) = index.iter().get_page(page_req);
-            let data = iter.map(|(id)| self.get(id).unwrap()).collect();
+            let data = iter.map(|id| self.get(id).unwrap()).collect();
 
             Page::new(data, has_next)
         } else {

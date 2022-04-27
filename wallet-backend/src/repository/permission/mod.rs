@@ -1,12 +1,10 @@
 use crate::repository::permission::model::Permission;
 use crate::repository::permission::types::{
-    Permission, PermissionFilter, PermissionId, PermissionRepositoryError, PermissionScope,
-    PermissionTarget,
+    PermissionFilter, PermissionId, PermissionTarget,
 };
-use ic_cdk::export::candid::{CandidType, Deserialize};
+use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
-use std::collections::hash_map::Entry;
 use std::collections::{BTreeSet, HashMap};
 
 pub mod model;

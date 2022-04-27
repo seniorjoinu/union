@@ -1,9 +1,6 @@
 use crate::repository::permission::types::PermissionId;
 use crate::repository::voting_config::model::VotingConfig;
-use crate::repository::voting_config::types::{
-    ActorConstraint, EditorConstraint, LenInterval, RoundSettings, ThresholdValue,
-    VotingConfigFilter, VotingConfigRepositoryError,
-};
+use crate::repository::voting_config::types::VotingConfigFilter;
 use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
@@ -75,7 +72,7 @@ impl Repository<VotingConfig, VotingConfigId, VotingConfigFilter, ()> for Voting
         if !index.is_empty() {
             index.append(&mut index2);
         } else {
-            index = index.intersection(&index2).collect();
+            index = index.intersection(&index2).cloned().collect();
         }
 
         let (has_next, iter) = index.iter().get_page(page_req);

@@ -1,9 +1,8 @@
-use crate::repository::chunk::types::{BatchId, ChunkId};
+use crate::repository::batch::types::BatchId;
+use crate::repository::chunk::types::ChunkId;
 use candid::{CandidType, Deserialize};
-use serde_bytes::ByteBuf;
 use shared::mvc::Model;
 use shared::types::Blob;
-use std::collections::BTreeSet;
 
 #[derive(Clone, Default, CandidType, Deserialize)]
 pub struct Chunk {
@@ -13,11 +12,11 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub fn new(batch_id: BatchId, content: ByteBuf) -> Self {
+    pub fn new(batch_id: BatchId, content: Blob) -> Self {
         Chunk {
             id: None,
             batch_id,
-            content: RcBytes::from(content),
+            content,
         }
     }
 

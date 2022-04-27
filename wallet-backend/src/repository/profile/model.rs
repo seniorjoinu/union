@@ -5,6 +5,7 @@ use crate::repository::profile::types::{
 use shared::mvc::Model;
 use shared::types::wallet::ProfileId;
 use shared::validation::{validate_and_trim_str, ValidationError};
+use candid::{CandidType, Deserialize};
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct Profile {
@@ -64,7 +65,7 @@ impl Model<ProfileId> for Profile {
         Some(self.id)
     }
 
-    fn _init_id(&mut self, id: ProfileId) {}
+    fn _init_id(&mut self, _: ProfileId) {}
 
     fn is_transient(&self) -> bool {
         false
