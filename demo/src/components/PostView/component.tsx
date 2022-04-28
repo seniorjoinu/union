@@ -60,7 +60,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   border: 1px solid grey;
-  padding: 16px 24px 12px;
+  padding: 12px 16px 12px;
 
   ${Head} {
     margin-bottom: 8px;

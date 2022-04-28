@@ -168,3 +168,25 @@ export const Spinner = styled.div<{ size?: number }>`
     }
   }
 `;
+
+export const SubmitButton = styled(({ children, ...p }: React.ComponentProps<typeof Button>) => (
+  <Button {...p}>
+    <Spinner size={20} />
+    <span>{children}</span>
+  </Button>
+))<{ $loading: boolean }>`
+  position: relative;
+
+  ${Spinner} {
+    position: absolute;
+    top: calc(50% - 10px);
+    left: calc(50% - 10px);
+    opacity: ${({ $loading }) => ($loading ? 1 : 0)};
+  }
+  button > span {
+    opacity: ${({ $loading }) => ($loading ? 0 : 1)};
+  }
+  ${Spinner}, & > span {
+    transition: opacity 0.2s ease;
+  }
+`;

@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import styled from 'styled-components';
 import { useBackend } from '../../backend';
-import { Button as B, TextArea as TA, Markdown as MD, Spinner } from '../atoms';
+import { TextArea as TA, Markdown as MD, SubmitButton } from '../atoms';
 import { withBorder } from '../withBorder';
 
 const TextArea = withBorder(TA);
@@ -46,34 +46,20 @@ const Tabs = styled.div`
   }
 `;
 
-const Button = styled(B)<{ $loading: boolean }>`
-  position: relative;
-
-  ${Spinner} {
-    position: absolute;
-    top: calc(50% - 10px);
-    left: calc(50% - 10px);
-    opacity: ${({ $loading }) => ($loading ? 1 : 0)};
-  }
-  & > span {
-    opacity: ${({ $loading }) => ($loading ? 0 : 1)};
-  }
-  ${Spinner}, & > span {
-    transition: opacity 0.2s ease;
-  }
-`;
-
 const Container = styled.div`
   display: flex;
   flex-direction: column;
 
-  ${Button} {
+  ${SubmitButton} {
     margin-top: 8px;
     align-self: flex-start;
   }
 
   ${Markdown} {
     max-height: 800px;
+  }
+  ${TA} {
+    padding: 8px;
   }
   ${MD} {
     padding: 8px;
@@ -145,14 +131,13 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
         {mode == 'preview' && <Markdown>{getValues().content}</Markdown>}
         {mode == 'preview' && !getValues().content && <Zeroscreen>No thoughts here</Zeroscreen>}
       </Playground>
-      <Button
+      <SubmitButton
         disabled={!isValid || !!fetching.add_post}
         $loading={!!fetching.add_post}
         onClick={handlePublish}
       >
-        <Spinner size={20} />
-        <span>Publish</span>
-      </Button>
+        Publish
+      </SubmitButton>
     </Container>
   );
 };
