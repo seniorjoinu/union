@@ -2,11 +2,11 @@ use crate::repository::get_repositories;
 use crate::repository::voting::types::{
     StartCondition, Vote, VoteType, Voter, VotingRepositoryError, VotingStatus,
 };
+use crate::service::_voting_config as VotingConfigService;
+use crate::service::_voting_config::VotingConfigServiceError;
 use crate::service::cron as CronService;
 use crate::service::history_ledger as HistoryLedgerService;
 use crate::service::history_ledger::HistoryLedgerServiceError;
-use crate::service::voting_config as VotingConfigService;
-use crate::service::voting_config::VotingConfigServiceError;
 use ic_cdk::api::time;
 use ic_cdk::caller;
 use shared::types::wallet::{ChoiceView, Shares, VotingConfigId, VotingId};

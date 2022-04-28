@@ -83,8 +83,19 @@ impl Settings {
 
 static mut SETTINGS: Option<Settings> = None;
 
-pub fn init_settings(gateway: Principal, history_ledger: Principal, timestamp: u64) {
-    unsafe { SETTINGS = Some(Settings::new(gateway, history_ledger, timestamp)) }
+pub fn init_settings(
+    gateway: Principal,
+    history_ledger: Principal,
+    name: String,
+    description: String,
+    timestamp: u64,
+) {
+    unsafe {
+        SETTINGS = Some(
+            Settings::new(gateway, history_ledger, name, description, timestamp)
+                .expect("Unable to init settings"),
+        )
+    }
 }
 
 fn get_settings() -> &'static mut Settings {

@@ -1,8 +1,8 @@
 use candid::{CandidType, Deserialize, Principal};
 use shared::pageable::{Page, PageRequest};
-use shared::remote_call::{ProgramExecutionResult, RemoteCallEndpoint};
+use shared::remote_call::{Program, ProgramExecutionResult};
 use shared::types::history_ledger::SharesInfo;
-use shared::types::wallet::{ChoiceId, ChoiceView, GroupId, VotingConfigId, VotingId};
+use shared::types::wallet::GroupId;
 
 // ------------------ SHARES MOVE -------------------
 
@@ -18,60 +18,34 @@ pub struct GetSharesInfoOfAtResponse {
     pub info_opt: Option<SharesInfo>,
 }
 
-// ------------------ VOTING EXECUTION ------------------
+// ------------------ PROGRAM EXECUTION ------------------
 
 #[derive(CandidType, Deserialize)]
-pub struct TimeInterval {
-    pub from: u64,
-    pub to: u64,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct VotingExecutionRecordFilter {
-    pub voting_config_id: Option<VotingConfigId>,
-    pub canister_id: Option<Principal>,
-    pub endpoint: Option<RemoteCallEndpoint>,
-    pub time_interval: Option<TimeInterval>,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct GetVotingExecutionRecordsRequest {
-    pub page_req: PageRequest<VotingExecutionRecordFilter, ()>,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct VotingExecutionRecordExternal {
-    pub voting_id: VotingId,
-    pub voting_config_id: VotingConfigId,
-    pub name: String,
-    pub description: String,
-    pub timestamp: u64,
-    pub winners_count: usize,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct GetVotingExecutionRecordsResponse {
-    pub page: Page<VotingExecutionRecordExternal>,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct GetVotingExecutionRecordWinnersRequest {
-    pub voting_id: VotingId,
+pub struct ListProgramExecutionEntryIdsRequest {
     pub page_req: PageRequest<(), ()>,
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct GetVotingExecutionRecordWinnersResponse {
-    pub page: Page<(ChoiceId, ChoiceView)>,
+pub struct ListProgramExecutionEntryIdsResponse {
+    pub page: Page<u64>,
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct GetVotingExecutionRecordResultsRequest {
-    pub voting_id: VotingId,
-    pub page_req: PageRequest<(), ()>,
+pub struct GetProgramExecutionEntryProgramRequest {
+    pub id: u64,
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct GetVotingExecutionRecordResultsResponse {
-    pub page: Page<(ChoiceId, ProgramExecutionResult)>,
+pub struct GetProgramExecutionEntryProgramResponse {
+    pub program: Program,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetProgramExecutionEntryResultRequest {
+    pub id: u64,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetProgramExecutionEntryResultResponse {
+    pub result: Option<ProgramExecutionResult>,
 }

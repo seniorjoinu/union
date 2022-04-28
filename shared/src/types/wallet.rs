@@ -1,5 +1,5 @@
 use crate::mvc::Id;
-use crate::remote_call::ProgramExecutionResult;
+use crate::remote_call::{Program, ProgramExecutionResult};
 use candid::{CandidType, Deserialize, Nat, Principal};
 use ic_event_hub_macros::Event;
 
@@ -17,26 +17,14 @@ pub enum GroupOrProfile {
 }
 
 #[derive(Event)]
-pub struct VotingExecutedMetaEvent {
-    pub voting_id: VotingId,
-    pub voting_config_id: VotingConfigId,
-    pub name: String,
-    pub description: String,
+pub struct ProgramExecutedEvent_1 {
     pub timestamp: u64,
-    pub winners_count: usize,
+    pub progam: Program,
 }
 
-/*#[derive(Event)]
-pub struct VotingExecutedWinnerEvent {
-    pub voting_id: VotingId,
-    pub choice_id: ChoiceId,
-    pub choice: Choice,
-}
-*/
 #[derive(Event)]
-pub struct VotingExecutedResultEvent {
-    pub voting_id: VotingId,
-    pub choice_id: ChoiceId,
+pub struct ProgramExecutedEvent_2 {
+    pub timestamp: u64,
     pub result: ProgramExecutionResult,
 }
 

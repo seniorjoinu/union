@@ -208,7 +208,7 @@ pub struct RoundSettings {
     pub round_delay: u64,
 }
 
-#[derive(Debug, Clone, CandidType, Deserialize)]
+#[derive(Debug, Clone, Copy, CandidType, Deserialize)]
 pub struct LenInterval {
     pub min: usize,
     pub max: usize,

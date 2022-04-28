@@ -1,21 +1,26 @@
+use crate::repository::program_execution::model::ProgramExecutionEntry;
+use crate::repository::program_execution::types::ProgramExecutionEntryId;
+use crate::repository::program_execution::ProgramExecutionRepository;
+use crate::repository::shares_move::model::SharesMoveEntry;
+use crate::repository::shares_move::types::{SharesMoveEntryFilter, SharesMoveEntryId};
 use crate::repository::shares_move::SharesMoveRepository;
-use crate::repository::voting_execution::VotingExecutionRepository;
 use candid::{CandidType, Deserialize};
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{post_upgrade, pre_upgrade};
+use shared::mvc::HasRepository;
 
+pub mod program_execution;
 pub mod shares_move;
-pub mod voting_execution;
 
 #[derive(Default, CandidType, Deserialize)]
 pub struct Repositories {
-    pub voting_execution: VotingExecutionRepository,
+    pub program_execution: ProgramExecutionRepository,
     pub shares_move: SharesMoveRepository,
 }
 
 static mut REPOSITORIES: Option<Repositories> = None;
 
-pub fn get_repositories() -> &'static mut Repositories {
+fn get_repositories() -> &'static mut Repositories {
     unsafe {
         match REPOSITORIES.as_mut() {
             Some(r) => r,
@@ -33,4 +38,32 @@ pub fn take_repositories() -> Option<Repositories> {
 
 pub fn set_repositories(repositories: Option<Repositories>) {
     unsafe { REPOSITORIES = repositories }
+}
+
+impl
+    HasRepository<
+        SharesMoveEntry,
+        SharesMoveEntryId,
+        SharesMoveEntryFilter,
+        (),
+        SharesMoveRepository,
+    > for SharesMoveEntry
+{
+    fn repo() -> &'static mut SharesMoveRepository {
+        &mut get_repositories().shares_move
+    }
+}
+
+impl
+    HasRepository<
+        ProgramExecutionEntry,
+        ProgramExecutionEntryId,
+        (),
+        (),
+        ProgramExecutionRepository,
+    > for ProgramExecutionEntry
+{
+    fn repo() -> &'static mut ProgramExecutionRepository {
+        &mut get_repositories().program_execution
+    }
 }

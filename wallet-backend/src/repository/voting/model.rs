@@ -34,8 +34,8 @@ pub struct Voting {
     losers: BTreeSet<ChoiceId>,
     choices: BTreeSet<ChoiceId>,
 
-    rejection_choice: ChoiceId,
-    approval_choice: ChoiceId,
+    rejection_choice: Option<ChoiceId>,
+    approval_choice: Option<ChoiceId>,
 }
 
 impl Voting {
@@ -46,8 +46,6 @@ impl Voting {
         start_condition: StartCondition,
         winners_need: usize,
         proposer: Principal,
-        rejection_choice: ChoiceId,
-        approval_choice: ChoiceId,
         timestamp: u64,
     ) -> Result<Self, ValidationError> {
         let voting = Self {
@@ -73,13 +71,20 @@ impl Voting {
             losers: BTreeSet::new(),
             choices: BTreeSet::new(),
 
-            rejection_choice,
-            approval_choice,
+            rejection_choice: None,
+            approval_choice: None,
         };
 
         Ok(voting)
     }
 
+    pub fn init_rejection_and_approval_choices(&mut self, rejection: ChoiceId, approval: ChoiceId) {
+        assert!(self.rejection_choice.is_none() && self.approval_choice.is_none());
+        
+        self.rejection_choice = Some(rejection);
+        self.approval_choice = Some(approval);
+    }
+    
     pub fn update(
         &mut self,
         new_name: Option<String>,
@@ -223,6 +228,10 @@ impl Voting {
         self.updated_at = timestamp;
     }
 
+    pub fn get_voting_config_id(&self) -> &VotingConfigId {
+        &self.voting_config_id
+    }
+    
     pub fn get_winners(&self) -> &BTreeSet<ChoiceId> {
         &self.winners
     }
@@ -236,11 +245,11 @@ impl Voting {
     }
 
     pub fn get_approval_choice(&self) -> &ChoiceId {
-        &self.approval_choice
+        &self.approval_choice.unwrap()
     }
 
     pub fn get_rejection_choice(&self) -> &ChoiceId {
-        &self.rejection_choice
+        &self.rejection_choice.unwrap()
     }
 
     pub fn get_used_voting_power(&self) -> &BTreeMap<GroupOrProfile, Shares> {
@@ -265,6 +274,10 @@ impl Voting {
 
     pub fn get_cron_task(&self) -> Option<TaskId> {
         self.task_id
+    }
+    
+    pub fn get_proposer(&self) -> Principal {
+        self.proposer
     }
 
     fn process_name(name: String) -> Result<String, ValidationError> {

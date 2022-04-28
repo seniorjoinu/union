@@ -86,6 +86,10 @@ impl Repository<QueryConfig, QueryConfigId, QueryConfigFilter, ()> for QueryConf
 }
 
 impl QueryConfigRepository {
+    pub fn get_query_configs_by_permission(&self, permission_id: &PermissionId) -> BTreeSet<QueryConfigId> {
+        self.query_configs_by_permission.get(permission_id).cloned().unwrap_or_default()
+    }
+    
     pub fn count(&self) -> usize {
         self.query_configs.len()
     }

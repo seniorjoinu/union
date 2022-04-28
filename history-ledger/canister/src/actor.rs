@@ -1,5 +1,5 @@
 use crate::repository::{set_repositories, take_repositories};
-use crate::service::cron as CronService;
+use crate::service::cron::CronService;
 use candid::Principal;
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{heartbeat, init, post_upgrade, pre_upgrade};

@@ -171,69 +171,44 @@ impl VotingConfig {
 
         Ok(())
     }
-
-    pub fn assert_voting_params_valid(
-        &self,
-        choices_len: usize,
-        winners_need: usize,
-    ) -> Result<(), ValidationError> {
-        if choices_len < winners_need {
-            return Err(ValidationError(format!(
-                "Not enough choices (winners need: {}, choices: {})",
-                winners_need, choices_len
-            )));
-        }
-
-        if let Some(cc) = &self.choices_count {
-            if !cc.contains(choices_len) {
-                return Err(ValidationError(format!(
-                    "Invalid choices count: expected {:?} actual {}",
-                    cc, choices_len
-                )));
-            }
-        }
-
-        if let Some(wc) = &self.winners_count {
-            if !wc.contains(winners_need) {
-                return Err(ValidationError(format!(
-                    "Invalid winners count: expected {:?} actual {}",
-                    wc, winners_need
-                )));
-            }
-        }
-
-        Ok(())
+    
+    pub fn get_winners_count(&self) -> &Option<LenInterval> {
+        &self.winners_count
+    }
+    
+    pub fn get_choices_count(&self) -> &Option<LenInterval> {
+        &self.choices_count
     }
 
     pub fn get_permissions(&self) -> &BTreeSet<PermissionId> {
         &self.permissions
     }
 
-    pub fn get_proposers(&self) -> &BTreeSet<ProposerConstraint> {
+    pub fn get_proposer_constraints(&self) -> &BTreeSet<ProposerConstraint> {
         &self.proposers
     }
 
-    pub fn get_editors(&self) -> &BTreeSet<EditorConstraint> {
+    pub fn get_editor_constraints(&self) -> &BTreeSet<EditorConstraint> {
         &self.editors
     }
 
-    pub fn get_approval(&self) -> &ThresholdValue {
+    pub fn get_approval_threshold(&self) -> &ThresholdValue {
         &self.approval
     }
 
-    pub fn get_rejection(&self) -> &ThresholdValue {
+    pub fn get_rejection_threshold(&self) -> &ThresholdValue {
         &self.rejection
     }
 
-    pub fn get_quorum(&self) -> &ThresholdValue {
+    pub fn get_quorum_threshold(&self) -> &ThresholdValue {
         &self.quorum
     }
 
-    pub fn get_win(&self) -> &ThresholdValue {
+    pub fn get_win_threshold(&self) -> &ThresholdValue {
         &self.win
     }
 
-    pub fn get_next_round(&self) -> &ThresholdValue {
+    pub fn get_next_round_threshold(&self) -> &ThresholdValue {
         &self.next_round
     }
 

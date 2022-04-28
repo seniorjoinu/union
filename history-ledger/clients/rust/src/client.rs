@@ -1,8 +1,8 @@
 use crate::api::{
-    GetSharesInfoOfAtRequest, GetSharesInfoOfAtResponse, GetVotingExecutionRecordResultsRequest,
-    GetVotingExecutionRecordResultsResponse, GetVotingExecutionRecordWinnersRequest,
-    GetVotingExecutionRecordWinnersResponse, GetVotingExecutionRecordsRequest,
-    GetVotingExecutionRecordsResponse,
+    GetProgramExecutionEntryProgramRequest, GetProgramExecutionEntryProgramResponse,
+    GetProgramExecutionEntryResultRequest, GetProgramExecutionEntryResultResponse,
+    GetSharesInfoOfAtRequest, GetSharesInfoOfAtResponse, ListProgramExecutionEntryIdsRequest,
+    ListProgramExecutionEntryIdsResponse,
 };
 use async_trait::async_trait;
 use candid::Principal;
@@ -17,19 +17,19 @@ pub trait IHistoryLedger {
         req: GetSharesInfoOfAtRequest,
     ) -> CandidCallResult<GetSharesInfoOfAtResponse>;
 
-    // ------------- VOTING EXECUTION --------------
-    async fn get_voting_execution_records(
+    // ------------- PROGRAM EXECUTION --------------
+    async fn list_program_execution_entry_ids(
         &self,
-        req: GetVotingExecutionRecordsRequest,
-    ) -> CandidCallResult<GetVotingExecutionRecordsResponse>;
-    async fn get_voting_execution_record_winners(
+        req: ListProgramExecutionEntryIdsRequest,
+    ) -> CandidCallResult<ListProgramExecutionEntryIdsResponse>;
+    async fn get_program_execution_entry_program(
         &self,
-        req: GetVotingExecutionRecordWinnersRequest,
-    ) -> CandidCallResult<GetVotingExecutionRecordWinnersResponse>;
-    async fn get_voting_execution_record_results(
+        req: GetProgramExecutionEntryProgramRequest,
+    ) -> CandidCallResult<GetProgramExecutionEntryProgramResponse>;
+    async fn get_program_execution_entry_result(
         &self,
-        req: GetVotingExecutionRecordResultsRequest,
-    ) -> CandidCallResult<GetVotingExecutionRecordResultsResponse>;
+        req: GetProgramExecutionEntryResultRequest,
+    ) -> CandidCallResult<GetProgramExecutionEntryResultResponse>;
 }
 
 #[async_trait]
@@ -46,33 +46,24 @@ impl IHistoryLedger for Principal {
             .map(|(it,)| it)
     }
 
-    // ------------ VOTING EXECUTION ----------------
+    // ------------ PROGRAM EXECUTION ----------------
 
-    async fn get_voting_execution_records(
-        &self,
-        req: GetVotingExecutionRecordsRequest,
-    ) -> CandidCallResult<GetVotingExecutionRecordsResponse> {
-        RemoteCallPayload::new_encode(*self, "get_voting_execution_records", (req,), 0)
+    async fn list_program_execution_entry_ids(&self, req: ListProgramExecutionEntryIdsRequest) -> CandidCallResult<ListProgramExecutionEntryIdsResponse> {
+        RemoteCallPayload::new_encode(*self, "list_program_execution_entry_ids", (req, ), 0)
             .do_call()
             .await
             .map(|(it,)| it)
     }
 
-    async fn get_voting_execution_record_winners(
-        &self,
-        req: GetVotingExecutionRecordWinnersRequest,
-    ) -> CandidCallResult<GetVotingExecutionRecordWinnersResponse> {
-        RemoteCallPayload::new_encode(*self, "get_voting_execution_record_winners", (req,), 0)
+    async fn get_program_execution_entry_program(&self, req: GetProgramExecutionEntryProgramRequest) -> CandidCallResult<GetProgramExecutionEntryProgramResponse> {
+        RemoteCallPayload::new_encode(*self, "get_program_execution_entry_program", (req,), 0)
             .do_call()
             .await
             .map(|(it,)| it)
     }
 
-    async fn get_voting_execution_record_results(
-        &self,
-        req: GetVotingExecutionRecordResultsRequest,
-    ) -> CandidCallResult<GetVotingExecutionRecordResultsResponse> {
-        RemoteCallPayload::new_encode(*self, "get_voting_execution_record_results", (req,), 0)
+    async fn get_program_execution_entry_result(&self, req: GetProgramExecutionEntryResultRequest) -> CandidCallResult<GetProgramExecutionEntryResultResponse> {
+        RemoteCallPayload::new_encode(*self, "get_program_execution_entry_result", (req,), 0)
             .do_call()
             .await
             .map(|(it,)| it)

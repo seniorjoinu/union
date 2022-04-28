@@ -1,108 +1,77 @@
-use crate::repository::get_repositories;
+use crate::repository::program_execution::model::ProgramExecutionEntry;
+use crate::repository::shares_move::model::SharesMoveEntry;
 use candid::Principal;
 use ic_cdk::print;
 use ic_event_hub::api::IEventHubClient;
 use ic_event_hub::types::{CallbackInfo, Event, IEvent, IEventFilter, SubscribeRequest};
+use shared::mvc::{HasRepository, Repository};
 use shared::types::wallet::{
-    SharesMoveEvent, SharesMoveEventFilter, VotingExecutedMetaEvent, VotingExecutedMetaEventFilter,
-    VotingExecutedResultEvent, VotingExecutedResultEventFilter, VotingExecutedWinnerEvent,
-    VotingExecutedWinnerEventFilter,
+    ProgramExecutedEvent_1, ProgramExecutedEvent_1Filter, ProgramExecutedEvent_2,
+    ProgramExecutedEvent_2Filter, SharesMoveEvent, SharesMoveEventFilter,
 };
 
-pub async fn subscribe_to_wallet_events(wallet_id: Principal) {
-    let f1 = SharesMoveEventFilter {};
-    let f2 = VotingExecutedMetaEventFilter {};
-    let f3 = VotingExecutedWinnerEventFilter {};
-    let f4 = VotingExecutedResultEventFilter {};
+pub struct EventsService;
 
-    // Warning! Method name should follow the name of the CONTROLLER method
-    wallet_id
-        .subscribe(SubscribeRequest {
-            callbacks: vec![
-                CallbackInfo {
-                    filter: f1.to_event_filter(),
-                    method_name: String::from("process_events"),
-                },
-                CallbackInfo {
-                    filter: f2.to_event_filter(),
-                    method_name: String::from("process_events"),
-                },
-                CallbackInfo {
-                    filter: f3.to_event_filter(),
-                    method_name: String::from("process_events"),
-                },
-                CallbackInfo {
-                    filter: f4.to_event_filter(),
-                    method_name: String::from("process_events"),
-                },
-            ],
-        })
-        .await
-        .expect("Unable to subscribe to wallet events")
-}
+impl EventsService {
+    pub async fn subscribe_to_wallet_events(wallet_id: Principal) {
+        let f1 = SharesMoveEventFilter {};
+        let f2 = ProgramExecutedEvent_1Filter {};
+        let f3 = ProgramExecutedEvent_2Filter {};
 
-// TODO: don't process events when there is a new ledger exists
-// TODO: only process events from your wallet
-pub fn process_events(events: Vec<Event>) {
-    for event in events {
-        match event.get_name().as_str() {
-            "SharesMoveEvent" => {
-                let ev: SharesMoveEvent = SharesMoveEvent::from_event(event);
+        // Warning! Method name should follow the name of the CONTROLLER method
+        wallet_id
+            .subscribe(SubscribeRequest {
+                callbacks: vec![
+                    CallbackInfo {
+                        filter: f1.to_event_filter(),
+                        method_name: String::from("process_events"),
+                    },
+                    CallbackInfo {
+                        filter: f2.to_event_filter(),
+                        method_name: String::from("process_events"),
+                    },
+                    CallbackInfo {
+                        filter: f3.to_event_filter(),
+                        method_name: String::from("process_events"),
+                    },
+                ],
+            })
+            .await
+            .expect("Unable to subscribe to wallet events")
+    }
 
-                get_repositories().shares_move.add_entry(ev);
-            }
-            "VotingExecutedMetaEvent" => {
-                let ev: VotingExecutedMetaEvent = VotingExecutedMetaEvent::from_event(event);
+    // TODO: don't process events when there is a new ledger exists
+    // TODO: only process events from your wallet
+    pub fn process_events(events: Vec<Event>) {
+        for event in events {
+            match event.get_name().as_str() {
+                "SharesMoveEvent" => {
+                    let ev: SharesMoveEvent = SharesMoveEvent::from_event(event);
+                    let it = SharesMoveEntry::from_event(ev);
 
-                let res = get_repositories().voting_execution.push(
-                    ev.voting_id,
-                    ev.voting_config_id,
-                    ev.name,
-                    ev.description,
-                    ev.timestamp,
-                    ev.winners_count,
-                );
-
-                if let Err(e) = res {
-                    print(format!(
-                        "Error during VotingExecutedMetaEvent processing: {:?}",
-                        e
-                    ));
+                    SharesMoveEntry::repo().save(it);
                 }
-            }
-            "VotingExecutedWinnerEvent" => {
-                let ev: VotingExecutedWinnerEvent = VotingExecutedWinnerEvent::from_event(event);
+                "ProgramExecutedEvent_1" => {
+                    let ev: ProgramExecutedEvent_1 = ProgramExecutedEvent_1::from_event(event);
+                    let it = ProgramExecutionEntry::from_event(ev);
 
-                let res = get_repositories().voting_execution.add_winner(
-                    ev.voting_id,
-                    ev.choice_id,
-                    ev.choice,
-                );
-
-                if let Err(e) = res {
-                    print(format!(
-                        "Error during VotingExecutedWinnerEvent processing: {:?}",
-                        e
-                    ));
+                    ProgramExecutionEntry::repo().save(it);
                 }
-            }
-            "VotingExecutedResultEvent" => {
-                let ev: VotingExecutedResultEvent = VotingExecutedResultEvent::from_event(event);
+                "ProgramExecutedEvent_2" => {
+                    let ev: ProgramExecutedEvent_2 = ProgramExecutedEvent_2::from_event(event);
 
-                let res = get_repositories().voting_execution.add_result(
-                    ev.voting_id,
-                    ev.choice_id,
-                    ev.result,
-                );
-
-                if let Err(e) = res {
-                    print(format!(
-                        "Error during VotingExecutedResultEvent processing: {:?}",
-                        e
-                    ));
+                    if let Some(mut it) = ProgramExecutionEntry::repo().get(&ev.timestamp) {
+                        it.set_result(ev.result);
+                        ProgramExecutionEntry::repo().save(it);
+                    } else {
+                        print(format!(
+                            "Unable to find a previous event for {}",
+                            ev.timestamp
+                        ))
+                    }
                 }
+                _ => print(format!("Unknown event {:?}", event)),
             }
-            _ => unreachable!("Unknown event {:?}", event),
         }
     }
 }

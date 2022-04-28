@@ -14,62 +14,18 @@ type GetSharesInfoOfAtRequest = record {
 type SharesInfo = record {
     balance : Shares;
     total_supply : Shares;
+    signature : empty;
 };
 
 type GetSharesInfoOfAtResponse = record {
     info_opt : opt SharesInfo;
 };
 
-// ------------------ VOTING EXECUTION -------------------
-
-type VotingConfigId = Id;
-type VotingId = Id;
-type ChoiceId = Id;
+// ------------------ PROGRAM EXECUTION -------------------
 
 type RemoteCallEndpoint = record {
     canister_id : principal;
     method_name : text;
-};
-
-type TimeInterval = record {
-    from : nat64;
-    to : nat64;
-};
-
-type VotingExecutionRecordFilter = record {
-    voting_config_id : opt VotingConfigId;
-    canister_id : opt principal;
-    endpoint : opt RemoteCallEndpoint;
-    time_interval : opt TimeInterval;
-};
-
-type VotingExecutionRecordPageRequest = record {
-    page_index : nat32;
-    page_size : nat32;
-    filter : VotingExecutionRecordFilter;
-    sort : empty;
-};
-
-type GetVotingExecutionRecordsRequest = record {
-    page_req : VotingExecutionRecordPageRequest;
-};
-
-type VotingExecutionRecordExternal = record {
-    voting_id : VotingId;
-    voting_config_id : VotingConfigId;
-    name : text;
-    description : text;
-    timestamp : nat64;
-    winners_count : nat32;
-};
-
-type VotingExecutionRecordPage = record {
-    data : vec VotingExecutionRecordExternal;
-    has_next : bool;
-};
-
-type GetVotingExecutionRecordsResponse = record {
-    page : VotingExecutionRecordPage;
 };
 
 type PageRequest = record {
@@ -79,9 +35,9 @@ type PageRequest = record {
     sort : empty;
 };
 
-type GetVotingExecutionRecordWinnersRequest = record {
-    voting_id : VotingId;
-    page_req : PageRequest;
+type Page = record {
+    data : vec nat64;
+    has_next : bool;
 };
 
 type RemoteCallArgs = variant {
@@ -98,26 +54,6 @@ type RemoteCallPayload = record {
 type Program = variant {
     Empty;
     RemoteCallSequence : vec RemoteCallPayload;
-};
-
-type ChoiceView = record {
-    name : text;
-    description : text;
-    program : Program;
-};
-
-type VotingExecutionRecordWinnersPage = record {
-    data : vec record { 0 : ChoiceId; 1 : ChoiceView; };
-    has_next : bool;
-};
-
-type GetVotingExecutionRecordWinnersResponse = record {
-    page : VotingExecutionRecordWinnersPage;
-};
-
-type GetVotingExecutionRecordResultsRequest = record {
-    voting_id : VotingId;
-    page_req : PageRequest;
 };
 
 type CandidRejectionCode = variant {
@@ -140,13 +76,28 @@ type ProgramExecutionResult = variant {
     RemoteCallSequence : vec RawCandidCallResult;
 };
 
-type VotingExecutionRecordResultsPage = record {
-    data : vec record { 0 : ChoiceId; 1 : ProgramExecutionResult; };
-    has_next : bool;
+type ListProgramExecutionEntryIdsRequest = record {
+    page_req : PageRequest;
 };
 
-type GetVotingExecutionRecordResultsResponse = record {
-    page : VotingExecutionRecordResultsPage;
+type ListProgramExecutionEntryIdsResponse = record {
+    page : Page;
+};
+
+type GetProgramExecutionEntryProgramRequest = record {
+    id : nat64;
+};
+
+type GetProgramExecutionEntryProgramResponse = record {
+    program : Program;
+};
+
+type GetProgramExecutionEntryResultRequest = record {
+    id : nat64;
+};
+
+type GetProgramExecutionEntryResultResponse = record {
+    result : opt ProgramExecutionResult;
 };
 
 // ------------------ SERVICE ------------------
@@ -155,8 +106,8 @@ service : (principal) -> {
     // ------------------ SHARES MOVE --------------------
     "get_shares_info_of_at" : (GetSharesInfoOfAtRequest) -> (GetSharesInfoOfAtResponse) query;
 
-    // ----------------- VOTING EXECUTION ----------------
-    "get_voting_execution_records" : (GetVotingExecutionRecordsRequest) -> (GetVotingExecutionRecordsResponse) query;
-    "get_voting_execution_record_winners" : (GetVotingExecutionRecordWinnersRequest) -> (GetVotingExecutionRecordWinnersResponse) query;
-    "get_voting_execution_record_results" : (GetVotingExecutionRecordResultsRequest) -> (GetVotingExecutionRecordResultsResponse) query;
+    // ----------------- PROGRAM EXECUTION ----------------
+    "list_program_execution_entry_ids" : (ListProgramExecutionEntryIdsRequest) -> (ListProgramExecutionEntryIdsResponse) query;
+    "get_program_execution_entry_program" : (GetProgramExecutionEntryProgramRequest) -> (GetProgramExecutionEntryProgramResponse) query;
+    "get_program_execution_entry_result" : (GetProgramExecutionEntryResultRequest) -> (GetProgramExecutionEntryResultResponse) query;
 }

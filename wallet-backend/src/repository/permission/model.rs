@@ -1,12 +1,12 @@
 use crate::repository::permission::types::{
-    PermissionId, PermissionScope, PermissionTarget, PERMISSION_DESCRIPTION_MAX_LEN,
-    PERMISSION_DESCRIPTION_MIN_LEN, PERMISSION_NAME_MAX_LEN, PERMISSION_NAME_MIN_LEN,
+    PermissionId, PermissionTarget, PERMISSION_DESCRIPTION_MAX_LEN, PERMISSION_DESCRIPTION_MIN_LEN,
+    PERMISSION_NAME_MAX_LEN, PERMISSION_NAME_MIN_LEN,
 };
+use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
 use shared::remote_call::{Program, RemoteCallEndpoint};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
-use candid::{CandidType, Deserialize};
 
 #[derive(CandidType, Deserialize, Clone, Debug)]
 pub struct Permission {
@@ -14,7 +14,6 @@ pub struct Permission {
     name: String,
     description: String,
     targets: BTreeSet<PermissionTarget>,
-    scope: PermissionScope,
 }
 
 impl Permission {
@@ -22,14 +21,12 @@ impl Permission {
         name: String,
         description: String,
         targets: Vec<PermissionTarget>,
-        scope: PermissionScope,
     ) -> Result<Self, ValidationError> {
         let permission = Permission {
             id: None,
             name: Self::process_name(name)?,
             description: Self::process_description(description)?,
             targets: targets.into_iter().collect(),
-            scope,
         };
 
         Ok(permission)
@@ -40,7 +37,6 @@ impl Permission {
         new_name: Option<String>,
         new_description: Option<String>,
         new_targets: Option<BTreeSet<PermissionTarget>>,
-        new_scope: Option<PermissionScope>,
     ) -> Result<(), ValidationError> {
         if let Some(name) = new_name {
             self.name = Self::process_name(name)?;
@@ -48,10 +44,6 @@ impl Permission {
 
         if let Some(description) = new_description {
             self.description = Self::process_description(description)?;
-        }
-
-        if let Some(scope) = new_scope {
-            self.scope = scope;
         }
 
         if let Some(targets) = new_targets {
@@ -84,12 +76,8 @@ impl Permission {
         &self.targets
     }
 
-    pub fn get_scope(&self) -> &PermissionScope {
-        &self.scope
-    }
-
     fn is_target(&self, endpoint_opt: Option<RemoteCallEndpoint>) -> bool {
-        let mut is_target = match endpoint_opt {
+        match endpoint_opt {
             Some(endpoint) => {
                 let target = PermissionTarget::Endpoint(endpoint);
                 let mut is_target = false;
@@ -107,15 +95,9 @@ impl Permission {
                 is_target
             }
             None => self.targets.contains(&PermissionTarget::SelfEmptyProgram),
-        };
-
-        if matches!(self.scope, PermissionScope::Blacklist) {
-            is_target = !is_target;
         }
-
-        is_target
     }
-    
+
     fn process_name(name: String) -> Result<String, ValidationError> {
         validate_and_trim_str(
             name,

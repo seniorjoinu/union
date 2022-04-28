@@ -9,12 +9,6 @@ pub const PERMISSION_DESCRIPTION_MAX_LEN: usize = 300;
 
 pub type PermissionId = Id;
 
-#[derive(CandidType, Deserialize, Copy, Clone, Debug)]
-pub enum PermissionScope {
-    Whitelist,
-    Blacklist,
-}
-
 #[derive(CandidType, Deserialize, Clone, PartialEq, Ord, PartialOrd, Eq, Hash, Debug)]
 pub enum PermissionTarget {
     SelfEmptyProgram,

@@ -34,6 +34,8 @@ impl ProfileService {
         let has_profile_group = GroupService::get_has_profile_group();
         let mut token = GroupService::get_token(&has_profile_group);
 
+        // TODO: check if there are any voting or query configs which list this profile
+        
         ProfileService::remove_from_has_profile_group(&mut token, id);
         Token::repo().save(token);
 

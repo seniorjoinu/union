@@ -1,4 +1,4 @@
-use crate::service::events as EventsService;
+use crate::service::events::EventsService;
 use ic_cdk_macros::update;
 use ic_event_hub::types::Event;
 

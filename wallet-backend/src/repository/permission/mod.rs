@@ -1,7 +1,5 @@
 use crate::repository::permission::model::Permission;
-use crate::repository::permission::types::{
-    PermissionFilter, PermissionId, PermissionTarget,
-};
+use crate::repository::permission::types::{PermissionFilter, PermissionId, PermissionTarget};
 use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
@@ -15,7 +13,6 @@ pub struct PermissionRepository {
     permissions: HashMap<PermissionId, Permission>,
     id_gen: IdGenerator,
 
-    // this list doesn't take into an account whitelist/blacklist logic
     permissions_by_permission_target_index: HashMap<PermissionTarget, BTreeSet<PermissionId>>,
 }
 
@@ -37,7 +34,7 @@ impl Repository<Permission, PermissionId, PermissionFilter, ()> for PermissionRe
         }
 
         self.permissions.insert(id, it);
-        
+
         id
     }
 
@@ -75,6 +72,13 @@ impl Repository<Permission, PermissionId, PermissionFilter, ()> for PermissionRe
 }
 
 impl PermissionRepository {
+    pub fn get_permissions_by_target(&self, target: &PermissionTarget) -> BTreeSet<PermissionId> {
+        self.permissions_by_permission_target_index
+            .get(target)
+            .cloned()
+            .unwrap_or_default()
+    }
+
     fn add_to_target_index(&mut self, id: PermissionId, target: PermissionTarget) {
         self.permissions_by_permission_target_index
             .entry(target)

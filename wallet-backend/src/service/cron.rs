@@ -1,6 +1,6 @@
 use crate::repository::voting::types::{StartCondition, Voting, VotingStatus};
-use crate::service::voting as VotingService;
-use crate::service::voting_config as VotingConfigService;
+use crate::service::_voting as VotingService;
+use crate::service::_voting_config as VotingConfigService;
 use crate::{cron_enqueue, cron_ready_tasks, get_repositories};
 use candid::{CandidType, Deserialize};
 use ic_cdk::api::time;
@@ -137,9 +137,12 @@ pub fn process_tasks() {
                         if round == *r {
                             get_repositories()
                                 .voting
-                                .finish_voting_fail(&voting_id, String::from("Not enough votes"), time())
+                                .finish_voting_fail(
+                                    &voting_id,
+                                    String::from("Not enough votes"),
+                                    time(),
+                                )
                                 .unwrap();
-                            
                         } else {
                             // log - it is an outdated task
                             print(format!(
@@ -147,7 +150,7 @@ pub fn process_tasks() {
                                 r, voting_id, round
                             ));
                         }
-                    },
+                    }
                     it => {
                         print(format!(
                             "Warning: round end task found at {:?}: {} {}",

@@ -5,4 +5,6 @@ use crate::types::wallet::Shares;
 pub struct SharesInfo {
     pub balance: Shares,
     pub total_supply: Shares,
+    // TODO: implement subnet signature
+    pub signature: (),
 }

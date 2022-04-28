@@ -1,13 +1,16 @@
 use crate::repository::group::model::Group;
 use crate::repository::permission::model::Permission;
-use crate::repository::permission::types::PermissionId;
+use crate::repository::permission::types::{PermissionFilter, PermissionId, PermissionTarget};
 use crate::repository::profile::model::Profile;
+use crate::repository::query_config::model::QueryConfig;
 use crate::repository::query_config::types::AlloweeConstraint;
 use crate::repository::voting_config::types::GroupCondition;
-use crate::service::group::types::HAS_PROFILE_GROUP_ID;
+use crate::service::group::types::{GroupService, HAS_PROFILE_GROUP_ID};
 use crate::service::permission::types::ALLOW_ALL_PERMISSION_ID;
 use crate::service::query_config::types::{QueryConfigError, QueryConfigService};
+use candid::Principal;
 use shared::mvc::{HasRepository, Repository};
+use shared::remote_call::RemoteCallEndpoint;
 use shared::types::wallet::{GroupOrProfile, Shares};
 use std::collections::BTreeSet;
 
@@ -22,6 +25,55 @@ impl QueryConfigService {
             vec![ALLOW_ALL_PERMISSION_ID].into_iter().collect(),
             vec![AlloweeConstraint::Group(GroupCondition { min_shares: Shares::from(1), id: HAS_PROFILE_GROUP_ID })].into_iter().collect(),
         ).unwrap();
+    }
+
+    pub fn assert_caller_can_query(
+        canister_id: Principal,
+        method_name: &str,
+        caller: Principal,
+    ) -> Result<(), QueryConfigError> {
+        let target_exact = PermissionTarget::Endpoint(RemoteCallEndpoint {
+            canister_id,
+            method_name: method_name.to_string(),
+        });
+        let target_wide = PermissionTarget::Canister(canister_id);
+
+        let mut permission_ids = Permission::repo().get_permissions_by_target(&target_exact);
+        permission_ids.extend(Permission::repo().get_permissions_by_target(&target_wide));
+
+        for permission_id in permission_ids {
+            for query_config_id in
+                QueryConfig::repo().get_query_configs_by_permission(&permission_id)
+            {
+                // unwrapping, because it should exist if it is listed
+                let qc = QueryConfig::repo().get(&query_config_id).unwrap();
+
+                for allowee in qc.get_allowees() {
+                    match allowee {
+                        AlloweeConstraint::Everyone => return Ok(()),
+                        AlloweeConstraint::Profile(p) => {
+                            if *p == caller {
+                                // unwrapping, because it should exist if it is listed
+                                Profile::repo().get(p).unwrap();
+                                
+                                return Ok(());
+                            }
+                        }
+                        AlloweeConstraint::Group(group_condition) => {
+                            // unwrapping, because it should exist if it is listed
+                            let group = Group::repo().get(&group_condition.id).unwrap();
+                            let token = GroupService::get_token(&group);
+
+                            if token.balance_of(&caller) >= group_condition.min_shares.clone() {
+                                return Ok(());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Err(QueryConfigError::QueryCallerNotAllowed)
     }
 
     fn assert_permissions_exist(

@@ -13,4 +13,5 @@ pub enum QueryConfigError {
     ProfileNotFound(ProfileId),
     QueryConfigNotFound(QueryConfigId),
     UnableToDeleteTheLastQueryConfig,
+    QueryCallerNotAllowed,
 }
