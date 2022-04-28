@@ -1,0 +1,23 @@
+{
+  "canisters": {
+    "feed-app": {
+      "type": "custom",
+      "candid": "./backend/backend.did",
+      "wasm": "./backend/target/wasm32-unknown-unknown/release/feed_app-opt.wasm",
+      "build": "./scripts/build.sh"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": ""
+    }
+  },
+  "dfx": "0.9.2",
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    }
+  },
+  "version": 1
+}

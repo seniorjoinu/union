@@ -8,7 +8,7 @@ folder_path="${root_folder}/gateway/frontend/gateway/dist"
 log "[batches-create] Creating batches..."
 
 files=`cd $folder_path && find . -type f`
-rm ./create_chunk_execute_args.txt || echo ""
+rm ./create_chunk_execute_args.txt 2> /dev/null || echo ""
 
 batch_ids=()
 exportable_batch_ids="( "
@@ -67,7 +67,7 @@ do
 done
 
 log "[batches-create] Batches successfull uploaded and locked"
-rm ./create_chunk_execute_args.txt
+rm ./create_chunk_execute_args.txt 2> /dev/null
 
 exportable_batch_ids+=")"
 export batch_ids

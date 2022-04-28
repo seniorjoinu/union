@@ -5,8 +5,8 @@ source .env
 
 frontend_wasm_path="${root_folder}/gateway/frontend/gateway/.dfx/local/canisters/union-wallet-frontend/union-wallet-frontend.wasm"
 
-rm ./install_code_execute_args.txt || echo ""
-rm ./candid_string.txt || echo ""
+rm ./install_code_execute_args.txt 2> /dev/null || echo ""
+rm ./candid_string.txt 2> /dev/null || echo ""
 
 log "[frontend-install-wasm] Upload wasm to frontend canister"
 wasm_bytes=$(./uwc did encode --mode blob $frontend_wasm_path)
@@ -44,8 +44,8 @@ echo "$install_code_args" > ./install_code_execute_args.txt
 
 log "[frontend-install-wasm]" $(./uwc canister $root_wallet "execute" ./install_code_execute_args.txt)
 
-rm ./install_code_execute_args.txt || echo ""
-rm ./candid_string.txt || echo ""
+rm ./install_code_execute_args.txt 2> /dev/null || echo ""
+rm ./candid_string.txt 2> /dev/null || echo ""
 
 sleep 3
 

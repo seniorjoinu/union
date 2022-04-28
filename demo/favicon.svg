@@ -1,0 +1,14 @@
+  <svg
+    width='78'
+    height='78'
+    viewBox='0 0 78 78'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+  >
+    <path d='M52 0H26V26H52V0Z' fill='white' />
+    <path d='M52 26H26V52H52V26Z' fill='white' />
+    <path d='M52 52H26V78H52V52Z' fill='white' />
+    <path d='M78 26H52V52H78V26Z' fill='white' />
+    <path d='M78 0H52V26H78V0Z' fill='white' />
+    <path d='M26 0H0V26H26V0Z' fill='white' />
+  </svg>

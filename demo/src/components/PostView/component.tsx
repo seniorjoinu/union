@@ -1,0 +1,145 @@
+import React, { useCallback, useEffect, useMemo } from 'react';
+import styled from 'styled-components';
+import moment from 'moment';
+import { Post } from 'backend-ts';
+import { useAuth } from '../../auth';
+import { Markdown, Principal } from '../atoms';
+import { useBackend } from '../../backend';
+import { Heart as H } from './heart';
+
+const Counter = styled.span``;
+const Timestamp = styled.span`
+  font-size: 14px;
+  color: grey;
+`;
+const Name = styled.span`
+  font-weight: 600;
+`;
+
+const Head = styled.div`
+  display: flex;
+  flex-direction: row;
+
+  ${Principal} {
+    color: grey;
+  }
+
+  ${Timestamp} {
+    flex-grow: 1;
+    text-align: end;
+  }
+
+  & > *:not(:last-child) {
+    margin-right: 8px;
+  }
+`;
+
+const Footer = styled.div`
+  display: flex;
+  flex-direction: row;
+
+  & > *:not(:last-child) {
+    margin-right: 8px;
+  }
+`;
+
+const Heart = styled(H)<{ $selected: boolean; $disabled: boolean }>`
+  width: 24px;
+  height: 16px;
+  color: ${({ $selected }) => ($selected ? 'red' : 'black')};
+  transition: color 0.2s ease;
+  cursor: pointer;
+  pointer-events: ${({ $disabled }) => ($disabled ? 'none' : 'all')};
+
+  &:hover {
+    color: grey;
+  }
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  border: 1px solid grey;
+  padding: 16px 24px 12px;
+
+  ${Head} {
+    margin-bottom: 8px;
+  }
+
+  ${Footer} {
+    margin-top: 12px;
+  }
+`;
+
+export interface PostViewProps {
+  className?: string;
+  style?: React.CSSProperties;
+  post: Post;
+}
+
+export const PostView = ({ post, ...p }: PostViewProps) => {
+  const { principal } = useAuth();
+  const { canister, data, fetching } = useBackend();
+
+  const refreshActivity = useCallback(() => {
+    canister.get_activity(post.id);
+  }, [canister, post]);
+
+  useEffect(() => {
+    refreshActivity();
+    canister.get_profile(post.author);
+  }, []);
+
+  const profileName = useMemo(() => data.get_profile?.name, [!!data.get_profile?.name]);
+
+  const heartDisabled =
+    !principal ||
+    principal.isAnonymous() ||
+    !data.get_activity ||
+    !!fetching.get_activity ||
+    !!fetching.set_activity;
+
+  const liked = useMemo(() => {
+    if (heartDisabled) {
+      return false;
+    }
+    const principalStr = principal?.toString();
+
+    return !!data.get_activity?.hearts.find((p) => p.id.toString() == principalStr);
+  }, [data.get_activity?.hearts, principal, heartDisabled]);
+
+  const heartsCount = useMemo(() => data.get_activity?.hearts.length || 0, [
+    data.get_activity?.hearts,
+  ]);
+
+  const handleHeartClick = useCallback(async () => {
+    if (heartDisabled) {
+      return;
+    }
+
+    await canister.set_activity({ post_id: post.id, heart: [!liked] });
+    refreshActivity();
+  }, [heartDisabled, liked, canister, post]);
+
+  const createdAt = useMemo(
+    () => moment(Math.floor(Number(post.created_at) / 10 ** 6)).format("DD MMMM'YY HH:mm"),
+    [post.created_at],
+  );
+
+  return (
+    <Container {...p}>
+      <Head>
+        {!!profileName && <Name>{profileName}</Name>}
+        <Principal onClick={() => navigator.clipboard.writeText(post.author.toString())}>
+          {post.author.toString()}
+        </Principal>
+        <Timestamp>{createdAt}</Timestamp>
+      </Head>
+      <Markdown>{post.content}</Markdown>
+      <Footer>
+        <Heart $disabled={heartDisabled} $selected={!!liked} onClick={handleHeartClick} />
+        {!!heartsCount && <Counter>{heartsCount}</Counter>}
+      </Footer>
+    </Container>
+  );
+};
