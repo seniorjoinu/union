@@ -39,7 +39,9 @@ impl ChoiceService {
         new_program: Option<Program>,
         editor: Principal,
     ) -> Result<(), ChoiceError> {
-        let mut choice = Choice::repo().get(choice_id).ok_or(ChoiceError::ChoiceNotFound(*choice_id))?;
+        let mut choice = Choice::repo()
+            .get(choice_id)
+            .ok_or(ChoiceError::ChoiceNotFound(*choice_id))?;
         // TODO: check program and editor
 
         choice

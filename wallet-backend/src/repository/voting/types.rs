@@ -9,16 +9,9 @@ pub type RoundId = u16;
 
 #[derive(Debug, Clone, CandidType, Deserialize)]
 pub enum VotingStatus {
-    Created,
-    Rejected,
     PreRound(RoundId),
     Round(RoundId),
+    Rejected,
     Success,
     Fail(String),
-}
-
-#[derive(Clone, CandidType, Deserialize)]
-pub enum StartCondition {
-    ExactDate(u64),
-    DelayAfterApproval(u64),
 }

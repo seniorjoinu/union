@@ -1,6 +1,8 @@
-use shared::types::wallet::{GroupId, ProfileId};
-use shared::validation::ValidationError;
 use crate::repository::permission::types::PermissionId;
+use shared::types::wallet::{GroupId, ProfileId, VotingConfigId};
+use shared::validation::ValidationError;
+
+pub const DEFAULT_VOTING_CONFIG_ID: VotingConfigId = 0;
 
 pub struct VotingConfigService;
 
@@ -10,4 +12,7 @@ pub enum VotingConfigError {
     PermissionNotExists(PermissionId),
     GroupNotExists(GroupId),
     ProfileNotExists(ProfileId),
+    UnableToEditDefaultVotingConfig,
+    HasRelatedVotings,
+    VotingConfigNotFound(VotingConfigId)
 }

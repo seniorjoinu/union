@@ -19,7 +19,7 @@ pub enum GroupOrProfile {
 #[derive(Event)]
 pub struct ProgramExecutedEvent_1 {
     pub timestamp: u64,
-    pub progam: Program,
+    pub program: Program,
 }
 
 #[derive(Event)]

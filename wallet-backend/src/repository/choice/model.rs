@@ -2,13 +2,13 @@ use crate::repository::choice::types::{
     VOTING_CHOICE_DESCRIPTION_MAX_LEN, VOTING_CHOICE_DESCRIPTION_MIN_LEN,
     VOTING_CHOICE_NAME_MAX_LEN, VOTING_CHOICE_NAME_MIN_LEN,
 };
+use crate::repository::token::types::TokenId;
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
 use shared::remote_call::Program;
 use shared::types::wallet::{ChoiceId, GroupOrProfile, VotingId};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeMap;
-use crate::repository::token::types::TokenId;
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct Choice {
@@ -54,7 +54,7 @@ impl Choice {
             Program::Empty,
             voting_id,
         )
-            .unwrap()
+        .unwrap()
     }
 
     pub fn update(
@@ -87,8 +87,16 @@ impl Choice {
         self.voting_power_by_gop.get(gop)
     }
 
+    pub fn list_tokens_by_gop(&self) -> &BTreeMap<GroupOrProfile, TokenId> {
+        &self.voting_power_by_gop
+    }
+
     pub fn get_voting_id(&self) -> &VotingId {
         &self.voting_id
+    }
+
+    pub fn get_program(&self) -> &Program {
+        &self.program
     }
 
     fn process_name(name: String) -> Result<String, ValidationError> {

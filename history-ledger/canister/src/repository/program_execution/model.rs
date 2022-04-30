@@ -1,8 +1,6 @@
-use candid::{CandidType, Deserialize, Principal};
-use shared::mvc::{Model};
-use shared::remote_call::{Program, ProgramExecutionResult, RemoteCallEndpoint};
-use shared::types::wallet::{ChoiceId, ProgramExecutedEvent_1, VotingConfigId, VotingId};
-use std::collections::BTreeMap;
+use candid::{CandidType, Deserialize};
+use shared::remote_call::{Program, ProgramExecutionResult};
+use shared::types::wallet::{ProgramExecutedEvent_1, VotingConfigId, VotingId};
 use crate::repository::program_execution::types::ProgramExecutionEntryId;
 
 #[derive(Clone, CandidType, Deserialize)]
@@ -18,7 +16,7 @@ impl ProgramExecutionEntry {
         Self {
             id: None,
             timestamp: ev.timestamp,
-            program: ev.progam,
+            program: ev.program,
             result: None,
         }
     }

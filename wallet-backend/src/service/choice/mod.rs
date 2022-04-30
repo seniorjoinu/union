@@ -5,6 +5,7 @@ use crate::service::token::types::TokenService;
 use candid::Principal;
 use shared::mvc::{HasRepository, Repository};
 use shared::types::wallet::{GroupOrProfile, Shares};
+use std::collections::BTreeMap;
 
 pub mod crud;
 pub mod types;
@@ -21,6 +22,18 @@ impl ChoiceService {
         };
 
         Token::repo().get(&token_id).unwrap()
+    }
+
+    pub fn list_total_voted_shares_by_gop(choice: &Choice) -> BTreeMap<GroupOrProfile, Shares> {
+        choice
+            .list_tokens_by_gop()
+            .iter()
+            .map(|(gop, token_id)| {
+                let token = Token::repo().get(token_id).unwrap();
+
+                (*gop, token.total_supply())
+            })
+            .collect()
     }
 
     pub fn cast_vote(token: &mut Token, voter: Principal, voting_power: Shares) {

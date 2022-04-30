@@ -15,6 +15,9 @@ impl SharesMoveService {
                 return Some(SharesInfo {
                     balance: ps.new_balance.clone(),
                     total_supply: entry.get_total_supply().clone(),
+                    group_id,
+                    principal_id: of,
+                    timestamp: at,
                     signature: (),
                 });
             }
@@ -25,6 +28,9 @@ impl SharesMoveService {
                 return Some(SharesInfo {
                     balance: ps.new_balance.clone(),
                     total_supply: entry.get_total_supply().clone(),
+                    timestamp: at,
+                    group_id,
+                    principal_id: of,
                     signature: (),
                 });
             }

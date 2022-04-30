@@ -3,8 +3,9 @@ use crate::repository::voting_config::model::VotingConfig;
 use crate::repository::voting_config::types::{
     EditorConstraint, LenInterval, ProposerConstraint, RoundSettings, ThresholdValue,
 };
+use crate::repository::voting::model::Voting;
 use crate::service::voting_config::types::{VotingConfigError, VotingConfigService};
-use shared::mvc::{HasRepository, Repository};
+use shared::mvc::{HasRepository, Model, Repository};
 use shared::types::wallet::VotingConfigId;
 use std::collections::BTreeSet;
 
@@ -92,6 +93,8 @@ impl VotingConfigService {
         win_opt: Option<ThresholdValue>,
         next_round_opt: Option<ThresholdValue>,
     ) -> Result<(), VotingConfigError> {
+        VotingConfigService::assert_not_default(vc.get_id().unwrap())?;
+        
         if let Some(permissions) = &permissions_opt {
             VotingConfigService::assert_permissions_exist(permissions)?;
         }
@@ -157,6 +160,14 @@ impl VotingConfigService {
         )
         .map_err(VotingConfigError::ValidationError)
     }
-    
-    // TODO: on delete - check if there are ongoing votings which use this voting-config
+
+    pub fn delete_voting_config(id: VotingConfigId) -> Result<VotingConfig, VotingConfigError> {
+        VotingConfigService::assert_not_default(id)?;
+        
+        if Voting::repo().voting_config_has_related_votings(&id) {
+            return Err(VotingConfigError::HasRelatedVotings);
+        }
+        
+        VotingConfig::repo().delete(&id).ok_or(VotingConfigError::VotingConfigNotFound(id))
+    }
 }

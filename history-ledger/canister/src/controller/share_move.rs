@@ -8,6 +8,5 @@ pub fn get_shares_info_of_at(req: GetSharesInfoOfAtRequest) -> GetSharesInfoOfAt
 
     GetSharesInfoOfAtResponse { 
         info_opt,
-        signature: (),
     }
 }

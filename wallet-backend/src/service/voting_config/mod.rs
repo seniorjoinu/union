@@ -1,19 +1,53 @@
-use std::collections::BTreeSet;
-use shared::mvc::{HasRepository, Repository};
-use shared::types::wallet::GroupOrProfile;
 use crate::repository::group::model::Group;
 use crate::repository::permission::model::Permission;
 use crate::repository::permission::types::PermissionId;
 use crate::repository::profile::model::Profile;
-use crate::service::voting_config::types::{VotingConfigError, VotingConfigService};
+use crate::repository::voting_config::types::{
+    EditorConstraint, Fraction, FractionOf, GroupCondition, ProposerConstraint, QuantityOf,
+    RoundSettings, Target, ThresholdValue,
+};
+use crate::service::group::types::HAS_PROFILE_GROUP_ID;
+use crate::service::permission::types::ALLOW_ALL_PERMISSION_ID;
+use crate::service::voting_config::types::{
+    VotingConfigError, VotingConfigService, DEFAULT_VOTING_CONFIG_ID,
+};
+use shared::mvc::{HasRepository, Repository};
+use shared::time::hours;
+use shared::types::wallet::{GroupOrProfile, Shares, VotingConfigId};
+use std::collections::BTreeSet;
 
 pub mod crud;
 pub mod types;
 
-
 impl VotingConfigService {
-    // TODO: add default config
-    
+    pub fn init_default_voting_config() {
+        let id = VotingConfigService::create_voting_config(
+            String::from("Default"),
+            String::from("Non-deletable voting config. Allows to call ANY method of this union if 100% of 'Has Profile' group wants it."),
+            None,
+            None,
+            vec![ALLOW_ALL_PERMISSION_ID].into_iter().collect(),
+            vec![ProposerConstraint::Group(GroupCondition { id: HAS_PROFILE_GROUP_ID, min_shares: Shares::from(1) })].into_iter().collect(),
+            vec![EditorConstraint::Group(GroupCondition { id: HAS_PROFILE_GROUP_ID, min_shares: Shares::from(1) })].into_iter().collect(),
+            RoundSettings { round_duration: hours(1), round_delay: 0 },
+            ThresholdValue::QuantityOf(QuantityOf { quantity: Shares::from(0), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
+            ThresholdValue::FractionOf(FractionOf { fraction: Fraction::from(1), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
+            ThresholdValue::QuantityOf(QuantityOf { quantity: Shares::from(1), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
+            ThresholdValue::FractionOf(FractionOf { fraction: Fraction::from(1), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
+            ThresholdValue::FractionOf(FractionOf { fraction: Fraction::from(1), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
+        ).unwrap();
+
+        assert_eq!(id, DEFAULT_VOTING_CONFIG_ID);
+    }
+
+    fn assert_not_default(id: VotingConfigId) -> Result<(), VotingConfigError> {
+        if id == DEFAULT_VOTING_CONFIG_ID {
+            Err(VotingConfigError::UnableToEditDefaultVotingConfig)
+        } else {
+            Ok(())
+        }
+    }
+
     fn assert_permissions_exist(
         permissions: &BTreeSet<PermissionId>,
     ) -> Result<(), VotingConfigError> {

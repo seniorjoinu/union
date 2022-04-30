@@ -6,9 +6,9 @@ use crate::repository::voting_config::types::{
 };
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
-use shared::types::wallet::VotingConfigId;
+use shared::types::wallet::{GroupOrProfile, Shares, VotingConfigId};
 use shared::validation::{validate_and_trim_str, ValidationError};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct VotingConfig {
@@ -170,6 +170,10 @@ impl VotingConfig {
         }
 
         Ok(())
+    }
+    
+    pub fn get_round_settings(&self) -> &RoundSettings {
+        &self.round
     }
     
     pub fn get_winners_count(&self) -> &Option<LenInterval> {

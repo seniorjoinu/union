@@ -14,6 +14,9 @@ type GetSharesInfoOfAtRequest = record {
 type SharesInfo = record {
     balance : Shares;
     total_supply : Shares;
+    timestamp: nat64;
+    group_id: GroupId;
+    principal_id: principal;
     signature : empty;
 };
 

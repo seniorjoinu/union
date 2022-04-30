@@ -33,9 +33,12 @@ use shared::candid::ToCandidType;
 use shared::validation::validate_and_trim_str;
 */
 use crate::repository::{set_repositories, take_repositories};
+use crate::service::init_services;
+use crate::service::profile::types::ProfileService;
 use crate::settings::{init_settings, set_settings, take_settings};
-use candid::Principal;
+use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::api::time;
+use ic_cdk::id;
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{heartbeat, init, post_upgrade, pre_upgrade};
 use ic_cron::implement_cron;
@@ -50,16 +53,33 @@ pub mod repository;
 pub mod service;
 pub mod settings;
 
+#[derive(CandidType, Deserialize)]
+pub struct InitRequest {
+    pub gateway: Principal,
+    pub history_ledger: Principal,
+    pub wallet_creator: Principal,
+    pub union_name: String,
+    pub union_description: String,
+}
+
 #[init]
-fn init(gateway: Principal, history_ledger: Principal, wallet_creator: Principal) {
-    init_settings(gateway, history_ledger, time());
-    /*
+fn init(req: InitRequest) {
+    init_settings(
+        req.gateway,
+        req.history_ledger,
+        req.union_name,
+        req.union_description,
+        time(),
+    );
+
+    init_services(id());
+
     ProfileService::create_profile(
-        wallet_creator,
+        req.wallet_creator,
         String::from("Wallet creator"),
         String::from("A person, who created this wallet"),
     )
-    .expect("Unable to create wallet creator profile");*/
+    .expect("Unable to create wallet creator profile");
 }
 
 #[post_upgrade]

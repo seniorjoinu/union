@@ -1,6 +1,6 @@
 use crate::repository::voting::types::{
-    StartCondition, VotingStatus, VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN,
-    VOTING_NAME_MAX_LEN, VOTING_NAME_MIN_LEN,
+    VotingStatus, VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN, VOTING_NAME_MAX_LEN,
+    VOTING_NAME_MIN_LEN,
 };
 use candid::{CandidType, Deserialize, Principal};
 use ic_cron::types::TaskId;
@@ -23,12 +23,9 @@ pub struct Voting {
 
     name: String,
     description: String,
-
-    start_condition: StartCondition,
     winners_need: usize,
 
     total_voting_power: BTreeMap<GroupOrProfile, Shares>,
-    used_voting_power: BTreeMap<GroupOrProfile, Shares>,
 
     winners: BTreeSet<ChoiceId>,
     losers: BTreeSet<ChoiceId>,
@@ -43,7 +40,6 @@ impl Voting {
         voting_config_id: VotingConfigId,
         name: String,
         description: String,
-        start_condition: StartCondition,
         winners_need: usize,
         proposer: Principal,
         timestamp: u64,
@@ -54,18 +50,15 @@ impl Voting {
 
             created_at: timestamp,
             updated_at: timestamp,
-            status: VotingStatus::Created,
+            status: VotingStatus::Round(0),
             proposer,
             task_id: None,
 
             name: Self::process_name(name)?,
             description: Self::process_description(description)?,
-
-            start_condition,
             winners_need,
 
             total_voting_power: BTreeMap::new(),
-            used_voting_power: BTreeMap::new(),
 
             winners: BTreeSet::new(),
             losers: BTreeSet::new(),
@@ -80,24 +73,28 @@ impl Voting {
 
     pub fn init_rejection_and_approval_choices(&mut self, rejection: ChoiceId, approval: ChoiceId) {
         assert!(self.rejection_choice.is_none() && self.approval_choice.is_none());
-        
+
         self.rejection_choice = Some(rejection);
         self.approval_choice = Some(approval);
     }
-    
+
     pub fn update(
         &mut self,
         new_name: Option<String>,
         new_description: Option<String>,
-        new_start_condition: Option<StartCondition>,
         new_winners_need: Option<usize>,
         timestamp: u64,
     ) -> Result<(), ValidationError> {
-        if !matches!(self.status, VotingStatus::Created) {
-            return Err(ValidationError(format!(
-                "Invalid voting status {:?}",
-                self.status
-            )));
+        match &self.status {
+            VotingStatus::Round(r) => {
+                if *r != 0 {
+                    return Err(ValidationError(format!(
+                        "Invalid voting status {:?}",
+                        self.status
+                    )));
+                }
+            }
+            _ => {}
         }
 
         if let Some(name) = new_name {
@@ -106,10 +103,6 @@ impl Voting {
 
         if let Some(description) = new_description {
             self.description = Self::process_description(description)?;
-        }
-
-        if let Some(start_condition) = new_start_condition {
-            self.start_condition = start_condition;
         }
 
         if let Some(winners_need) = new_winners_need {
@@ -131,29 +124,8 @@ impl Voting {
         self.updated_at = timestamp;
     }
 
-    pub fn add_used_voting_power(
-        &mut self,
-        gop: GroupOrProfile,
-        voting_power: Shares,
-        timestamp: u64,
-    ) {
-        let prev_vp = self.used_voting_power.remove(&gop).unwrap_or_default();
-        self.used_voting_power.insert(gop, prev_vp + voting_power);
-        self.updated_at = timestamp;
-    }
-
-    pub fn approve(&mut self, timestamp: u64) {
-        assert!(matches!(self.status, VotingStatus::Created));
-
-        self.status = VotingStatus::PreRound(1);
-        self.updated_at = timestamp;
-    }
-
     pub fn reject(&mut self, timestamp: u64) {
-        assert!(matches!(
-            self.status,
-            VotingStatus::Created | VotingStatus::Round(_)
-        ));
+        assert!(matches!(self.status, VotingStatus::Round(_)));
 
         self.status = VotingStatus::Rejected;
         self.updated_at = timestamp;
@@ -231,7 +203,11 @@ impl Voting {
     pub fn get_voting_config_id(&self) -> &VotingConfigId {
         &self.voting_config_id
     }
-    
+
+    pub fn get_created_at(&self) -> u64 {
+        self.created_at
+    }
+
     pub fn get_winners(&self) -> &BTreeSet<ChoiceId> {
         &self.winners
     }
@@ -252,20 +228,12 @@ impl Voting {
         &self.rejection_choice.unwrap()
     }
 
-    pub fn get_used_voting_power(&self) -> &BTreeMap<GroupOrProfile, Shares> {
-        &self.used_voting_power
-    }
-
     pub fn get_total_voting_power(&self) -> &BTreeMap<GroupOrProfile, Shares> {
         &self.total_voting_power
     }
 
-    pub fn get_winners_need(&self) -> &usize {
-        &self.winners_need
-    }
-
-    pub fn get_start_condition(&self) -> &StartCondition {
-        &self.start_condition
+    pub fn get_winners_need(&self) -> usize {
+        self.winners_need
     }
 
     pub fn get_status(&self) -> &VotingStatus {
@@ -275,7 +243,7 @@ impl Voting {
     pub fn get_cron_task(&self) -> Option<TaskId> {
         self.task_id
     }
-    
+
     pub fn get_proposer(&self) -> Principal {
         self.proposer
     }

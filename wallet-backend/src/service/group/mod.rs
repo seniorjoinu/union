@@ -1,5 +1,6 @@
 use crate::repository::group::model::Group;
 use crate::repository::token::model::Token;
+use crate::service::events::EventsService;
 use crate::service::group::types::{GroupError, GroupService, HAS_PROFILE_GROUP_ID};
 use crate::service::profile::types::ProfileService;
 use candid::Principal;
@@ -33,13 +34,26 @@ impl GroupService {
         token: &mut Token,
         owner: Principal,
         qty: Shares,
+        timestamp: u64,
     ) -> Result<(), GroupError> {
         GroupService::assert_not_has_profile_group(group.get_id().unwrap())?;
 
         if group.is_private() {
             token.mint_unaccepted(owner, qty);
+            // TODO: emit event for gateway
         } else {
-            token.mint(owner, qty);
+            token.mint(owner, qty.clone());
+            let balance = token.balance_of(&owner);
+            let total_supply = token.total_supply();
+
+            EventsService::emit_shares_mint_event(
+                group.get_id().unwrap(),
+                owner,
+                qty,
+                balance,
+                total_supply,
+                timestamp,
+            );
         }
 
         Ok(())
@@ -51,6 +65,7 @@ impl GroupService {
         from: Principal,
         to: Principal,
         qty: Shares,
+        timestamp: u64,
     ) -> Result<(), GroupError> {
         GroupService::assert_not_has_profile_group(group.get_id().unwrap())?;
         GroupService::assert_transferable(group, token)?;
@@ -61,8 +76,25 @@ impl GroupService {
         }
 
         token
-            .transfer(from, to, qty)
-            .map_err(GroupError::ValidationError)
+            .transfer(from, to, qty.clone())
+            .map_err(GroupError::ValidationError)?;
+
+        let from_balance = token.balance_of(&from);
+        let to_balance = token.balance_of(&to);
+        let total_supply = token.total_supply();
+
+        EventsService::emit_shares_transfer_event(
+            group.get_id().unwrap(),
+            from,
+            to,
+            qty,
+            from_balance,
+            to_balance,
+            total_supply,
+            timestamp,
+        );
+
+        Ok(())
     }
 
     pub fn accept_shares(
@@ -70,14 +102,30 @@ impl GroupService {
         token: &mut Token,
         owner: Principal,
         qty: Shares,
+        timestamp: u64,
     ) -> Result<(), GroupError> {
         GroupService::assert_acceptable(group, token)?;
         GroupService::assert_profile_exists(owner)?;
 
         token
-            .accept(owner, qty)
-            .map_err(GroupError::ValidationError)
+            .accept(owner, qty.clone())
+            .map_err(GroupError::ValidationError)?;
+
+        let balance = token.balance_of(&owner);
+        let total_supply = token.total_supply();
+        EventsService::emit_shares_mint_event(
+            group.get_id().unwrap(),
+            owner,
+            qty,
+            balance,
+            total_supply,
+            timestamp,
+        );
+
+        Ok(())
     }
+
+    // TODO: add burn
 
     pub fn convert_to_private(group: &mut Group, token: &mut Token) -> Result<(), GroupError> {
         GroupService::assert_not_has_profile_group(group.get_id().unwrap())?;
