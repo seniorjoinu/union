@@ -1,0 +1,16 @@
+src
+coverage
+
+.env
+.eslintrc
+.eslintignore
+.prettierignore
+.prettierrc
+yarn-error.log
+yarn.lock
+package.lock.json
+node_modules
+*.html
+tsconfig.*
+tsup.config.ts
+vite.config.ts

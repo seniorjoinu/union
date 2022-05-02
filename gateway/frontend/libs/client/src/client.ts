@@ -2,9 +2,9 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 import { IDL } from '@dfinity/candid';
 import { UnionWalletWindowOpener, OpenerOptions, UnionWalletWindowOpenerOptions } from './opener';
 import { UnionWalletWindowAuthorizer } from './auth';
-import { ExecuteRequest, _SERVICE } from './union-wallet.did';
+import { ExecuteRequest, _SERVICE } from './assets/union-wallet.did';
 // @ts-expect-error
-import { idlFactory as idl } from './union-wallet.did.js';
+import { idlFactory as idl } from './assets/union-wallet.did.js';
 
 export type ExecuteRequestData = Partial<ExecuteRequest>;
 

@@ -6,4 +6,4 @@ args=
 dfx $args deploy
 
 FEED_APP_CANISTER_ID=$(dfx canister id feed-app)
-echo "http://localhost:8000?canisterId=${FEED_APP_CANISTER_ID}"
+echo "http://${FEED_APP_CANISTER_ID}.localhost:8000"

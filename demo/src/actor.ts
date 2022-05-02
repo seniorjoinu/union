@@ -7,10 +7,10 @@ import { backendSerializer, _SERVICE } from './backend';
 export const createActor = <T>(idl: IDL.InterfaceFactory, configuration: ActorConfig): T => {
   const actor = Actor.createActor<T>(idl, {
     ...configuration,
-    callTransform: (methodName: keyof _SERVICE, args: any[], config) => {
+    callTransform: (methodName: string, args: any[], config) => {
       if (unionWalletClient.isAuthorized()) {
         const canisterId = Principal.from(config.canisterId);
-        const candidArgs = backendSerializer[methodName](...args);
+        const candidArgs = backendSerializer[methodName as keyof _SERVICE](...args);
 
         unionWalletClient.execute(
           {

@@ -1,5 +1,7 @@
-export const isLocalhost = () =>
-  window.location.href.startsWith('http://localhost') || window.location.href.includes('127.0.0.1');
+export const isLocalhost = () => {
+  const hostname = new URL(window.location.origin).hostname;
+  return hostname.includes('localhost') || hostname.includes('127.0.0.1');
+};
 
 export const randomBigInt = () => BigInt(String(Math.random()).replace('0.', ''));
 

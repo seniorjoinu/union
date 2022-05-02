@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
+# FIXME
+echo Building npm deps
+cd ../libs/serialize
+yarn build
+cd ../../gateway
+
 cp ../../../deployer-backend/canister/.dfx/local/canisters/union-deployer/union-deployer.did.d.ts ./src/assets/union-deployer.did.d.ts
 cp ../../../deployer-backend/canister/.dfx/local/canisters/union-deployer/union-deployer.did.js ./src/assets/union-deployer.did.js
 

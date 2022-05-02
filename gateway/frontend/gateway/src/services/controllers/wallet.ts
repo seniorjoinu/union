@@ -1,9 +1,8 @@
 import { authClient, Canister, CanisterProps, useCanister } from 'toolkit';
-import { IDL } from '@dfinity/candid';
+import { buildSerializer, buildEncoder } from '@union-wallet/serialize';
 import { _SERVICE } from 'wallet-ts';
 // @ts-expect-error
 import { idlFactory as idl } from 'wallet-idl';
-import './idl-monkey-patching';
 import { Principal } from '@dfinity/principal';
 
 export type IWalletController = Canister<_SERVICE>;
@@ -18,29 +17,10 @@ export const initWalletController = (canisterId: string, handlers?: CanisterProp
 
   return canister;
 };
-// @ts-expect-error
-window.initWalletController = initWalletController;
 
 export const useWallet = (canisterId: Principal) =>
   useCanister(canisterId.toString(), initWalletController);
 
-const idlFactory = idl({ IDL }) as IDL.ServiceClass;
+export const walletSerializer = buildSerializer<_SERVICE>(idl);
 
-export const walletSerializer = idlFactory._fields.reduce((acc, next) => {
-  const func = next[1] as IDL.FuncClass;
-
-  return {
-    ...acc,
-    [next[0]]: (...args: any[]) =>
-      func.argTypes.map((argType, index) => argType.valueToString(args[index])),
-  };
-}, {} as { [key in keyof _SERVICE]: (...args: Parameters<_SERVICE[key]>) => string[] });
-
-export const walletEncoder = idlFactory._fields.reduce((acc, next) => {
-  const func = next[1] as IDL.FuncClass;
-
-  return {
-    ...acc,
-    [next[0]]: (...args: any[]) => IDL.encode(func.argTypes, args),
-  };
-}, {} as { [key in keyof _SERVICE]: (...args: Parameters<_SERVICE[key]>) => ArrayBuffer });
+export const walletEncoder = buildEncoder<_SERVICE>(idl);

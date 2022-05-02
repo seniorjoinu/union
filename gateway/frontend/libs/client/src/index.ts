@@ -1,2 +1,2 @@
 export * from './client';
-export * as logo from './logo.svg';
+export * as logo from './assets/logo.svg';

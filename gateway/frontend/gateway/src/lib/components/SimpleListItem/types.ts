@@ -1,6 +1,9 @@
 import * as React from 'react';
 
-export type DefaultSimpleListItem = { id: string | number };
+export type DefaultSimpleListItem = {
+  id: string | number;
+  [key: string]: React.ReactNode;
+};
 
 export interface Order<T extends DefaultSimpleListItem> {
   key: keyof T;

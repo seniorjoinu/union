@@ -4,12 +4,15 @@ set -e
 args=
 uwc=../scripts/uwc
 
+# FIXME
 echo Building npm deps
 cd ../gateway/frontend/libs/client
-yarn && yarn build
+yarn build
+cd ../serialize
+yarn build
 cd ../../../../demo
 
-yarn && yarn build
+yarn build
 
 FEED_APP_CANISTER_ID=$(dfx canister $args id feed-app)
 echo Storing assets to $FEED_APP_CANISTER_ID
@@ -51,4 +54,4 @@ done
 
 rm ./tmp_args.txt 2> /dev/null || echo ""
 
-echo Assets successfull stored to "http://localhost:8000?canisterId=${FEED_APP_CANISTER_ID}"
+echo Assets successfull stored to "http://${FEED_APP_CANISTER_ID}.localhost:8000"

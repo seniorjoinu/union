@@ -1,5 +1,4 @@
 import * as React from 'react';
-import styled from 'styled-components';
 import AnimateHeight from 'react-animate-height';
 import { CSSTransition } from 'react-transition-group';
 import { Container, Header, HeaderHandler, Children, Arrow, Title, Borders } from './styles';

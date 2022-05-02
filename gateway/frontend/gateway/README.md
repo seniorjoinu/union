@@ -72,7 +72,6 @@ TODO
 
 ## Code assumptions
 
-- Used monkey-patching of @dfinity/candid in [file](./src/services/controllers/idl-monkey-patching.ts)
 - [Lib folder](./src/lib/README.md) contains potential separated npm packages
 - IMPORTANT!!! walletSerializer must use candid from `export_candid` method of current canister!!!!
 

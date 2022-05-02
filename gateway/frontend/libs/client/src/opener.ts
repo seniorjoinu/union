@@ -29,7 +29,8 @@ interface Cache<R, P> {
   handleResponse?(data: R): void;
 }
 
-const isLocalhost = ['localhost', '127.0.0.1'].includes(new URL(window.location.origin).hostname);
+const hostname = new URL(window.location.origin).hostname;
+const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
 export class UnionWalletWindowOpener {
   protected options: Required<UnionWalletWindowOpenerOptions>;
   protected window: Window | null = null;
@@ -71,7 +72,7 @@ export class UnionWalletWindowOpener {
     }
 
     if (waitClose) {
-      this.interval = setInterval(this.checkChild, 1000);
+      this.interval = window.setInterval(this.checkChild, 1000);
     }
 
     return this.window;
@@ -95,11 +96,7 @@ export class UnionWalletWindowOpener {
     const canisterId = this.options.gateway.toString();
     const url = new URL(this.options.providerUrl);
 
-    if (isLocalhost) {
-      url.searchParams.append('canisterId', canisterId);
-    } else {
-      url.host = `${canisterId}.${url.host}`;
-    }
+    url.host = `${canisterId}.${url.host}`;
 
     return url;
   };

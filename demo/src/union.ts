@@ -4,7 +4,7 @@ import { getAgent } from './agent';
 import { UnionWalletClient } from '@union-wallet/client';
 
 export const unionWalletClient = new UnionWalletClient({
-  providerUrl: 'http://localhost:3000',
+  // providerUrl: 'http://localhost:3000',
 });
 
 export const useUnionWallet = () => {

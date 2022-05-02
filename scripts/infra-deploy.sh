@@ -56,7 +56,7 @@ log "[infra-deploy] Frontend built"
 COLOR="92"
 log deployer=$deployer
 log gateway_backend=$gateway_backend
-log internet-identity="http://localhost:8000?canisterId=$INTERNET_IDENTITY_CANISTER_ID"
+log internet-identity="http://$INTERNET_IDENTITY_CANISTER_ID.localhost:8000"
 
 cd $current_folder
 

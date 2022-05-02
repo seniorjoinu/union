@@ -1,7 +1,7 @@
 import { HttpAgent, HttpAgentOptions } from '@dfinity/agent';
 
 export const config = {
-  LOCAL_IDENTITY_URL: `http://localhost:8000?canisterId=${process.env.INTERNET_IDENTITY_CANISTER_ID}`,
+  LOCAL_IDENTITY_URL: `http://${process.env.INTERNET_IDENTITY_CANISTER_ID}.localhost:8000`,
   IDENTITY_URL: 'https://identity.ic0.app',
 };
 
@@ -19,5 +19,7 @@ export const getAgent = (options: HttpAgentOptions = {}) => {
 export const getIdentityUrl = () =>
   isLocalhost() ? config.LOCAL_IDENTITY_URL : config.IDENTITY_URL;
 
-export const isLocalhost = () =>
-  window.location.href.includes('localhost') || window.location.href.includes('127.0.0.1');
+export const isLocalhost = () => {
+  const hostname = new URL(window.location.origin).hostname;
+  return hostname.includes('localhost') || hostname.includes('127.0.0.1');
+};

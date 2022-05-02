@@ -25,6 +25,10 @@ dfx start --clean
 # Register via Internet Identity and get principal on frontend gateway
 cd ./scripts
 ./add-profile.sh --ii=*identity* --name=*name (default is Agent)*
+
+# deploy demo project
+cd ./demo
+./deploy.sh
 ```
 
 ## didc

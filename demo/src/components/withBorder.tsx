@@ -24,7 +24,6 @@ export const withBorder = <P extends object, R extends React.JSXElementConstruct
   opts: WithBorderOptions = {},
 ): R => {
   const options = { ...defaultOptions, ...opts };
-  // @ts-expect-error
   const StyledComponent = styled(Component)`
     border: none;
   `;
@@ -96,6 +95,7 @@ export const withBorder = <P extends object, R extends React.JSXElementConstruct
   const WrappedComponent = (({ className, style, ...props }: P & WithBorderProps) => (
     <BorderWrapper className={className} style={style}>
       <BorderSlice />
+      {/* @ts-expect-error */}
       <StyledComponent {...(props as P)} />
     </BorderWrapper>
   )) as R;

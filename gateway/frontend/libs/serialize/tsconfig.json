@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "module": "es2015",
+    "target": "esnext",
+    "module": "esnext",
     "moduleResolution": "node",
     "lib": ["dom", "es2015", "es2016", "es2017", "esnext"],
     "jsx": "react",
     "outDir": "./dist",
-    "baseUrl": "./src",
     "skipLibCheck": true,
-    "sourceMap": true,
+    "esModuleInterop": true,
     "declaration": true,
+    "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "downlevelIteration": true,
     "experimentalDecorators": true,
@@ -24,13 +24,5 @@
     "strictFunctionTypes": true,
     "strictPropertyInitialization": true,
     "strictNullChecks": true
-  },
-  "exclude": [
-    "dist",
-    "./src/**/test/**",
-    "./src/**/*.test.*",
-    "./src/**/stories/**",
-    "./src/**/*.story.*",
-    "./src/**/*.stories.*"
-  ]
+  }
 }

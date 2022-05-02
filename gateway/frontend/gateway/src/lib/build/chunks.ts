@@ -13,9 +13,6 @@ export const defaultManualChunks = (path: string, currentDir: string): string =>
 
   const id = path.slice(path.indexOf('node_modules/') + 1);
 
-  if (id.includes('@dfinity')) {
-    return 'dfinity';
-  }
   if (id.includes('react')) {
     return 'react';
   }

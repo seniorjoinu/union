@@ -44,4 +44,4 @@ send_batches_args="(record {
 dfx canister $args call $root_wallet "execute" "${send_batches_args}"
 
 log "[batches-send] Frontend canister ready"
-log "http://localhost:8000?canisterId=$(parse_principal $frontend_canister_id_did)"
+log "http://$(parse_principal $frontend_canister_id_did).localhost:8000"

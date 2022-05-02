@@ -7,3 +7,4 @@
 /.idea
 /.dfx
 /.env
+node_modules
