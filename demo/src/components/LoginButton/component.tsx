@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth';
@@ -6,13 +6,14 @@ import { useBackend } from '../../backend';
 import { Button as B, Principal } from '../atoms';
 import { UnionLoginButton as UB } from '../UnionLoginButton';
 import logo from './logo.svg';
-import { ProfileModal } from './ProfileModal';
+import { UserProfileModal } from './UserProfileModal';
 
 const Button = styled(B)``;
 const UnionLoginButton = styled(UB)``;
 
 const Name = styled.span`
   font-weight: 600;
+  cursor: pointer;
 `;
 
 const Logo = styled.img`
@@ -47,6 +48,7 @@ export const LoginButton = ({ children, onLogin, ...props }: LoginButtonProps) =
   const navigate = useNavigate();
   const { principal, login, logout } = useAuth();
   const { canister, data } = useBackend();
+  const [modalVisible, setModalVisible] = useState(false);
 
   const refresh = useCallback(() => {
     if (!principal || principal.isAnonymous()) {
@@ -81,8 +83,17 @@ export const LoginButton = ({ children, onLogin, ...props }: LoginButtonProps) =
 
   return (
     <Container {...props}>
-      <ProfileModal />
-      {!!data.get_profile?.name && <Name>{data.get_profile.name}</Name>}
+      <UserProfileModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSubmit={() => {
+          refresh();
+          setModalVisible(false);
+        }}
+      />
+      {!!data.get_profile?.name && (
+        <Name onClick={() => setModalVisible(true)}>{data.get_profile.name}</Name>
+      )}
       <Principal onClick={() => navigator.clipboard.writeText(principal.toString())}>
         {principal.toString()}
       </Principal>

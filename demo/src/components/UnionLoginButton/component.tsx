@@ -1,16 +1,20 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
+import { useBackend } from '../../backend';
 import { useAuth } from '../../auth';
 import { useUnionWallet } from '../../union';
 import { Button as B, PureButton, Principal, Tooltip } from '../atoms';
 import { Logo as L } from './logo';
+import { UnionProfileModal } from './UnionProfileModal';
 
 const Name = styled.span`
+  word-break: break-word;
   font-weight: 600;
 `;
 const Info = styled.span`
   font-size: 14px;
   text-align: center;
+  color: grey;
 `;
 
 const Logo = styled(L)`
@@ -80,6 +84,7 @@ const Container = styled.div`
 
   &:hover {
     ${Tooltip} {
+      max-width: 245px;
       pointer-events: all;
       opacity: 1;
     }
@@ -100,6 +105,15 @@ export const UnionLoginButton = ({
 }: UnionLoginButtonProps) => {
   const { authorized, refresh, client } = useUnionWallet();
   const { principal } = useAuth();
+  const { canister, data } = useBackend();
+  const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (!client.wallet) {
+      return;
+    }
+    canister.get_profile(client.wallet);
+  }, [authorized]);
 
   const handleLogin = useCallback(async () => {
     if (!principal) {
@@ -121,6 +135,7 @@ export const UnionLoginButton = ({
 
   return (
     <Container {...props}>
+      <UnionProfileModal visible={modalVisible} onClose={() => setModalVisible(false)} />
       <UButton $authorized={authorized} onClick={!authorized ? handleLogin : undefined}>
         <Logo />
       </UButton>
@@ -128,11 +143,13 @@ export const UnionLoginButton = ({
         <Tooltip>
           <TooltipContent>
             <Info>Union wallet connected</Info>
+            {!!data.get_profile?.name && <Name>{data.get_profile?.name}</Name>}
             {client.wallet && (
               <Principal onClick={() => navigator.clipboard.writeText(principal.toString())}>
                 {client.wallet.toString()}
               </Principal>
             )}
+            <Button onClick={() => setModalVisible(true)}>Change name</Button>
             <Controls>
               <Button onClick={client.view}>View</Button>
               <Button onClick={handleLogout}>Logout</Button>

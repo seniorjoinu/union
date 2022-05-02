@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import styled from 'styled-components';
+import {useUnionWallet} from '../../union';
 import { useBackend } from '../../backend';
 import { TextArea as TA, Markdown as MD, SubmitButton } from '../atoms';
 import { withBorder } from '../withBorder';
@@ -46,6 +47,15 @@ const Tabs = styled.div`
   }
 `;
 
+const Controls = styled.div`
+  display: flex;
+  flex-direction: row;
+
+  & > *:not(:last-child) {
+    margin-right: 8px;
+  }
+`;
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -81,6 +91,7 @@ export interface PostCreatorProps {
 export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) => {
   const [mode, setMode] = useState('write');
   const { canister, fetching } = useBackend();
+  const { authorized, execute } = useUnionWallet();
   const {
     control,
     setValue,
@@ -96,9 +107,18 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
   const handlePublish = useCallback(async () => {
     await canister.add_post({ content: getValues().content });
 
-    setValue('content', '');
+    setValue('content', '', {shouldValidate: true});
     onSuccess();
   }, [getValues, setValue, onSuccess]);
+
+  const handlePublishFromWallet = useCallback(async () => {
+    await execute('add_post', [{ content: getValues().content }], {
+      title: 'Publish post on Thoughter',
+    });
+
+    setValue('content', '', {shouldValidate: true});
+    onSuccess();
+  }, [execute, getValues, setValue, onSuccess]);
 
   return (
     <Container {...p}>
@@ -131,13 +151,25 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
         {mode == 'preview' && <Markdown>{getValues().content}</Markdown>}
         {mode == 'preview' && !getValues().content && <Zeroscreen>No thoughts here</Zeroscreen>}
       </Playground>
-      <SubmitButton
-        disabled={!isValid || !!fetching.add_post}
-        $loading={!!fetching.add_post}
-        onClick={handlePublish}
-      >
-        Publish
-      </SubmitButton>
+      <Controls>
+        <SubmitButton
+          disabled={!isValid || !!fetching.add_post}
+          $loading={!!fetching.add_post}
+          onClick={handlePublish}
+        >
+          Publish
+        </SubmitButton>
+        {
+          authorized &&
+            <SubmitButton
+              disabled={!isValid || !!fetching.add_post}
+              onClick={handlePublishFromWallet}
+            >
+              Publish from wallet
+            </SubmitButton>
+        }
+        
+      </Controls>
     </Container>
   );
 };

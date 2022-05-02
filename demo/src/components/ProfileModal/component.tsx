@@ -1,9 +1,9 @@
+import { Principal } from '@dfinity/principal';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactDOM from 'react-dom';
 import styled from 'styled-components';
-import { useAuth } from '../../auth';
 import { useBackend } from '../../backend';
-import { TextField, Button } from '../atoms';
+import { TextField, SubmitButton, Button } from '../atoms';
 
 const Cross = styled.span`
   cursor: pointer;
@@ -40,7 +40,7 @@ const Modal = styled.section`
     margin-bottom: 16px;
   }
 
-  ${Button} {
+  ${SubmitButton}, ${Button} {
     align-self: flex-start;
   }
 
@@ -79,16 +79,31 @@ const Container = styled.div`
   }
 `;
 
+export interface ProfileModalData {
+  name: string;
+}
+
 export interface ProfileModalProps {
   className?: string;
   style?: React.CSSProperties;
+  principal: Principal;
+  visible: boolean;
+  onSubmit(data: ProfileModalData): Promise<any>;
+  onLogout(): void;
+  onClose(): void;
 }
 
-export const ProfileModal = ({ ...p }: ProfileModalProps) => {
-  const { principal, logout } = useAuth();
+export const ProfileModal = ({
+  principal,
+  onSubmit,
+  onLogout,
+  visible,
+  onClose,
+  ...p
+}: ProfileModalProps) => {
   const { canister, data, fetching } = useBackend();
+  const [submitting, setSubmitting] = useState(false);
   const [name, setName] = useState('');
-  const [manualClosed, setManualClosed] = useState(false);
 
   const refresh = useCallback(() => {
     if (!principal || principal.isAnonymous()) {
@@ -101,27 +116,27 @@ export const ProfileModal = ({ ...p }: ProfileModalProps) => {
     refresh();
   }, [refresh]);
 
-  const visible = !!data.get_profile && !data.get_profile.name && !manualClosed;
-
   const handleSubmit = useCallback(async () => {
     if (!name) {
       return;
     }
+    setSubmitting(true);
 
-    await canister.edit_profile({ name });
-    refresh();
-  }, [canister, refresh, name]);
+    onSubmit({ name }).finally(() => {
+      setSubmitting(false);
+    });
+  }, [name, setSubmitting]);
 
   if (!visible) {
     return null;
   }
 
-  const loading = !!fetching.edit_profile || !!fetching.get_profile;
+  const loading = !!submitting || !!fetching.get_profile;
 
   return ReactDOM.createPortal(
     <Container {...p}>
       <Modal>
-        <Cross onClick={() => setManualClosed(true)} />
+        <Cross onClick={onClose} />
         <TextField
           placeholder='Set your name'
           onChange={(e) => setName(e.target.value)}
@@ -130,10 +145,10 @@ export const ProfileModal = ({ ...p }: ProfileModalProps) => {
           disabled={loading}
         />
         <Controls>
-          <Button disabled={!name || loading} onClick={handleSubmit}>
+          <SubmitButton disabled={!name || loading} $loading={submitting} onClick={handleSubmit}>
             Submit
-          </Button>
-          <Button disabled={loading} onClick={logout}>
+          </SubmitButton>
+          <Button disabled={loading} onClick={onLogout}>
             Logout
           </Button>
         </Controls>
