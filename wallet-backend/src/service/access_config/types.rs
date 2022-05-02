@@ -1,17 +1,17 @@
 use crate::repository::permission::types::PermissionId;
-use crate::repository::query_config::types::QueryConfigId;
 use shared::types::wallet::{GroupId, ProfileId};
 use shared::validation::ValidationError;
+use crate::repository::access_config::types::AccessConfigId;
 
-pub struct QueryConfigService;
+pub struct AccessConfigService;
 
 #[derive(Debug)]
-pub enum QueryConfigError {
+pub enum AccessConfigError {
     ValidationError(ValidationError),
     PermissionNotFound(PermissionId),
     GroupNotFound(GroupId),
     ProfileNotFound(ProfileId),
-    QueryConfigNotFound(QueryConfigId),
-    UnableToDeleteTheLastQueryConfig,
+    AccessConfigNotFound(AccessConfigId),
+    UnableToDeleteTheLastAccessConfig,
     QueryCallerNotAllowed,
 }

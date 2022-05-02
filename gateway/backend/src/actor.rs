@@ -1,10 +1,8 @@
 use crate::common::api::{
     AttachToUnionWalletRequest, ControllerSpawnWalletRequest, ControllerSpawnWalletResponse,
     DetachFromUnionWalletRequest, GetAttachedUnionWalletsResponse, GetMyNotificationsResponse,
-    ProfileActivatedEvent, ProfileActivatedEventFilter, ProfileCreatedEvent,
-    ProfileCreatedEventFilter, ProveBillPaidRequest, ProveBillPaidResponse,
-    SpawnUnionWalletRequest, SpawnUnionWalletResponse, TransferControlRequest,
-    UpgradeUnionWalletRequest,
+    ProveBillPaidRequest, ProveBillPaidResponse, SpawnUnionWalletRequest, SpawnUnionWalletResponse,
+    TransferControlRequest, UpgradeUnionWalletRequest,
 };
 use crate::common::gateway::{ProfileCreatedNotification, State};
 use crate::common::types::{BillId, BillType};
@@ -13,10 +11,14 @@ use ic_cdk::api::time;
 use ic_cdk::export::candid::export_service;
 use ic_cdk::export::Principal;
 use ic_cdk::storage::{stable_restore, stable_save};
-use ic_cdk::{call, caller, id};
+use ic_cdk::{call, caller, id, print};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
 use ic_event_hub::api::IEventHubClient;
 use ic_event_hub::types::{CallbackInfo, Event, IEvent, IEventFilter, SubscribeRequest};
+use shared::types::wallet::{
+    ProfileActivatedEvent, ProfileActivatedEventFilter, ProfileCreatedEvent,
+    ProfileCreatedEventFilter,
+};
 use union_deployer_client::api::{SpawnWalletRequest, UpgradeWalletVersionRequest};
 use union_deployer_client::client::IDeployerBackend;
 
@@ -196,14 +198,14 @@ fn events_callback(events: Vec<Event>) {
             "ProfileCreatedEvent" => {
                 let ev: ProfileCreatedEvent = ProfileCreatedEvent::from_event(event);
 
-                get_state().create_notification(ev.profile_owner, caller(), ev.profile_role_id);
+                get_state().create_notification(ev.profile_owner, caller());
             }
             "ProfileActivatedEvent" => {
                 let ev: ProfileActivatedEvent = ProfileActivatedEvent::from_event(event);
 
                 get_state().remove_notifications(caller(), ev.profile_owner);
             }
-            _ => unreachable!("Unknown event"),
+            _ => print("Unknown event"),
         }
     }
 }

@@ -31,6 +31,13 @@ impl Token {
             unaccepted_balances: HashMap::default(),
         }
     }
+    
+    pub fn reset(&mut self) {
+        self.balances = HashMap::new();
+        self.total_supply = Shares::default();
+        self.unaccepted_balances = HashMap::new();
+        self.unaccepted_total_supply = Shares::default();
+    }
 
     pub fn mint(&mut self, to: Principal, qty: Shares) {
         self.balances.insert(to, self.balance_of(&to) + qty.clone());

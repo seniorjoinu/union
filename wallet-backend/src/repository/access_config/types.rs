@@ -1,10 +1,10 @@
 use crate::repository::permission::types::PermissionId;
+use crate::repository::voting_config::types::GroupCondition;
 use candid::{CandidType, Deserialize};
 use shared::mvc::Id;
 use shared::types::wallet::{GroupOrProfile, ProfileId};
-use crate::repository::voting_config::types::GroupCondition;
 
-pub type QueryConfigId = Id;
+pub type AccessConfigId = Id;
 
 pub const QUERY_CONFIG_NAME_MIN_LEN: usize = 1;
 pub const QUERY_CONFIG_NAME_MAX_LEN: usize = 200;
@@ -23,13 +23,13 @@ impl AlloweeConstraint {
         match &self {
             AlloweeConstraint::Everyone => None,
             AlloweeConstraint::Group(g) => Some(GroupOrProfile::Group(g.id)),
-            AlloweeConstraint::Profile(p) => Some(GroupOrProfile::Profile(*p))
+            AlloweeConstraint::Profile(p) => Some(GroupOrProfile::Profile(*p)),
         }
     }
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct QueryConfigFilter {
+pub struct AccessConfigFilter {
     pub permission: Option<PermissionId>,
     pub group_or_profile: Option<GroupOrProfile>,
 }

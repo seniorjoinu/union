@@ -86,6 +86,22 @@ impl Repository<VotingConfig, VotingConfigId, VotingConfigFilter, ()> for Voting
 }
 
 impl VotingConfigRepository {
+    pub fn gop_has_related_voting_configs(&self, gop: &GroupOrProfile) -> bool {
+        if let Some(index) = self.voting_configs_by_group_or_profile_index.get(gop) {
+            !index.is_empty()
+        } else {
+            false
+        }
+    }
+
+    pub fn permission_has_related_voting_configs(&self, permission_id: &PermissionId) -> bool {
+        if let Some(index) = self.voting_configs_by_permission_index.get(permission_id) {
+            !index.is_empty()
+        } else {
+            false
+        }
+    }
+    
     fn add_to_indexes(&mut self, voting_config: &VotingConfig) {
         let id = voting_config.get_id().unwrap();
 

@@ -17,4 +17,6 @@ pub enum GroupError {
     GroupSharesAreNotTransferable(GroupId),
     GroupSharesAreNotAcceptable(GroupId),
     UnableToEditHasProfileGroup,
+    RelatedAccessConfigsExist,
+    RelatedVotingConfigsExist,
 }

@@ -40,7 +40,7 @@ pub struct PrincipalShareholder {
     pub new_balance: Shares,
 }
 
-#[derive(Event, Deserialize, CandidType, Clone)]
+#[derive(Event, Clone)]
 pub struct SharesMoveEvent {
     pub timestamp: u64,
     pub group_id: GroupId,
@@ -48,4 +48,16 @@ pub struct SharesMoveEvent {
     pub to: Shareholder,
     pub qty: Shares,
     pub total_supply: Shares,
+}
+
+#[derive(Event)]
+pub struct ProfileCreatedEvent {
+    #[topic]
+    pub profile_owner: Principal,
+}
+
+#[derive(Event)]
+pub struct ProfileActivatedEvent {
+    #[topic]
+    pub profile_owner: Principal,
 }

@@ -1,12 +1,15 @@
 use crate::repository::permission::types::PermissionId;
-use crate::repository::query_config::types::{QueryConfigId, QUERY_CONFIG_DESCRIPTION_MAX_LEN, QUERY_CONFIG_DESCRIPTION_MIN_LEN, QUERY_CONFIG_NAME_MAX_LEN, QUERY_CONFIG_NAME_MIN_LEN, AlloweeConstraint};
+use crate::repository::query_config::types::{
+    AlloweeConstraint, QueryConfigId, QUERY_CONFIG_DESCRIPTION_MAX_LEN,
+    QUERY_CONFIG_DESCRIPTION_MIN_LEN, QUERY_CONFIG_NAME_MAX_LEN, QUERY_CONFIG_NAME_MIN_LEN,
+};
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
 
 #[derive(Clone, CandidType, Deserialize)]
-pub struct QueryConfig {
+pub struct AccessConfig {
     id: Option<QueryConfigId>,
     name: String,
     description: String,
@@ -15,7 +18,7 @@ pub struct QueryConfig {
     allowees: BTreeSet<AlloweeConstraint>,
 }
 
-impl QueryConfig {
+impl AccessConfig {
     pub fn new(
         name: String,
         description: String,
@@ -84,7 +87,7 @@ impl QueryConfig {
     }
 }
 
-impl Model<QueryConfigId> for QueryConfig {
+impl Model<QueryConfigId> for AccessConfig {
     fn get_id(&self) -> Option<QueryConfigId> {
         self.id
     }

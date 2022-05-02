@@ -16,6 +16,8 @@ pub struct Group {
     token: TokenId,
 }
 
+// TODO: add token index, add get_my_groups function
+
 impl Group {
     pub fn new(
         name: String,

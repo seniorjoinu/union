@@ -1,6 +1,6 @@
+use crate::repository::access_config::model::AccessConfig;
+use crate::repository::access_config::types::{AccessConfigFilter, AccessConfigId};
 use crate::repository::permission::types::PermissionId;
-use crate::repository::query_config::model::QueryConfig;
-use crate::repository::query_config::types::{QueryConfigFilter, QueryConfigId};
 use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
@@ -11,16 +11,16 @@ pub mod model;
 pub mod types;
 
 #[derive(Default, CandidType, Deserialize)]
-pub struct QueryConfigRepository {
-    query_configs: HashMap<QueryConfigId, QueryConfig>,
+pub struct AccessConfigRepository {
+    access_configs: HashMap<AccessConfigId, AccessConfig>,
     id_gen: IdGenerator,
 
-    query_configs_by_permission: BTreeMap<PermissionId, BTreeSet<QueryConfigId>>,
-    query_configs_by_group_or_profile: BTreeMap<GroupOrProfile, BTreeSet<QueryConfigId>>,
+    access_configs_by_permission: BTreeMap<PermissionId, BTreeSet<AccessConfigId>>,
+    access_configs_by_group_or_profile: BTreeMap<GroupOrProfile, BTreeSet<AccessConfigId>>,
 }
 
-impl Repository<QueryConfig, QueryConfigId, QueryConfigFilter, ()> for QueryConfigRepository {
-    fn save(&mut self, mut it: QueryConfig) -> QueryConfigId {
+impl Repository<AccessConfig, AccessConfigId, AccessConfigFilter, ()> for AccessConfigRepository {
+    fn save(&mut self, mut it: AccessConfig) -> AccessConfigId {
         if it.is_transient() {
             it._init_id(self.id_gen.generate());
         } else {
@@ -30,32 +30,32 @@ impl Repository<QueryConfig, QueryConfigId, QueryConfigFilter, ()> for QueryConf
 
         self.add_to_indexes(&it);
         let id = it.get_id().unwrap();
-        self.query_configs.insert(id, it);
-        
+        self.access_configs.insert(id, it);
+
         id
     }
 
-    fn delete(&mut self, id: &QueryConfigId) -> Option<QueryConfig> {
-        let it = self.query_configs.remove(id)?;
+    fn delete(&mut self, id: &AccessConfigId) -> Option<AccessConfig> {
+        let it = self.access_configs.remove(id)?;
         self.remove_from_indexes(&it);
 
         Some(it)
     }
 
-    fn get(&self, id: &QueryConfigId) -> Option<QueryConfig> {
-        self.query_configs.get(id).cloned()
+    fn get(&self, id: &AccessConfigId) -> Option<AccessConfig> {
+        self.access_configs.get(id).cloned()
     }
 
-    fn list(&self, page_req: &PageRequest<QueryConfigFilter, ()>) -> Page<QueryConfig> {
+    fn list(&self, page_req: &PageRequest<AccessConfigFilter, ()>) -> Page<AccessConfig> {
         if page_req.filter.permission.is_none() && page_req.filter.group_or_profile.is_none() {
-            let (has_next, iter) = self.query_configs.iter().get_page(page_req);
+            let (has_next, iter) = self.access_configs.iter().get_page(page_req);
             let data = iter.map(|(_, it)| it.clone()).collect();
 
             return Page::new(data, has_next);
         }
 
         let mut index = if let Some(permission_id) = page_req.filter.permission {
-            self.query_configs_by_permission
+            self.access_configs_by_permission
                 .get(&permission_id)
                 .cloned()
                 .unwrap_or_default()
@@ -64,7 +64,7 @@ impl Repository<QueryConfig, QueryConfigId, QueryConfigFilter, ()> for QueryConf
         };
 
         let mut index2 = if let Some(gop) = page_req.filter.group_or_profile {
-            self.query_configs_by_group_or_profile
+            self.access_configs_by_group_or_profile
                 .get(&gop)
                 .cloned()
                 .unwrap_or_default()
@@ -85,20 +85,42 @@ impl Repository<QueryConfig, QueryConfigId, QueryConfigFilter, ()> for QueryConf
     }
 }
 
-impl QueryConfigRepository {
-    pub fn get_query_configs_by_permission(&self, permission_id: &PermissionId) -> BTreeSet<QueryConfigId> {
-        self.query_configs_by_permission.get(permission_id).cloned().unwrap_or_default()
+impl AccessConfigRepository {
+    pub fn get_access_configs_by_permission(
+        &self,
+        permission_id: &PermissionId,
+    ) -> BTreeSet<AccessConfigId> {
+        self.access_configs_by_permission
+            .get(permission_id)
+            .cloned()
+            .unwrap_or_default()
     }
-    
+
+    pub fn gop_has_related_access_configs(&self, gop: &GroupOrProfile) -> bool {
+        if let Some(index) = self.access_configs_by_group_or_profile.get(gop) {
+            !index.is_empty()
+        } else {
+            false
+        }
+    }
+
+    pub fn permission_has_related_access_configs(&self, permission_id: &PermissionId) -> bool {
+        if let Some(index) = self.access_configs_by_permission.get(permission_id) {
+            !index.is_empty()
+        } else {
+            false
+        }
+    }
+
     pub fn count(&self) -> usize {
-        self.query_configs.len()
+        self.access_configs.len()
     }
-    
-    fn add_to_indexes(&mut self, query_config: &QueryConfig) {
+
+    fn add_to_indexes(&mut self, query_config: &AccessConfig) {
         let id = query_config.get_id().unwrap();
 
         for permission in query_config.get_permissions() {
-            self.query_configs_by_permission
+            self.access_configs_by_permission
                 .entry(*permission)
                 .or_default()
                 .insert(id);
@@ -106,7 +128,7 @@ impl QueryConfigRepository {
 
         for allowee in query_config.get_allowees() {
             if let Some(gop) = allowee.to_group_or_profile() {
-                self.query_configs_by_group_or_profile
+                self.access_configs_by_group_or_profile
                     .entry(gop)
                     .or_default()
                     .insert(id);
@@ -114,11 +136,11 @@ impl QueryConfigRepository {
         }
     }
 
-    fn remove_from_indexes(&mut self, query_config: &QueryConfig) {
+    fn remove_from_indexes(&mut self, query_config: &AccessConfig) {
         let id = query_config.get_id().unwrap();
 
         for permission in query_config.get_permissions() {
-            self.query_configs_by_permission
+            self.access_configs_by_permission
                 .get_mut(permission)
                 .unwrap()
                 .remove(&id);
@@ -126,7 +148,7 @@ impl QueryConfigRepository {
 
         for allowee in query_config.get_allowees() {
             if let Some(gop) = &allowee.to_group_or_profile() {
-                self.query_configs_by_group_or_profile
+                self.access_configs_by_group_or_profile
                     .get_mut(gop)
                     .unwrap()
                     .remove(&id);

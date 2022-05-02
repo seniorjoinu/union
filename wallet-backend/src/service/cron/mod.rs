@@ -62,49 +62,51 @@ impl CronService {
 
         voting.set_cron_task(task_id, timestamp);
     }
-}
 
-pub fn process_tasks() {
-    let timestamp = time();
+    pub fn process_tasks() {
+        let timestamp = time();
 
-    for task in cron_ready_tasks() {
-        let kind: CronTaskKind = task.get_payload().expect("Unable to get task payload");
+        for task in cron_ready_tasks() {
+            let kind: CronTaskKind = task.get_payload().expect("Unable to get task payload");
 
-        match kind {
-            CronTaskKind::RoundStart(voting_id) => {
-                let mut voting = Voting::repo().get(&voting_id).unwrap();
-                let vc = VotingConfig::repo()
-                    .get(voting.get_voting_config_id())
-                    .unwrap();
+            match kind {
+                CronTaskKind::RoundStart(voting_id) => {
+                    let mut voting = Voting::repo().get(&voting_id).unwrap();
+                    let vc = VotingConfig::repo()
+                        .get(voting.get_voting_config_id())
+                        .unwrap();
 
-                voting.start_round(timestamp);
-                CronService::schedule_round_end(&mut voting, &vc, timestamp);
+                    voting.start_round(timestamp);
+                    CronService::schedule_round_end(&mut voting, &vc, timestamp);
 
-                Voting::repo().save(voting);
-            }
-            CronTaskKind::RoundEnd(voting_id) => {
-                let mut voting = Voting::repo().get(&voting_id).unwrap();
-                let vc = VotingConfig::repo()
-                    .get(voting.get_voting_config_id())
-                    .unwrap();
-
-                VotingService::try_finish_voting(&mut voting, &vc, timestamp);
-            }
-            CronTaskKind::VotingExecution(voting_id) => spawn(async move {
-                let voting = Voting::repo().get(&voting_id).unwrap();
-
-                for choice in voting
-                    .get_winners()
-                    .iter()
-                    .map(|id| Choice::repo().get(id).unwrap())
-                {
-                    let timestamp = time();
-                    let program = choice.get_program().clone();
-                    let result = program.execute().await;
-
-                    EventsService::emit_program_executed_event(program, result, timestamp)
+                    Voting::repo().save(voting);
                 }
-            }),
-        };
+                CronTaskKind::RoundEnd(voting_id) => {
+                    let mut voting = Voting::repo().get(&voting_id).unwrap();
+                    let vc = VotingConfig::repo()
+                        .get(voting.get_voting_config_id())
+                        .unwrap();
+
+                    VotingService::try_finish_voting(&mut voting, &vc, timestamp);
+                    
+                    Voting::repo().save(voting);
+                }
+                CronTaskKind::VotingExecution(voting_id) => spawn(async move {
+                    let voting = Voting::repo().get(&voting_id).unwrap();
+
+                    for choice in voting
+                        .get_winners()
+                        .iter()
+                        .map(|id| Choice::repo().get(id).unwrap())
+                    {
+                        let timestamp = time();
+                        let program = choice.get_program().clone();
+                        let result = program.execute().await;
+
+                        EventsService::emit_program_executed_event(program, result, timestamp)
+                    }
+                }),
+            };
+        }
     }
 }

@@ -1,7 +1,13 @@
 use crate::repository::choice::model::Choice;
+use crate::repository::choice::types::ChoiceFilter;
+use crate::repository::token::model::Token;
+use crate::repository::voting::model::Voting;
 use crate::service::choice::types::{ChoiceError, ChoiceService};
+use crate::service::voting::types::VotingService;
+use crate::service::voting_config::types::VotingConfigService;
 use candid::Principal;
 use shared::mvc::{HasRepository, Repository};
+use shared::pageable::{Page, PageRequest};
 use shared::remote_call::Program;
 use shared::types::wallet::{ChoiceId, VotingId};
 
@@ -12,14 +18,32 @@ impl ChoiceService {
         program: Program,
         voting_id: VotingId,
         creator: Principal,
+        timestamp: u64,
     ) -> Result<ChoiceId, ChoiceError> {
-        // TODO: get voting, get voting-config, check if the program fits permissions of the config
-        // TODO: also check if the creator is listed in editors of voting config (or it is the creator of the voting)
+        let mut voting = VotingService::get_voting(&voting_id).map_err(ChoiceError::VotingError)?;
+        let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
+
+        if !VotingService::is_editable(&voting)
+            || !VotingService::editor_can_edit(&vc, creator, voting.get_proposer())
+        {
+            return Err(ChoiceError::UnableToEditVoting(voting_id));
+        }
+
+        if !VotingConfigService::does_program_fit(&vc, &program) {
+            return Err(ChoiceError::ProgramNotAllowedByVotingConfig);
+        }
+
+        VotingService::reset_approval_choice(&voting);
 
         let choice = Choice::new(name, description, program, voting_id)
             .map_err(ChoiceError::ValidationError)?;
 
-        Ok(Choice::repo().save(choice))
+        let id = Choice::repo().save(choice);
+
+        voting.add_choice(id, timestamp);
+        Voting::repo().save(voting);
+
+        Ok(id)
     }
 
     pub fn create_rejection_and_approval_choices(voting_id: VotingId) -> (ChoiceId, ChoiceId) {
@@ -39,10 +63,24 @@ impl ChoiceService {
         new_program: Option<Program>,
         editor: Principal,
     ) -> Result<(), ChoiceError> {
-        let mut choice = Choice::repo()
-            .get(choice_id)
-            .ok_or(ChoiceError::ChoiceNotFound(*choice_id))?;
-        // TODO: check program and editor
+        let mut choice = ChoiceService::get_choice(choice_id)?;
+
+        let mut voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
+        let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
+
+        if !VotingService::is_editable(&voting)
+            || !VotingService::editor_can_edit(&vc, editor, voting.get_proposer())
+        {
+            return Err(ChoiceError::UnableToEditVoting(*choice.get_voting_id()));
+        }
+
+        if let Some(program) = &new_program {
+            if !VotingConfigService::does_program_fit(&vc, program) {
+                return Err(ChoiceError::ProgramNotAllowedByVotingConfig);
+            }
+        }
+
+        VotingService::reset_approval_choice(&voting);
 
         choice
             .update(new_name, new_description, new_program)
@@ -51,5 +89,46 @@ impl ChoiceService {
         Choice::repo().save(choice);
 
         Ok(())
+    }
+
+    pub fn delete_choice(
+        choice_id: &ChoiceId,
+        voting_id: &VotingId,
+        deleter: Principal,
+    ) -> Result<(), ChoiceError> {
+        let mut choice = ChoiceService::get_choice(choice_id)?;
+
+        if choice.get_voting_id() != voting_id {
+            return Err(ChoiceError::ChoiceNotFound(*choice_id));
+        }
+
+        let mut voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
+        let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
+
+        if !VotingService::is_editable(&voting)
+            || !VotingService::editor_can_edit(&vc, deleter, voting.get_proposer())
+        {
+            return Err(ChoiceError::UnableToEditVoting(*choice.get_voting_id()));
+        }
+
+        for (gop, token_id) in choice.list_tokens_by_gop() {
+            Token::repo().delete(token_id).unwrap();
+        }
+
+        Choice::repo().delete(choice_id).unwrap();
+
+        Ok(())
+    }
+
+    #[inline(always)]
+    pub fn get_choice(id: &ChoiceId) -> Result<Choice, ChoiceError> {
+        Choice::repo()
+            .get(id)
+            .ok_or(ChoiceError::ChoiceNotFound(*id))
+    }
+
+    #[inline(always)]
+    pub fn list_choices(page_req: &PageRequest<ChoiceFilter, ()>) -> Page<Choice> {
+        Choice::repo().list(page_req)
     }
 }

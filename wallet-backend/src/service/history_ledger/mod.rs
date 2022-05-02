@@ -11,6 +11,8 @@ pub enum HistoryLedgerError {
     NetworkError(CandidRejectionCode, String),
 }
 
+// TODO: add calls made with access_configs
+
 pub struct HistoryLedgerService;
 
 impl HistoryLedgerService {

@@ -1,3 +1,6 @@
+use crate::repository::access_config::model::AccessConfig;
+use crate::repository::access_config::types::{AccessConfigFilter, AccessConfigId};
+use crate::repository::access_config::AccessConfigRepository;
 use crate::repository::batch::model::Batch;
 use crate::repository::batch::types::BatchId;
 use crate::repository::batch::BatchRepository;
@@ -14,9 +17,6 @@ use crate::repository::permission::types::{PermissionFilter, PermissionId};
 use crate::repository::permission::PermissionRepository;
 use crate::repository::profile::model::Profile;
 use crate::repository::profile::ProfileRepository;
-use crate::repository::query_config::model::QueryConfig;
-use crate::repository::query_config::types::{QueryConfigFilter, QueryConfigId};
-use crate::repository::query_config::QueryConfigRepository;
 use crate::repository::token::model::Token;
 use crate::repository::token::types::{TokenFilter, TokenId};
 use crate::repository::token::TokenRepository;
@@ -29,26 +29,26 @@ use candid::{CandidType, Deserialize};
 use shared::mvc::HasRepository;
 use shared::types::wallet::{ChoiceId, GroupId, ProfileId, VotingConfigId, VotingId};
 
+pub mod access_config;
 pub mod batch;
 pub mod choice;
 pub mod chunk;
 pub mod group;
 pub mod permission;
 pub mod profile;
-pub mod query_config;
 pub mod token;
 pub mod voting;
 pub mod voting_config;
 
 #[derive(Default, CandidType, Deserialize)]
 pub struct Repositories {
+    access_config: AccessConfigRepository,
     batch: BatchRepository,
     choice: ChoiceRepository,
     chunk: ChunkRepository,
     group: GroupRepository,
     profile: ProfileRepository,
     permission: PermissionRepository,
-    query_config: QueryConfigRepository,
     token: TokenRepository,
     voting_config: VotingConfigRepository,
     voting: VotingRepository,
@@ -114,11 +114,11 @@ impl HasRepository<Permission, PermissionId, PermissionFilter, (), PermissionRep
     }
 }
 
-impl HasRepository<QueryConfig, QueryConfigId, QueryConfigFilter, (), QueryConfigRepository>
-    for QueryConfig
+impl HasRepository<AccessConfig, AccessConfigId, AccessConfigFilter, (), AccessConfigRepository>
+    for AccessConfig
 {
-    fn repo() -> &'static mut QueryConfigRepository {
-        &mut get_repositories().query_config
+    fn repo() -> &'static mut AccessConfigRepository {
+        &mut get_repositories().access_config
     }
 }
 

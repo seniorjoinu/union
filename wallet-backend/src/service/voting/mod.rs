@@ -12,35 +12,27 @@ use crate::service::group::types::{GroupService, DEFAULT_GROUP_SHARES};
 use crate::service::voting::types::{
     MultiChoiceVote, SingleChoiceVote, Vote, VotingError, VotingService,
 };
+use crate::service::voting_config::types::VotingConfigService;
 use bigdecimal::{BigDecimal, One};
 use candid::{Nat, Principal};
 use shared::mvc::{HasRepository, Model, Repository};
-use shared::remote_call::Program;
 use shared::types::history_ledger::SharesInfo;
-use shared::types::wallet::{GroupOrProfile, Shares};
+use shared::types::wallet::{ChoiceId, GroupOrProfile, Shares, VotingId};
 use std::collections::BTreeMap;
 
 pub mod crud;
 pub mod types;
 
 impl VotingService {
-    pub fn add_choice(
-        voting: &mut Voting,
-        vc: &VotingConfig,
-        name: String,
-        description: String,
-        program: Program,
-    ) -> Result<(), VotingError> {
-        // TODO
-    }
-
     pub fn cast_vote(
-        voting: &mut Voting,
-        vc: &VotingConfig,
+        id: &VotingId,
         vote: Vote,
         caller: Principal,
         timestamp: u64,
     ) -> Result<(), VotingError> {
+        let mut voting = VotingService::get_voting(id)?;
+        let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
+
         if !matches!(voting.get_status(), VotingStatus::Round(_)) {
             return Err(VotingError::InvalidVote);
         }
@@ -49,9 +41,9 @@ impl VotingService {
             Vote::Rejection(s) => {
                 let (gop, principal, shares, total_shares) = match s {
                     SingleChoiceVote::AsGroupMember(shares_info) => {
-                        VotingService::assert_shares_info_valid(&shares_info, voting, caller)?;
+                        VotingService::assert_shares_info_valid(&shares_info, &voting, caller)?;
                         VotingService::assert_can_reject(
-                            vc,
+                            &vc,
                             &GroupOrProfile::Group(shares_info.group_id),
                         )?;
 
@@ -66,7 +58,7 @@ impl VotingService {
                         Profile::repo()
                             .get(&caller)
                             .ok_or(VotingError::ProfileNotExists(caller))?;
-                        VotingService::assert_can_reject(vc, &GroupOrProfile::Profile(caller))?;
+                        VotingService::assert_can_reject(&vc, &GroupOrProfile::Profile(caller))?;
 
                         (
                             GroupOrProfile::Profile(caller),
@@ -77,10 +69,10 @@ impl VotingService {
                     }
                 };
 
-                VotingService::remove_prev_vote(voting, gop, principal);
+                VotingService::remove_prev_vote(&voting, gop, principal);
                 let rejection_choice = Choice::repo().get(voting.get_rejection_choice()).unwrap();
                 VotingService::put_vote(
-                    voting,
+                    &mut voting,
                     vec![(rejection_choice, shares)],
                     total_shares,
                     gop,
@@ -91,9 +83,9 @@ impl VotingService {
             Vote::Approval(s) => {
                 let (gop, principal, shares, total_shares) = match s {
                     SingleChoiceVote::AsGroupMember(shares_info) => {
-                        VotingService::assert_shares_info_valid(&shares_info, voting, caller)?;
+                        VotingService::assert_shares_info_valid(&shares_info, &voting, caller)?;
                         VotingService::assert_can_approve(
-                            vc,
+                            &vc,
                             &GroupOrProfile::Group(shares_info.group_id),
                         )?;
 
@@ -108,7 +100,7 @@ impl VotingService {
                         Profile::repo()
                             .get(&caller)
                             .ok_or(VotingError::ProfileNotExists(caller))?;
-                        VotingService::assert_can_approve(vc, &GroupOrProfile::Profile(caller))?;
+                        VotingService::assert_can_approve(&vc, &GroupOrProfile::Profile(caller))?;
 
                         (
                             GroupOrProfile::Profile(caller),
@@ -119,10 +111,10 @@ impl VotingService {
                     }
                 };
 
-                VotingService::remove_prev_vote(voting, gop, principal);
+                VotingService::remove_prev_vote(&voting, gop, principal);
                 let approval_choice = Choice::repo().get(voting.get_approval_choice()).unwrap();
                 VotingService::put_vote(
-                    voting,
+                    &mut voting,
                     vec![(approval_choice, shares)],
                     total_shares,
                     gop,
@@ -133,14 +125,15 @@ impl VotingService {
             Vote::Common(m) => {
                 let (gop, principal, total_shares, votes) = match m {
                     MultiChoiceVote::AsGroupMember(v) => {
-                        VotingService::assert_shares_info_valid(&v.shares_info, voting, caller)?;
+                        VotingService::assert_shares_info_valid(&v.shares_info, &voting, caller)?;
                         VotingService::assert_can_vote(
-                            vc,
+                            &vc,
                             &GroupOrProfile::Group(v.shares_info.group_id),
                         )?;
 
                         let total_fraction: BigDecimal =
                             v.vote.iter().map(|(_, f)| f.0.abs()).sum();
+                        
                         if total_fraction > BigDecimal::one() {
                             return Err(VotingError::InvalidVote);
                         }
@@ -167,7 +160,8 @@ impl VotingService {
                         Profile::repo()
                             .get(&caller)
                             .ok_or(VotingError::ProfileNotExists(caller))?;
-                        VotingService::assert_can_vote(vc, &GroupOrProfile::Profile(caller))?;
+                        
+                        VotingService::assert_can_vote(&vc, &GroupOrProfile::Profile(caller))?;
 
                         let total_fraction: BigDecimal =
                             v.vote.iter().map(|(_, f)| f.0.abs()).sum();
@@ -206,10 +200,12 @@ impl VotingService {
                     })
                     .collect();
 
-                VotingService::remove_prev_vote(voting, gop, principal);
-                VotingService::put_vote(voting, choices, total_shares, gop, principal, timestamp);
+                VotingService::remove_prev_vote(&voting, gop, principal);
+                VotingService::put_vote(&mut voting, choices, total_shares, gop, principal, timestamp);
             }
         };
+        
+        Voting::repo().save(voting);
 
         Ok(())
     }
@@ -346,6 +342,11 @@ impl VotingService {
         }
     }
 
+    pub fn reset_approval_choice(voting: &Voting) {
+        let approval_choice = Choice::repo().get(voting.get_approval_choice()).unwrap();
+        ChoiceService::reset(&approval_choice);
+    }
+
     fn remove_prev_vote(voting: &Voting, gop: GroupOrProfile, principal: Principal) {
         let mut choices = match voting.get_status() {
             VotingStatus::Round(r) => {
@@ -437,18 +438,21 @@ impl VotingService {
         Err(VotingError::ProposerNotFoundInVotingConfig(proposer))
     }
 
-    fn assert_editor_can_edit(
-        vc: &VotingConfig,
-        editor: Principal,
-        proposer: Principal,
-    ) -> Result<(), VotingError> {
+    pub fn is_editable(voting: &Voting) -> bool {
+        match voting.get_status() {
+            VotingStatus::Round(r) => *r == 0,
+            _ => false,
+        }
+    }
+
+    pub fn editor_can_edit(vc: &VotingConfig, editor: Principal, proposer: Principal) -> bool {
         for editor_constraint in vc.get_editor_constraints() {
             match editor_constraint {
                 EditorConstraint::Profile(p) => {
                     if *p == editor {
                         // unwrapping, because profile should exist if it is listed
                         Profile::repo().get(p).unwrap();
-                        return Ok(());
+                        return true;
                     }
                 }
                 EditorConstraint::Group(group_condition) => {
@@ -457,18 +461,18 @@ impl VotingService {
                     let token = GroupService::get_token(&group);
 
                     if token.balance_of(&editor) >= group_condition.min_shares.clone() {
-                        return Ok(());
+                        return true;
                     }
                 }
                 EditorConstraint::Proposer => {
                     if editor == proposer {
-                        return Ok(());
+                        return true;
                     }
                 }
             }
         }
 
-        Err(VotingError::EditorNotFoundInVotingConfig(editor))
+        false
     }
 
     fn assert_can_approve(vc: &VotingConfig, gop: &GroupOrProfile) -> Result<(), VotingError> {

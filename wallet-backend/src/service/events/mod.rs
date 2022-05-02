@@ -1,10 +1,7 @@
 use crate::emit;
 use candid::Principal;
 use shared::remote_call::{Program, ProgramExecutionResult};
-use shared::types::wallet::{
-    GroupId, PrincipalShareholder, ProgramExecutedEvent_1, ProgramExecutedEvent_2, Shareholder,
-    Shares, SharesMoveEvent,
-};
+use shared::types::wallet::{GroupId, PrincipalShareholder, ProfileActivatedEvent, ProfileCreatedEvent, ProgramExecutedEvent_1, ProgramExecutedEvent_2, Shareholder, Shares, SharesMoveEvent};
 
 pub struct EventsService;
 
@@ -84,5 +81,17 @@ impl EventsService {
                 new_balance: from_new_balance
             }),
         })
+    }
+    
+    pub fn emit_profile_created_event(owner: Principal) {
+        emit(ProfileCreatedEvent {
+            profile_owner: owner
+        });
+    }
+    
+    pub fn emit_profile_activated_event(owner: Principal) {
+        emit(ProfileActivatedEvent {
+            profile_owner: owner
+        });
     }
 }

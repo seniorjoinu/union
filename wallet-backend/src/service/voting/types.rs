@@ -18,6 +18,8 @@ pub enum VotingError {
     VotingNotFound(VotingId),
     VotingInInvalidStatus(VotingId),
     InvalidVote,
+    ProgramNotAllowedByVotingConfig,
+    ChoiceNotFound(ChoiceId),
 }
 
 #[derive(CandidType, Deserialize)]

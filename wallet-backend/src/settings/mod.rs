@@ -2,7 +2,7 @@ use candid::{CandidType, Deserialize, Principal};
 use shared::sorted_by_timestamp::SortedByTimestamp;
 use shared::validation::{validate_and_trim_str, ValidationError};
 
-#[derive(CandidType, Deserialize)]
+#[derive(Clone, CandidType, Deserialize)]
 pub struct Settings {
     gateway: Principal,
     history_ledgers: SortedByTimestamp<Principal>,

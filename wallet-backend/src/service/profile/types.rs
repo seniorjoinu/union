@@ -8,6 +8,8 @@ pub enum ProfileError {
     ProfileAlreadyExists(ProfileId),
     GroupError(GroupError),
     ProfileNotFound(ProfileId),
+    RelatedVotingConfigsExist,
+    RelatedAccessConfigsExist,
 }
 
 pub struct ProfileService;

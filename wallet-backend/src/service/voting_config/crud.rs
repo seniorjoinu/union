@@ -1,13 +1,12 @@
 use crate::repository::permission::types::PermissionId;
 use crate::repository::voting_config::model::VotingConfig;
-use crate::repository::voting_config::types::{
-    EditorConstraint, LenInterval, ProposerConstraint, RoundSettings, ThresholdValue,
-};
+use crate::repository::voting_config::types::{EditorConstraint, LenInterval, ProposerConstraint, RoundSettings, ThresholdValue, VotingConfigFilter};
 use crate::repository::voting::model::Voting;
 use crate::service::voting_config::types::{VotingConfigError, VotingConfigService};
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::types::wallet::VotingConfigId;
 use std::collections::BTreeSet;
+use shared::pageable::{Page, PageRequest};
 
 impl VotingConfigService {
     pub fn create_voting_config(
@@ -78,7 +77,7 @@ impl VotingConfigService {
     }
 
     pub fn update_voting_config(
-        vc: &mut VotingConfig,
+        id: VotingConfigId,
         name_opt: Option<String>,
         description_opt: Option<String>,
         choices_count_opt: Option<Option<LenInterval>>,
@@ -93,7 +92,7 @@ impl VotingConfigService {
         win_opt: Option<ThresholdValue>,
         next_round_opt: Option<ThresholdValue>,
     ) -> Result<(), VotingConfigError> {
-        VotingConfigService::assert_not_default(vc.get_id().unwrap())?;
+        VotingConfigService::assert_not_default(id)?;
         
         if let Some(permissions) = &permissions_opt {
             VotingConfigService::assert_permissions_exist(permissions)?;
@@ -142,6 +141,8 @@ impl VotingConfigService {
                 VotingConfigService::assert_gop_exists(&gop)?;
             }
         }
+        
+        let mut vc = VotingConfigService::get_voting_config(&id)?;
 
         vc.update(
             name_opt,
@@ -158,7 +159,10 @@ impl VotingConfigService {
             win_opt,
             next_round_opt,
         )
-        .map_err(VotingConfigError::ValidationError)
+        .map_err(VotingConfigError::ValidationError);
+        VotingConfig::repo().save(vc);
+        
+        Ok(())
     }
 
     pub fn delete_voting_config(id: VotingConfigId) -> Result<VotingConfig, VotingConfigError> {
@@ -169,5 +173,15 @@ impl VotingConfigService {
         }
         
         VotingConfig::repo().delete(&id).ok_or(VotingConfigError::VotingConfigNotFound(id))
+    }
+    
+    #[inline(always)]
+    pub fn get_voting_config(id: &VotingConfigId) -> Result<VotingConfig, VotingConfigError> {
+        VotingConfig::repo().get(id).ok_or(VotingConfigError::VotingConfigNotFound(*id))
+    }
+    
+    #[inline(always)]
+    pub fn list_voting_configs(page_req: &PageRequest<VotingConfigFilter, ()>) -> Page<VotingConfig> {
+        VotingConfig::repo().list(page_req)
     }
 }

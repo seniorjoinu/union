@@ -22,11 +22,17 @@ impl StreamingService {
             .ok_or(StreamingError::BatchNotFound(*id))
     }
 
-    #[inline(always)]
-    pub fn delete_batch(id: &BatchId) -> Result<Batch, StreamingError> {
+    pub fn delete_batch(id: &BatchId, lock_assertion: bool) -> Result<Batch, StreamingError> {
         let batch = Batch::repo()
             .delete(id)
             .ok_or(StreamingError::BatchNotFound(*id))?;
+
+        if batch.is_locked() && !lock_assertion {
+            return Err(StreamingError::BatchIsLocked(*id));
+        }
+        if !batch.is_locked() && lock_assertion {
+            return Err(StreamingError::BatchIsNotLocked(*id));
+        }
 
         Chunk::repo().delete_all_by_batch(&batch.get_id().unwrap());
 
@@ -38,7 +44,6 @@ impl StreamingService {
         Batch::repo().list(page_req)
     }
 
-    #[inline(always)]
     pub fn create_chunk(batch_id: BatchId, content: Blob) -> Result<ChunkId, StreamingError> {
         StreamingService::get_batch(&batch_id)?;
 

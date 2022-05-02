@@ -1,14 +1,18 @@
-use shared::mvc::Model;
 use crate::repository::batch::model::Batch;
+use crate::repository::batch::types::BatchId;
 use crate::service::streaming::types::{StreamingError, StreamingService};
+use shared::mvc::{HasRepository, Model, Repository};
 
 pub mod crud;
 pub mod types;
 
 impl StreamingService {
-    pub fn lock_batch(batch: &mut Batch) -> Result<(), StreamingError> {
-        StreamingService::assert_batch_locked(batch)?;
+    pub fn lock_batch(batch_id: &BatchId) -> Result<(), StreamingError> {
+        let mut batch = StreamingService::get_batch(batch_id)?;
+        StreamingService::assert_batch_locked(&batch)?;
         batch.lock();
+
+        Batch::repo().save(batch);
 
         Ok(())
     }

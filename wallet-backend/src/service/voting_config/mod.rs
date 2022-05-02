@@ -15,6 +15,8 @@ use shared::mvc::{HasRepository, Repository};
 use shared::time::hours;
 use shared::types::wallet::{GroupOrProfile, Shares, VotingConfigId};
 use std::collections::BTreeSet;
+use shared::remote_call::Program;
+use crate::repository::voting_config::model::VotingConfig;
 
 pub mod crud;
 pub mod types;
@@ -38,6 +40,18 @@ impl VotingConfigService {
         ).unwrap();
 
         assert_eq!(id, DEFAULT_VOTING_CONFIG_ID);
+    }
+
+    pub fn does_program_fit(vc: &VotingConfig, program: &Program) -> bool {
+        for id in vc.get_permissions() {
+            let permission = Permission::repo().get(id).unwrap();
+            
+            if permission.is_program_allowed(program) {
+                return true;
+            }
+        }
+        
+        false
     }
 
     fn assert_not_default(id: VotingConfigId) -> Result<(), VotingConfigError> {
