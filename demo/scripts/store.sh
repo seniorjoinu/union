@@ -6,7 +6,7 @@ uwc=../scripts/uwc
 
 echo Building npm deps
 cd ../gateway/frontend/libs/client
-yarn
+yarn && yarn build
 cd ../../../../demo
 
 yarn && yarn build

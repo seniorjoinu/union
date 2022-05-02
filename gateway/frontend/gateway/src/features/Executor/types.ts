@@ -1,7 +1,8 @@
+import { Principal } from '@dfinity/principal';
 import { ExecuteRequest, RemoteCallPayload, RemoteCallEndpoint } from 'wallet-ts';
 
 export interface ExecutorContextData {
-  canisterId: string;
+  canisterId: Principal;
 }
 
 export interface Program extends Omit<RemoteCallPayload, 'endpoint' | 'cycles' | 'args'> {
@@ -19,7 +20,17 @@ export type ExecutorFormData = Omit<ExecuteRequest, 'authorization_delay_nano' |
   program: Program[];
 };
 
-export type ExternalExecutorFormData = Partial<ExecutorFormData>;
+export type ExtendedProgram = { Empty: null } | { RemoteCallSequence: Array<RemoteCallPayload> };
+
+export type ExecutorSerializedFormData = Omit<
+  ExecuteRequest,
+  'authorization_delay_nano' | 'program'
+> & {
+  authorization_delay_nano: number;
+  program: ExtendedProgram;
+};
+
+export type ExternalExecutorFormData = Partial<ExecutorSerializedFormData>;
 
 export const getEmptyProgram = (): Program => ({
   endpoint: { canister_id: '', method_name: '' },

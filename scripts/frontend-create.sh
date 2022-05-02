@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 . ./utils.sh
-source .env
+source $root_folder/.env
 
 log "[frontend-create] Create frontend canister"
 create_canister_args='(record {})'

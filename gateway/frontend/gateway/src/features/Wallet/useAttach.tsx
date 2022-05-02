@@ -24,21 +24,25 @@ export function useAttach() {
           verbose?.description ||
           `Attach roles "${roleIds.join()}" to permissions "${permissionIds.join()}"`,
         rnp,
-        program: roleIds
-          .map((roleId) =>
-            permissionIds.map((permissionId) => ({
-              endpoint: {
-                canister_id: principal,
-                method_name: 'attach_role_to_permission',
-              },
-              cycles: '0',
-              args_candid: walletSerializer.attach_role_to_permission({
-                role_id: Number(roleId),
-                permission_id: Number(permissionId),
-              }),
-            })),
-          )
-          .flat(),
+        program: {
+          RemoteCallSequence: roleIds
+            .map((roleId) =>
+              permissionIds.map((permissionId) => ({
+                endpoint: {
+                  canister_id: principal,
+                  method_name: 'attach_role_to_permission',
+                },
+                cycles: BigInt(0),
+                args: {
+                  CandidString: walletSerializer.attach_role_to_permission({
+                    role_id: Number(roleId),
+                    permission_id: Number(permissionId),
+                  }),
+                },
+              })),
+            )
+            .flat(),
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });

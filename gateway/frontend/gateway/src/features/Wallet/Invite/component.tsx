@@ -68,31 +68,33 @@ export const Invite = () => {
       title: 'Invite members',
       description: 'Invite members and create profiles',
       rnp,
-      program: [
-        ...members
-          .filter((m) => checkPrincipal(m.principal))
-          .map((member) => {
-            const args = walletSerializer.create_role({
-              role_type: {
-                Profile: {
-                  principal_id: Principal.fromText(member.principal),
-                  name: member.name || defaultMember.name,
-                  description: member.description || defaultMember.description,
-                  active: false,
+      program: {
+        RemoteCallSequence: [
+          ...members
+            .filter((m) => checkPrincipal(m.principal))
+            .map((member) => {
+              const args = walletSerializer.create_role({
+                role_type: {
+                  Profile: {
+                    principal_id: Principal.fromText(member.principal),
+                    name: member.name || defaultMember.name,
+                    description: member.description || defaultMember.description,
+                    active: false,
+                  },
                 },
-              },
-            });
+              });
 
-            return {
-              endpoint: {
-                canister_id: principal,
-                method_name: 'create_role',
-              },
-              cycles: '0',
-              args_candid: args,
-            };
-          }),
-      ],
+              return {
+                endpoint: {
+                  canister_id: Principal.from(principal),
+                  method_name: 'create_role',
+                },
+                cycles: BigInt(0),
+                args: { CandidString: args },
+              };
+            }),
+        ],
+      },
     };
 
     nav(`/wallet/${principal}/execute`, { state: payload });

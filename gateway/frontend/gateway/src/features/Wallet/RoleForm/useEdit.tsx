@@ -83,19 +83,23 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
     const payload: ExternalExecutorFormData = {
       title: 'Update role',
       description: 'Update role through interface',
-      program: [
-        {
-          endpoint: {
-            canister_id: principal,
-            method_name: 'update_role',
+      program: {
+        RemoteCallSequence: [
+          {
+            endpoint: {
+              canister_id: principal,
+              method_name: 'update_role',
+            },
+            cycles: BigInt(0),
+            args: {
+              CandidString: walletSerializer.update_role({
+                role_id: Number(roleId),
+                new_role_type: roleType,
+              }),
+            },
           },
-          cycles: '0',
-          args_candid: walletSerializer.update_role({
-            role_id: Number(roleId),
-            new_role_type: roleType,
-          }),
-        },
-      ],
+        ],
+      },
     };
 
     return payload;

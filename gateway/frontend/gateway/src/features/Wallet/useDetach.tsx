@@ -29,19 +29,23 @@ export function useDetach() {
           verbose?.description ||
           `Detach role "${parsed.title}" from permission "${permission.name}"(id ${permission.id})`,
         rnp,
-        program: [
-          {
-            endpoint: {
-              canister_id: principal,
-              method_name: 'detach_role_from_permission',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: principal,
+                method_name: 'detach_role_from_permission',
+              },
+              cycles: BigInt(0),
+              args: {
+                CandidString: walletSerializer.detach_role_from_permission({
+                  role_id: role.id,
+                  permission_id: permission.id,
+                }),
+              },
             },
-            cycles: '0',
-            args_candid: walletSerializer.detach_role_from_permission({
-              role_id: role.id,
-              permission_id: permission.id,
-            }),
-          },
-        ],
+          ],
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });

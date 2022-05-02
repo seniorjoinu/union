@@ -1,9 +1,12 @@
+import { checkPrincipal } from 'toolkit';
 import { ExecutorFormData, Program } from './types';
 
 export const parseMessage = (data: any): Partial<ExecutorFormData> | null => {
   if (!data) {
     return null;
   }
+
+  console.log('Received data', data);
 
   const authorization_delay_nano = data.authorization_delay_nano
     ? Number(data.authorization_delay_nano)
@@ -28,33 +31,48 @@ export const parseMessage = (data: any): Partial<ExecutorFormData> | null => {
     }
   }
 
-  if (data.program && Array.isArray(data.program)) {
-    const program = data.program
-      .filter(
-        (p: any) =>
-          !!p && 'endpoint' in p && !!p.endpoint?.canister_id && !!p.endpoint?.method_name,
-      )
-      .map(
-        (p: any): Program => ({
+  if (!data.program || 'Empty' in data.program) {
+    console.log('Parsed data', result);
+    return result;
+  }
+
+  if ('RemoteCallSequence' in data.program && Array.isArray(data.program.RemoteCallSequence)) {
+    const program = data.program.RemoteCallSequence.filter(
+      (p: any) => !!p && 'endpoint' in p && !!p.endpoint?.canister_id && !!p.endpoint?.method_name,
+    ).map(
+      (p: any): Program => {
+        const remoteCall = {
           endpoint: {
-            canister_id: String(p.endpoint.canister_id),
+            canister_id: checkPrincipal(p.endpoint.canister_id)?.toString() || '',
             method_name: String(p.endpoint.method_name),
           },
           cycles: !Number.isNaN(Number(p.cycles)) ? String(p.cycles) : '',
-          // args: p.args || { CandidString: [] },
-          args_candid: Array.isArray(p.args_candid)
-            ? p.args_candid.filter((a: any) => typeof a == 'string')
-            : [],
-          args_encoded:
-            Array.isArray(p.args_encoded) && typeof p.args_encoded[0] == 'number'
-              ? p.args_encoded
-              : [],
-        }),
-      );
+          args_candid: [],
+          args_encoded: [],
+        };
+
+        if (
+          'Encoded' in p.args &&
+          Array.isArray(p.args.Encoded) &&
+          typeof p.args.Encoded[0] == 'number'
+        ) {
+          remoteCall.args_encoded = p.args.Encoded;
+        }
+        if (
+          'CandidString' in p.args &&
+          Array.isArray(p.args.CandidString) &&
+          typeof p.args.CandidString[0] == 'string'
+        ) {
+          remoteCall.args_candid = p.args.CandidString;
+        }
+
+        return remoteCall;
+      },
+    );
 
     result.program = program;
   }
 
-  console.log('PARSED', data, result);
+  console.log('Parsed data', result);
   return result;
 };

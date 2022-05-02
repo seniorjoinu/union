@@ -6,28 +6,19 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "dev": "npm run copy_deps && npm run storybook",
-    "build": "npm run clean && npm run copy_deps && tsup-node",
-    "copy_deps": "./build_scripts/pre_copy_deps.sh",
+    "dev": "npm run copy && source .env && cd ./example && vite",
+    "build": "npm run clean && npm run copy && source .env && tsup-node",
     "clean": "rimraf dist",
     "test": "npm run lint",
     "lint": "eslint ./src",
     "lint:fix": "prettier --config ./.prettierrc ./src --write && eslint ./src --fix",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "npm run copy_deps && build-storybook"
+    "copy": "npm run copy_deps",
+    "copy_deps": "./build_scripts/pre_copy_deps.sh"
   },
   "license": "ISC",
   "devDependencies": {
-    "@babel/core": "^7.17.8",
-    "@storybook/addon-actions": "^6.4.19",
-    "@storybook/addon-essentials": "^6.4.19",
-    "@storybook/addon-interactions": "^6.4.19",
-    "@storybook/addon-links": "^6.4.19",
-    "@storybook/react": "^6.4.19",
-    "@storybook/testing-library": "^0.0.9",
     "@typescript-eslint/eslint-plugin": "~4.4.1",
     "@typescript-eslint/parser": "~4.4.1",
-    "babel-loader": "^8.2.4",
     "eslint": "~7.11.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "~6.12.0",
@@ -36,21 +27,16 @@
     "eslint-plugin-prettier": "~3.1.4",
     "eslint-plugin-react": "^7.20.0",
     "eslint-plugin-react-hooks": "^4.1.2",
-    "js-sha256": "^0.9.0",
     "prettier": "~2.1.2",
     "rimraf": "~3.0.2",
-    "tsup": "~5.11.7"
+    "tsup": "~5.11.7",
+    "vite": "^2.6.14",
+    "vite-plugin-checker": "^0.4.5"
   },
   "dependencies": {
+    "@dfinity/agent": "^0.10.4",
+    "@dfinity/candid": "^0.10.4",
     "@dfinity/principal": "^0.10.4",
-    "@types/react": "*",
-    "@types/react-dom": "*",
-    "@types/styled-components": "5.1.18",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-hook-form": "^7.28.1",
-    "react-router-dom": "^6.2.2",
-    "styled-components": "^5.3.3",
     "typescript": "~4.2.4"
   }
 }

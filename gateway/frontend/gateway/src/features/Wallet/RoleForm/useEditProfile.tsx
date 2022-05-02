@@ -23,20 +23,24 @@ export const useEditProfile = () => {
         title: 'Edit profile',
         description: `Edit profile with id=${roleId}`,
         rnp,
-        program: [
-          {
-            endpoint: {
-              canister_id: principal,
-              method_name: 'edit_profile',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: principal,
+                method_name: 'edit_profile',
+              },
+              cycles: BigInt(0),
+              args: {
+                CandidString: walletSerializer.edit_profile({
+                  role_id: Number(roleId),
+                  new_name: old.name !== data.name ? [data.name] : [],
+                  new_description: old.description !== data.description ? [data.description] : [],
+                }),
+              },
             },
-            cycles: '0',
-            args_candid: walletSerializer.edit_profile({
-              role_id: Number(roleId),
-              new_name: old.name !== data.name ? [data.name] : [],
-              new_description: old.description !== data.description ? [data.description] : [],
-            }),
-          },
-        ],
+          ],
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });

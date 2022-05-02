@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Principal } from '@dfinity/principal';
 import { Text } from 'components';
 import { useWallet } from 'services';
 import styled from 'styled-components';
@@ -15,7 +16,7 @@ const Container = styled.div`
 export interface WalletInfoProps {
   className?: string;
   style?: React.CSSProperties;
-  canisterId: string;
+  canisterId: Principal;
 }
 
 export const WalletInfo = ({ canisterId, ...p }: WalletInfoProps) => {
@@ -34,7 +35,7 @@ export const WalletInfo = ({ canisterId, ...p }: WalletInfoProps) => {
   return (
     <Container {...p}>
       <Text weight='medium'>{info.name}</Text>
-      <Text>{canisterId}</Text>
+      <Text>{canisterId.toString()}</Text>
     </Container>
   );
 };

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 . ./utils.sh
-source .env
+source $root_folder/.env
 
 args=
 version="0.0.0"

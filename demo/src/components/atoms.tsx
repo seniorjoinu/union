@@ -3,25 +3,24 @@ import styled from 'styled-components';
 import MD from 'react-markdown';
 import { withBorder } from './withBorder';
 
-export const Button = withBorder(
-  styled.button`
-    display: flex;
-    background: rgba(0, 0, 0, 0);
-    border: 1px solid grey;
-    padding: 4px 12px;
-    font-size: 16px;
+export const PureButton = styled.button`
+  display: flex;
+  background: rgba(0, 0, 0, 0);
+  border: 1px solid grey;
+  padding: 4px 12px;
+  font-size: 16px;
 
-    &:not([disabled]) {
-      transition: background 0.3s ease;
-      cursor: pointer;
+  &:not([disabled]) {
+    transition: background 0.3s ease;
+    cursor: pointer;
 
-      &:hover {
-        background: rgba(239, 239, 239, 1);
-      }
+    &:hover {
+      background: rgba(239, 239, 239, 1);
     }
-  `,
-  { withQuad: false, size: 6, color: 'grey' },
-);
+  }
+`;
+
+export const Button = withBorder(PureButton, { withQuad: false, size: 6, color: 'grey' });
 
 export const Principal = styled.span`
   white-space: nowrap;
@@ -72,6 +71,31 @@ export const Markdown = styled(MD)`
     &:hover {
       color: black;
     }
+  }
+`;
+
+const BordererdDiv = withBorder(styled.div``);
+
+export const Tooltip = styled(({ children, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div {...p}>
+    <BordererdDiv>{children}</BordererdDiv>
+  </div>
+))`
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, 0);
+  padding: 6px 4px 4px;
+
+  & > div {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    background-color: white;
   }
 `;
 

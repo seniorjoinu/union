@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { checkPrincipal } from 'toolkit';
 import { ExternalExecutor, InternalExecutor, Executor } from '../Executor';
 import { Provider } from './context';
 import { Info, InfoForm, UpgradeForm } from './Info';
@@ -23,7 +24,9 @@ const Container = styled.div`
 export const Wallet = () => {
   const params = useParams();
   const nav = useNavigate();
-  const principal = params.id;
+
+  const principalStr = params.id || '';
+  const principal = checkPrincipal(principalStr);
 
   if (!principal) {
     return <Navigate to='/wallets' replace />;

@@ -1,90 +1,67 @@
-import { ExecuteRequest } from './union-wallet.did';
-import { Principal } from '@dfinity/principal';
+import { Actor, HttpAgent } from '@dfinity/agent';
+import { IDL } from '@dfinity/candid';
+import { UnionWalletWindowOpener, OpenerOptions, UnionWalletWindowOpenerOptions } from './opener';
+import { UnionWalletWindowAuthorizer } from './auth';
+import { ExecuteRequest, _SERVICE } from './union-wallet.did';
+// @ts-expect-error
+import { idlFactory as idl } from './union-wallet.did.js';
 
 export type ExecuteRequestData = Partial<ExecuteRequest>;
-export type ExecuteRequestOptions = {
-  after?: 'close';
-};
 
-export interface UnionWalletClientOptions {
-  gateway: Principal;
-  wallet: Principal;
-  providerUrl?: string;
-}
+export interface UnionWalletClientOptions extends UnionWalletWindowOpenerOptions {}
 
 export class UnionWalletClient {
   protected options: UnionWalletClientOptions;
-  private window: Window | null = null;
-  private buffer: { req: ExecuteRequestData; opts: ExecuteRequestOptions } | null = null;
+  private auth: UnionWalletWindowAuthorizer;
 
   constructor(opts: UnionWalletClientOptions) {
     this.options = opts;
+    this.auth = new UnionWalletWindowAuthorizer(opts);
   }
 
-  execute = (req: ExecuteRequestData, opts?: ExecuteRequestOptions) => {
-    this.open();
+  get wallet() {
+    return this.auth.wallet;
+  }
 
-    this.buffer = { req, opts: { ...opts } };
-    window.addEventListener('message', this.messageHandler);
+  get idl() {
+    return idl as IDL.InterfaceFactory;
+  }
+
+  isAuthorized = () => this.auth.isAuthorized();
+
+  login = (...args: Parameters<UnionWalletWindowAuthorizer['login']>) => this.auth.login(...args);
+
+  logout = (...args: Parameters<UnionWalletWindowAuthorizer['logout']>) =>
+    this.auth.logout(...args);
+
+  view = () => {
+    const opener = new UnionWalletWindowOpener(this.options);
+    opener.view(this.auth.wallet ? `/wallet/${this.auth.wallet.toString()}` : '/wallets');
   };
 
-  private open = () => {
-    const url = this.buildURL();
-    url.pathname = '/auth';
-    url.searchParams.append('to', `/wallet/${this.options.wallet.toString()}/external-execute`);
-
-    this.window = window.open(url.toString(), '_blank');
-
-    return this.window;
+  execute = (payload: ExecuteRequestData, options?: OpenerOptions) => {
+    if (!this.auth.wallet) {
+      throw 'Not authorized';
+    }
+    const opener = new UnionWalletWindowOpener(this.options);
+    opener.open({
+      path: `/wallet/${this.auth.wallet.toString()}/external-execute`,
+      payload,
+      options,
+    });
   };
 
-  private buildURL = () => {
-    const isLocalhost = ['localhost', '127.0.0.1'].includes(
-      new URL(window.location.origin).hostname,
-    );
+  // executeDirectly = async (payload: ExecuteRequest, agent: HttpAgent) => {
+  //   // TODO call with proof from wallet to direct execution
+  //   // Take it from authorizer
+  //   // this.auth.proof;
+  //   return this.getWalletActor(agent).execute(payload);
+  // };
 
-    const canisterId = this.options.gateway.toString();
-    const url = new URL(
-      this.options.providerUrl || (isLocalhost ? 'http://localhost:8000' : 'https://ic0.app'),
-    );
-
-    if (isLocalhost) {
-      url.searchParams.append('canisterId', canisterId);
-    } else {
-      url.host = `${canisterId}.${url.host}`;
+  getWalletActor = (agent: HttpAgent) => {
+    if (!this.auth.wallet) {
+      return null;
     }
-
-    return url;
-  };
-
-  private messageHandler = (e: MessageEvent<any>) => {
-    if (!e.data || e.data.origin != 'wallet-executor') {
-      return;
-    }
-
-    switch (e.data.type) {
-      case 'ready': {
-        window.removeEventListener('message', this.messageHandler);
-        this.sendData();
-        break;
-      }
-    }
-  };
-
-  private sendData = () => {
-    if (!this.buffer || !this.window) {
-      return;
-    }
-
-    const url = this.buildURL();
-    this.window.postMessage(
-      {
-        target: 'wallet-executor',
-        payload: this.buffer.req,
-        options: this.buffer.opts,
-      },
-      url.toString(),
-    );
-    this.buffer = null;
+    return Actor.createActor<_SERVICE>(idl, { canisterId: this.auth.wallet, agent });
   };
 }

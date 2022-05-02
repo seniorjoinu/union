@@ -3,8 +3,8 @@
 .cache
 .vscode
 dist
-storybook-static
 *.txt
+.env
 node_modules
 coverage
 stats.json

@@ -22,7 +22,7 @@ export const useUpdateAssetCanister = ({
   const { principal } = useCurrentWallet();
 
   const getValues = useCallback(() => {
-    const argsBuffer = IDL.encode([IDL.Principal], [Principal.fromText(principal)]);
+    const argsBuffer = IDL.encode([IDL.Principal], [Principal.from(principal)]);
 
     return {
       ...getFormValues(),

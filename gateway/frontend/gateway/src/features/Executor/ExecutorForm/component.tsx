@@ -79,7 +79,7 @@ const Container = styled(PageWrapper)`
 
 export interface ExecutorFormProps extends IClassName {
   mode: 'edit' | 'view';
-  canisterId: string;
+  canisterId: Principal;
   data: Partial<ExecutorFormData>;
   renderResult?(index: number): React.ReactNode | null | void;
   onSubmit(response: ExecuteResponse): void;

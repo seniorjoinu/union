@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 . ./utils.sh
-source .env
+source $root_folder/.env
 
 frontend_wasm_path="${root_folder}/gateway/frontend/gateway/.dfx/local/canisters/union-wallet-frontend/union-wallet-frontend.wasm"
 

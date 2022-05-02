@@ -25,13 +25,13 @@ const Container = styled.div`
   ${LoginButton} {
     position: fixed;
     top: 16px;
-    right: 16px;
+    right: 24px;
     z-index: 1;
   }
   ${Logo} {
     position: fixed;
     top: 16px;
-    left: 16px;
+    left: 24px;
     z-index: 1;
   }
 `;

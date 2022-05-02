@@ -18,16 +18,20 @@ export function useRemove() {
         title: verbose?.title || 'Remove roles',
         description: verbose?.description || `Remove roles "${roleIds.join()}"`,
         rnp,
-        program: roleIds.map((roleId) => ({
-          endpoint: {
-            canister_id: principal,
-            method_name: 'remove_role',
-          },
-          cycles: '0',
-          args_candid: walletSerializer.remove_role({
-            role_id: Number(roleId),
-          }),
-        })),
+        program: {
+          RemoteCallSequence: roleIds.map((roleId) => ({
+            endpoint: {
+              canister_id: principal,
+              method_name: 'remove_role',
+            },
+            cycles: BigInt(0),
+            args: {
+              CandidString: walletSerializer.remove_role({
+                role_id: Number(roleId),
+              }),
+            },
+          })),
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });
@@ -45,16 +49,20 @@ export function useRemove() {
         title: verbose?.title || 'Remove permissions',
         description: verbose?.description || `Remove permissions "${permissionIds.join()}"`,
         rnp,
-        program: permissionIds.map((permissionId) => ({
-          endpoint: {
-            canister_id: principal,
-            method_name: 'remove_permission',
-          },
-          cycles: '0',
-          args_candid: walletSerializer.remove_permission({
-            permission_id: Number(permissionId),
-          }),
-        })),
+        program: {
+          RemoteCallSequence: permissionIds.map((permissionId) => ({
+            endpoint: {
+              canister_id: principal,
+              method_name: 'remove_permission',
+            },
+            cycles: BigInt(0),
+            args: {
+              CandidString: walletSerializer.remove_permission({
+                permission_id: Number(permissionId),
+              }),
+            },
+          })),
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });

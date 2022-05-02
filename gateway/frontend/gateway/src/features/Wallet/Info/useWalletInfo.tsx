@@ -1,3 +1,4 @@
+import { Principal } from '@dfinity/principal';
 import React, { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gatewaySerializer, useWallet, walletEncoder } from 'services';
@@ -45,17 +46,18 @@ export const useSetInfo = ({ getValues }: UseSetInfoProps) => {
         title: verbose?.title || 'Set wallet info',
         description: verbose?.description || 'Set wallet info',
         rnp,
-        program: [
-          {
-            endpoint: {
-              canister_id: principal,
-              method_name: 'update_info',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: principal,
+                method_name: 'update_info',
+              },
+              cycles: BigInt(0),
+              args: { Encoded: [...new Uint8Array(encoded)] },
             },
-            cycles: '0',
-            args_encoded: [...new Uint8Array(encoded)],
-            args_candid: [],
-          },
-        ],
+          ],
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });
@@ -92,18 +94,22 @@ export const useUpgradeWallet = ({ getValues }: UseUpgradeWalletProps) => {
         title: verbose?.title || 'Upgrade wallet binary',
         description: verbose?.description || `Upgrade wallet binary to version "${version}"`,
         rnp,
-        program: [
-          {
-            endpoint: {
-              canister_id: process.env.GATEWAY_CANISTER_ID,
-              method_name: 'upgrade_union_wallet',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: Principal.from(process.env.GATEWAY_CANISTER_ID),
+                method_name: 'upgrade_union_wallet',
+              },
+              cycles: BigInt(0),
+              args: {
+                CandidString: gatewaySerializer.upgrade_union_wallet({
+                  new_version: version,
+                }),
+              },
             },
-            cycles: '0',
-            args_candid: gatewaySerializer.upgrade_union_wallet({
-              new_version: version,
-            }),
-          },
-        ],
+          ],
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });

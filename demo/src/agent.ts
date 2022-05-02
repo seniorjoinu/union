@@ -9,7 +9,7 @@ export const getAgent = (options: HttpAgentOptions = {}) => {
   const agent = new HttpAgent(options);
 
   if (isLocalhost()) {
-    console.error('dev mode');
+    console.warn('dev mode!');
     agent.fetchRootKey();
   }
 

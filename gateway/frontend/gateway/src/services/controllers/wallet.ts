@@ -4,6 +4,7 @@ import { _SERVICE } from 'wallet-ts';
 // @ts-expect-error
 import { idlFactory as idl } from 'wallet-idl';
 import './idl-monkey-patching';
+import { Principal } from '@dfinity/principal';
 
 export type IWalletController = Canister<_SERVICE>;
 
@@ -20,7 +21,8 @@ export const initWalletController = (canisterId: string, handlers?: CanisterProp
 // @ts-expect-error
 window.initWalletController = initWalletController;
 
-export const useWallet = (canisterId: string) => useCanister(canisterId, initWalletController);
+export const useWallet = (canisterId: Principal) =>
+  useCanister(canisterId.toString(), initWalletController);
 
 const idlFactory = idl({ IDL }) as IDL.ServiceClass;
 

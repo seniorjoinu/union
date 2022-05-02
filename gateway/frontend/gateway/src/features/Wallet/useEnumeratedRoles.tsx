@@ -29,19 +29,23 @@ export function useEnumeratedRoles() {
           verbose?.description ||
           `Attach roles "${roleIds.join()}" to role "${parsedRole.title}"(id ${role.id})`,
         rnp,
-        program: [
-          {
-            endpoint: {
-              canister_id: principal,
-              method_name: 'add_enumerated_roles',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: principal,
+                method_name: 'add_enumerated_roles',
+              },
+              cycles: BigInt(0),
+              args: {
+                CandidString: walletSerializer.add_enumerated_roles({
+                  role_id: role.id,
+                  enumerated_roles_to_add: roleIds.map((rId) => Number(rId)),
+                }),
+              },
             },
-            cycles: '0',
-            args_candid: walletSerializer.add_enumerated_roles({
-              role_id: role.id,
-              enumerated_roles_to_add: roleIds.map((rId) => Number(rId)),
-            }),
-          },
-        ],
+          ],
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });
@@ -67,19 +71,23 @@ export function useEnumeratedRoles() {
           verbose?.description ||
           `Substract roles "${roleIds.join()}" to role "${parsedRole.title}"(id ${role.id})`,
         rnp,
-        program: [
-          {
-            endpoint: {
-              canister_id: principal,
-              method_name: 'subtract_enumerated_roles',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: principal,
+                method_name: 'subtract_enumerated_roles',
+              },
+              cycles: BigInt(0),
+              args: {
+                CandidString: walletSerializer.subtract_enumerated_roles({
+                  role_id: role.id,
+                  enumerated_roles_to_subtract: roleIds.map((rId) => Number(rId)),
+                }),
+              },
             },
-            cycles: '0',
-            args_candid: walletSerializer.subtract_enumerated_roles({
-              role_id: role.id,
-              enumerated_roles_to_subtract: roleIds.map((rId) => Number(rId)),
-            }),
-          },
-        ],
+          ],
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });

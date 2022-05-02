@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
-source .env
 . ./utils.sh
+source $root_folder/.env
 
 identity=
 role_name="Agent"

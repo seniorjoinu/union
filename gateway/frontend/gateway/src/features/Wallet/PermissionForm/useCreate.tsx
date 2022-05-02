@@ -38,20 +38,24 @@ export const useCreate = ({ create, getValues }: UseCreateProps) => {
       title: 'Create new permission',
       description: 'Create new permission through interface',
       rnp,
-      program: [
-        {
-          endpoint: {
-            canister_id: principal,
-            method_name: 'create_permission',
+      program: {
+        RemoteCallSequence: [
+          {
+            endpoint: {
+              canister_id: principal,
+              method_name: 'create_permission',
+            },
+            cycles: BigInt(0),
+            args: {
+              CandidString: walletSerializer.create_permission({
+                name: values.name,
+                scope,
+                targets,
+              }),
+            },
           },
-          cycles: '0',
-          args_candid: walletSerializer.create_permission({
-            name: values.name,
-            scope,
-            targets,
-          }),
-        },
-      ],
+        ],
+      },
     };
 
     return payload;

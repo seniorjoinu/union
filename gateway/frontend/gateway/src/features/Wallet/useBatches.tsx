@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useWallet, walletSerializer } from 'services';
 import { useNavigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
+import { Principal } from '@dfinity/principal';
 import { ExternalExecutorFormData } from '../Executor';
 import { useCurrentWallet } from './context';
 
@@ -20,18 +21,22 @@ export function useBatches() {
         title: verbose?.title || 'Delete locked batches',
         description: verbose?.description || `Delete locked batches with ids ${batchIds.join()}`,
         rnp,
-        program: [
-          {
-            endpoint: {
-              canister_id: principal,
-              method_name: 'delete_batches',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: principal,
+                method_name: 'delete_batches',
+              },
+              cycles: BigInt(0),
+              args: {
+                CandidString: walletSerializer.delete_batches({
+                  batch_ids: batchIds,
+                }),
+              },
             },
-            cycles: '0',
-            args_candid: walletSerializer.delete_batches({
-              batch_ids: batchIds,
-            }),
-          },
-        ],
+          ],
+        },
       };
 
       nav(`/wallet/${principal}/execute`, { state: payload });
@@ -60,19 +65,23 @@ export function useBatches() {
         description:
           verbose?.description || `Send batches ${batchIds.join()} to canister ${targetCanister}`,
         rnp,
-        program: [
-          ...batchIds.map((batchId) => ({
-            endpoint: {
-              canister_id: principal,
-              method_name: 'send_batch',
-            },
-            cycles: '0',
-            args_candid: walletSerializer.send_batch({
-              batch_id: batchId,
-              target_canister: canisterId,
-            }),
-          })),
-        ],
+        program: {
+          RemoteCallSequence: [
+            ...batchIds.map((batchId) => ({
+              endpoint: {
+                canister_id: Principal.from(principal),
+                method_name: 'send_batch',
+              },
+              cycles: BigInt(0),
+              args: {
+                CandidString: walletSerializer.send_batch({
+                  batch_id: batchId,
+                  target_canister: canisterId,
+                }),
+              },
+            })),
+          ],
+        },
       };
       // const payload: ExternalExecutorFormData = {
       //   title: verbose?.title || 'Send batches to canister and delete them',
@@ -80,7 +89,7 @@ export function useBatches() {
       //     verbose?.description ||
       //     `Send batches ${batchIds.join()} to canister ${targetCanister} and delete them`,
       //   rnp,
-      //   program: [
+      //   program: {RemoteCallSequence: [
       //     ...batchIds.map((batchId) => ({
       //       endpoint: {
       //         canister_id: principal,
@@ -102,7 +111,7 @@ export function useBatches() {
       //         batch_ids: batchIds,
       //       }),
       //     },
-      //   ],
+      //   ]},
       // };
 
       nav(`/wallet/${principal}/execute`, { state: payload });

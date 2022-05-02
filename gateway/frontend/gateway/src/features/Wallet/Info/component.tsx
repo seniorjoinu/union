@@ -45,7 +45,7 @@ export const Info = ({ ...p }: InfoProps) => {
 
   useEffect(() => {
     canister.get_info();
-    deployer.canister.get_instances({ ids: [Principal.fromText(principal)] });
+    deployer.canister.get_instances({ ids: [Principal.from(principal)] });
   }, []);
 
   const downloadCandid = useCallback(async () => {

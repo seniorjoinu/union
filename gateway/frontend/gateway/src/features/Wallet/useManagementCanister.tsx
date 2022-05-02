@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { managementEncoder, managementSerializer } from 'services';
 import { useNavigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
+import { Principal } from '@dfinity/principal';
 import { ExternalExecutorFormData } from '../../features/Executor';
 import { useCurrentWallet } from './context';
 
@@ -20,16 +21,18 @@ export const useCreateCanister = (_: UseCreateCanisterProps) => {
       title: 'Create canister',
       description: 'Create canister with management canister',
       rnp,
-      program: [
-        {
-          endpoint: {
-            canister_id: process.env.MANAGEMENT_CANISTER_ID,
-            method_name: 'create_canister',
+      program: {
+        RemoteCallSequence: [
+          {
+            endpoint: {
+              canister_id: Principal.from(process.env.MANAGEMENT_CANISTER_ID),
+              method_name: 'create_canister',
+            },
+            cycles: BigInt(10 ** 9),
+            args: { CandidString: managementSerializer.create_canister({ settings: [] }) },
           },
-          cycles: String(10 ** 9),
-          args_candid: managementSerializer.create_canister({ settings: [] }),
-        },
-      ],
+        ],
+      },
     };
 
     nav(`/wallet/${principal}/execute`, { state: payload });
@@ -88,33 +91,36 @@ export const useUpdateCanister = ({ getValues }: UseUpdateCanisterProps) => {
       title: 'Install code to canister',
       description: 'Install code and set current wallet as controller',
       rnp,
-      program: [
-        {
-          endpoint: {
-            canister_id: process.env.MANAGEMENT_CANISTER_ID,
-            method_name: 'install_code',
-          },
-          cycles: '1',
-          args_encoded: [...new Uint8Array(encoded)],
-          args_candid: [],
-        },
-        {
-          endpoint: {
-            canister_id: process.env.MANAGEMENT_CANISTER_ID,
-            method_name: 'update_settings',
-          },
-          cycles: '1',
-          args_candid: managementSerializer.update_settings({
-            canister_id: canisterId,
-            settings: {
-              controllers: [[walletCanisterId]],
-              freezing_threshold: [],
-              memory_allocation: [],
-              compute_allocation: [],
+      program: {
+        RemoteCallSequence: [
+          {
+            endpoint: {
+              canister_id: Principal.from(process.env.MANAGEMENT_CANISTER_ID),
+              method_name: 'install_code',
             },
-          }),
-        },
-      ],
+            cycles: BigInt(0),
+            args: { Encoded: [...new Uint8Array(encoded)] },
+          },
+          {
+            endpoint: {
+              canister_id: Principal.from(process.env.MANAGEMENT_CANISTER_ID),
+              method_name: 'update_settings',
+            },
+            cycles: BigInt(0),
+            args: {
+              CandidString: managementSerializer.update_settings({
+                canister_id: canisterId,
+                settings: {
+                  controllers: [[walletCanisterId]],
+                  freezing_threshold: [],
+                  memory_allocation: [],
+                  compute_allocation: [],
+                },
+              }),
+            },
+          },
+        ],
+      },
     };
 
     nav(`/wallet/${principal}/execute`, { state: payload });

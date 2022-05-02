@@ -4,7 +4,7 @@ import { Principal } from '@dfinity/principal';
 import { useNavigate } from 'react-router-dom';
 import { PageWrapper, Text, SubmitButton as B, SimpleListItem } from 'components';
 import { useDeployer, useGateway } from 'services';
-import { WalletInfo } from '../Wallets';
+import { WalletItem } from '../Wallets';
 
 const List = styled.div`
   display: flex;
@@ -53,37 +53,26 @@ export const Explore = () => {
   const instances = data.get_instances?.instances || [];
   const progress = !!fetching.get_instance_ids || !!fetching.get_instances;
 
-  const rootWallet = gateway.data.get_controller?.toString() || '';
+  const rootWallet = gateway.data.get_controller;
 
   return (
     <Container title='Explore wallets'>
       <List>
         {instances.map(({ canister_id }) => (
-          <SimpleListItem
+          <WalletItem
             key={canister_id.toString()}
-            item={{
-              id: canister_id.toString(),
-              principal: <WalletInfo canisterId={canister_id.toString()} />,
-              isRoot: rootWallet == canister_id.toString() && (
-                <Text variant='p1' color='grey'>
-                  Root
-                </Text>
-              ),
-              attach: !!attached && (
-                <AttachButton onClick={(e) => handleAttach(e, canister_id)}>
-                  {attached?.find((a) => a.toString() == canister_id.toString())
-                    ? 'Detach'
-                    : 'Attach'}
-                </AttachButton>
-              ),
-            }}
-            order={[
-              { key: 'principal', basis: '30%' },
-              { key: 'isRoot', basis: '30%' },
-              { key: 'attach', align: 'end' },
-            ]}
-            onClick={() => nav(`/wallet/${canister_id.toString()}`)}
-          />
+            rootWallet={rootWallet}
+            wallet={canister_id}
+            onClick={(wallet) => nav(`/wallet/${wallet.toString()}`)}
+          >
+            {!!attached && (
+              <AttachButton onClick={(e) => handleAttach(e, canister_id)}>
+                {attached?.find((a) => a.toString() == canister_id.toString())
+                  ? 'Detach'
+                  : 'Attach'}
+              </AttachButton>
+            )}
+          </WalletItem>
         ))}
         {!instances.length && !progress && <Text>There are no union wallets</Text>}
         {progress && <Text>fetching</Text>}

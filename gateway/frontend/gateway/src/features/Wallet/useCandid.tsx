@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { Principal } from '@dfinity/principal';
 import { IDL } from '@dfinity/candid';
 import { Actor, ActorSubclass } from '@dfinity/agent';
 import { useAuth } from 'services';
 import { checkPrincipal } from 'toolkit';
 
 export interface UseCandidProps {
-  canisterId: string;
+  canisterId: Principal;
   getCandidMethodName?: string;
 }
 
@@ -17,12 +18,6 @@ export const useCandid = ({
   const { authClient } = useAuth();
 
   useEffect(() => {
-    const check = checkPrincipal(canisterId);
-
-    if (!check) {
-      return;
-    }
-
     const common_interface: IDL.InterfaceFactory = ({ IDL }) =>
       IDL.Service({
         [getCandidMethodName]: IDL.Func([], [IDL.Text], ['query']),

@@ -35,6 +35,7 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
   ({ value, onChange, disabled, ...p }, ref) => {
     const { principal } = useCurrentWallet();
     const { did } = useCandid({ canisterId: principal });
+    const principalStr = principal.toString();
 
     const processMethod = useCallback(
       (methodName: string) => {
@@ -43,7 +44,7 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
         }
 
         const existingIndex = value.findIndex(
-          (v) => v.methodName == methodName && v.canisterId == principal,
+          (v) => v.methodName == methodName && v.canisterId == principalStr,
         );
 
         if (existingIndex !== -1) {
@@ -52,7 +53,7 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
           newValue.splice(existingIndex, 1);
           onChange(newValue);
         } else {
-          onChange([...value, { canisterId: principal, methodName }]);
+          onChange([...value, { canisterId: principalStr, methodName }]);
         }
       },
       [principal, disabled, onChange, value],
@@ -65,7 +66,9 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
             key={methodName}
             variant='p2'
             onClick={() => processMethod(methodName)}
-            $selected={!!value.find((v) => v.methodName == methodName && v.canisterId == principal)}
+            $selected={
+              !!value.find((v) => v.methodName == methodName && v.canisterId == principalStr)
+            }
           >
             {methodName}
           </Method>

@@ -76,21 +76,25 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
       title: 'Update permission',
       description: 'Update permission through interface',
       rnp,
-      program: [
-        {
-          endpoint: {
-            canister_id: principal,
-            method_name: 'update_permission',
+      program: {
+        RemoteCallSequence: [
+          {
+            endpoint: {
+              canister_id: principal,
+              method_name: 'update_permission',
+            },
+            cycles: BigInt(0),
+            args: {
+              CandidString: walletSerializer.update_permission({
+                permission_id: Number(permissionId),
+                new_name: old.name !== values.name ? [values.name] : [],
+                new_scope: old.scope !== values.scope ? [scope] : [],
+                new_targets: [targets], // TODO make check of change
+              }),
+            },
           },
-          cycles: '0',
-          args_candid: walletSerializer.update_permission({
-            permission_id: Number(permissionId),
-            new_name: old.name !== values.name ? [values.name] : [],
-            new_scope: old.scope !== values.scope ? [scope] : [],
-            new_targets: [targets], // TODO make check of change
-          }),
-        },
-      ],
+        ],
+      },
     };
 
     return payload;

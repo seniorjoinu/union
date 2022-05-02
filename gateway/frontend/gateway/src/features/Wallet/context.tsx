@@ -1,9 +1,10 @@
 import React, { useEffect, createContext, useContext, useMemo, useState, useCallback } from 'react';
 import { RoleAndPermission, Role, Permission } from 'wallet-ts';
 import { useWallet } from 'services';
+import { Principal } from '@dfinity/principal';
 
 export interface CurrentWalletContext {
-  principal: string;
+  principal: Principal;
   rnp: RoleAndPermission | null;
   setRoleAndPermission(rnp: Partial<RoleAndPermission>): void;
   roles: Role[];
@@ -14,7 +15,7 @@ export interface CurrentWalletContext {
 }
 
 const context = createContext<CurrentWalletContext>({
-  principal: '',
+  principal: Principal.anonymous(),
   rnp: null,
   setRoleAndPermission: () => undefined,
   roles: [],
@@ -25,7 +26,7 @@ const context = createContext<CurrentWalletContext>({
 });
 
 export interface ProviderProps {
-  principal: string;
+  principal: Principal;
   children: any;
 }
 

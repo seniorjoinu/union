@@ -47,18 +47,22 @@ export const useCreate = ({ create, getValues }: UseCreateProps) => {
       title: 'Create new role',
       description: 'Create new role through interface',
       rnp,
-      program: [
-        {
-          endpoint: {
-            canister_id: principal,
-            method_name: 'create_role',
+      program: {
+        RemoteCallSequence: [
+          {
+            endpoint: {
+              canister_id: principal,
+              method_name: 'create_role',
+            },
+            cycles: BigInt(0),
+            args: {
+              CandidString: walletSerializer.create_role({
+                role_type: roleType,
+              }),
+            },
           },
-          cycles: '1',
-          args_candid: walletSerializer.create_role({
-            role_type: roleType,
-          }),
-        },
-      ],
+        ],
+      },
     };
 
     return payload;

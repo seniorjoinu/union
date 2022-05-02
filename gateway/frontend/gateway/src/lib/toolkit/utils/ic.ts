@@ -1,10 +1,10 @@
 import { Principal } from '@dfinity/principal';
 
-export const checkPrincipal = (canisterId: string): Principal | null => {
+export const checkPrincipal = (canisterId: string | Principal): Principal | null => {
   let principal: Principal;
 
   try {
-    principal = Principal.fromText(canisterId);
+    principal = Principal.from(canisterId);
   } catch (e) {
     return null;
   }

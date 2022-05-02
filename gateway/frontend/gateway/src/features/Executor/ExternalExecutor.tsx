@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { ExecutorFormData } from './types';
+import React, { useCallback } from 'react';
+import { ExecuteResponse } from 'wallet-ts';
+import { useClient } from '../useClient';
 import { parseMessage } from './utils';
 import { Executor, ExecutorProps } from './component';
 
@@ -8,42 +9,16 @@ export type ExternalExecutorProps = Omit<ExecutorProps, 'data' | 'onSuccess'> & 
 };
 
 export const ExternalExecutor = ({ redirectToHistory, ...props }: ExternalExecutorProps) => {
-  const [data, setData] = useState<Partial<ExecutorFormData> | undefined>(undefined);
-  const [opts, setOpts] = useState<{ after?: 'close' } | undefined>(undefined);
+  const { data, success } = useClient({ parser: parseMessage });
 
-  const handler = useCallback((e: MessageEvent<any>) => {
-    if (!e.data || e.data.target != 'wallet-executor') {
-      return;
-    }
-    setOpts(e.data.options);
-
-    const data = parseMessage(e.data.payload);
-
-    if (data) {
-      setData(data);
-    }
-  }, []);
-
-  const handleSuccess = useCallback(() => {
-    switch (opts?.after) {
-      case 'close': {
-        window.close();
-        break;
-      }
-      default: {
+  const handleSuccess = useCallback(
+    (payload: ExecuteResponse) => {
+      success(payload).then(() => {
         redirectToHistory && redirectToHistory();
-      }
-    }
-  }, [opts, redirectToHistory]);
-
-  useEffect(() => {
-    window.opener?.postMessage({ origin: 'wallet-executor', type: 'ready', args: [] }, '*');
-
-    window.addEventListener('message', handler);
-    return () => {
-      window.removeEventListener('message', handler);
-    };
-  }, []);
+      });
+    },
+    [success, redirectToHistory],
+  );
 
   if (!data) {
     return <span>Waiting data...</span>;

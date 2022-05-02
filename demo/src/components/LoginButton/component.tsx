@@ -3,30 +3,36 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth';
 import { useBackend } from '../../backend';
-import { Button, Principal } from '../atoms';
+import { Button as B, Principal } from '../atoms';
+import { UnionLoginButton as UB } from '../UnionLoginButton';
 import logo from './logo.svg';
 import { ProfileModal } from './ProfileModal';
+
+const Button = styled(B)``;
+const UnionLoginButton = styled(UB)``;
 
 const Name = styled.span`
   font-weight: 600;
 `;
 
 const Logo = styled.img`
-  height: 16px;
+  height: 18px;
 `;
 
 const Container = styled.div`
   display: flex;
   flex-direction: row;
 
-  ${Principal} {
+  & > *:not(:last-child) {
     margin-right: 8px;
+  }
+
+  ${Principal} {
     color: grey;
   }
 
   ${Name} {
     align-self: center;
-    margin-right: 8px;
   }
 `;
 
@@ -80,6 +86,7 @@ export const LoginButton = ({ children, onLogin, ...props }: LoginButtonProps) =
       <Principal onClick={() => navigator.clipboard.writeText(principal.toString())}>
         {principal.toString()}
       </Principal>
+      <UnionLoginButton />
       <Button onClick={() => logout().then(() => navigate('/', { replace: true }))}>Logout</Button>
     </Container>
   );

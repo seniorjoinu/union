@@ -4,6 +4,7 @@ import { NavLink, useParams } from 'react-router-dom';
 import { Text } from 'components';
 import { useDeployer, useWallet } from 'services';
 import { checkPrincipal } from 'toolkit';
+import { Principal } from '@dfinity/principal';
 import { LoginButton } from '../Auth/LoginButton';
 
 const Item = styled(Text)`
@@ -45,8 +46,8 @@ export function Header(p: HeaderProps) {
   const location = param['*'] || '';
 
   const isInsideWallet = location.startsWith('wallet/');
-  const walletId = location.split('wallet/')[1]?.split('/')[0];
-  const { data, canister } = useWallet(walletId);
+  const walletId = location.split('wallet/')[1]?.split('/')[0] || '';
+  const { data, canister } = useWallet(walletId ? Principal.from(walletId) : Principal.anonymous());
 
   useEffect(() => {
     if (!checkPrincipal(walletId)) {
