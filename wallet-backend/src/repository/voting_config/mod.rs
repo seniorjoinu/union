@@ -31,7 +31,7 @@ impl Repository<VotingConfig, VotingConfigId, VotingConfigFilter, ()> for Voting
         self.add_to_indexes(&it);
         let id = it.get_id().unwrap();
         self.voting_configs.insert(id, it);
-        
+
         id
     }
 
@@ -101,7 +101,7 @@ impl VotingConfigRepository {
             false
         }
     }
-    
+
     fn add_to_indexes(&mut self, voting_config: &VotingConfig) {
         let id = voting_config.get_id().unwrap();
 
@@ -109,25 +109,24 @@ impl VotingConfigRepository {
             self.add_to_permissions_index(id, *permission_id);
         }
 
-        for proposer in voting_config.get_proposer_constraints() {
-            self.add_to_group_or_profile_index(id, proposer.to_group_or_profile());
-        }
-
-        for editor in voting_config.get_editor_constraints() {
-            if let Some(gop) = editor.to_group_or_profile() {
-                self.add_to_group_or_profile_index(id, gop);
-            }
-        }
-
-        for gop in voting_config.get_approval_threshold().list_groups_and_profiles() {
+        for gop in voting_config
+            .get_approval_threshold()
+            .list_groups_and_profiles()
+        {
             self.add_to_group_or_profile_index(id, gop);
         }
 
-        for gop in voting_config.get_rejection_threshold().list_groups_and_profiles() {
+        for gop in voting_config
+            .get_rejection_threshold()
+            .list_groups_and_profiles()
+        {
             self.add_to_group_or_profile_index(id, gop);
         }
 
-        for gop in voting_config.get_quorum_threshold().list_groups_and_profiles() {
+        for gop in voting_config
+            .get_quorum_threshold()
+            .list_groups_and_profiles()
+        {
             self.add_to_group_or_profile_index(id, gop);
         }
 
@@ -135,7 +134,10 @@ impl VotingConfigRepository {
             self.add_to_group_or_profile_index(id, gop);
         }
 
-        for gop in voting_config.get_next_round_threshold().list_groups_and_profiles() {
+        for gop in voting_config
+            .get_next_round_threshold()
+            .list_groups_and_profiles()
+        {
             self.add_to_group_or_profile_index(id, gop);
         }
     }
@@ -147,25 +149,24 @@ impl VotingConfigRepository {
             self.remove_from_permissions_index(&id, permission_id);
         }
 
-        for proposer in voting_config.get_proposer_constraints() {
-            self.remove_from_group_or_profile_index(&id, &proposer.to_group_or_profile());
-        }
-
-        for editor in voting_config.get_editor_constraints() {
-            if let Some(gop) = editor.to_group_or_profile() {
-                self.remove_from_group_or_profile_index(&id, &gop);
-            }
-        }
-
-        for gop in voting_config.get_approval_threshold().list_groups_and_profiles() {
+        for gop in voting_config
+            .get_approval_threshold()
+            .list_groups_and_profiles()
+        {
             self.remove_from_group_or_profile_index(&id, &gop);
         }
 
-        for gop in voting_config.get_rejection_threshold().list_groups_and_profiles() {
+        for gop in voting_config
+            .get_rejection_threshold()
+            .list_groups_and_profiles()
+        {
             self.remove_from_group_or_profile_index(&id, &gop);
         }
 
-        for gop in voting_config.get_quorum_threshold().list_groups_and_profiles() {
+        for gop in voting_config
+            .get_quorum_threshold()
+            .list_groups_and_profiles()
+        {
             self.remove_from_group_or_profile_index(&id, &gop);
         }
 
@@ -173,7 +174,10 @@ impl VotingConfigRepository {
             self.remove_from_group_or_profile_index(&id, &gop);
         }
 
-        for gop in voting_config.get_next_round_threshold().list_groups_and_profiles() {
+        for gop in voting_config
+            .get_next_round_threshold()
+            .list_groups_and_profiles()
+        {
             self.remove_from_group_or_profile_index(&id, &gop);
         }
     }

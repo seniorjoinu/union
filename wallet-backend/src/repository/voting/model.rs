@@ -1,7 +1,4 @@
-use crate::repository::voting::types::{
-    VotingStatus, VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN, VOTING_NAME_MAX_LEN,
-    VOTING_NAME_MIN_LEN,
-};
+use crate::repository::voting::types::{VotingStatus, VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN, VOTING_NAME_MAX_LEN, VOTING_NAME_MIN_LEN, RoundResult};
 use candid::{CandidType, Deserialize, Principal};
 use ic_cron::types::TaskId;
 use shared::mvc::Model;
@@ -27,10 +24,11 @@ pub struct Voting {
 
     total_voting_power: BTreeMap<GroupOrProfile, Shares>,
 
-    winners: BTreeSet<ChoiceId>,
-    losers: BTreeSet<ChoiceId>,
+    winners: Vec<RoundResult>,
+    losers: Vec<RoundResult>,
+    
     choices: BTreeSet<ChoiceId>,
-
+    
     rejection_choice: Option<ChoiceId>,
     approval_choice: Option<ChoiceId>,
 }
@@ -60,8 +58,8 @@ impl Voting {
 
             total_voting_power: BTreeMap::new(),
 
-            winners: BTreeSet::new(),
-            losers: BTreeSet::new(),
+            winners: Vec::new(),
+            losers: Vec::new(),
             choices: BTreeSet::new(),
 
             rejection_choice: None,
@@ -170,23 +168,13 @@ impl Voting {
         self.updated_at = timestamp;
     }
 
-    pub fn add_winner(&mut self, choice_id: ChoiceId, timestamp: u64) {
-        self.winners.insert(choice_id);
+    pub fn add_winner(&mut self, round_result: RoundResult, timestamp: u64) {
+        self.winners.push(round_result);
         self.updated_at = timestamp;
     }
 
-    pub fn remove_winner(&mut self, choice_id: &ChoiceId, timestamp: u64) {
-        self.winners.remove(choice_id);
-        self.updated_at = timestamp;
-    }
-
-    pub fn add_loser(&mut self, choice_id: ChoiceId, timestamp: u64) {
-        self.losers.insert(choice_id);
-        self.updated_at = timestamp;
-    }
-
-    pub fn remove_loser(&mut self, choice_id: &ChoiceId, timestamp: u64) {
-        self.losers.remove(choice_id);
+    pub fn add_loser(&mut self, round_result: RoundResult, timestamp: u64) {
+        self.losers.push(round_result);
         self.updated_at = timestamp;
     }
 
@@ -208,11 +196,11 @@ impl Voting {
         self.created_at
     }
 
-    pub fn get_winners(&self) -> &BTreeSet<ChoiceId> {
+    pub fn get_winners(&self) -> &Vec<RoundResult> {
         &self.winners
     }
 
-    pub fn get_losers(&self) -> &BTreeSet<ChoiceId> {
+    pub fn get_losers(&self) -> &Vec<RoundResult> {
         &self.losers
     }
 

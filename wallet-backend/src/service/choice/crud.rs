@@ -5,7 +5,6 @@ use crate::repository::voting::model::Voting;
 use crate::service::choice::types::{ChoiceError, ChoiceService};
 use crate::service::voting::types::VotingService;
 use crate::service::voting_config::types::VotingConfigService;
-use candid::Principal;
 use shared::mvc::{HasRepository, Repository};
 use shared::pageable::{Page, PageRequest};
 use shared::remote_call::Program;
@@ -17,15 +16,12 @@ impl ChoiceService {
         description: String,
         program: Program,
         voting_id: VotingId,
-        creator: Principal,
         timestamp: u64,
     ) -> Result<ChoiceId, ChoiceError> {
         let mut voting = VotingService::get_voting(&voting_id).map_err(ChoiceError::VotingError)?;
         let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
 
-        if !VotingService::is_editable(&voting)
-            || !VotingService::editor_can_edit(&vc, creator, voting.get_proposer())
-        {
+        if !VotingService::is_editable(&voting) {
             return Err(ChoiceError::UnableToEditVoting(voting_id));
         }
 
@@ -61,16 +57,13 @@ impl ChoiceService {
         new_name: Option<String>,
         new_description: Option<String>,
         new_program: Option<Program>,
-        editor: Principal,
     ) -> Result<(), ChoiceError> {
         let mut choice = ChoiceService::get_choice(choice_id)?;
 
         let mut voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
         let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
 
-        if !VotingService::is_editable(&voting)
-            || !VotingService::editor_can_edit(&vc, editor, voting.get_proposer())
-        {
+        if !VotingService::is_editable(&voting) {
             return Err(ChoiceError::UnableToEditVoting(*choice.get_voting_id()));
         }
 
@@ -94,7 +87,6 @@ impl ChoiceService {
     pub fn delete_choice(
         choice_id: &ChoiceId,
         voting_id: &VotingId,
-        deleter: Principal,
     ) -> Result<(), ChoiceError> {
         let mut choice = ChoiceService::get_choice(choice_id)?;
 
@@ -105,9 +97,7 @@ impl ChoiceService {
         let mut voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
         let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
 
-        if !VotingService::is_editable(&voting)
-            || !VotingService::editor_can_edit(&vc, deleter, voting.get_proposer())
-        {
+        if !VotingService::is_editable(&voting) {
             return Err(ChoiceError::UnableToEditVoting(*choice.get_voting_id()));
         }
 

@@ -13,8 +13,6 @@ pub enum VotingError {
     VotingConfigNotFound(VotingConfigId),
     InvalidWinnersCount(usize, LenInterval),
     ProfileNotExists(ProfileId),
-    ProposerNotFoundInVotingConfig(Principal),
-    EditorNotFoundInVotingConfig(Principal),
     VotingNotFound(VotingId),
     VotingInInvalidStatus(VotingId),
     InvalidVote,

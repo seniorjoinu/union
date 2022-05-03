@@ -1,4 +1,6 @@
 use candid::{CandidType, Deserialize};
+use shared::types::wallet::ChoiceId;
+use std::collections::BTreeSet;
 
 pub const VOTING_NAME_MIN_LEN: usize = 1;
 pub const VOTING_NAME_MAX_LEN: usize = 200;
@@ -14,4 +16,35 @@ pub enum VotingStatus {
     Rejected,
     Success,
     Fail(String),
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct RoundResult {
+    round: RoundId,
+    choices: BTreeSet<ChoiceId>,
+}
+
+impl RoundResult {
+    pub fn new(round: RoundId) -> Self {
+        Self {
+            round,
+            choices: BTreeSet::new(),
+        }
+    }
+
+    pub fn add_choice(&mut self, choice_id: ChoiceId) {
+        self.choices.insert(choice_id);
+    }
+
+    pub fn get_choices(&self) -> &BTreeSet<ChoiceId> {
+        &self.choices
+    }
+
+    pub fn len(&self) -> usize {
+        self.choices.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.choices.is_empty()
+    }
 }

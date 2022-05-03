@@ -1,16 +1,29 @@
 use crate::repository::choice::model::Choice;
 use crate::repository::token::model::Token;
-use crate::service::choice::types::ChoiceService;
+use crate::service::choice::types::{ChoiceError, ChoiceService};
 use crate::service::token::types::TokenService;
 use candid::Principal;
 use shared::mvc::{HasRepository, Repository};
-use shared::types::wallet::{GroupOrProfile, Shares};
+use shared::types::wallet::{ChoiceId, GroupOrProfile, Shares, VotingId};
 use std::collections::BTreeMap;
 
 pub mod crud;
 pub mod types;
 
 impl ChoiceService {
+    pub fn get_voting_choice(
+        choice_id: &ChoiceId,
+        voting_id: &VotingId,
+    ) -> Result<Choice, ChoiceError> {
+        let choice = ChoiceService::get_choice(choice_id)?;
+
+        if choice.get_voting_id() != voting_id {
+            Err(ChoiceError::ChoiceNotFound(*choice_id))
+        } else {
+            Ok(choice)
+        }
+    }
+
     pub fn get_token_for_gop(choice: &mut Choice, gop: GroupOrProfile) -> Token {
         let token_id = if let Some(token_id) = choice.get_shares_by_gop_token(&gop) {
             *token_id

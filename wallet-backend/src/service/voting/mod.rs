@@ -1,14 +1,13 @@
 use crate::repository::choice::model::Choice;
-use crate::repository::group::model::Group;
 use crate::repository::profile::model::Profile;
 use crate::repository::token::model::Token;
 use crate::repository::voting::model::Voting;
-use crate::repository::voting::types::VotingStatus;
+use crate::repository::voting::types::{RoundResult, VotingStatus};
 use crate::repository::voting_config::model::VotingConfig;
-use crate::repository::voting_config::types::{EditorConstraint, Fraction, ProposerConstraint};
+use crate::repository::voting_config::types::Fraction;
 use crate::service::choice::types::ChoiceService;
 use crate::service::cron::CronService;
-use crate::service::group::types::{GroupService, DEFAULT_GROUP_SHARES};
+use crate::service::group::types::DEFAULT_GROUP_SHARES;
 use crate::service::voting::types::{
     MultiChoiceVote, SingleChoiceVote, Vote, VotingError, VotingService,
 };
@@ -17,7 +16,7 @@ use bigdecimal::{BigDecimal, One};
 use candid::{Nat, Principal};
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::types::history_ledger::SharesInfo;
-use shared::types::wallet::{ChoiceId, GroupOrProfile, Shares, VotingId};
+use shared::types::wallet::{GroupOrProfile, Shares, VotingId};
 use std::collections::BTreeMap;
 
 pub mod crud;
@@ -133,7 +132,7 @@ impl VotingService {
 
                         let total_fraction: BigDecimal =
                             v.vote.iter().map(|(_, f)| f.0.abs()).sum();
-                        
+
                         if total_fraction > BigDecimal::one() {
                             return Err(VotingError::InvalidVote);
                         }
@@ -160,7 +159,7 @@ impl VotingService {
                         Profile::repo()
                             .get(&caller)
                             .ok_or(VotingError::ProfileNotExists(caller))?;
-                        
+
                         VotingService::assert_can_vote(&vc, &GroupOrProfile::Profile(caller))?;
 
                         let total_fraction: BigDecimal =
@@ -201,10 +200,17 @@ impl VotingService {
                     .collect();
 
                 VotingService::remove_prev_vote(&voting, gop, principal);
-                VotingService::put_vote(&mut voting, choices, total_shares, gop, principal, timestamp);
+                VotingService::put_vote(
+                    &mut voting,
+                    choices,
+                    total_shares,
+                    gop,
+                    principal,
+                    timestamp,
+                );
             }
         };
-        
+
         Voting::repo().save(voting);
 
         Ok(())
@@ -298,13 +304,18 @@ impl VotingService {
                     } else if !win.is_empty() {
                         // TODO: what if we have more winners than we need?
 
-                        let mut cur_winners_count = voting.get_winners().len();
+                        let mut new_winners = RoundResult::new(*r);
+                        let mut cur_winners_count: usize =
+                            voting.get_winners().iter().map(|it| it.len()).sum();
+
                         for choice_id in win {
                             voting.remove_choice(&choice_id, timestamp);
-                            voting.add_winner(choice_id, timestamp);
+                            new_winners.add_choice(choice_id);
+
                             cur_winners_count += 1;
 
                             if cur_winners_count == voting.get_winners_need() {
+                                voting.add_winner(new_winners, timestamp);
                                 voting.finish_success(timestamp);
                                 CronService::schedule_voting_execution(voting, timestamp);
 
@@ -312,15 +323,20 @@ impl VotingService {
                             }
                         }
 
+                        voting.add_winner(new_winners, timestamp);
                         voting.next_round(timestamp);
                         CronService::schedule_round_start(voting, vc, timestamp);
                     } else {
+                        let mut new_losers = RoundResult::new(*r);
+
                         for choice_id in voting.get_choices().clone() {
                             if !next_round.contains(&choice_id) {
                                 voting.remove_choice(&choice_id, timestamp);
-                                voting.add_loser(choice_id, timestamp);
+                                new_losers.add_choice(choice_id);
                             }
                         }
+
+                        voting.add_loser(new_losers, timestamp);
 
                         if voting.get_winners().len() + voting.get_choices().len()
                             < voting.get_winners_need()
@@ -410,69 +426,11 @@ impl VotingService {
         Ok(())
     }
 
-    fn assert_proposer_can_propose(
-        vc: &VotingConfig,
-        proposer: Principal,
-    ) -> Result<(), VotingError> {
-        for proposer_constraint in vc.get_proposer_constraints() {
-            match proposer_constraint {
-                ProposerConstraint::Profile(p) => {
-                    if *p == proposer {
-                        // unwrapping, because profile should exist if it is listed
-                        Profile::repo().get(p).unwrap();
-                        return Ok(());
-                    }
-                }
-                ProposerConstraint::Group(group_condition) => {
-                    // unwrapping, because profile should exist if it is listed
-                    let group = Group::repo().get(&group_condition.id).unwrap();
-                    let token = GroupService::get_token(&group);
-
-                    if token.balance_of(&proposer) >= group_condition.min_shares.clone() {
-                        return Ok(());
-                    }
-                }
-            }
-        }
-
-        Err(VotingError::ProposerNotFoundInVotingConfig(proposer))
-    }
-
     pub fn is_editable(voting: &Voting) -> bool {
         match voting.get_status() {
             VotingStatus::Round(r) => *r == 0,
             _ => false,
         }
-    }
-
-    pub fn editor_can_edit(vc: &VotingConfig, editor: Principal, proposer: Principal) -> bool {
-        for editor_constraint in vc.get_editor_constraints() {
-            match editor_constraint {
-                EditorConstraint::Profile(p) => {
-                    if *p == editor {
-                        // unwrapping, because profile should exist if it is listed
-                        Profile::repo().get(p).unwrap();
-                        return true;
-                    }
-                }
-                EditorConstraint::Group(group_condition) => {
-                    // unwrapping, because profile should exist if it is listed
-                    let group = Group::repo().get(&group_condition.id).unwrap();
-                    let token = GroupService::get_token(&group);
-
-                    if token.balance_of(&editor) >= group_condition.min_shares.clone() {
-                        return true;
-                    }
-                }
-                EditorConstraint::Proposer => {
-                    if editor == proposer {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        false
     }
 
     fn assert_can_approve(vc: &VotingConfig, gop: &GroupOrProfile) -> Result<(), VotingError> {

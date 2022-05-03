@@ -7,6 +7,7 @@ use candid::Principal;
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::{VotingConfigId, VotingId};
+use crate::CronService;
 
 impl VotingService {
     pub fn create_voting(
@@ -22,7 +23,6 @@ impl VotingService {
             .ok_or(VotingError::VotingConfigNotFound(voting_config_id))?;
 
         VotingService::assert_winners_need_is_fine(&vc, winners_need)?;
-        VotingService::assert_proposer_can_propose(&vc, proposer)?;
 
         let mut voting = Voting::new(
             voting_config_id,
@@ -38,7 +38,7 @@ impl VotingService {
             ChoiceService::create_rejection_and_approval_choices(voting.get_id().unwrap());
         voting.init_rejection_and_approval_choices(rejection_choice, approval_choice);
 
-        VotingService::try_finish_voting(&mut voting, &vc, timestamp);
+        CronService::schedule_round_end(&mut voting, &vc, timestamp);
 
         Ok(Voting::repo().save(voting))
     }
@@ -48,7 +48,6 @@ impl VotingService {
         new_name: Option<String>,
         new_description: Option<String>,
         new_winners_need: Option<usize>,
-        editor: Principal,
         timestamp: u64,
     ) -> Result<(), VotingError> {
         let mut voting = VotingService::get_voting(id)?;
@@ -62,10 +61,6 @@ impl VotingService {
             VotingService::assert_winners_need_is_fine(&vc, *winners_need)?;
         }
 
-        if !VotingService::editor_can_edit(&vc, editor, voting.get_proposer()) {
-            return Err(VotingError::EditorNotFoundInVotingConfig(editor));
-        }
-
         voting
             .update(new_name, new_description, new_winners_need, timestamp)
             .map_err(VotingError::ValidationError)?;
@@ -74,16 +69,12 @@ impl VotingService {
         Ok(())
     }
 
-    pub fn delete_voting(id: &VotingId, deleter: Principal) -> Result<(), VotingError> {
+    pub fn delete_voting(id: &VotingId) -> Result<(), VotingError> {
         let voting = VotingService::get_voting(id)?;
 
         let vc = VotingConfig::repo()
             .get(voting.get_voting_config_id())
             .unwrap();
-
-        if !VotingService::editor_can_edit(&vc, deleter, voting.get_proposer()) {
-            return Err(VotingError::EditorNotFoundInVotingConfig(deleter));
-        }
 
         let voting = Voting::repo().delete(id).unwrap();
 

@@ -88,22 +88,24 @@ impl CronService {
                         .unwrap();
 
                     VotingService::try_finish_voting(&mut voting, &vc, timestamp);
-                    
+
                     Voting::repo().save(voting);
                 }
                 CronTaskKind::VotingExecution(voting_id) => spawn(async move {
                     let voting = Voting::repo().get(&voting_id).unwrap();
 
-                    for choice in voting
-                        .get_winners()
-                        .iter()
-                        .map(|id| Choice::repo().get(id).unwrap())
-                    {
-                        let timestamp = time();
-                        let program = choice.get_program().clone();
-                        let result = program.execute().await;
+                    for result in voting.get_winners() {
+                        for choice in result
+                            .get_choices()
+                            .iter()
+                            .map(|id| Choice::repo().get(id).unwrap())
+                        {
+                            let timestamp = time();
+                            let program = choice.get_program().clone();
+                            let result = program.execute().await;
 
-                        EventsService::emit_program_executed_event(program, result, timestamp)
+                            EventsService::emit_program_executed_event(program, result, timestamp)
+                        }
                     }
                 }),
             };

@@ -1,6 +1,7 @@
 use crate::repository::choice::model::Choice;
 use crate::repository::choice::types::ChoiceFilter;
 use crate::repository::voting::model::Voting;
+use crate::service::voting::types::Vote;
 use candid::{CandidType, Deserialize};
 use shared::pageable::{Page, PageRequest};
 use shared::remote_call::Program;
@@ -31,6 +32,12 @@ pub struct UpdateVotingRequest {
 #[derive(CandidType, Deserialize)]
 pub struct DeleteVotingRequest {
     pub id: VotingId,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct CastVoteRequest {
+    pub id: VotingId,
+    pub vote: Vote,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -81,6 +88,17 @@ pub struct DeleteVotingChoiceRequest {
 }
 
 #[derive(CandidType, Deserialize)]
+pub struct GetVotingChoiceRequest {
+    pub choice_id: ChoiceId,
+    pub voting_id: VotingId,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetVotingChoiceResponse {
+    pub choice: Choice,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct ListVotingChoicesRequest {
     pub page_req: PageRequest<ChoiceFilter, ()>,
 }
@@ -89,6 +107,8 @@ pub struct ListVotingChoicesRequest {
 pub struct ListVotingChoicesResponse {
     pub page: Page<Choice>,
 }
+
+// ------------------- PERSONAL ------------------
 
 #[derive(CandidType, Deserialize)]
 pub struct GetMyVoteRequest {

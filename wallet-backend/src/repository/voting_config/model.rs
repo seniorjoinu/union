@@ -1,14 +1,13 @@
 use crate::repository::permission::types::PermissionId;
 use crate::repository::voting_config::types::{
-    EditorConstraint, LenInterval, ProposerConstraint, RoundSettings, ThresholdValue,
-    VOTING_CONFIG_DESCRIPTION_MAX_LEN, VOTING_CONFIG_DESCRIPTION_MIN_LEN,
-    VOTING_CONFIG_NAME_MAX_LEN, VOTING_CONFIG_NAME_MIN_LEN,
+    LenInterval, RoundSettings, ThresholdValue, VOTING_CONFIG_DESCRIPTION_MAX_LEN,
+    VOTING_CONFIG_DESCRIPTION_MIN_LEN, VOTING_CONFIG_NAME_MAX_LEN, VOTING_CONFIG_NAME_MIN_LEN,
 };
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
-use shared::types::wallet::{GroupOrProfile, Shares, VotingConfigId};
+use shared::types::wallet::VotingConfigId;
 use shared::validation::{validate_and_trim_str, ValidationError};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct VotingConfig {
@@ -18,16 +17,12 @@ pub struct VotingConfig {
 
     choices_count: Option<LenInterval>,
     winners_count: Option<LenInterval>,
+    round: RoundSettings,
 
     permissions: BTreeSet<PermissionId>,
 
-    proposers: BTreeSet<ProposerConstraint>,
-    editors: BTreeSet<EditorConstraint>,
     approval: ThresholdValue,
     rejection: ThresholdValue,
-
-    round: RoundSettings,
-
     quorum: ThresholdValue,
     win: ThresholdValue,
     next_round: ThresholdValue,
@@ -40,8 +35,6 @@ impl VotingConfig {
         choices_count: Option<LenInterval>,
         winners_count: Option<LenInterval>,
         permissions: BTreeSet<PermissionId>,
-        proposers: BTreeSet<ProposerConstraint>,
-        editors: BTreeSet<EditorConstraint>,
         round: RoundSettings,
         approval: ThresholdValue,
         quorum: ThresholdValue,
@@ -72,8 +65,6 @@ impl VotingConfig {
             choices_count,
             winners_count,
             permissions,
-            proposers,
-            editors,
             round,
             approval,
             quorum,
@@ -92,8 +83,6 @@ impl VotingConfig {
         choices_count_opt: Option<Option<LenInterval>>,
         winners_count_opt: Option<Option<LenInterval>>,
         permissions_opt: Option<BTreeSet<PermissionId>>,
-        proposers_opt: Option<BTreeSet<ProposerConstraint>>,
-        editors_opt: Option<BTreeSet<EditorConstraint>>,
         round_opt: Option<RoundSettings>,
         approval_opt: Option<ThresholdValue>,
         quorum_opt: Option<ThresholdValue>,
@@ -137,14 +126,6 @@ impl VotingConfig {
             self.permissions = permissions;
         }
 
-        if let Some(proposers) = proposers_opt {
-            self.proposers = proposers;
-        }
-
-        if let Some(editors) = editors_opt {
-            self.editors = editors;
-        }
-
         if let Some(round) = round_opt {
             self.round = round;
         }
@@ -171,29 +152,21 @@ impl VotingConfig {
 
         Ok(())
     }
-    
+
     pub fn get_round_settings(&self) -> &RoundSettings {
         &self.round
     }
-    
+
     pub fn get_winners_count(&self) -> &Option<LenInterval> {
         &self.winners_count
     }
-    
+
     pub fn get_choices_count(&self) -> &Option<LenInterval> {
         &self.choices_count
     }
 
     pub fn get_permissions(&self) -> &BTreeSet<PermissionId> {
         &self.permissions
-    }
-
-    pub fn get_proposer_constraints(&self) -> &BTreeSet<ProposerConstraint> {
-        &self.proposers
-    }
-
-    pub fn get_editor_constraints(&self) -> &BTreeSet<EditorConstraint> {
-        &self.editors
     }
 
     pub fn get_approval_threshold(&self) -> &ThresholdValue {

@@ -4,7 +4,7 @@ use bigdecimal::{BigDecimal, ToPrimitive};
 use candid::types::{Serializer, Type};
 use candid::{CandidType, Deserialize, Nat};
 use serde::Deserializer;
-use shared::types::wallet::{GroupId, GroupOrProfile, ProfileId, Shares};
+use shared::types::wallet::{GroupOrProfile, Shares};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Div, Mul};
 use std::str::FromStr;
@@ -170,44 +170,6 @@ pub struct FractionOf {
 pub enum Target {
     Thresholds(Vec<ThresholdValue>),
     GroupOrProfile(GroupOrProfile),
-}
-
-#[derive(Clone, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
-pub enum ProposerConstraint {
-    Group(GroupCondition),
-    Profile(ProfileId),
-}
-
-impl ProposerConstraint {
-    pub fn to_group_or_profile(&self) -> GroupOrProfile {
-        match self {
-            ProposerConstraint::Profile(p) => GroupOrProfile::Profile(*p),
-            ProposerConstraint::Group(g) => GroupOrProfile::Group(g.id),
-        }
-    }
-}
-
-#[derive(Clone, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
-pub enum EditorConstraint {
-    Proposer,
-    Group(GroupCondition),
-    Profile(ProfileId),
-}
-
-impl EditorConstraint {
-    pub fn to_group_or_profile(&self) -> Option<GroupOrProfile> {
-        match self {
-            EditorConstraint::Profile(p) => Some(GroupOrProfile::Profile(*p)),
-            EditorConstraint::Group(g) => Some(GroupOrProfile::Group(g.id)),
-            EditorConstraint::Proposer => None,
-        }
-    }
-}
-
-#[derive(Clone, CandidType, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
-pub struct GroupCondition {
-    pub id: GroupId,
-    pub min_shares: Shares,
 }
 
 #[derive(Clone, CandidType, Deserialize)]
