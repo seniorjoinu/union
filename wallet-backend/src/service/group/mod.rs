@@ -1,5 +1,6 @@
 use crate::repository::group::model::Group;
 use crate::repository::token::model::Token;
+use crate::repository::token::types::ChoiceOrGroup;
 use crate::service::events::EventsService;
 use crate::service::group::types::{GroupError, GroupService, HAS_PROFILE_GROUP_ID};
 use crate::service::profile::types::ProfileService;
@@ -7,6 +8,7 @@ use candid::Principal;
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::{GroupId, Shares};
+use std::collections::BTreeSet;
 
 pub mod crud;
 pub mod types;
@@ -41,6 +43,9 @@ impl GroupService {
         let group = GroupService::get_group(group_id)?;
         let mut token = GroupService::get_token(&group);
 
+        let zero = Shares::default();
+        let prev_balance = token.balance_of(&owner) + token.unaccepted_balance_of(&owner);
+
         if group.is_private() {
             token.mint_unaccepted(owner, qty);
         } else {
@@ -56,6 +61,11 @@ impl GroupService {
                 total_supply,
                 timestamp,
             );
+        }
+
+        let new_balance = token.balance_of(&owner) + token.unaccepted_balance_of(&owner);
+        if prev_balance == zero && new_balance > zero {
+            Token::repo().add_to_principal_index(owner, token.get_id().unwrap());
         }
 
         Token::repo().save(token);
@@ -86,6 +96,10 @@ impl GroupService {
 
         let new_balance = token.balance_of(&owner);
         let total_supply = token.total_supply();
+
+        if new_balance.clone() + token.unaccepted_balance_of(&owner) == Shares::default() {
+            Token::repo().remove_from_principal_index(&owner, &token.get_id().unwrap());
+        }
 
         EventsService::emit_shares_burn_event(
             group_id,
@@ -118,14 +132,27 @@ impl GroupService {
             GroupService::assert_profile_exists(to)?;
         }
 
+        let prev_to_balance = token.balance_of(&to);
+
         token
             .transfer(from, to, qty.clone())
             .map_err(GroupError::ValidationError)?;
 
         Token::repo().save(token);
 
+        let from_unaccepted_balance = token.unaccepted_balance_of(&from);
         let from_balance = token.balance_of(&from);
+        let to_unaccepted_balance = token.unaccepted_balance_of(&to);
         let to_balance = token.balance_of(&to);
+
+        let zero = Shares::default();
+        if from_unaccepted_balance + from_balance.clone() == zero {
+            Token::repo().remove_from_principal_index(&from, &token.get_id().unwrap());
+        }
+        if to_unaccepted_balance + prev_to_balance == zero && to_balance > zero {
+            Token::repo().add_to_principal_index(to, token.get_id().unwrap());
+        }
+
         let total_supply = token.total_supply();
 
         EventsService::emit_shares_transfer_event(
@@ -193,9 +220,29 @@ impl GroupService {
         token
             .burn_unaccepted(owner, qty)
             .map_err(GroupError::ValidationError)?;
+
+        if Shares::default() == token.balance_of(&owner) + token.unaccepted_balance_of(&owner) {
+            Token::repo().remove_from_principal_index(&owner, &token.get_id().unwrap());
+        }
+
         Token::repo().save(token);
 
         Ok(())
+    }
+    
+    fn get_groups_of(caller: &Principal) -> Vec<Group> {
+        Token::repo()
+            .get_tokens_by_principal(caller)
+            .into_iter()
+            .filter_map(|id| {
+                let it = Token::repo().get(&id).unwrap();
+
+                match it.is_choice_or_group() {
+                    ChoiceOrGroup::Group(id) => Some(Group::repo().get(&id).unwrap()),
+                    _ => None,
+                }
+            })
+            .collect()
     }
 
     pub fn get_group_shares_balance_of(

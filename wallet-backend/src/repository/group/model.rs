@@ -13,22 +13,17 @@ pub struct Group {
     name: String,
     description: String,
     private: bool,
-    token: TokenId,
+    token: Option<TokenId>,
 }
 
 // TODO: add token index, add get_my_groups function
 
 impl Group {
-    pub fn new(
-        name: String,
-        description: String,
-        private: bool,
-        token: TokenId,
-    ) -> Result<Self, ValidationError> {
+    pub fn new(name: String, description: String, private: bool) -> Result<Self, ValidationError> {
         let group = Self {
             id: None,
             private,
-            token,
+            token: None,
             name: Self::process_name(name)?,
             description: Self::process_description(description)?,
         };
@@ -56,8 +51,13 @@ impl Group {
         self.private = value;
     }
 
+    pub fn init_token(&mut self, token_id: TokenId) {
+        assert!(self.token.is_none());
+        self.token = Some(token_id);
+    }
+
     pub fn get_token(&self) -> &TokenId {
-        &self.token
+        &self.token.unwrap()
     }
 
     pub fn is_private(&self) -> bool {

@@ -1,9 +1,10 @@
 use crate::repository::token::model::Token;
-use crate::repository::token::types::{TokenFilter, TokenId};
+use crate::repository::token::types::{ChoiceOrGroup, TokenFilter, TokenId};
 use crate::Principal;
 use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
+use shared::types::wallet::{ChoiceId, GroupId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 pub mod model;
@@ -25,7 +26,7 @@ impl Repository<Token, TokenId, TokenFilter, ()> for TokenRepository {
 
         let id = it.get_id().unwrap();
         self.tokens.insert(id, it);
-        
+
         id
     }
 
@@ -55,17 +56,23 @@ impl Repository<Token, TokenId, TokenFilter, ()> for TokenRepository {
 }
 
 impl TokenRepository {
-    pub fn add_to_index(&mut self, principal: Principal, id: TokenId) {
+    pub fn add_to_principal_index(&mut self, principal: Principal, id: TokenId) {
         self.tokens_by_principal_index
             .entry(principal)
             .or_default()
             .insert(id);
     }
 
-    pub fn remove_from_index(&mut self, principal: &Principal, id: &TokenId) {
+    pub fn remove_from_principal_index(&mut self, principal: &Principal, id: &TokenId) {
+        if let Some(index) = self.tokens_by_principal_index.get_mut(principal) {
+            index.remove(id);
+        }
+    }
+
+    pub fn get_tokens_by_principal(&self, principal: &Principal) -> BTreeSet<TokenId> {
         self.tokens_by_principal_index
-            .get_mut(principal)
-            .unwrap()
-            .remove(id);
+            .get(principal)
+            .cloned()
+            .unwrap_or_default()
     }
 }

@@ -1,13 +1,4 @@
-use crate::controller::group::api::{
-    AcceptMyGroupSharesRequest, BurnGroupSharesRequest, BurnMyGroupSharesRequest,
-    CreateGroupRequest, CreateGroupResponse, DeclineMyGroupSharesRequest, DeleteGroupRequest,
-    GetGroupRequest, GetGroupResponse, GetGroupSharesBalanceOfRequest,
-    GetGroupSharesBalanceOfResponse, GetMyGroupSharesBalanceRequest,
-    GetMyGroupSharesBalanceResponse, GetTotalGroupSharesRequest, GetTotalGroupSharesResponse,
-    ListGroupSharesRequest, ListGroupSharesResponse, ListGroupsRequest, ListGroupsResponse,
-    MintGroupSharesRequest, TransferGroupSharesRequest, TransferMyGroupSharesRequest,
-    UpdateGroupRequest,
-};
+use crate::controller::group::api::{AcceptMyGroupSharesRequest, BurnGroupSharesRequest, BurnMyGroupSharesRequest, CreateGroupRequest, CreateGroupResponse, DeclineMyGroupSharesRequest, DeleteGroupRequest, GetGroupRequest, GetGroupResponse, GetGroupSharesBalanceOfRequest, GetGroupSharesBalanceOfResponse, GetGroupsOfRequest, GetGroupsResponse, GetMyGroupSharesBalanceRequest, GetMyGroupSharesBalanceResponse, GetTotalGroupSharesRequest, GetTotalGroupSharesResponse, ListGroupSharesRequest, ListGroupSharesResponse, ListGroupsRequest, ListGroupsResponse, MintGroupSharesRequest, TransferGroupSharesRequest, TransferMyGroupSharesRequest, UpdateGroupRequest};
 use crate::guards::only_self_or_with_access;
 use crate::service::group::types::GroupService;
 use ic_cdk::api::time;
@@ -156,6 +147,14 @@ fn list_unaccepted_group_shares(req: ListGroupSharesRequest) -> ListGroupSharesR
     ListGroupSharesResponse { page }
 }
 
+#[query]
+fn get_groups_of(req: GetGroupsOfRequest) -> GetGroupsResponse {
+    only_self_or_with_access("get_groups_of");
+    
+    let groups = GroupService::get_groups_of(&req.principal_id);
+    GetGroupsResponse { groups }
+}
+
 // ------------------ PERSONAL -----------------------
 
 #[update]
@@ -200,4 +199,10 @@ fn get_my_unaccepted_group_shares_balance(
         .expect("Unable to get my unaccepted group shares balance");
 
     GetMyGroupSharesBalanceResponse { balance }
+}
+
+#[query]
+fn get_my_groups() -> GetGroupsResponse {
+    let groups = GroupService::get_groups_of(&caller());
+    GetGroupsResponse { groups }
 }

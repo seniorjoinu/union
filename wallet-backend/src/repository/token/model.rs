@@ -1,4 +1,4 @@
-use crate::repository::token::types::TokenId;
+use crate::repository::token::types::{ChoiceOrGroup, TokenId};
 use candid::{CandidType, Deserialize, Principal};
 use shared::mvc::Model;
 use shared::pageable::{Page, PageRequest, Pageable};
@@ -9,6 +9,8 @@ use std::collections::HashMap;
 #[derive(Clone, CandidType, Deserialize)]
 pub struct Token {
     id: Option<TokenId>,
+    cog: ChoiceOrGroup,
+
     acceptable: bool,
     transferable: bool,
 
@@ -20,18 +22,19 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn new(acceptable: bool, transferable: bool) -> Self {
+    pub fn new(cog: ChoiceOrGroup, acceptable: bool, transferable: bool) -> Self {
         Self {
             id: None,
             acceptable,
             transferable,
+            cog,
             total_supply: Shares::default(),
             balances: HashMap::default(),
             unaccepted_total_supply: Shares::default(),
             unaccepted_balances: HashMap::default(),
         }
     }
-    
+
     pub fn reset(&mut self) {
         self.balances = HashMap::new();
         self.total_supply = Shares::default();
@@ -135,6 +138,10 @@ impl Token {
 
     pub fn is_transferable(&self) -> bool {
         self.transferable
+    }
+
+    pub fn is_choice_or_group(&self) -> ChoiceOrGroup {
+        self.cog
     }
 
     pub fn balance_of(&self, of: &Principal) -> Shares {

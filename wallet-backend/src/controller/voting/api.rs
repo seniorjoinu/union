@@ -108,18 +108,6 @@ pub struct ListVotingChoicesResponse {
     pub page: Page<Choice>,
 }
 
-// ------------------- PERSONAL ------------------
-
-#[derive(CandidType, Deserialize)]
-pub struct GetMyVoteRequest {
-    pub voting_id: VotingId,
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct GetMyVoteResponse {
-    pub vote: BTreeMap<ChoiceId, BTreeMap<GroupOrProfile, Shares>>,
-}
-
 #[derive(CandidType, Deserialize)]
 pub struct GetVotingResultsRequest {
     pub voting_id: VotingId,
@@ -128,4 +116,17 @@ pub struct GetVotingResultsRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetVotingResultsResponse {
     pub results: BTreeMap<ChoiceId, BTreeMap<GroupOrProfile, Shares>>,
+}
+
+// ------------------- PERSONAL ------------------
+
+#[derive(CandidType, Deserialize)]
+pub struct GetMyVoteRequest {
+    pub voting_id: VotingId,
+    pub gop: GroupOrProfile,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetMyVoteResponse {
+    pub vote: BTreeMap<ChoiceId, Shares>,
 }

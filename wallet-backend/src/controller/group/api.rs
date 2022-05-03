@@ -136,3 +136,13 @@ pub struct ListGroupSharesRequest {
 pub struct ListGroupSharesResponse {
     pub page: Page<(Principal, Shares)>,
 }
+
+#[derive(CandidType, Deserialize)]
+pub struct GetGroupsOfRequest {
+    pub principal_id: Principal,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetGroupsResponse {
+    pub groups: Vec<Group>
+}

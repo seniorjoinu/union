@@ -1,12 +1,12 @@
 use crate::repository::token::model::Token;
-use crate::repository::token::types::{TokenFilter, TokenId};
+use crate::repository::token::types::{ChoiceOrGroup, TokenFilter, TokenId};
 use crate::service::token::types::{TokenError, TokenService};
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::pageable::{Page, PageRequest};
 
 impl TokenService {
-    pub fn create_token(acceptable: bool, transferable: bool) -> TokenId {
-        let token = Token::new(acceptable, transferable);
+    pub fn create_token(cog: ChoiceOrGroup, acceptable: bool, transferable: bool) -> TokenId {
+        let token = Token::new(cog, acceptable, transferable);
         Token::repo().save(token)
     }
 

@@ -8,6 +8,7 @@ use crate::repository::voting_config::types::Fraction;
 use crate::service::choice::types::ChoiceService;
 use crate::service::cron::CronService;
 use crate::service::group::types::DEFAULT_GROUP_SHARES;
+use crate::service::token::types::TokenService;
 use crate::service::voting::types::{
     MultiChoiceVote, SingleChoiceVote, Vote, VotingError, VotingService,
 };
@@ -16,8 +17,8 @@ use bigdecimal::{BigDecimal, One};
 use candid::{Nat, Principal};
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::types::history_ledger::SharesInfo;
-use shared::types::wallet::{GroupOrProfile, Shares, VotingId};
-use std::collections::BTreeMap;
+use shared::types::wallet::{ChoiceId, GroupOrProfile, Shares, VotingId};
+use std::collections::{BTreeMap, BTreeSet};
 
 pub mod crud;
 pub mod types;
@@ -363,21 +364,91 @@ impl VotingService {
         ChoiceService::reset(&approval_choice);
     }
 
+    pub fn get_vote_of(
+        voting_id: &VotingId,
+        gop: GroupOrProfile,
+        caller: Principal,
+    ) -> Result<BTreeMap<ChoiceId, Shares>, VotingError> {
+        let voting = VotingService::get_voting(voting_id)?;
+        let choices = VotingService::get_voting_choices(&voting);
+
+        let result = choices
+            .into_iter()
+            .map(|mut it| {
+                let token = ChoiceService::get_token_for_gop(&mut it, gop);
+                (it.get_id().unwrap(), token.balance_of(&caller))
+            })
+            .collect();
+
+        Ok(result)
+    }
+
+    pub fn get_voting_results(
+        voting_id: &VotingId,
+    ) -> Result<BTreeMap<ChoiceId, BTreeMap<GroupOrProfile, Shares>>, VotingError> {
+        let voting = VotingService::get_voting(voting_id)?;
+        let choices = VotingService::get_voting_choices(&voting);
+
+        let result = choices
+            .into_iter()
+            .map(|it| {
+                let total_by_gop = it
+                    .list_tokens_by_gop()
+                    .into_iter()
+                    .map(|(gop, token_id)| {
+                        let token = Token::repo().get(token_id).unwrap();
+
+                        (*gop, token.total_supply())
+                    })
+                    .collect();
+
+                (it.get_id().unwrap(), total_by_gop)
+            })
+            .collect();
+
+        Ok(result)
+    }
+
+    fn get_voting_choices(voting: &Voting) -> Vec<Choice> {
+        let mut choices = Vec::new();
+        choices.push(Choice::repo().get(voting.get_approval_choice()).unwrap());
+        choices.push(Choice::repo().get(voting.get_rejection_choice()).unwrap());
+
+        for id in voting.get_choices() {
+            choices.push(Choice::repo().get(id).unwrap());
+        }
+
+        for result in voting.get_winners() {
+            for id in result.get_choices() {
+                choices.push(Choice::repo().get(id).unwrap());
+            }
+        }
+
+        for result in voting.get_losers() {
+            for id in result.get_choices() {
+                choices.push(Choice::repo().get(id).unwrap());
+            }
+        }
+
+        choices
+    }
+
     fn remove_prev_vote(voting: &Voting, gop: GroupOrProfile, principal: Principal) {
         let mut choices = match voting.get_status() {
             VotingStatus::Round(r) => {
                 if *r == 0 {
                     vec![
-                        Choice::repo().get(voting.get_approval_choice()).unwrap(),
-                        Choice::repo().get(voting.get_rejection_choice()).unwrap(),
+                        ChoiceService::get_choice(voting.get_approval_choice()).unwrap(),
+                        ChoiceService::get_choice(voting.get_rejection_choice()).unwrap(),
                     ]
                 } else {
                     let mut list: Vec<Choice> = voting
                         .get_choices()
                         .into_iter()
-                        .map(|id| Choice::repo().get(id).unwrap())
+                        .map(|id| ChoiceService::get_choice(id).unwrap())
                         .collect();
-                    list.push(Choice::repo().get(voting.get_rejection_choice()).unwrap());
+
+                    list.push(ChoiceService::get_choice(voting.get_rejection_choice()).unwrap());
 
                     list
                 }
