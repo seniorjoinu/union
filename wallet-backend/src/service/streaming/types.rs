@@ -1,3 +1,4 @@
+use shared::candid::CandidRejectionCode;
 use crate::repository::batch::types::BatchId;
 use crate::repository::chunk::types::ChunkId;
 
@@ -10,4 +11,5 @@ pub enum StreamingError {
     BatchIsLocked(BatchId),
     BatchIsNotLocked(BatchId),
     ChunkNotFound(ChunkId),
+    NetworkError(CandidRejectionCode, String)
 }

@@ -18,6 +18,8 @@ impl ChoiceService {
         voting_id: VotingId,
         timestamp: u64,
     ) -> Result<ChoiceId, ChoiceError> {
+        program.validate().map_err(ChoiceError::ValidationError)?;
+        
         let mut voting = VotingService::get_voting(&voting_id).map_err(ChoiceError::VotingError)?;
         let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
 
@@ -68,6 +70,8 @@ impl ChoiceService {
         }
 
         if let Some(program) = &new_program {
+            program.validate().map_err(ChoiceError::ValidationError)?;
+            
             if !VotingConfigService::does_program_fit(&vc, program) {
                 return Err(ChoiceError::ProgramNotAllowedByVotingConfig);
             }

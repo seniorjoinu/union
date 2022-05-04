@@ -60,6 +60,10 @@ impl Repository<Chunk, ChunkId, ChunkFilter, ()> for ChunkRepository {
 }
 
 impl ChunkRepository {
+    pub fn get_all_by_batch(&self, batch_id: &BatchId) -> BTreeSet<ChunkId> {
+        self.chunks_by_batch_index.get(batch_id).cloned().unwrap_or_default()
+    }
+    
     pub fn delete_all_by_batch(&mut self, batch_id: &BatchId) {
         if let Some(index) = self.chunks_by_batch_index.remove(batch_id) {
             for id in index {

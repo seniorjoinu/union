@@ -2,7 +2,7 @@ use crate::controller::streaming::api::{
     CreateBatchRequest, CreateBatchResponse, CreateChunkRequest, CreateChunkResponse,
     DeleteBatchesRequest, GetBatchRequest, GetBatchResponse, GetChunkRequest, GetChunkResponse,
     ListBatchesRequest, ListBatchesResponse, ListChunksRequest, ListChunksResponse,
-    LockBatchesRequest,
+    LockBatchesRequest, SendBatchRequest,
 };
 use crate::guards::{only_self, only_self_or_with_access};
 use crate::service::streaming::types::StreamingService;
@@ -43,6 +43,15 @@ fn lock_batches(req: LockBatchesRequest) {
     for id in req.ids {
         StreamingService::lock_batch(&id).expect("Unable to lock batches");
     }
+}
+
+#[update]
+async fn send_batch(req: SendBatchRequest) {
+    only_self();
+
+    StreamingService::send_batch(&req.batch_id, req.target_canister)
+        .await
+        .expect("Unable to send batch");
 }
 
 #[query]

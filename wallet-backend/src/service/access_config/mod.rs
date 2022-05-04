@@ -33,6 +33,8 @@ impl AccessConfigService {
         caller: Principal,
         timestamp: u64,
     ) -> Result<ProgramExecutionResult, AccessConfigError> {
+        program.validate().map_err(AccessConfigError::ValidationError)?;
+        
         let ac = AccessConfigService::get_access_config(id)?;
         AccessConfigService::assert_program_fits(&ac, &program)?;
         AccessConfigService::assert_caller_allowed(&ac, caller)?;
@@ -48,6 +50,30 @@ impl AccessConfigService {
         );
 
         Ok(result)
+    }
+
+    pub fn caller_has_access(canister_id: Principal, method_name: &str, caller: Principal) -> bool {
+        let target_exact = PermissionTarget::Endpoint(RemoteCallEndpoint {
+            canister_id,
+            method_name: method_name.to_string(),
+        });
+        let target_wide = PermissionTarget::Endpoint(RemoteCallEndpoint::wildcard(canister_id));
+
+        let mut permission_ids = Permission::repo().get_permissions_by_target(&target_exact);
+        permission_ids.extend(Permission::repo().get_permissions_by_target(&target_wide));
+
+        for permission_id in permission_ids {
+            for config_id in AccessConfig::repo().get_access_configs_by_permission(&permission_id) {
+                // unwrapping, because it should exist if it is listed
+                let ac = AccessConfig::repo().get(&config_id).unwrap();
+
+                if AccessConfigService::assert_caller_allowed(&ac, caller).is_ok() {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     fn assert_caller_allowed(
@@ -90,30 +116,6 @@ impl AccessConfigService {
         }
 
         Err(AccessConfigError::InvalidProgram)
-    }
-
-    pub fn caller_has_access(canister_id: Principal, method_name: &str, caller: Principal) -> bool {
-        let target_exact = PermissionTarget::Endpoint(RemoteCallEndpoint {
-            canister_id,
-            method_name: method_name.to_string(),
-        });
-        let target_wide = PermissionTarget::Endpoint(RemoteCallEndpoint::wildcard(canister_id));
-
-        let mut permission_ids = Permission::repo().get_permissions_by_target(&target_exact);
-        permission_ids.extend(Permission::repo().get_permissions_by_target(&target_wide));
-
-        for permission_id in permission_ids {
-            for config_id in AccessConfig::repo().get_access_configs_by_permission(&permission_id) {
-                // unwrapping, because it should exist if it is listed
-                let ac = AccessConfig::repo().get(&config_id).unwrap();
-
-                if AccessConfigService::assert_caller_allowed(&ac, caller).is_ok() {
-                    return true;
-                }
-            }
-        }
-
-        false
     }
 
     fn assert_permissions_exist(

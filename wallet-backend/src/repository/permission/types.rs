@@ -12,7 +12,6 @@ pub type PermissionId = Id;
 #[derive(CandidType, Deserialize, Clone, PartialEq, Ord, PartialOrd, Eq, Hash, Debug)]
 pub enum PermissionTarget {
     SelfEmptyProgram,
-    // TODO: switch to "*"
     Endpoint(RemoteCallEndpoint),
 }
 

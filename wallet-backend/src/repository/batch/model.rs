@@ -29,7 +29,7 @@ impl Batch {
         &self.key
     }
 
-    pub fn content_type(&self) -> &String {
+    pub fn get_content_type(&self) -> &String {
         &self.content_type
     }
 

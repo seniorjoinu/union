@@ -9,7 +9,7 @@ use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::api::time;
 use ic_cdk::id;
 use ic_cdk::storage::{stable_restore, stable_save};
-use ic_cdk_macros::{heartbeat, init, post_upgrade, pre_upgrade};
+use ic_cdk_macros::{heartbeat, init, post_upgrade, pre_upgrade, query};
 use ic_cron::implement_cron;
 use ic_event_hub::{implement_event_emitter, implement_subscribe, implement_unsubscribe};
 use shared::time::secs;
@@ -92,4 +92,9 @@ implement_unsubscribe!();
 fn tick() {
     CronService::process_tasks();
     send_events();
+}
+
+#[query]
+fn export_candid() -> String {
+    include_str!("../can.did").to_string()
 }

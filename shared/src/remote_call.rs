@@ -46,7 +46,7 @@ impl RemoteCallEndpoint {
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub enum RemoteCallArgs {
     CandidString(Vec<String>),
-    Encoded(Vec<u8>),
+    Encoded(Blob),
 }
 
 impl RemoteCallArgs {

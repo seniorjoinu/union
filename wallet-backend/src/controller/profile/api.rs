@@ -29,13 +29,13 @@ pub struct UpdateProfileRequest {
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct GetProfileResponse {
-    pub profile: Profile,
+pub struct GetProfileRequest {
+    pub id: ProfileId,
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct GetProfileRequest {
-    pub id: ProfileId,
+pub struct GetProfileResponse {
+    pub profile: Profile,
 }
 
 #[derive(CandidType, Deserialize)]
