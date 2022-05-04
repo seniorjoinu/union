@@ -3,7 +3,7 @@ use crate::controller::voting_config::api::{
     GetVotingConfigRequest, GetVotingConfigResponse, ListVotingConfigsRequest,
     ListVotingConfigsResponse, UpdateVotingConfigRequest,
 };
-use crate::guards::only_self_or_with_access;
+use crate::guards::{only_self, only_self_or_with_access};
 use crate::service::voting_config::types::VotingConfigService;
 use ic_cdk_macros::{query, update};
 
@@ -11,7 +11,7 @@ pub mod api;
 
 #[update]
 fn create_voting_config(req: CreateVotingConfigRequest) -> CreateVotingConfigResponse {
-    only_self_or_with_access("create_voting_config");
+    only_self();
 
     let id = VotingConfigService::create_voting_config(
         req.name,
@@ -32,7 +32,7 @@ fn create_voting_config(req: CreateVotingConfigRequest) -> CreateVotingConfigRes
 
 #[update]
 fn update_voting_config(req: UpdateVotingConfigRequest) {
-    only_self_or_with_access("update_voting_config");
+    only_self();
 
     VotingConfigService::update_voting_config(
         req.id,
@@ -53,7 +53,7 @@ fn update_voting_config(req: UpdateVotingConfigRequest) {
 
 #[update]
 fn delete_voting_config(req: DeleteVotingConfigRequest) {
-    only_self_or_with_access("delete_voting_config");
+    only_self();
 
     VotingConfigService::delete_voting_config(req.id).expect("Unable to delete voting config");
 }

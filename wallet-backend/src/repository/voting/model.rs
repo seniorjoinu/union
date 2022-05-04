@@ -1,8 +1,11 @@
-use crate::repository::voting::types::{VotingStatus, VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN, VOTING_NAME_MAX_LEN, VOTING_NAME_MIN_LEN, RoundResult};
+use crate::repository::voting::types::{
+    RoundResult, VotingStatus, VOTING_DESCRIPTION_MAX_LEN, VOTING_DESCRIPTION_MIN_LEN,
+    VOTING_NAME_MAX_LEN, VOTING_NAME_MIN_LEN,
+};
 use candid::{CandidType, Deserialize, Principal};
 use ic_cron::types::TaskId;
 use shared::mvc::Model;
-use shared::types::wallet::{ChoiceId, GroupOrProfile, Shares, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceId, GroupId, Shares, VotingConfigId, VotingId};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -22,13 +25,13 @@ pub struct Voting {
     description: String,
     winners_need: usize,
 
-    total_voting_power: BTreeMap<GroupOrProfile, Shares>,
+    total_voting_power_by_group: BTreeMap<GroupId, Shares>,
 
     winners: Vec<RoundResult>,
     losers: Vec<RoundResult>,
-    
+
     choices: BTreeSet<ChoiceId>,
-    
+
     rejection_choice: Option<ChoiceId>,
     approval_choice: Option<ChoiceId>,
 }
@@ -56,7 +59,7 @@ impl Voting {
             description: Self::process_description(description)?,
             winners_need,
 
-            total_voting_power: BTreeMap::new(),
+            total_voting_power_by_group: BTreeMap::new(),
 
             winners: Vec::new(),
             losers: Vec::new(),
@@ -112,13 +115,14 @@ impl Voting {
         Ok(())
     }
 
-    pub fn update_total_voting_power(
+    pub fn update_total_voting_power_by_group(
         &mut self,
-        gop: GroupOrProfile,
+        group_id: GroupId,
         total_voting_power: Shares,
         timestamp: u64,
     ) {
-        self.total_voting_power.insert(gop, total_voting_power);
+        self.total_voting_power_by_group
+            .insert(group_id, total_voting_power);
         self.updated_at = timestamp;
     }
 
@@ -216,8 +220,8 @@ impl Voting {
         &self.rejection_choice.unwrap()
     }
 
-    pub fn get_total_voting_power(&self) -> &BTreeMap<GroupOrProfile, Shares> {
-        &self.total_voting_power
+    pub fn get_total_voting_power_by_group(&self) -> &BTreeMap<GroupId, Shares> {
+        &self.total_voting_power_by_group
     }
 
     pub fn get_winners_need(&self) -> usize {

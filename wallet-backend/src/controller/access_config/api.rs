@@ -1,9 +1,22 @@
 use std::collections::BTreeSet;
 use candid::{CandidType, Deserialize};
 use shared::pageable::{Page, PageRequest};
+use shared::remote_call::{Program, ProgramExecutionResult};
+use shared::types::wallet::AccessConfigId;
 use crate::repository::access_config::model::AccessConfig;
-use crate::repository::access_config::types::{AccessConfigFilter, AccessConfigId, AlloweeConstraint};
+use crate::repository::access_config::types::{AccessConfigFilter, AlloweeConstraint};
 use crate::repository::permission::types::PermissionId;
+
+#[derive(CandidType, Deserialize)]
+pub struct ExecuteRequest {
+    pub access_config_id: AccessConfigId,
+    pub program: Program,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct ExecuteResponse {
+    pub result: ProgramExecutionResult,
+}
 
 #[derive(CandidType, Deserialize)]
 pub struct CreateAccessConfigRequest {

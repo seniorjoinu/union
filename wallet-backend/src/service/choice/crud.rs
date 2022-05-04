@@ -101,7 +101,7 @@ impl ChoiceService {
             return Err(ChoiceError::UnableToEditVoting(*choice.get_voting_id()));
         }
 
-        for (gop, token_id) in choice.list_tokens_by_gop() {
+        for (gop, token_id) in choice.list_tokens_by_group() {
             Token::repo().delete(token_id).unwrap();
         }
 

@@ -8,7 +8,6 @@ use candid::Principal;
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::{GroupId, Shares};
-use std::collections::BTreeSet;
 
 pub mod crud;
 pub mod types;
@@ -230,7 +229,7 @@ impl GroupService {
         Ok(())
     }
     
-    fn get_groups_of(caller: &Principal) -> Vec<Group> {
+    pub fn get_groups_of(caller: &Principal) -> Vec<Group> {
         Token::repo()
             .get_tokens_by_principal(caller)
             .into_iter()

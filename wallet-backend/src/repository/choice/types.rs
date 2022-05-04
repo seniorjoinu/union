@@ -1,5 +1,5 @@
-use shared::types::wallet::VotingId;
 use candid::{CandidType, Deserialize};
+use shared::types::wallet::VotingId;
 
 pub const VOTING_CHOICE_NAME_MIN_LEN: usize = 1;
 pub const VOTING_CHOICE_NAME_MAX_LEN: usize = 200;

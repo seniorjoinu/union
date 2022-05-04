@@ -7,7 +7,7 @@ use crate::service::group::types::{GroupError, GroupService};
 use crate::service::token::types::TokenService;
 use shared::mvc::{HasRepository, Repository};
 use shared::pageable::{Page, PageRequest};
-use shared::types::wallet::{GroupId, GroupOrProfile};
+use shared::types::wallet::GroupId;
 
 impl GroupService {
     pub fn create_group(
@@ -29,11 +29,10 @@ impl GroupService {
     pub fn delete_group(group_id: GroupId) -> Result<(Group, Token), GroupError> {
         GroupService::assert_not_has_profile_group(group_id)?;
 
-        let gop = GroupOrProfile::Group(group_id);
-        if AccessConfig::repo().gop_has_related_access_configs(&gop) {
+        if AccessConfig::repo().group_has_related_access_configs(&group_id) {
             return Err(GroupError::RelatedAccessConfigsExist);
         }
-        if VotingConfig::repo().gop_has_related_voting_configs(&gop) {
+        if VotingConfig::repo().group_has_related_voting_configs(&group_id) {
             return Err(GroupError::RelatedVotingConfigsExist);
         }
 

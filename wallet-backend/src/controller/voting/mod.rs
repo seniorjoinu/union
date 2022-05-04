@@ -6,7 +6,7 @@ use crate::controller::voting::api::{
     ListVotingChoicesResponse, ListVotingsRequest, ListVotingsResponse, UpdateVotingChoiceRequest,
     UpdateVotingRequest,
 };
-use crate::guards::only_self_or_with_access;
+use crate::guards::{only_self, only_self_or_with_access};
 use crate::service::choice::types::ChoiceService;
 use crate::service::voting::types::VotingService;
 use ic_cdk::api::time;
@@ -17,7 +17,7 @@ pub mod api;
 
 #[update]
 fn create_voting(req: CreateVotingRequest) -> CreateVotingResponse {
-    only_self_or_with_access("create_voting");
+    only_self();
 
     let id = VotingService::create_voting(
         req.voting_config_id,
@@ -34,7 +34,7 @@ fn create_voting(req: CreateVotingRequest) -> CreateVotingResponse {
 
 #[update]
 fn update_voting(req: UpdateVotingRequest) {
-    only_self_or_with_access("update_voting");
+    only_self();
 
     VotingService::update_voting(
         &req.id,
@@ -48,7 +48,7 @@ fn update_voting(req: UpdateVotingRequest) {
 
 #[update]
 fn create_voting_choice(req: CreateVotingChoiceRequest) -> CreateVotingChoiceResponse {
-    only_self_or_with_access("create_voting_choice");
+    only_self();
 
     let choice_id = ChoiceService::create_choice(
         req.name,
@@ -63,7 +63,7 @@ fn create_voting_choice(req: CreateVotingChoiceRequest) -> CreateVotingChoiceRes
 
 #[update]
 fn update_voting_choice(req: UpdateVotingChoiceRequest) {
-    only_self_or_with_access("update_voting_choice");
+    only_self();
 
     ChoiceService::update_choice(
         &req.choice_id,
@@ -76,7 +76,7 @@ fn update_voting_choice(req: UpdateVotingChoiceRequest) {
 
 #[update]
 fn delete_voting_choice(req: DeleteVotingChoiceRequest) {
-    only_self_or_with_access("delete_voting_choice");
+    only_self();
 
     ChoiceService::delete_choice(&req.choice_id, &req.voting_id)
         .expect("Unable to delete voting choice");
@@ -84,14 +84,14 @@ fn delete_voting_choice(req: DeleteVotingChoiceRequest) {
 
 #[update]
 fn delete_voting(req: DeleteVotingRequest) {
-    only_self_or_with_access("delete_voting");
+    only_self();
 
     VotingService::delete_voting(&req.id).expect("Unable to delete voting");
 }
 
 #[update]
 fn cast_vote(req: CastVoteRequest) {
-    only_self_or_with_access("cast_vote");
+    only_self();
 
     VotingService::cast_vote(&req.id, req.vote, caller(), time()).expect("Unable to cast vote");
 }
@@ -142,7 +142,7 @@ fn get_voting_results(req: GetVotingResultsRequest) -> GetVotingResultsResponse 
 
 #[query]
 fn get_my_vote(req: GetMyVoteRequest) -> GetMyVoteResponse {
-    let vote = VotingService::get_vote_of(&req.voting_id, req.gop, caller())
+    let vote = VotingService::get_vote_of(&req.voting_id, req.group_id, caller())
         .expect("Unable to get my vote");
     GetMyVoteResponse { vote }
 }

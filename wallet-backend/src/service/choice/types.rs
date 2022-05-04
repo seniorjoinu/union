@@ -18,7 +18,7 @@ pub struct ChoiceService;
 
 impl ChoiceService {
     pub fn reset(choice: &Choice) {
-        for (gop, token_id) in choice.list_tokens_by_gop() {
+        for (gop, token_id) in choice.list_tokens_by_group() {
             let mut token = Token::repo().get(token_id).unwrap();
             token.reset();
             Token::repo().save(token);

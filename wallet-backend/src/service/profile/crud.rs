@@ -4,10 +4,10 @@ use crate::repository::token::model::Token;
 use crate::repository::voting_config::model::VotingConfig;
 use crate::service::group::types::{GroupService, DEFAULT_GROUP_SHARES};
 use crate::service::profile::types::{ProfileError, ProfileService};
+use crate::EventsService;
 use shared::mvc::{HasRepository, Repository};
 use shared::pageable::{Page, PageRequest};
-use shared::types::wallet::{GroupOrProfile, ProfileId, Shares};
-use crate::EventsService;
+use shared::types::wallet::{ProfileId, Shares};
 
 impl ProfileService {
     pub fn create_profile(
@@ -50,12 +50,7 @@ impl ProfileService {
     }
 
     pub fn delete_profile(id: ProfileId) -> Result<(), ProfileError> {
-        let gop = GroupOrProfile::Profile(id);
-
-        if VotingConfig::repo().gop_has_related_voting_configs(&gop) {
-            return Err(ProfileError::RelatedVotingConfigsExist);
-        }
-        if AccessConfig::repo().gop_has_related_access_configs(&gop) {
+        if AccessConfig::repo().profile_has_related_access_configs(&id) {
             return Err(ProfileError::RelatedAccessConfigsExist);
         }
 

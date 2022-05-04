@@ -1,4 +1,5 @@
 use crate::api::{
+    GetProgramExecutionEntryMetaRequest, GetProgramExecutionEntryMetaResponse,
     GetProgramExecutionEntryProgramRequest, GetProgramExecutionEntryProgramResponse,
     GetProgramExecutionEntryResultRequest, GetProgramExecutionEntryResultResponse,
     GetSharesInfoOfAtRequest, GetSharesInfoOfAtResponse, ListProgramExecutionEntryIdsRequest,
@@ -22,6 +23,10 @@ pub trait IHistoryLedger {
         &self,
         req: ListProgramExecutionEntryIdsRequest,
     ) -> CandidCallResult<ListProgramExecutionEntryIdsResponse>;
+    async fn get_program_execution_entry_meta(
+        &self,
+        req: GetProgramExecutionEntryMetaRequest,
+    ) -> CandidCallResult<GetProgramExecutionEntryMetaResponse>;
     async fn get_program_execution_entry_program(
         &self,
         req: GetProgramExecutionEntryProgramRequest,
@@ -48,21 +53,40 @@ impl IHistoryLedger for Principal {
 
     // ------------ PROGRAM EXECUTION ----------------
 
-    async fn list_program_execution_entry_ids(&self, req: ListProgramExecutionEntryIdsRequest) -> CandidCallResult<ListProgramExecutionEntryIdsResponse> {
-        RemoteCallPayload::new_encode(*self, "list_program_execution_entry_ids", (req, ), 0)
+    async fn list_program_execution_entry_ids(
+        &self,
+        req: ListProgramExecutionEntryIdsRequest,
+    ) -> CandidCallResult<ListProgramExecutionEntryIdsResponse> {
+        RemoteCallPayload::new_encode(*self, "list_program_execution_entry_ids", (req,), 0)
             .do_call()
             .await
             .map(|(it,)| it)
     }
 
-    async fn get_program_execution_entry_program(&self, req: GetProgramExecutionEntryProgramRequest) -> CandidCallResult<GetProgramExecutionEntryProgramResponse> {
+    async fn get_program_execution_entry_meta(
+        &self,
+        req: GetProgramExecutionEntryMetaRequest,
+    ) -> CandidCallResult<GetProgramExecutionEntryMetaResponse> {
+        RemoteCallPayload::new_encode(*self, "get_program_execution_entry_meta", (req,), 0)
+            .do_call()
+            .await
+            .map(|(it,)| it)
+    }
+
+    async fn get_program_execution_entry_program(
+        &self,
+        req: GetProgramExecutionEntryProgramRequest,
+    ) -> CandidCallResult<GetProgramExecutionEntryProgramResponse> {
         RemoteCallPayload::new_encode(*self, "get_program_execution_entry_program", (req,), 0)
             .do_call()
             .await
             .map(|(it,)| it)
     }
 
-    async fn get_program_execution_entry_result(&self, req: GetProgramExecutionEntryResultRequest) -> CandidCallResult<GetProgramExecutionEntryResultResponse> {
+    async fn get_program_execution_entry_result(
+        &self,
+        req: GetProgramExecutionEntryResultRequest,
+    ) -> CandidCallResult<GetProgramExecutionEntryResultResponse> {
         RemoteCallPayload::new_encode(*self, "get_program_execution_entry_result", (req,), 0)
             .do_call()
             .await

@@ -3,6 +3,7 @@ use std::collections::btree_map::Iter as BTreeMapIter;
 use std::collections::btree_set::Iter as BTreeSetIter;
 use std::collections::hash_map::Iter as HashMapIter;
 use std::collections::vec_deque::Iter as VecIter;
+use std::slice::Iter as SliceIter;
 use std::iter::{Skip, Take};
 
 #[derive(CandidType, Deserialize)]
@@ -15,7 +16,7 @@ impl<T> Page<T> {
     pub fn new(data: Vec<T>, has_next: bool) -> Self {
         Self { data, has_next }
     }
-    
+
     pub fn empty() -> Self {
         Self {
             data: Vec::new(),
@@ -100,6 +101,26 @@ impl<'a, T> Pageable for VecIter<'a, T> {
 
 impl<'a, T> Pageable for BTreeSetIter<'a, T> {
     type BaseType = BTreeSetIter<'a, T>;
+
+    fn get_page<F, S>(self, req: &PageRequest<F, S>) -> (bool, Take<Skip<Self::BaseType>>) {
+        let has_next = self
+            .clone()
+            .skip(req.page_size * req.page_index)
+            .skip(req.page_size)
+            .peekable()
+            .peek()
+            .is_some();
+
+        let it = self
+            .skip(req.page_size * req.page_index)
+            .take(req.page_size);
+
+        (has_next, it)
+    }
+}
+
+impl<'a, T> Pageable for SliceIter<'a, T> {
+    type BaseType = SliceIter<'a, T>;
 
     fn get_page<F, S>(self, req: &PageRequest<F, S>) -> (bool, Take<Skip<Self::BaseType>>) {
         let has_next = self

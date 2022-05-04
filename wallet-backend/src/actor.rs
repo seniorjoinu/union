@@ -1,6 +1,7 @@
 use crate::repository::{set_repositories, take_repositories};
 use crate::service::cron::CronService;
 use crate::service::events::EventsService;
+use crate::service::group::types::{GroupService, DEFAULT_GROUP_SHARES, HAS_PROFILE_GROUP_ID};
 use crate::service::init_services;
 use crate::service::profile::types::ProfileService;
 use crate::settings::{init_settings, set_settings, take_settings};
@@ -12,15 +13,14 @@ use ic_cdk_macros::{heartbeat, init, post_upgrade, pre_upgrade};
 use ic_cron::implement_cron;
 use ic_event_hub::{implement_event_emitter, implement_subscribe, implement_unsubscribe};
 use shared::time::secs;
+use shared::types::wallet::Shares;
 
-pub mod api;
 pub mod common;
+pub mod controller;
 pub mod guards;
-pub mod helpers;
 pub mod repository;
 pub mod service;
 pub mod settings;
-pub mod controller;
 
 #[derive(CandidType, Deserialize)]
 pub struct InitRequest {
@@ -49,6 +49,14 @@ fn init(req: InitRequest) {
         String::from("A person, who created this wallet"),
     )
     .expect("Unable to create wallet creator profile");
+
+    GroupService::accept_shares(
+        HAS_PROFILE_GROUP_ID,
+        req.wallet_creator,
+        Shares::from(DEFAULT_GROUP_SHARES),
+        time(),
+    )
+    .expect("Unable to accept wallet creator shares");
 }
 
 #[post_upgrade]

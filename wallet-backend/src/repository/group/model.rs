@@ -16,8 +16,6 @@ pub struct Group {
     token: Option<TokenId>,
 }
 
-// TODO: add token index, add get_my_groups function
-
 impl Group {
     pub fn new(name: String, description: String, private: bool) -> Result<Self, ValidationError> {
         let group = Self {

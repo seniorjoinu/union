@@ -1,3 +1,1 @@
-use shared::mvc::Id;
-
-pub type ProgramExecutionEntryId = Id;
+pub type ProgramExecutionEntryId = u64;

@@ -1,8 +1,8 @@
 use candid::{CandidType, Deserialize, Principal};
 use shared::pageable::{Page, PageRequest};
-use shared::remote_call::{Program, ProgramExecutionResult};
+use shared::remote_call::{Program, ProgramExecutionResult, RemoteCallEndpoint};
 use shared::types::history_ledger::SharesInfo;
-use shared::types::wallet::GroupId;
+use shared::types::wallet::{GroupId, ProgramExecutedWith};
 
 // ------------------ SHARES MOVE -------------------
 
@@ -21,13 +21,31 @@ pub struct GetSharesInfoOfAtResponse {
 // ------------------ PROGRAM EXECUTION ------------------
 
 #[derive(CandidType, Deserialize)]
+pub struct ProgramExecutionFilter {
+    pub from_timestamp: Option<u64>,
+    pub to_timestamp: Option<u64>,
+    pub endpoint: Option<RemoteCallEndpoint>,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct ListProgramExecutionEntryIdsRequest {
-    pub page_req: PageRequest<(), ()>,
+    pub page_req: PageRequest<ProgramExecutionFilter, ()>,
 }
 
 #[derive(CandidType, Deserialize)]
 pub struct ListProgramExecutionEntryIdsResponse {
     pub page: Page<u64>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetProgramExecutionEntryMetaRequest {
+    pub id: u64,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetProgramExecutionEntryMetaResponse {
+    pub initiator: Principal,
+    pub program_executed_with: ProgramExecutedWith,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -37,7 +55,7 @@ pub struct GetProgramExecutionEntryProgramRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct GetProgramExecutionEntryProgramResponse {
-    pub program: Program,
+    pub program: Option<Program>,
 }
 
 #[derive(CandidType, Deserialize)]

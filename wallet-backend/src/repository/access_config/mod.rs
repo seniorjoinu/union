@@ -1,10 +1,12 @@
 use crate::repository::access_config::model::AccessConfig;
-use crate::repository::access_config::types::{AccessConfigFilter, AccessConfigId};
+use crate::repository::access_config::types::{
+    AccessConfigFilter, AccessConfigId, AlloweeConstraint,
+};
 use crate::repository::permission::types::PermissionId;
 use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
-use shared::types::wallet::GroupOrProfile;
+use shared::types::wallet::{GroupId, ProfileId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 pub mod model;
@@ -16,7 +18,8 @@ pub struct AccessConfigRepository {
     id_gen: IdGenerator,
 
     access_configs_by_permission: BTreeMap<PermissionId, BTreeSet<AccessConfigId>>,
-    access_configs_by_group_or_profile: BTreeMap<GroupOrProfile, BTreeSet<AccessConfigId>>,
+    access_configs_by_group: BTreeMap<GroupId, BTreeSet<AccessConfigId>>,
+    access_configs_by_profile: BTreeMap<ProfileId, BTreeSet<AccessConfigId>>,
 }
 
 impl Repository<AccessConfig, AccessConfigId, AccessConfigFilter, ()> for AccessConfigRepository {
@@ -47,7 +50,10 @@ impl Repository<AccessConfig, AccessConfigId, AccessConfigFilter, ()> for Access
     }
 
     fn list(&self, page_req: &PageRequest<AccessConfigFilter, ()>) -> Page<AccessConfig> {
-        if page_req.filter.permission.is_none() && page_req.filter.group_or_profile.is_none() {
+        if page_req.filter.permission.is_none()
+            && page_req.filter.group.is_none()
+            && page_req.filter.profile.is_none()
+        {
             let (has_next, iter) = self.access_configs.iter().get_page(page_req);
             let data = iter.map(|(_, it)| it.clone()).collect();
 
@@ -63,14 +69,29 @@ impl Repository<AccessConfig, AccessConfigId, AccessConfigFilter, ()> for Access
             BTreeSet::default()
         };
 
-        let mut index2 = if let Some(gop) = page_req.filter.group_or_profile {
-            self.access_configs_by_group_or_profile
-                .get(&gop)
+        let mut index1 = if let Some(g) = page_req.filter.group {
+            self.access_configs_by_group
+                .get(&g)
                 .cloned()
                 .unwrap_or_default()
         } else {
             BTreeSet::default()
         };
+
+        let mut index2 = if let Some(p) = page_req.filter.profile {
+            self.access_configs_by_profile
+                .get(&p)
+                .cloned()
+                .unwrap_or_default()
+        } else {
+            BTreeSet::default()
+        };
+
+        if !index.is_empty() {
+            index.append(&mut index1);
+        } else {
+            index = index.intersection(&index1).cloned().collect();
+        }
 
         if !index.is_empty() {
             index.append(&mut index2);
@@ -96,8 +117,16 @@ impl AccessConfigRepository {
             .unwrap_or_default()
     }
 
-    pub fn gop_has_related_access_configs(&self, gop: &GroupOrProfile) -> bool {
-        if let Some(index) = self.access_configs_by_group_or_profile.get(gop) {
+    pub fn group_has_related_access_configs(&self, group_id: &GroupId) -> bool {
+        if let Some(index) = self.access_configs_by_group.get(group_id) {
+            !index.is_empty()
+        } else {
+            false
+        }
+    }
+
+    pub fn profile_has_related_access_configs(&self, profile_id: &ProfileId) -> bool {
+        if let Some(index) = self.access_configs_by_profile.get(profile_id) {
             !index.is_empty()
         } else {
             false
@@ -127,12 +156,21 @@ impl AccessConfigRepository {
         }
 
         for allowee in query_config.get_allowees() {
-            if let Some(gop) = allowee.to_group_or_profile() {
-                self.access_configs_by_group_or_profile
-                    .entry(gop)
-                    .or_default()
-                    .insert(id);
-            }
+            match allowee {
+                AlloweeConstraint::Group(gc) => {
+                    self.access_configs_by_group
+                        .entry(gc.id)
+                        .or_default()
+                        .insert(id);
+                }
+                AlloweeConstraint::Profile(p) => {
+                    self.access_configs_by_profile
+                        .entry(p.clone() /* ??? */)
+                        .or_default()
+                        .insert(id);
+                }
+                _ => {}
+            };
         }
     }
 
@@ -147,12 +185,21 @@ impl AccessConfigRepository {
         }
 
         for allowee in query_config.get_allowees() {
-            if let Some(gop) = &allowee.to_group_or_profile() {
-                self.access_configs_by_group_or_profile
-                    .get_mut(gop)
-                    .unwrap()
-                    .remove(&id);
-            }
+            match allowee {
+                AlloweeConstraint::Group(gc) => {
+                    self.access_configs_by_group
+                        .get_mut(&gc.id)
+                        .unwrap()
+                        .remove(&id);
+                }
+                AlloweeConstraint::Profile(p) => {
+                    self.access_configs_by_profile
+                        .get_mut(&p)
+                        .unwrap()
+                        .remove(&id);
+                }
+                _ => {}
+            };
         }
     }
 }

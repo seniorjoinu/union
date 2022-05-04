@@ -5,7 +5,7 @@ use crate::service::voting::types::Vote;
 use candid::{CandidType, Deserialize};
 use shared::pageable::{Page, PageRequest};
 use shared::remote_call::Program;
-use shared::types::wallet::{ChoiceId, GroupOrProfile, Shares, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceId, GroupId, Shares, VotingConfigId, VotingId};
 use std::collections::BTreeMap;
 
 #[derive(CandidType, Deserialize)]
@@ -115,7 +115,7 @@ pub struct GetVotingResultsRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct GetVotingResultsResponse {
-    pub results: BTreeMap<ChoiceId, BTreeMap<GroupOrProfile, Shares>>,
+    pub results: BTreeMap<ChoiceId, BTreeMap<GroupId, Shares>>,
 }
 
 // ------------------- PERSONAL ------------------
@@ -123,7 +123,7 @@ pub struct GetVotingResultsResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetMyVoteRequest {
     pub voting_id: VotingId,
-    pub gop: GroupOrProfile,
+    pub group_id: GroupId,
 }
 
 #[derive(CandidType, Deserialize)]

@@ -90,6 +90,14 @@ impl<T: Ord> SortedByTimestamp<T> {
         result
     }
 
+    pub fn get_last_timestamp(&self) -> u64 {
+        self.0.last().map(|it| it.timestamp).unwrap_or(u64::MAX)
+    }
+    
+    pub fn get_first_timestamp(&self) -> u64 {
+        self.0.first().map(|it| it.timestamp).unwrap_or_default()
+    }
+    
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()

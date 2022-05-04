@@ -1,5 +1,5 @@
 use ic_cdk_macros::query;
-use history_ledger_client::api::{GetProgramExecutionEntryProgramRequest, GetProgramExecutionEntryProgramResponse, GetProgramExecutionEntryResultRequest, GetProgramExecutionEntryResultResponse, ListProgramExecutionEntryIdsRequest, ListProgramExecutionEntryIdsResponse};
+use history_ledger_client::api::{GetProgramExecutionEntryMetaRequest, GetProgramExecutionEntryMetaResponse, GetProgramExecutionEntryProgramRequest, GetProgramExecutionEntryProgramResponse, GetProgramExecutionEntryResultRequest, GetProgramExecutionEntryResultResponse, ListProgramExecutionEntryIdsRequest, ListProgramExecutionEntryIdsResponse};
 use shared::mvc::{HasRepository, Repository};
 use crate::repository::program_execution::model::ProgramExecutionEntry;
 use crate::service::program_execution::ProgramExecutionService;
@@ -11,6 +11,18 @@ fn list_program_execution_entry_ids(
     let page = ProgramExecutionService::list_program_execution_entry_ids(&req.page_req);
 
     ListProgramExecutionEntryIdsResponse { page }
+}
+
+#[query]
+fn get_program_execution_entry_meta(
+    req: GetProgramExecutionEntryMetaRequest
+) -> GetProgramExecutionEntryMetaResponse {
+    let entry = ProgramExecutionEntry::repo().get(&req.id).expect("Entry no found");
+    
+    GetProgramExecutionEntryMetaResponse { 
+        initiator: entry.get_initiator(),
+        program_executed_with: entry.get_with(),
+    }
 }
 
 #[query]

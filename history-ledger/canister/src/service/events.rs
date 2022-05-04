@@ -6,8 +6,9 @@ use ic_event_hub::api::IEventHubClient;
 use ic_event_hub::types::{CallbackInfo, Event, IEvent, IEventFilter, SubscribeRequest};
 use shared::mvc::{HasRepository, Repository};
 use shared::types::wallet::{
-    ProgramExecutedEvent_1, ProgramExecutedEvent_1Filter, ProgramExecutedEvent_2,
-    ProgramExecutedEvent_2Filter, SharesMoveEvent, SharesMoveEventFilter,
+    ProgramExecutedEvent_0, ProgramExecutedEvent_0Filter, ProgramExecutedEvent_1,
+    ProgramExecutedEvent_1Filter, ProgramExecutedEvent_2, ProgramExecutedEvent_2Filter,
+    SharesMoveEvent, SharesMoveEventFilter,
 };
 
 pub struct EventsService;
@@ -15,8 +16,9 @@ pub struct EventsService;
 impl EventsService {
     pub async fn subscribe_to_wallet_events(wallet_id: Principal) {
         let f1 = SharesMoveEventFilter {};
-        let f2 = ProgramExecutedEvent_1Filter {};
-        let f3 = ProgramExecutedEvent_2Filter {};
+        let f2 = ProgramExecutedEvent_0Filter {};
+        let f3 = ProgramExecutedEvent_1Filter {};
+        let f4 = ProgramExecutedEvent_2Filter {};
 
         // Warning! Method name should follow the name of the CONTROLLER method
         wallet_id
@@ -32,6 +34,10 @@ impl EventsService {
                     },
                     CallbackInfo {
                         filter: f3.to_event_filter(),
+                        method_name: String::from("process_events"),
+                    },
+                    CallbackInfo {
+                        filter: f4.to_event_filter(),
                         method_name: String::from("process_events"),
                     },
                 ],
@@ -51,11 +57,23 @@ impl EventsService {
 
                     SharesMoveEntry::repo().save(it);
                 }
+                "ProgramExecutedEvent_0" => {
+                    let ev: ProgramExecutedEvent_0 = ProgramExecutedEvent_0::from_event(event);
+                    let it = ProgramExecutionEntry::from_event(ev);
+                    
+                    ProgramExecutionEntry::repo().save(it);
+                }
                 "ProgramExecutedEvent_1" => {
                     let ev: ProgramExecutedEvent_1 = ProgramExecutedEvent_1::from_event(event);
-                    let it = ProgramExecutionEntry::from_event(ev);
-
-                    ProgramExecutionEntry::repo().save(it);
+                    if let Some(mut it) = ProgramExecutionEntry::repo().get(&ev.timestamp) {
+                        it.set_program(ev.program);
+                        ProgramExecutionEntry::repo().save(it);
+                    } else {
+                        print(format!(
+                            "ERROR: Unable to find a previous event for {}",
+                            ev.timestamp
+                        ))
+                    }
                 }
                 "ProgramExecutedEvent_2" => {
                     let ev: ProgramExecutedEvent_2 = ProgramExecutedEvent_2::from_event(event);
@@ -65,7 +83,7 @@ impl EventsService {
                         ProgramExecutionEntry::repo().save(it);
                     } else {
                         print(format!(
-                            "Unable to find a previous event for {}",
+                            "ERROR: Unable to find a previous event for {}",
                             ev.timestamp
                         ))
                     }

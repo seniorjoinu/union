@@ -1,5 +1,5 @@
 use crate::controller::group::api::{AcceptMyGroupSharesRequest, BurnGroupSharesRequest, BurnMyGroupSharesRequest, CreateGroupRequest, CreateGroupResponse, DeclineMyGroupSharesRequest, DeleteGroupRequest, GetGroupRequest, GetGroupResponse, GetGroupSharesBalanceOfRequest, GetGroupSharesBalanceOfResponse, GetGroupsOfRequest, GetGroupsResponse, GetMyGroupSharesBalanceRequest, GetMyGroupSharesBalanceResponse, GetTotalGroupSharesRequest, GetTotalGroupSharesResponse, ListGroupSharesRequest, ListGroupSharesResponse, ListGroupsRequest, ListGroupsResponse, MintGroupSharesRequest, TransferGroupSharesRequest, TransferMyGroupSharesRequest, UpdateGroupRequest};
-use crate::guards::only_self_or_with_access;
+use crate::guards::{only_self, only_self_or_with_access};
 use crate::service::group::types::GroupService;
 use ic_cdk::api::time;
 use ic_cdk::caller;
@@ -9,7 +9,7 @@ pub mod api;
 
 #[update]
 fn create_group(req: CreateGroupRequest) -> CreateGroupResponse {
-    only_self_or_with_access("create_group");
+    only_self();
 
     let group_id =
         GroupService::create_group(req.name, req.description, req.private, req.transferable)
@@ -20,7 +20,7 @@ fn create_group(req: CreateGroupRequest) -> CreateGroupResponse {
 
 #[update]
 fn update_group(req: UpdateGroupRequest) {
-    only_self_or_with_access("update_group");
+    only_self();
 
     GroupService::update_group(req.group_id, req.new_name, req.new_description)
         .expect("Unable to update group");
@@ -28,7 +28,7 @@ fn update_group(req: UpdateGroupRequest) {
 
 #[update]
 fn delete_group(req: DeleteGroupRequest) {
-    only_self_or_with_access("delete_group");
+    only_self();
 
     GroupService::delete_group(req.group_id).expect("Unable to delete group");
 }
@@ -51,7 +51,7 @@ fn list_groups(req: ListGroupsRequest) -> ListGroupsResponse {
 
 #[update]
 fn mint_group_shares(req: MintGroupSharesRequest) {
-    only_self_or_with_access("mint_group_shares");
+    only_self();
 
     GroupService::mint_shares(req.group_id, req.owner, req.qty, time())
         .expect("Unable to mint group shares");
@@ -59,7 +59,7 @@ fn mint_group_shares(req: MintGroupSharesRequest) {
 
 #[update]
 fn burn_group_shares(req: BurnGroupSharesRequest) {
-    only_self_or_with_access("burn_group_shares");
+    only_self();
 
     GroupService::burn_shares(req.group_id, req.owner, req.qty, time())
         .expect("Unable to burn group shares");
@@ -67,7 +67,7 @@ fn burn_group_shares(req: BurnGroupSharesRequest) {
 
 #[update]
 fn burn_unaccepted_group_shares(req: BurnGroupSharesRequest) {
-    only_self_or_with_access("burn_group_shares");
+    only_self();
 
     GroupService::burn_unaccepted_shares(req.group_id, req.owner, req.qty)
         .expect("Unable to burn unaccepted group shares");
@@ -75,7 +75,7 @@ fn burn_unaccepted_group_shares(req: BurnGroupSharesRequest) {
 
 #[update]
 fn transfer_group_shares(req: TransferGroupSharesRequest) {
-    only_self_or_with_access("transfer_group_shares");
+    only_self();
 
     GroupService::transfer_shares(req.group_id, req.from, req.to, req.qty, time())
         .expect("Unable to transfer group shares");

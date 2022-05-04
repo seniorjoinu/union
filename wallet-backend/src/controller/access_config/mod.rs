@@ -1,17 +1,29 @@
-use crate::controller::access_config::api::{
-    CreateAccessConfigRequest, CreateAccessConfigResponse, DeleteAccessConfigRequest,
-    GetAccessConfigRequest, GetAccessConfigResponse, ListAccessConfigsRequest,
-    ListAccessConfigsResponse, UpdateAccessConfigRequest,
-};
-use crate::guards::only_self_or_with_access;
+use ic_cdk::api::time;
+use ic_cdk::caller;
+use crate::controller::access_config::api::{CreateAccessConfigRequest, CreateAccessConfigResponse, DeleteAccessConfigRequest, ExecuteRequest, ExecuteResponse, GetAccessConfigRequest, GetAccessConfigResponse, ListAccessConfigsRequest, ListAccessConfigsResponse, UpdateAccessConfigRequest};
+use crate::guards::{only_self_or_with_access, only_self};
 use crate::service::access_config::types::AccessConfigService;
 use ic_cdk_macros::{query, update};
 
 pub mod api;
 
 #[update]
+async fn execute(req: ExecuteRequest) -> ExecuteResponse {
+    let result = AccessConfigService::execute(
+        &req.access_config_id,
+        req.program,
+        caller(),
+        time()
+    )
+        .await
+        .expect("Unable to execute");
+    
+    ExecuteResponse { result }
+}
+
+#[update]
 fn create_access_config(req: CreateAccessConfigRequest) -> CreateAccessConfigResponse {
-    only_self_or_with_access("create_access_config");
+    only_self();
 
     let id = AccessConfigService::create_access_config(
         req.name,
@@ -25,7 +37,7 @@ fn create_access_config(req: CreateAccessConfigRequest) -> CreateAccessConfigRes
 
 #[update]
 fn update_access_config(req: UpdateAccessConfigRequest) {
-    only_self_or_with_access("update_access_config");
+    only_self();
 
     AccessConfigService::update_access_config(
         &req.id,
@@ -39,7 +51,7 @@ fn update_access_config(req: UpdateAccessConfigRequest) {
 
 #[update]
 fn delete_access_config(req: DeleteAccessConfigRequest) {
-    only_self_or_with_access("delete_access_config");
+    only_self();
 
     AccessConfigService::delete_access_config(&req.id).expect("Unable to delete access config");
 }

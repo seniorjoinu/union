@@ -18,7 +18,7 @@ pub enum VotingStatus {
     Fail(String),
 }
 
-#[derive(CandidType, Deserialize)]
+#[derive(Clone, CandidType, Deserialize)]
 pub struct RoundResult {
     round: RoundId,
     choices: BTreeSet<ChoiceId>,

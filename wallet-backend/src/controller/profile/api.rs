@@ -1,5 +1,5 @@
 use crate::repository::profile::model::Profile;
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize};
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::ProfileId;
 
@@ -40,10 +40,10 @@ pub struct GetProfileRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct ListProfilesRequest {
-    pub page_req: PageRequest<(), ()>
+    pub page_req: PageRequest<(), ()>,
 }
 
 #[derive(CandidType, Deserialize)]
 pub struct ListProfilesResponse {
-    pub page: Page<Profile>
+    pub page: Page<Profile>,
 }

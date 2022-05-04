@@ -8,6 +8,8 @@ use candid::{decode_args, encode_args, CandidType, Deserialize, Principal};
 use ic_cdk::api::call::call_raw;
 use ic_cdk::id;
 
+const WILDCARD: &str = "*";
+
 #[derive(CandidType, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct RemoteCallEndpoint {
     pub canister_id: Principal,
@@ -19,6 +21,24 @@ impl RemoteCallEndpoint {
         Self {
             canister_id: id(),
             method_name: String::from(method_name),
+        }
+    }
+    
+    pub fn wildcard(canister_id: Principal) -> Self {
+        Self {
+            canister_id,
+            method_name: String::from(WILDCARD)
+        }
+    }
+    
+    pub fn is_wildcard(&self) -> bool {
+        self.method_name == WILDCARD
+    }
+    
+    pub fn to_wildcard(&self) -> Self {
+        Self {
+            canister_id: self.canister_id,
+            method_name: String::from(WILDCARD)
         }
     }
 }

@@ -3,7 +3,7 @@ use crate::controller::permission::api::{
     GetPermissionRequest, GetPermissionResponse, ListPermissionsRequest, ListPermissionsResponse,
     UpdatePermissionRequest,
 };
-use crate::guards::only_self_or_with_access;
+use crate::guards::{only_self, only_self_or_with_access};
 use crate::service::permission::types::PermissionService;
 use ic_cdk_macros::{query, update};
 
@@ -11,7 +11,7 @@ pub mod api;
 
 #[update]
 fn create_permission(req: CreatePermissionRequest) -> CreatePermissionResponse {
-    only_self_or_with_access("create_permission");
+    only_self();
 
     let id = PermissionService::create_permission(req.name, req.description, req.targets)
         .expect("Unable to create permission");
@@ -20,7 +20,7 @@ fn create_permission(req: CreatePermissionRequest) -> CreatePermissionResponse {
 
 #[update]
 fn update_permission(req: UpdatePermissionRequest) {
-    only_self_or_with_access("update_permission");
+    only_self();
 
     PermissionService::update_permission(
         &req.id,
@@ -33,7 +33,7 @@ fn update_permission(req: UpdatePermissionRequest) {
 
 #[update]
 fn delete_permission(req: DeletePermissionRequest) {
-    only_self_or_with_access("delete_permission");
+    only_self();
 
     PermissionService::delete_permission(&req.id).expect("Unable to delete permission");
 }

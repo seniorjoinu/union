@@ -1,7 +1,6 @@
 use crate::repository::permission::types::PermissionId;
-use shared::types::wallet::{GroupId, ProfileId};
+use shared::types::wallet::{AccessConfigId, GroupId, ProfileId};
 use shared::validation::ValidationError;
-use crate::repository::access_config::types::AccessConfigId;
 
 pub struct AccessConfigService;
 
@@ -13,5 +12,6 @@ pub enum AccessConfigError {
     ProfileNotFound(ProfileId),
     AccessConfigNotFound(AccessConfigId),
     UnableToDeleteTheLastAccessConfig,
-    QueryCallerNotAllowed,
+    CallerNotAllowed,
+    InvalidProgram,
 }

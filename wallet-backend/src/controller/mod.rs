@@ -1,5 +1,6 @@
 pub mod access_config;
 pub mod group;
+pub mod history_ledger;
 pub mod permission;
 pub mod profile;
 pub mod settings;

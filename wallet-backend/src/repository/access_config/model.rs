@@ -1,8 +1,8 @@
-use crate::repository::permission::types::PermissionId;
-use crate::repository::query_config::types::{
-    AlloweeConstraint, QueryConfigId, QUERY_CONFIG_DESCRIPTION_MAX_LEN,
+use crate::repository::access_config::types::{
+    AccessConfigId, AlloweeConstraint, QUERY_CONFIG_DESCRIPTION_MAX_LEN,
     QUERY_CONFIG_DESCRIPTION_MIN_LEN, QUERY_CONFIG_NAME_MAX_LEN, QUERY_CONFIG_NAME_MIN_LEN,
 };
+use crate::repository::permission::types::PermissionId;
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
 use shared::validation::{validate_and_trim_str, ValidationError};
@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct AccessConfig {
-    id: Option<QueryConfigId>,
+    id: Option<AccessConfigId>,
     name: String,
     description: String,
 
@@ -87,12 +87,12 @@ impl AccessConfig {
     }
 }
 
-impl Model<QueryConfigId> for AccessConfig {
-    fn get_id(&self) -> Option<QueryConfigId> {
+impl Model<AccessConfigId> for AccessConfig {
+    fn get_id(&self) -> Option<AccessConfigId> {
         self.id
     }
 
-    fn _init_id(&mut self, id: QueryConfigId) {
+    fn _init_id(&mut self, id: AccessConfigId) {
         assert!(self.is_transient());
         self.id = Some(id);
     }

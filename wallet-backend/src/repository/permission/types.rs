@@ -12,18 +12,8 @@ pub type PermissionId = Id;
 #[derive(CandidType, Deserialize, Clone, PartialEq, Ord, PartialOrd, Eq, Hash, Debug)]
 pub enum PermissionTarget {
     SelfEmptyProgram,
-    Canister(Principal),
+    // TODO: switch to "*"
     Endpoint(RemoteCallEndpoint),
-}
-
-impl PermissionTarget {
-    pub fn to_canister(self) -> Option<PermissionTarget> {
-        match &self {
-            PermissionTarget::SelfEmptyProgram => None,
-            PermissionTarget::Canister(_) => Some(self),
-            PermissionTarget::Endpoint(e) => Some(PermissionTarget::Canister(e.canister_id)),
-        }
-    }
 }
 
 #[derive(CandidType, Deserialize)]

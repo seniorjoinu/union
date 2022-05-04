@@ -1,9 +1,9 @@
 use crate::repository::voting_config::types::{Fraction, LenInterval};
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Deserialize};
 use shared::types::history_ledger::SharesInfo;
-use shared::types::wallet::{ChoiceId, ProfileId, Shares, VotingConfigId, VotingId};
+use shared::types::wallet::{ChoiceId, ProfileId, VotingConfigId, VotingId};
 use shared::validation::ValidationError;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 pub struct VotingService;
 
@@ -21,25 +21,13 @@ pub enum VotingError {
 }
 
 #[derive(CandidType, Deserialize)]
-pub enum SingleChoiceVote {
-    AsGroupMember(SharesInfo),
-    AsProfileOwner,
-}
-
-#[derive(CandidType, Deserialize)]
-pub enum MultiChoiceVote {
-    AsGroupMember(MultiChoiceVoteAsGroupMember),
-    AsProfileOwner(MultiChoiceVoteAsProfileOwner),
-}
-
-#[derive(CandidType, Deserialize)]
-pub struct MultiChoiceVoteAsGroupMember {
+pub struct SingleChoiceVote {
     pub shares_info: SharesInfo,
-    pub vote: BTreeMap<ChoiceId, Fraction>,
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct MultiChoiceVoteAsProfileOwner {
+pub struct MultiChoiceVote {
+    pub shares_info: SharesInfo,
     pub vote: BTreeMap<ChoiceId, Fraction>,
 }
 

@@ -1,10 +1,9 @@
 use crate::repository::token::model::Token;
-use crate::repository::token::types::{ChoiceOrGroup, TokenFilter, TokenId};
+use crate::repository::token::types::{TokenFilter, TokenId};
 use crate::Principal;
 use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
-use shared::types::wallet::{ChoiceId, GroupId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 pub mod model;

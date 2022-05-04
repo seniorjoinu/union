@@ -22,7 +22,7 @@ impl Repository<Voting, VotingId, (), ()> for VotingRepository {
             it._init_id(self.id_gen.generate());
             self.add_to_index(&it);
         }
-        
+
         let id = it.get_id().unwrap();
         self.votings.insert(id, it);
 
@@ -32,7 +32,7 @@ impl Repository<Voting, VotingId, (), ()> for VotingRepository {
     fn delete(&mut self, id: &VotingId) -> Option<Voting> {
         let it = self.votings.remove(id)?;
         self.remove_from_index(&it);
-        
+
         Some(it)
     }
 
@@ -56,12 +56,18 @@ impl VotingRepository {
             false
         }
     }
-    
+
     fn add_to_index(&mut self, voting: &Voting) {
-        self.votings_by_voting_config_index.entry(*voting.get_voting_config_id()).or_default().insert(voting.get_id().unwrap());
+        self.votings_by_voting_config_index
+            .entry(*voting.get_voting_config_id())
+            .or_default()
+            .insert(voting.get_id().unwrap());
     }
-    
+
     fn remove_from_index(&mut self, voting: &Voting) {
-        self.votings_by_voting_config_index.get_mut(voting.get_voting_config_id()).unwrap().remove(&voting.get_id().unwrap());
+        self.votings_by_voting_config_index
+            .get_mut(voting.get_voting_config_id())
+            .unwrap()
+            .remove(&voting.get_id().unwrap());
     }
 }

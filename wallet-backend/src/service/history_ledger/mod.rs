@@ -1,8 +1,9 @@
 use crate::settings::Settings;
-use candid::Principal;
-use history_ledger_client::api::GetSharesInfoOfAtRequest;
+use candid::{Principal, CandidType, Deserialize};
+use history_ledger_client::api::{GetSharesInfoOfAtRequest, ListProgramExecutionEntryIdsRequest, ProgramExecutionFilter};
 use history_ledger_client::client::IHistoryLedger;
 use shared::candid::CandidRejectionCode;
+use shared::pageable::{Page, PageRequest};
 use shared::types::history_ledger::SharesInfo;
 use shared::types::wallet::GroupId;
 
@@ -10,8 +11,6 @@ use shared::types::wallet::GroupId;
 pub enum HistoryLedgerError {
     NetworkError(CandidRejectionCode, String),
 }
-
-// TODO: add calls made with access_configs
 
 pub struct HistoryLedgerService;
 
@@ -29,6 +28,18 @@ impl HistoryLedgerService {
             .map_err(|(code, msg)| HistoryLedgerError::NetworkError(code, msg))?;
 
         Ok(resp.info_opt)
+    }
+    
+    pub async fn list_program_execution_entry_ids(page_req: PageRequest<ProgramExecutionFilter, ()>) -> Result<(Page<u64>, Principal), HistoryLedgerError> {
+        // TODO: make it efficiently search through ledgers
+        let history_ledger = **Settings::get().get_history_ledgers().first().unwrap();
+        
+        let resp = history_ledger
+            .list_program_execution_entry_ids(ListProgramExecutionEntryIdsRequest { page_req })
+            .await
+            .map_err(|(code, msg)| HistoryLedgerError::NetworkError(code, msg))?;
+        
+        Ok((resp.page, history_ledger))
     }
 }
 

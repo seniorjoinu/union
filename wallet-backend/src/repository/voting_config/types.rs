@@ -4,7 +4,7 @@ use bigdecimal::{BigDecimal, ToPrimitive};
 use candid::types::{Serializer, Type};
 use candid::{CandidType, Deserialize, Nat};
 use serde::Deserializer;
-use shared::types::wallet::{GroupOrProfile, Shares};
+use shared::types::wallet::{GroupId, Shares};
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{Div, Mul};
 use std::str::FromStr;
@@ -88,23 +88,23 @@ pub enum ThresholdValue {
 }
 
 impl ThresholdValue {
-    pub fn list_groups_and_profiles(&self) -> BTreeSet<GroupOrProfile> {
+    pub fn list_groups(&self) -> BTreeSet<GroupId> {
         let mut result = BTreeSet::new();
 
-        self._list_groups_and_profiles(&mut result);
+        self._list_groups(&mut result);
 
         result
     }
 
     pub fn is_reached(
         &self,
-        total: &BTreeMap<GroupOrProfile, Shares>,
-        voted: &BTreeMap<GroupOrProfile, Shares>,
+        total: &BTreeMap<GroupId, Shares>,
+        voted: &BTreeMap<GroupId, Shares>,
     ) -> bool {
         let (voted_shares, total_shares) = match self.get_target() {
-            Target::GroupOrProfile(gop) => {
-                let voted_shares = voted.get(gop).cloned().unwrap_or_default();
-                let total_shares = total.get(gop).cloned().unwrap_or_default();
+            Target::Group(group_id) => {
+                let voted_shares = voted.get(group_id).cloned().unwrap_or_default();
+                let total_shares = total.get(group_id).cloned().unwrap_or_default();
 
                 (voted_shares, total_shares)
             }
@@ -133,14 +133,14 @@ impl ThresholdValue {
         }
     }
 
-    fn _list_groups_and_profiles(&self, list: &mut BTreeSet<GroupOrProfile>) {
+    fn _list_groups(&self, list: &mut BTreeSet<GroupId>) {
         match self.get_target() {
-            Target::GroupOrProfile(r) => {
+            Target::Group(r) => {
                 list.insert(*r);
             }
             Target::Thresholds(t) => {
                 for it in t {
-                    it._list_groups_and_profiles(list);
+                    it._list_groups(list);
                 }
             }
         }
@@ -169,7 +169,7 @@ pub struct FractionOf {
 #[derive(Clone, CandidType, Deserialize)]
 pub enum Target {
     Thresholds(Vec<ThresholdValue>),
-    GroupOrProfile(GroupOrProfile),
+    Group(GroupId),
 }
 
 #[derive(Clone, CandidType, Deserialize)]
@@ -195,6 +195,6 @@ impl LenInterval {
 
 #[derive(CandidType, Deserialize)]
 pub struct VotingConfigFilter {
-    pub group_or_profile: Option<GroupOrProfile>,
+    pub group: Option<GroupId>,
     pub permission: Option<PermissionId>,
 }

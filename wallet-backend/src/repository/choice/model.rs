@@ -6,7 +6,7 @@ use crate::repository::token::types::TokenId;
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
 use shared::remote_call::Program;
-use shared::types::wallet::{ChoiceId, GroupOrProfile, VotingId};
+use shared::types::wallet::{ChoiceId, GroupId, VotingId};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeMap;
 
@@ -17,7 +17,7 @@ pub struct Choice {
     name: String,
     description: String,
     program: Program,
-    voting_power_by_gop: BTreeMap<GroupOrProfile, TokenId>,
+    voting_power_by_group: BTreeMap<GroupId, TokenId>,
 }
 
 impl Choice {
@@ -33,7 +33,7 @@ impl Choice {
             name: Self::process_name(name)?,
             description: Self::process_description(description)?,
             program,
-            voting_power_by_gop: BTreeMap::new(),
+            voting_power_by_group: BTreeMap::new(),
         })
     }
 
@@ -78,17 +78,17 @@ impl Choice {
         Ok(())
     }
 
-    pub fn set_shares_by_gop_token(&mut self, gop: GroupOrProfile, token_id: TokenId) {
-        assert!(!self.voting_power_by_gop.contains_key(&gop));
-        self.voting_power_by_gop.insert(gop, token_id);
+    pub fn set_shares_by_group_token(&mut self, group_id: GroupId, token_id: TokenId) {
+        assert!(!self.voting_power_by_group.contains_key(&group_id));
+        self.voting_power_by_group.insert(group_id, token_id);
     }
 
-    pub fn get_shares_by_gop_token(&self, gop: &GroupOrProfile) -> Option<&TokenId> {
-        self.voting_power_by_gop.get(gop)
+    pub fn get_shares_by_group_token(&self, group_id: &GroupId) -> Option<&TokenId> {
+        self.voting_power_by_group.get(group_id)
     }
 
-    pub fn list_tokens_by_gop(&self) -> &BTreeMap<GroupOrProfile, TokenId> {
-        &self.voting_power_by_gop
+    pub fn list_tokens_by_group(&self) -> &BTreeMap<GroupId, TokenId> {
+        &self.voting_power_by_group
     }
 
     pub fn get_voting_id(&self) -> &VotingId {

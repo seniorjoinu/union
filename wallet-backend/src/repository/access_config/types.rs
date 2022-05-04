@@ -1,9 +1,6 @@
 use crate::repository::permission::types::PermissionId;
 use candid::{CandidType, Deserialize};
-use shared::mvc::Id;
-use shared::types::wallet::{GroupId, GroupOrProfile, ProfileId, Shares};
-
-pub type AccessConfigId = Id;
+use shared::types::wallet::{GroupId, ProfileId, Shares};
 
 pub const QUERY_CONFIG_NAME_MIN_LEN: usize = 1;
 pub const QUERY_CONFIG_NAME_MAX_LEN: usize = 200;
@@ -23,18 +20,9 @@ pub enum AlloweeConstraint {
     Profile(ProfileId),
 }
 
-impl AlloweeConstraint {
-    pub fn to_group_or_profile(&self) -> Option<GroupOrProfile> {
-        match &self {
-            AlloweeConstraint::Everyone => None,
-            AlloweeConstraint::Group(g) => Some(GroupOrProfile::Group(g.id)),
-            AlloweeConstraint::Profile(p) => Some(GroupOrProfile::Profile(*p)),
-        }
-    }
-}
-
 #[derive(CandidType, Deserialize)]
 pub struct AccessConfigFilter {
     pub permission: Option<PermissionId>,
-    pub group_or_profile: Option<GroupOrProfile>,
+    pub group: Option<GroupId>,
+    pub profile: Option<ProfileId>,
 }

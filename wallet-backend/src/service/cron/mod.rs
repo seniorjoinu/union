@@ -6,10 +6,10 @@ use crate::service::voting::types::VotingService;
 use crate::{cron_enqueue, cron_ready_tasks};
 use candid::{CandidType, Deserialize};
 use ic_cdk::api::time;
-use ic_cdk::{print, spawn};
-use ic_cron::types::{Iterations, SchedulingOptions, TaskId};
+use ic_cdk::spawn;
+use ic_cron::types::{Iterations, SchedulingOptions};
 use shared::mvc::{HasRepository, Model, Repository};
-use shared::types::wallet::VotingId;
+use shared::types::wallet::{ProgramExecutedWith, VotingId};
 
 #[derive(CandidType, Deserialize)]
 pub enum CronTaskKind {
@@ -104,7 +104,15 @@ impl CronService {
                             let program = choice.get_program().clone();
                             let result = program.execute().await;
 
-                            EventsService::emit_program_executed_event(program, result, timestamp)
+                            EventsService::emit_program_executed_event(
+                                voting.get_proposer(),
+                                ProgramExecutedWith::WithVotingConfig(
+                                    *voting.get_voting_config_id(),
+                                ),
+                                program,
+                                result,
+                                timestamp,
+                            );
                         }
                     }
                 }),

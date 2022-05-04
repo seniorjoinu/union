@@ -1,7 +1,6 @@
 use crate::repository::group::model::Group;
 use crate::repository::permission::model::Permission;
 use crate::repository::permission::types::PermissionId;
-use crate::repository::profile::model::Profile;
 use crate::repository::voting_config::model::VotingConfig;
 use crate::repository::voting_config::types::{
     Fraction, FractionOf, QuantityOf, RoundSettings, Target, ThresholdValue,
@@ -14,7 +13,7 @@ use crate::service::voting_config::types::{
 use shared::mvc::{HasRepository, Repository};
 use shared::remote_call::Program;
 use shared::time::hours;
-use shared::types::wallet::{GroupOrProfile, Shares, VotingConfigId};
+use shared::types::wallet::{GroupId, Shares, VotingConfigId};
 use std::collections::BTreeSet;
 
 pub mod crud;
@@ -29,11 +28,11 @@ impl VotingConfigService {
             None,
             vec![ALLOW_ALL_PERMISSION_ID].into_iter().collect(),
             RoundSettings { round_duration: hours(1), round_delay: 0 },
-            ThresholdValue::QuantityOf(QuantityOf { quantity: Shares::from(0), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
-            ThresholdValue::FractionOf(FractionOf { fraction: Fraction::from(1), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
-            ThresholdValue::QuantityOf(QuantityOf { quantity: Shares::from(1), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
-            ThresholdValue::FractionOf(FractionOf { fraction: Fraction::from(1), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
-            ThresholdValue::FractionOf(FractionOf { fraction: Fraction::from(1), target: Target::GroupOrProfile(GroupOrProfile::Group(HAS_PROFILE_GROUP_ID)) }),
+            ThresholdValue::QuantityOf(QuantityOf { quantity: Shares::from(0), target: Target::Group(HAS_PROFILE_GROUP_ID) }),
+            ThresholdValue::FractionOf(FractionOf { fraction: Fraction::from(1), target: Target::Group(HAS_PROFILE_GROUP_ID) }),
+            ThresholdValue::QuantityOf(QuantityOf { quantity: Shares::from(1), target: Target::Group(HAS_PROFILE_GROUP_ID) }),
+            ThresholdValue::FractionOf(FractionOf { fraction: Fraction::from(1), target: Target::Group(HAS_PROFILE_GROUP_ID) }),
+            ThresholdValue::FractionOf(FractionOf { fraction: Fraction::from(1), target: Target::Group(HAS_PROFILE_GROUP_ID) }),
         ).unwrap();
 
         assert_eq!(id, DEFAULT_VOTING_CONFIG_ID);
@@ -65,26 +64,16 @@ impl VotingConfigService {
         for id in permissions {
             Permission::repo()
                 .get(id)
-                .ok_or(VotingConfigError::PermissionNotExists(*id))?;
+                .ok_or(VotingConfigError::PermissionDoesntExist(*id))?;
         }
 
         Ok(())
     }
 
-    fn assert_gop_exists(gop: &GroupOrProfile) -> Result<(), VotingConfigError> {
-        match gop {
-            GroupOrProfile::Group(g) => {
-                Group::repo()
-                    .get(g)
-                    .ok_or(VotingConfigError::GroupNotExists(*g))?;
-            }
-            GroupOrProfile::Profile(p) => {
-                Profile::repo()
-                    .get(p)
-                    .ok_or(VotingConfigError::ProfileNotExists(*p))?;
-            }
-        };
-
-        Ok(())
+    fn assert_group_exists(group_id: &GroupId) -> Result<(), VotingConfigError> {
+        Group::repo()
+            .get(group_id)
+            .map(|it| ())
+            .ok_or(VotingConfigError::GroupDoesntExist(*group_id))
     }
 }

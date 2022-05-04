@@ -1,16 +1,19 @@
 use crate::emit;
 use candid::Principal;
 use shared::remote_call::{Program, ProgramExecutionResult};
-use shared::types::wallet::{GroupId, PrincipalShareholder, ProfileActivatedEvent, ProfileCreatedEvent, ProgramExecutedEvent_1, ProgramExecutedEvent_2, Shareholder, Shares, SharesMoveEvent};
+use shared::types::wallet::{GroupId, PrincipalShareholder, ProfileActivatedEvent, ProfileCreatedEvent, ProgramExecutedEvent_0, ProgramExecutedEvent_1, ProgramExecutedEvent_2, ProgramExecutedWith, Shareholder, Shares, SharesMoveEvent};
 
 pub struct EventsService;
 
 impl EventsService {
     pub fn emit_program_executed_event(
+        initiator: Principal,
+        with: ProgramExecutedWith,
         program: Program,
         result: ProgramExecutionResult,
         timestamp: u64,
     ) {
+        emit(ProgramExecutedEvent_0 { timestamp, initiator, with });
         emit(ProgramExecutedEvent_1 { timestamp, program });
         emit(ProgramExecutedEvent_2 { timestamp, result })
     }
@@ -78,20 +81,20 @@ impl EventsService {
             }),
             from: Shareholder::Principal(PrincipalShareholder {
                 principal_id: from,
-                new_balance: from_new_balance
+                new_balance: from_new_balance,
             }),
         })
     }
-    
+
     pub fn emit_profile_created_event(owner: Principal) {
         emit(ProfileCreatedEvent {
-            profile_owner: owner
+            profile_owner: owner,
         });
     }
-    
+
     pub fn emit_profile_activated_event(owner: Principal) {
         emit(ProfileActivatedEvent {
-            profile_owner: owner
+            profile_owner: owner,
         });
     }
 }

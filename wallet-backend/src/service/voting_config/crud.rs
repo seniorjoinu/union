@@ -26,23 +26,23 @@ impl VotingConfigService {
     ) -> Result<VotingConfigId, VotingConfigError> {
         VotingConfigService::assert_permissions_exist(&permissions)?;
 
-        for gop in approval.list_groups_and_profiles() {
+        for gop in approval.list_groups() {
             VotingConfigService::assert_gop_exists(&gop)?;
         }
 
-        for gop in rejection.list_groups_and_profiles() {
+        for gop in rejection.list_groups() {
             VotingConfigService::assert_gop_exists(&gop)?;
         }
 
-        for gop in quorum.list_groups_and_profiles() {
+        for gop in quorum.list_groups() {
             VotingConfigService::assert_gop_exists(&gop)?;
         }
 
-        for gop in win.list_groups_and_profiles() {
+        for gop in win.list_groups() {
             VotingConfigService::assert_gop_exists(&gop)?;
         }
 
-        for gop in next_round.list_groups_and_profiles() {
+        for gop in next_round.list_groups() {
             VotingConfigService::assert_gop_exists(&gop)?;
         }
 
@@ -85,31 +85,31 @@ impl VotingConfigService {
         }
 
         if let Some(approval) = &approval_opt {
-            for gop in approval.list_groups_and_profiles() {
+            for gop in approval.list_groups() {
                 VotingConfigService::assert_gop_exists(&gop)?;
             }
         }
 
         if let Some(rejection) = &rejection_opt {
-            for gop in rejection.list_groups_and_profiles() {
+            for gop in rejection.list_groups() {
                 VotingConfigService::assert_gop_exists(&gop)?;
             }
         }
 
         if let Some(quorum) = &quorum_opt {
-            for gop in quorum.list_groups_and_profiles() {
+            for gop in quorum.list_groups() {
                 VotingConfigService::assert_gop_exists(&gop)?;
             }
         }
 
         if let Some(win) = &win_opt {
-            for gop in win.list_groups_and_profiles() {
+            for gop in win.list_groups() {
                 VotingConfigService::assert_gop_exists(&gop)?;
             }
         }
 
         if let Some(next_round) = &next_round_opt {
-            for gop in next_round.list_groups_and_profiles() {
+            for gop in next_round.list_groups() {
                 VotingConfigService::assert_gop_exists(&gop)?;
             }
         }

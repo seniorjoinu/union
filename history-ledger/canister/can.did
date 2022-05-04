@@ -2,6 +2,8 @@ type Id = nat64;
 
 // ------------------ SHARES MOVE --------------------
 
+type VotingConfigId = Id;
+type AccessConfigId = Id;
 type GroupId = Id;
 type Shares = nat;
 
@@ -31,10 +33,16 @@ type RemoteCallEndpoint = record {
     method_name : text;
 };
 
+type ProgramExecutionFilter = record {
+    from_timestamp : opt nat64;
+    to_timestamp : opt nat64;
+    endpoint : opt RemoteCallEndpoint;
+};
+
 type PageRequest = record {
     page_index : nat32;
     page_size : nat32;
-    filter : empty;
+    filter : ProgramExecutionFilter;
     sort : empty;
 };
 
@@ -87,12 +95,26 @@ type ListProgramExecutionEntryIdsResponse = record {
     page : Page;
 };
 
+type GetProgramExecutionEntryMetaRequest = record {
+    id : nat64;
+};
+
+type ProgramExecutedWith = variant {
+    WithAccessConfig : AccessConfigId;
+    WithVotingConfig : VotingConfigId;
+};
+
+type GetProgramExecutionEntryMetaResponse = record {
+    initiator : principal;
+    program_executed_with : ProgramExecutedWith;
+};
+
 type GetProgramExecutionEntryProgramRequest = record {
     id : nat64;
 };
 
 type GetProgramExecutionEntryProgramResponse = record {
-    program : Program;
+    program : opt Program;
 };
 
 type GetProgramExecutionEntryResultRequest = record {
@@ -111,6 +133,7 @@ service : (principal) -> {
 
     // ----------------- PROGRAM EXECUTION ----------------
     "list_program_execution_entry_ids" : (ListProgramExecutionEntryIdsRequest) -> (ListProgramExecutionEntryIdsResponse) query;
+    "get_program_execution_entry_meta" : (GetProgramExecutionEntryMetaRequest) -> (GetProgramExecutionEntryMetaResponse) query;
     "get_program_execution_entry_program" : (GetProgramExecutionEntryProgramRequest) -> (GetProgramExecutionEntryProgramResponse) query;
     "get_program_execution_entry_result" : (GetProgramExecutionEntryResultRequest) -> (GetProgramExecutionEntryResultResponse) query;
 }

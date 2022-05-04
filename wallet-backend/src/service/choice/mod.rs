@@ -5,7 +5,7 @@ use crate::service::choice::types::{ChoiceError, ChoiceService};
 use crate::service::token::types::TokenService;
 use candid::Principal;
 use shared::mvc::{HasRepository, Model, Repository};
-use shared::types::wallet::{ChoiceId, GroupOrProfile, Shares, VotingId};
+use shared::types::wallet::{ChoiceId, GroupId, Shares, VotingId};
 use std::collections::BTreeMap;
 
 pub mod crud;
@@ -25,16 +25,16 @@ impl ChoiceService {
         }
     }
 
-    pub fn get_token_for_gop(choice: &mut Choice, gop: GroupOrProfile) -> Token {
-        let token_id = if let Some(token_id) = choice.get_shares_by_gop_token(&gop) {
+    pub fn get_token_for_group(choice: &mut Choice, group_id: GroupId) -> Token {
+        let token_id = if let Some(token_id) = choice.get_shares_by_group_token(&group_id) {
             *token_id
         } else {
             let token_id = TokenService::create_token(
-                ChoiceOrGroup::Choice(choice.get_id().unwrap(), gop),
+                ChoiceOrGroup::Choice(choice.get_id().unwrap(), group_id),
                 false,
                 false,
             );
-            choice.set_shares_by_gop_token(gop, token_id);
+            choice.set_shares_by_group_token(group_id, token_id);
 
             token_id
         };
@@ -42,9 +42,9 @@ impl ChoiceService {
         Token::repo().get(&token_id).unwrap()
     }
 
-    pub fn list_total_voted_shares_by_gop(choice: &Choice) -> BTreeMap<GroupOrProfile, Shares> {
+    pub fn list_total_voted_shares_by_group(choice: &Choice) -> BTreeMap<GroupId, Shares> {
         choice
-            .list_tokens_by_gop()
+            .list_tokens_by_group()
             .iter()
             .map(|(gop, token_id)| {
                 let token = Token::repo().get(token_id).unwrap();

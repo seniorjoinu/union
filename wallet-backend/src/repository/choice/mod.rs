@@ -24,13 +24,13 @@ impl Repository<Choice, ChoiceId, ChoiceFilter, ()> for ChoiceRepository {
         }
 
         let id = it.get_id().unwrap();
-        
+
         self.choices_by_voting_index
             .entry(*it.get_voting_id())
             .or_default()
             .insert(id);
         self.choices.insert(id, it);
-        
+
         id
     }
 

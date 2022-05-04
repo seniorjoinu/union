@@ -3,11 +3,11 @@ use crate::repository::voting::model::Voting;
 use crate::repository::voting_config::model::VotingConfig;
 use crate::service::choice::types::ChoiceService;
 use crate::service::voting::types::{VotingError, VotingService};
+use crate::CronService;
 use candid::Principal;
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::{VotingConfigId, VotingId};
-use crate::CronService;
 
 impl VotingService {
     pub fn create_voting(
@@ -51,7 +51,7 @@ impl VotingService {
         timestamp: u64,
     ) -> Result<(), VotingError> {
         let mut voting = VotingService::get_voting(id)?;
-        
+
         // unwrapping because it should exist if it is listed
         let vc = VotingConfig::repo()
             .get(&voting.get_voting_config_id())
@@ -65,7 +65,7 @@ impl VotingService {
             .update(new_name, new_description, new_winners_need, timestamp)
             .map_err(VotingError::ValidationError)?;
         Voting::repo().save(voting);
-        
+
         Ok(())
     }
 
@@ -83,12 +83,16 @@ impl VotingService {
             .unwrap();
         Choice::repo().delete(voting.get_approval_choice()).unwrap();
 
-        for choice in voting.get_losers() {
-            Choice::repo().delete(choice).unwrap();
+        for result in voting.get_losers() {
+            for choice in result.get_choices() {
+                Choice::repo().delete(choice).unwrap();
+            }
         }
 
-        for choice in voting.get_winners() {
-            Choice::repo().delete(choice).unwrap();
+        for result in voting.get_winners() {
+            for choice in result.get_choices() {
+                Choice::repo().delete(choice).unwrap();
+            }
         }
 
         for choice in voting.get_choices() {
@@ -97,12 +101,14 @@ impl VotingService {
 
         Ok(())
     }
-    
+
     #[inline(always)]
     pub fn get_voting(id: &VotingId) -> Result<Voting, VotingError> {
-        Voting::repo().get(id).ok_or(VotingError::VotingNotFound(*id))
+        Voting::repo()
+            .get(id)
+            .ok_or(VotingError::VotingNotFound(*id))
     }
-    
+
     #[inline(always)]
     pub fn list_votings(page_req: &PageRequest<(), ()>) -> Page<Voting> {
         Voting::repo().list(page_req)

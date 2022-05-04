@@ -1,5 +1,5 @@
 use crate::controller::settings::api::{GetSettingsResponse, UpdateSettingsRequest};
-use crate::guards::only_self_or_with_access;
+use crate::guards::{only_self, only_self_or_with_access};
 use crate::settings::Settings;
 use ic_cdk_macros::{query, update};
 
@@ -7,7 +7,7 @@ pub mod api;
 
 #[update]
 fn update_settings(req: UpdateSettingsRequest) {
-    only_self_or_with_access("update_settings");
+    only_self();
     
     Settings::get()
         .update(req.new_name, req.new_description)
