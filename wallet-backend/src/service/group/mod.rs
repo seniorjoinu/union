@@ -91,14 +91,14 @@ impl GroupService {
             .burn(owner, qty.clone())
             .map_err(GroupError::ValidationError)?;
 
-        Token::repo().save(token);
-
         let new_balance = token.balance_of(&owner);
         let total_supply = token.total_supply();
 
         if new_balance.clone() + token.unaccepted_balance_of(&owner) == Shares::default() {
             Token::repo().remove_from_principal_index(&owner, &token.get_id().unwrap());
         }
+
+        Token::repo().save(token);
 
         EventsService::emit_shares_burn_event(
             group_id,
@@ -137,8 +137,6 @@ impl GroupService {
             .transfer(from, to, qty.clone())
             .map_err(GroupError::ValidationError)?;
 
-        Token::repo().save(token);
-
         let from_unaccepted_balance = token.unaccepted_balance_of(&from);
         let from_balance = token.balance_of(&from);
         let to_unaccepted_balance = token.unaccepted_balance_of(&to);
@@ -153,6 +151,8 @@ impl GroupService {
         }
 
         let total_supply = token.total_supply();
+
+        Token::repo().save(token);
 
         EventsService::emit_shares_transfer_event(
             group.get_id().unwrap(),
@@ -185,10 +185,10 @@ impl GroupService {
             .accept(owner, qty.clone())
             .map_err(GroupError::ValidationError)?;
 
-        Token::repo().save(token);
-
         let balance = token.balance_of(&owner);
         let total_supply = token.total_supply();
+
+        Token::repo().save(token);
 
         EventsService::emit_shares_mint_event(
             group.get_id().unwrap(),
@@ -228,7 +228,7 @@ impl GroupService {
 
         Ok(())
     }
-    
+
     pub fn get_groups_of(caller: &Principal) -> Vec<Group> {
         Token::repo()
             .get_tokens_by_principal(caller)
@@ -329,7 +329,7 @@ impl GroupService {
     }
 
     pub fn get_token(group: &Group) -> Token {
-        Token::repo().get(group.get_token()).unwrap()
+        Token::repo().get(&group.get_token()).unwrap()
     }
 
     fn assert_private(group: &Group) -> Result<(), GroupError> {

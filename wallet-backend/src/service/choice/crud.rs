@@ -60,7 +60,7 @@ impl ChoiceService {
     ) -> Result<(), ChoiceError> {
         let mut choice = ChoiceService::get_choice(choice_id)?;
 
-        let mut voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
+        let voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
         let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
 
         if !VotingService::is_editable(&voting) {
@@ -84,24 +84,20 @@ impl ChoiceService {
         Ok(())
     }
 
-    pub fn delete_choice(
-        choice_id: &ChoiceId,
-        voting_id: &VotingId,
-    ) -> Result<(), ChoiceError> {
-        let mut choice = ChoiceService::get_choice(choice_id)?;
+    pub fn delete_choice(choice_id: &ChoiceId, voting_id: &VotingId) -> Result<(), ChoiceError> {
+        let choice = ChoiceService::get_choice(choice_id)?;
 
         if choice.get_voting_id() != voting_id {
             return Err(ChoiceError::ChoiceNotFound(*choice_id));
         }
 
-        let mut voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
-        let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
+        let voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
 
         if !VotingService::is_editable(&voting) {
             return Err(ChoiceError::UnableToEditVoting(*choice.get_voting_id()));
         }
 
-        for (gop, token_id) in choice.list_tokens_by_group() {
+        for (_, token_id) in choice.list_tokens_by_group() {
             Token::repo().delete(token_id).unwrap();
         }
 

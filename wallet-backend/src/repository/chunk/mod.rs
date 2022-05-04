@@ -63,7 +63,7 @@ impl ChunkRepository {
     pub fn delete_all_by_batch(&mut self, batch_id: &BatchId) {
         if let Some(index) = self.chunks_by_batch_index.remove(batch_id) {
             for id in index {
-                self.chunks.remove(batch_id);
+                self.chunks.remove(&id);
             }
         }
     }

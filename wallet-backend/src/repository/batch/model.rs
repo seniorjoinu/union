@@ -1,7 +1,6 @@
 use crate::repository::batch::types::{BatchId, Key};
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
-use shared::validation::ValidationError;
 
 #[derive(Clone, Default, CandidType, Deserialize)]
 pub struct Batch {

@@ -212,12 +212,12 @@ impl Voting {
         &self.choices
     }
 
-    pub fn get_approval_choice(&self) -> &ChoiceId {
-        &self.approval_choice.unwrap()
+    pub fn get_approval_choice(&self) -> ChoiceId {
+        self.approval_choice.unwrap()
     }
 
-    pub fn get_rejection_choice(&self) -> &ChoiceId {
-        &self.rejection_choice.unwrap()
+    pub fn get_rejection_choice(&self) -> ChoiceId {
+        self.rejection_choice.unwrap()
     }
 
     pub fn get_total_voting_power_by_group(&self) -> &BTreeMap<GroupId, Shares> {

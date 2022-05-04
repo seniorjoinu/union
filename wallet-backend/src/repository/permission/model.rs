@@ -79,17 +79,17 @@ impl Permission {
     fn is_target(&self, endpoint_opt: Option<RemoteCallEndpoint>) -> bool {
         match endpoint_opt {
             Some(endpoint) => {
-                let target = PermissionTarget::Endpoint(endpoint);
+                let target = PermissionTarget::Endpoint(endpoint.clone());
                 let mut is_target = false;
 
                 if self.targets.contains(&target) {
                     is_target = true;
-                }
+                } else {
+                    let wildcard_target = PermissionTarget::Endpoint(endpoint.to_wildcard());
 
-                let canister_target = target.to_canister().unwrap();
-
-                if self.targets.contains(&canister_target) {
-                    is_target = true;
+                    if self.targets.contains(&wildcard_target) {
+                        is_target = true;
+                    }
                 }
 
                 is_target

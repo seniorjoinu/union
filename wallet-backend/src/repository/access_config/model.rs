@@ -1,10 +1,11 @@
 use crate::repository::access_config::types::{
-    AccessConfigId, AlloweeConstraint, QUERY_CONFIG_DESCRIPTION_MAX_LEN,
-    QUERY_CONFIG_DESCRIPTION_MIN_LEN, QUERY_CONFIG_NAME_MAX_LEN, QUERY_CONFIG_NAME_MIN_LEN,
+    AlloweeConstraint, QUERY_CONFIG_DESCRIPTION_MAX_LEN, QUERY_CONFIG_DESCRIPTION_MIN_LEN,
+    QUERY_CONFIG_NAME_MAX_LEN, QUERY_CONFIG_NAME_MIN_LEN,
 };
 use crate::repository::permission::types::PermissionId;
 use candid::{CandidType, Deserialize};
 use shared::mvc::Model;
+use shared::types::wallet::AccessConfigId;
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
 

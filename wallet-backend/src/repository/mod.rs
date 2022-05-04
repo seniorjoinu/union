@@ -1,5 +1,5 @@
 use crate::repository::access_config::model::AccessConfig;
-use crate::repository::access_config::types::{AccessConfigFilter, AccessConfigId};
+use crate::repository::access_config::types::AccessConfigFilter;
 use crate::repository::access_config::AccessConfigRepository;
 use crate::repository::batch::model::Batch;
 use crate::repository::batch::types::BatchId;
@@ -27,7 +27,9 @@ use crate::repository::voting_config::types::VotingConfigFilter;
 use crate::repository::voting_config::VotingConfigRepository;
 use candid::{CandidType, Deserialize};
 use shared::mvc::HasRepository;
-use shared::types::wallet::{ChoiceId, GroupId, ProfileId, VotingConfigId, VotingId};
+use shared::types::wallet::{
+    AccessConfigId, ChoiceId, GroupId, ProfileId, VotingConfigId, VotingId,
+};
 
 pub mod access_config;
 pub mod batch;

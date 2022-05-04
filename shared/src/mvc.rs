@@ -3,6 +3,8 @@ use candid::{CandidType, Deserialize};
 
 pub type Id = u64;
 
+pub const ZERO_ID: Id = 0;
+
 #[derive(Debug, Default, Copy, Clone, CandidType, Deserialize)]
 pub struct IdGenerator {
     cur_id: Id,

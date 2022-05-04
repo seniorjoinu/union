@@ -26,24 +26,24 @@ impl VotingConfigService {
     ) -> Result<VotingConfigId, VotingConfigError> {
         VotingConfigService::assert_permissions_exist(&permissions)?;
 
-        for gop in approval.list_groups() {
-            VotingConfigService::assert_gop_exists(&gop)?;
+        for group in approval.list_groups() {
+            VotingConfigService::assert_group_exists(&group)?;
         }
 
-        for gop in rejection.list_groups() {
-            VotingConfigService::assert_gop_exists(&gop)?;
+        for group in rejection.list_groups() {
+            VotingConfigService::assert_group_exists(&group)?;
         }
 
-        for gop in quorum.list_groups() {
-            VotingConfigService::assert_gop_exists(&gop)?;
+        for group in quorum.list_groups() {
+            VotingConfigService::assert_group_exists(&group)?;
         }
 
-        for gop in win.list_groups() {
-            VotingConfigService::assert_gop_exists(&gop)?;
+        for group in win.list_groups() {
+            VotingConfigService::assert_group_exists(&group)?;
         }
 
-        for gop in next_round.list_groups() {
-            VotingConfigService::assert_gop_exists(&gop)?;
+        for group in next_round.list_groups() {
+            VotingConfigService::assert_group_exists(&group)?;
         }
 
         let vc = VotingConfig::new(
@@ -85,32 +85,32 @@ impl VotingConfigService {
         }
 
         if let Some(approval) = &approval_opt {
-            for gop in approval.list_groups() {
-                VotingConfigService::assert_gop_exists(&gop)?;
+            for group in approval.list_groups() {
+                VotingConfigService::assert_group_exists(&group)?;
             }
         }
 
         if let Some(rejection) = &rejection_opt {
-            for gop in rejection.list_groups() {
-                VotingConfigService::assert_gop_exists(&gop)?;
+            for group in rejection.list_groups() {
+                VotingConfigService::assert_group_exists(&group)?;
             }
         }
 
         if let Some(quorum) = &quorum_opt {
-            for gop in quorum.list_groups() {
-                VotingConfigService::assert_gop_exists(&gop)?;
+            for group in quorum.list_groups() {
+                VotingConfigService::assert_group_exists(&group)?;
             }
         }
 
         if let Some(win) = &win_opt {
-            for gop in win.list_groups() {
-                VotingConfigService::assert_gop_exists(&gop)?;
+            for group in win.list_groups() {
+                VotingConfigService::assert_group_exists(&group)?;
             }
         }
 
         if let Some(next_round) = &next_round_opt {
-            for gop in next_round.list_groups() {
-                VotingConfigService::assert_gop_exists(&gop)?;
+            for group in next_round.list_groups() {
+                VotingConfigService::assert_group_exists(&group)?;
             }
         }
 
@@ -129,7 +129,8 @@ impl VotingConfigService {
             win_opt,
             next_round_opt,
         )
-        .map_err(VotingConfigError::ValidationError);
+        .map_err(VotingConfigError::ValidationError)?;
+
         VotingConfig::repo().save(vc);
 
         Ok(())

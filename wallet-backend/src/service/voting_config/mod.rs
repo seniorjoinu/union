@@ -73,7 +73,7 @@ impl VotingConfigService {
     fn assert_group_exists(group_id: &GroupId) -> Result<(), VotingConfigError> {
         Group::repo()
             .get(group_id)
-            .map(|it| ())
+            .map(|_| ())
             .ok_or(VotingConfigError::GroupDoesntExist(*group_id))
     }
 }

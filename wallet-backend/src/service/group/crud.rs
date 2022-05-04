@@ -40,7 +40,7 @@ impl GroupService {
             .delete(&group_id)
             .ok_or(GroupError::GroupNotFound(group_id))?;
 
-        let token = Token::repo().delete(group.get_token()).unwrap();
+        let token = Token::repo().delete(&group.get_token()).unwrap();
 
         Ok((group, token))
     }

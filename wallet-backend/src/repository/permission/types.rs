@@ -1,4 +1,4 @@
-use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
+use ic_cdk::export::candid::{CandidType, Deserialize};
 use shared::mvc::Id;
 use shared::remote_call::RemoteCallEndpoint;
 

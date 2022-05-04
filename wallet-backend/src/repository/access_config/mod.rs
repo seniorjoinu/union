@@ -1,12 +1,10 @@
 use crate::repository::access_config::model::AccessConfig;
-use crate::repository::access_config::types::{
-    AccessConfigFilter, AccessConfigId, AlloweeConstraint,
-};
+use crate::repository::access_config::types::{AccessConfigFilter, AlloweeConstraint};
 use crate::repository::permission::types::PermissionId;
 use candid::{CandidType, Deserialize};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
-use shared::types::wallet::{GroupId, ProfileId};
+use shared::types::wallet::{AccessConfigId, GroupId, ProfileId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 pub mod model;

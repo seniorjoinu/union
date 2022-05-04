@@ -1,6 +1,6 @@
 use candid::{CandidType, Deserialize, Principal};
 use shared::mvc::Id;
-use shared::types::wallet::{ChoiceId, GroupId, GroupOrProfile};
+use shared::types::wallet::{ChoiceId, GroupId};
 
 pub type TokenId = Id;
 
@@ -11,6 +11,6 @@ pub struct TokenFilter {
 
 #[derive(Copy, Clone, CandidType, Deserialize)]
 pub enum ChoiceOrGroup {
-    Choice(ChoiceId, GroupOrProfile),
+    Choice(ChoiceId, GroupId),
     Group(GroupId),
 }

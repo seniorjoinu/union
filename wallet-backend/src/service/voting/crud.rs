@@ -70,18 +70,15 @@ impl VotingService {
     }
 
     pub fn delete_voting(id: &VotingId) -> Result<(), VotingError> {
-        let voting = VotingService::get_voting(id)?;
-
-        let vc = VotingConfig::repo()
-            .get(voting.get_voting_config_id())
-            .unwrap();
-
         let voting = Voting::repo().delete(id).unwrap();
 
         Choice::repo()
-            .delete(voting.get_rejection_choice())
+            .delete(&voting.get_rejection_choice())
             .unwrap();
-        Choice::repo().delete(voting.get_approval_choice()).unwrap();
+
+        Choice::repo()
+            .delete(&voting.get_approval_choice())
+            .unwrap();
 
         for result in voting.get_losers() {
             for choice in result.get_choices() {

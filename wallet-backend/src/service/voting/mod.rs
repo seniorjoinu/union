@@ -1,5 +1,4 @@
 use crate::repository::choice::model::Choice;
-use crate::repository::profile::model::Profile;
 use crate::repository::token::model::Token;
 use crate::repository::voting::model::Voting;
 use crate::repository::voting::types::{RoundResult, VotingStatus};
@@ -7,10 +6,7 @@ use crate::repository::voting_config::model::VotingConfig;
 use crate::repository::voting_config::types::Fraction;
 use crate::service::choice::types::ChoiceService;
 use crate::service::cron::CronService;
-use crate::service::group::types::DEFAULT_GROUP_SHARES;
-use crate::service::voting::types::{
-    MultiChoiceVote, SingleChoiceVote, Vote, VotingError, VotingService,
-};
+use crate::service::voting::types::{Vote, VotingError, VotingService};
 use crate::service::voting_config::types::VotingConfigService;
 use bigdecimal::{BigDecimal, One};
 use candid::{Nat, Principal};
@@ -41,7 +37,7 @@ impl VotingService {
                 VotingService::assert_can_reject(&vc, &s.shares_info.group_id)?;
 
                 let balance = s.shares_info.balance.clone();
-                let rejection_choice = Choice::repo().get(voting.get_rejection_choice()).unwrap();
+                let rejection_choice = Choice::repo().get(&voting.get_rejection_choice()).unwrap();
 
                 (vec![(rejection_choice, balance)], s.shares_info)
             }
@@ -49,7 +45,7 @@ impl VotingService {
                 VotingService::assert_can_approve(&vc, &s.shares_info.group_id)?;
 
                 let balance = s.shares_info.balance.clone();
-                let approval_choice = Choice::repo().get(voting.get_approval_choice()).unwrap();
+                let approval_choice = Choice::repo().get(&voting.get_approval_choice()).unwrap();
 
                 (vec![(approval_choice, balance)], s.shares_info)
             }
@@ -107,7 +103,7 @@ impl VotingService {
     pub fn try_finish_voting(voting: &mut Voting, vc: &VotingConfig, timestamp: u64) {
         match voting.get_status() {
             VotingStatus::Round(r) => {
-                let rejection_choice = Choice::repo().get(voting.get_rejection_choice()).unwrap();
+                let rejection_choice = Choice::repo().get(&voting.get_rejection_choice()).unwrap();
                 let rejection_votes_per_group =
                     ChoiceService::list_total_voted_shares_by_group(&rejection_choice);
 
@@ -120,7 +116,8 @@ impl VotingService {
                 }
 
                 if *r == 0 {
-                    let approval_choice = Choice::repo().get(voting.get_approval_choice()).unwrap();
+                    let approval_choice =
+                        Choice::repo().get(&voting.get_approval_choice()).unwrap();
                     let approval_votes_per_group =
                         ChoiceService::list_total_voted_shares_by_group(&approval_choice);
 
@@ -250,7 +247,7 @@ impl VotingService {
     }
 
     pub fn reset_approval_choice(voting: &Voting) {
-        let approval_choice = Choice::repo().get(voting.get_approval_choice()).unwrap();
+        let approval_choice = Choice::repo().get(&voting.get_approval_choice()).unwrap();
         ChoiceService::reset(&approval_choice);
     }
 
@@ -301,8 +298,8 @@ impl VotingService {
 
     fn get_voting_choices(voting: &Voting) -> Vec<Choice> {
         let mut choices = Vec::new();
-        choices.push(Choice::repo().get(voting.get_approval_choice()).unwrap());
-        choices.push(Choice::repo().get(voting.get_rejection_choice()).unwrap());
+        choices.push(Choice::repo().get(&voting.get_approval_choice()).unwrap());
+        choices.push(Choice::repo().get(&voting.get_rejection_choice()).unwrap());
 
         for id in voting.get_choices() {
             choices.push(Choice::repo().get(id).unwrap());
@@ -324,12 +321,12 @@ impl VotingService {
     }
 
     fn remove_prev_vote(voting: &Voting, group_id: GroupId, principal: Principal) {
-        let mut choices = match voting.get_status() {
+        let choices = match voting.get_status() {
             VotingStatus::Round(r) => {
                 if *r == 0 {
                     vec![
-                        ChoiceService::get_choice(voting.get_approval_choice()).unwrap(),
-                        ChoiceService::get_choice(voting.get_rejection_choice()).unwrap(),
+                        ChoiceService::get_choice(&voting.get_approval_choice()).unwrap(),
+                        ChoiceService::get_choice(&voting.get_rejection_choice()).unwrap(),
                     ]
                 } else {
                     let mut list: Vec<Choice> = voting
@@ -338,7 +335,7 @@ impl VotingService {
                         .map(|id| ChoiceService::get_choice(id).unwrap())
                         .collect();
 
-                    list.push(ChoiceService::get_choice(voting.get_rejection_choice()).unwrap());
+                    list.push(ChoiceService::get_choice(&voting.get_rejection_choice()).unwrap());
 
                     list
                 }

@@ -54,8 +54,8 @@ impl Group {
         self.token = Some(token_id);
     }
 
-    pub fn get_token(&self) -> &TokenId {
-        &self.token.unwrap()
+    pub fn get_token(&self) -> TokenId {
+        self.token.unwrap()
     }
 
     pub fn is_private(&self) -> bool {

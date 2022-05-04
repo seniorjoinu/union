@@ -1,10 +1,11 @@
+use crate::repository::access_config::model::AccessConfig;
+use crate::repository::access_config::types::{AccessConfigFilter, AlloweeConstraint};
 use crate::repository::permission::types::PermissionId;
 use crate::service::access_config::types::{AccessConfigError, AccessConfigService};
 use shared::mvc::{HasRepository, Repository};
-use std::collections::BTreeSet;
 use shared::pageable::{Page, PageRequest};
-use crate::repository::access_config::model::AccessConfig;
-use crate::repository::access_config::types::{AccessConfigFilter, AccessConfigId, AlloweeConstraint};
+use shared::types::wallet::AccessConfigId;
+use std::collections::BTreeSet;
 
 impl AccessConfigService {
     pub fn create_access_config(
@@ -38,11 +39,11 @@ impl AccessConfigService {
         }
 
         let mut ac = AccessConfigService::get_access_config(id)?;
-        
+
         ac.update(new_name, new_description, new_permissions, new_allowees)
             .map_err(AccessConfigError::ValidationError)?;
         AccessConfig::repo().save(ac);
-        
+
         Ok(())
     }
 
@@ -55,15 +56,18 @@ impl AccessConfigService {
             .delete(id)
             .ok_or(AccessConfigError::AccessConfigNotFound(*id))
     }
-    
+
     #[inline(always)]
     pub fn get_access_config(id: &AccessConfigId) -> Result<AccessConfig, AccessConfigError> {
-        AccessConfig::repo().get(id)
+        AccessConfig::repo()
+            .get(id)
             .ok_or(AccessConfigError::AccessConfigNotFound(*id))
     }
-    
+
     #[inline(always)]
-    pub fn list_access_configs(page_req: &PageRequest<AccessConfigFilter, ()>) -> Page<AccessConfig> {
+    pub fn list_access_configs(
+        page_req: &PageRequest<AccessConfigFilter, ()>,
+    ) -> Page<AccessConfig> {
         AccessConfig::repo().list(page_req)
     }
 }

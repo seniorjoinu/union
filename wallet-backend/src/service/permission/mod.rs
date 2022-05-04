@@ -3,6 +3,7 @@ use crate::service::permission::types::{
     PermissionError, PermissionService, ALLOW_ALL_PERMISSION_ID,
 };
 use candid::Principal;
+use shared::remote_call::RemoteCallEndpoint;
 
 pub mod crud;
 pub mod types;
@@ -14,7 +15,7 @@ impl PermissionService {
             String::from(
                 "Non-deletable default permission. Allows calls to ANY method of this union.",
             ),
-            vec![PermissionTarget::Canister(this_canister_id)],
+            vec![PermissionTarget::Endpoint(RemoteCallEndpoint::wildcard(this_canister_id))],
         )
         .unwrap();
 

@@ -1,7 +1,6 @@
 use crate::repository::access_config::model::AccessConfig;
 use crate::repository::profile::model::Profile;
 use crate::repository::token::model::Token;
-use crate::repository::voting_config::model::VotingConfig;
 use crate::service::group::types::{GroupService, DEFAULT_GROUP_SHARES};
 use crate::service::profile::types::{ProfileError, ProfileService};
 use crate::EventsService;
@@ -54,7 +53,7 @@ impl ProfileService {
             return Err(ProfileError::RelatedAccessConfigsExist);
         }
 
-        let profile = Profile::repo()
+        Profile::repo()
             .delete(&id)
             .ok_or(ProfileError::ProfileNotFound(id))?;
 

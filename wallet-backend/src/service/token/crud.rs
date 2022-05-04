@@ -1,6 +1,6 @@
 use crate::repository::token::model::Token;
 use crate::repository::token::types::{ChoiceOrGroup, TokenFilter, TokenId};
-use crate::service::token::types::{TokenError, TokenService};
+use crate::service::token::types::TokenService;
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::pageable::{Page, PageRequest};
 
