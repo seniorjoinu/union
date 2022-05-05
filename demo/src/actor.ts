@@ -1,4 +1,13 @@
-import { Actor, ActorConfig } from '@dfinity/agent';
+import {
+  Actor,
+  ActorConfig,
+  // ProxyAgent,
+  // ProxyMessage,
+  // ProxyMessageKind,
+  // ProxyStubAgent,
+  // ProxyMessageCallResponse,
+  // requestIdOf,
+} from '@dfinity/agent';
 import { IDL } from '@dfinity/candid';
 import { _SERVICE } from './backend';
 // import { backendSerializer, _SERVICE } from './backend';
@@ -7,6 +16,42 @@ import { _SERVICE } from './backend';
 
 export const createActor = <T>(idl: IDL.InterfaceFactory, configuration: ActorConfig): T => {
   return Actor.createActor<T>(idl, configuration);
+  // const { agent } = configuration;
+  // if (!agent) {
+  //   throw 'Agent dows not exists';
+  // }
+
+  // const backend = (msg: ProxyMessage) => {
+  //   switch (msg.type) {
+  //     case ProxyMessageKind.Call: {
+  //       console.log('PROXY', msg);
+  //       console.log('PROXY_DECODED', Cbor.decode(msg.args[1].arg));
+  //       const response: ProxyMessageCallResponse = {
+  //         ...msg,
+  //         type: ProxyMessageKind.CallResponse,
+  //         response: {
+  //           requestId: requestIdOf({}),
+  //           response: {
+  //             ok: true,
+  //             status: 200,
+  //             statusText: 'Proxied to union-wallet',
+  //           },
+  //         },
+  //       };
+  //       proxy.onmessage(response);
+  //       break;
+  //     }
+  //     default: {
+  //       stub.onmessage(msg);
+  //     }
+  //   }
+  // };
+  // const proxy = new ProxyAgent(backend);
+  // const stub = new ProxyStubAgent((msg) => proxy.onmessage(msg), agent);
+  // proxy.fetchRootKey();
+
+  // return Actor.createActor<T>(idl, { ...configuration, agent: proxy });
+
   // return Actor.createActor<T>(idl, {
   //   ...configuration,
   //   callTransform: (methodName: string, args: any[], config) => {
