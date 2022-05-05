@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import styled from 'styled-components';
-import {useUnionWallet} from '../../union';
+import { useUnionWallet } from '../../union';
 import { useBackend } from '../../backend';
 import { TextArea as TA, Markdown as MD, SubmitButton } from '../atoms';
 import { withBorder } from '../withBorder';
@@ -107,16 +107,18 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
   const handlePublish = useCallback(async () => {
     await canister.add_post({ content: getValues().content });
 
-    setValue('content', '', {shouldValidate: true});
+    setValue('content', '', { shouldValidate: true });
     onSuccess();
   }, [getValues, setValue, onSuccess]);
 
   const handlePublishFromWallet = useCallback(async () => {
-    await execute('add_post', [{ content: getValues().content }], {
+    const { content } = getValues();
+
+    await execute('add_post', [{ content }], {
       title: 'Publish post on Thoughter',
     });
 
-    setValue('content', '', {shouldValidate: true});
+    setValue('content', '', { shouldValidate: true });
     onSuccess();
   }, [execute, getValues, setValue, onSuccess]);
 
@@ -159,16 +161,14 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
         >
           Publish
         </SubmitButton>
-        {
-          authorized &&
-            <SubmitButton
-              disabled={!isValid || !!fetching.add_post}
-              onClick={handlePublishFromWallet}
-            >
-              Publish from wallet
-            </SubmitButton>
-        }
-        
+        {authorized && (
+          <SubmitButton
+            disabled={!isValid || !!fetching.add_post}
+            onClick={handlePublishFromWallet}
+          >
+            Publish from wallet
+          </SubmitButton>
+        )}
       </Controls>
     </Container>
   );

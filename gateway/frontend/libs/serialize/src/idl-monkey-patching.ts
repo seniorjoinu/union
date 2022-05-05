@@ -13,6 +13,12 @@ const patch = <S, T extends { name: string; valueToString(x: S): string }>(insta
 
   return instance;
 };
+const patchText = <S, T extends { name: string; valueToString(x: S): string }>(instance: T) => {
+  instance.valueToString = (x: any) =>
+    `"${x.toString().replace(/(?<!\\)\"/gm, '\\"')}" : ${instance.name}`;
+
+  return instance;
+};
 const patchFloat = <S, T extends { name: string; valueToString(x: S): string }>(instance: T) => {
   instance.valueToString = (x: any) =>
     `${x.toString().includes('.') ? x.toString() : `${x.toString()}.0`} : ${instance.name}`;
@@ -34,4 +40,5 @@ export const PatchedIDL: typeof candid.IDL = {
   Nat16: patch(new candid.IDL.FixedNatClass(16)),
   Nat32: patch(new candid.IDL.FixedNatClass(32)),
   Nat64: patch(new candid.IDL.FixedNatClass(64)),
+  Text: patchText(new candid.IDL.TextClass()),
 };
