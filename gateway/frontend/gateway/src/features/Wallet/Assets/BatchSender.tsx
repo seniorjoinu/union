@@ -1,13 +1,22 @@
 import React, { useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { Controller, useForm } from 'react-hook-form';
-import { TextField as TF, SubmitButton as B } from 'components';
+import { TextField as TF, Text, SubmitButton as B } from 'components';
 import { checkPrincipal } from 'toolkit';
 import { useBatches } from '../useBatches';
 
 const Button = styled(B)``;
 const TextField = styled(TF)``;
 
+const CheckboxContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  & > *:not(:last-child) {
+    margin-right: 8px;
+  }
+`;
 const Container = styled.div`
   display: flex;
   flex-direction: row;
@@ -15,6 +24,11 @@ const Container = styled.div`
 
   ${TextField} {
     flex-grow: 1;
+    margin-right: 8px;
+  }
+
+  ${CheckboxContainer} {
+    margin-bottom: 5px;
     margin-right: 8px;
   }
 `;
@@ -27,6 +41,7 @@ export interface BatchSenderProps {
 
 interface FormData {
   canisterId: string;
+  removeBatches: boolean;
 }
 
 export const BatchSender = ({ batchIds, ...p }: BatchSenderProps) => {
@@ -39,12 +54,13 @@ export const BatchSender = ({ batchIds, ...p }: BatchSenderProps) => {
   } = useForm<FormData>({
     defaultValues: {
       canisterId: '',
+      removeBatches: true,
     },
     mode: 'onTouched',
   });
 
   const handleSend = useCallback(async () => {
-    const { canisterId: rawCanisterId } = getValues();
+    const { canisterId: rawCanisterId, removeBatches } = getValues();
 
     const canisterId = rawCanisterId?.trim();
 
@@ -52,7 +68,7 @@ export const BatchSender = ({ batchIds, ...p }: BatchSenderProps) => {
       return;
     }
 
-    await send(batchIds, canisterId);
+    await send(batchIds, canisterId, removeBatches);
   }, [send, getValues, setValue, batchIds]);
 
   return (
@@ -68,6 +84,20 @@ export const BatchSender = ({ batchIds, ...p }: BatchSenderProps) => {
         }}
         render={({ field, fieldState: { error } }) => (
           <TextField {...field} helperText={error?.message} label='Send batches to canister id' />
+        )}
+      />
+      <Controller
+        name='removeBatches'
+        control={control}
+        render={({ field }) => (
+          <CheckboxContainer>
+            <Text>Remove batches?</Text>
+            <input
+              type='checkbox'
+              onChange={(e) => field.onChange(!field.value)}
+              checked={!!field.value}
+            />
+          </CheckboxContainer>
         )}
       />
       <Button type='submit' disabled={!isValid || !batchIds.length} onClick={handleSend}>

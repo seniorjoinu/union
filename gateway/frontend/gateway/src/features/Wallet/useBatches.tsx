@@ -48,6 +48,7 @@ export function useBatches() {
     async (
       batchIds: bigint[],
       targetCanister: string,
+      removeBatches?: boolean,
       verbose?: { title?: string; description?: string },
     ) => {
       if (!rnp) {
@@ -80,39 +81,25 @@ export function useBatches() {
                 }),
               },
             })),
+            ...(removeBatches
+              ? [
+                  {
+                    endpoint: {
+                      canister_id: principal,
+                      method_name: 'delete_batches',
+                    },
+                    cycles: BigInt(0),
+                    args: {
+                      CandidString: walletSerializer.delete_batches({
+                        batch_ids: batchIds,
+                      }),
+                    },
+                  },
+                ]
+              : []),
           ],
         },
       };
-      // const payload: ExternalExecutorFormData = {
-      //   title: verbose?.title || 'Send batches to canister and delete them',
-      //   description:
-      //     verbose?.description ||
-      //     `Send batches ${batchIds.join()} to canister ${targetCanister} and delete them`,
-      //   rnp,
-      //   program: {RemoteCallSequence: [
-      //     ...batchIds.map((batchId) => ({
-      //       endpoint: {
-      //         canister_id: principal,
-      //         method_name: 'send_batch',
-      //       },
-      //       cycles: '0',
-      //       args_candid: walletSerializer.send_batch({
-      //         batch_id: batchId,
-      //         target_canister: canisterId,
-      //       }),
-      //     })),
-      //     {
-      //       endpoint: {
-      //         canister_id: principal,
-      //         method_name: 'delete_batches',
-      //       },
-      //       cycles: '0',
-      //       args_candid: walletSerializer.delete_batches({
-      //         batch_ids: batchIds,
-      //       }),
-      //     },
-      //   ]},
-      // };
 
       nav(`/wallet/${principal}/execute`, { state: payload });
     },
