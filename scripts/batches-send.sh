@@ -16,7 +16,7 @@ do
 	operations+="
 		record {
 			endpoint = record {
-				canister_id = principal \"${root_wallet}\";
+				canister_id = principal \"${root_union}\";
 				method_name = \"send_batch\";
 			};
 			cycles = 0 : nat64;
@@ -41,7 +41,7 @@ send_batches_args="(record {
 	}
 })"
 
-dfx canister $args call $root_wallet "execute" "${send_batches_args}"
+dfx canister $args call $root_union "execute" "${send_batches_args}"
 
 log "[batches-send] Frontend canister ready"
 log "http://$(parse_principal $frontend_canister_id_did).localhost:8000"

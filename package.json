@@ -1,14 +1,14 @@
 {
   "name": "union-wallet",
   "version": "1.0.0",
-  "main": "gateway/frontend/gateway/index.tsx",
+  "main": "gateway/frontend/index.tsx",
   "private": true,
   "type": "module",
   "scripts": {},
   "workspaces": [
     "demo",
-    "gateway/frontend/gateway",
-    "gateway/frontend/libs/*"
+    "gateway/frontend",
+    "libs/*"
   ],
   "resolutions": {
     "buffer": "6.0.3",

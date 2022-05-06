@@ -1,6 +1,6 @@
 *.pem
 *.log
 *.txt
-uwc
+uc
 .env
 node_modules/

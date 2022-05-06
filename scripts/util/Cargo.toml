@@ -1,10 +1,10 @@
 [package]
-name = "union-wallet-caller"
+name = "union-caller"
 version = "0.0.1"
 edition = "2018"
 
 [[bin]]
-name = "uwc"
+name = "uc"
 path = "main.rs"
 
 [dependencies]

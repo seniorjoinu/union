@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { createGlobalStyle } from 'styled-components';
 import { ProvideAuth } from '../auth';
-import { UnionWalletProvider } from '../union';
+import { UnionProvider } from '../union';
 import { Router } from './Router';
 
 const GlobalStyle = createGlobalStyle`
@@ -30,9 +30,9 @@ ReactDOM.render(
   <React.StrictMode>
     <GlobalStyle />
     <ProvideAuth>
-      <UnionWalletProvider>
+      <UnionProvider>
         <Router />
-      </UnionWalletProvider>
+      </UnionProvider>
     </ProvideAuth>
   </React.StrictMode>,
   document.getElementById('root'),

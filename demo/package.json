@@ -11,8 +11,8 @@
     "lint:fix": "prettier --config ./.prettierrc ./src --write && eslint ./src --fix"
   },
   "dependencies": {
-    "@union-wallet/client": "*",
-    "@union-wallet/serialize": "*",
+    "@union/client": "*",
+    "@union/serialize": "*",
     "@dfinity/agent": "^0.10.4",
     "@dfinity/auth-client": "^0.10.4",
     "@dfinity/authentication": "^0.10.4",

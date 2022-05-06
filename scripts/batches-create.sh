@@ -4,7 +4,7 @@ set -e
 source $root_folder/.env
 
 args=
-folder_path="${root_folder}/gateway/frontend/gateway/dist"
+folder_path="${root_folder}/gateway/frontend/dist"
 log "[batches-create] Creating batches..."
 
 files=`cd $folder_path && find . -type f`
@@ -26,17 +26,17 @@ do
 	log $key $content_type
 
 	create_batch_response=$(
-		dfx canister $args call $root_wallet "create_batch" "(record {
+		dfx canister $args call $root_union "create_batch" "(record {
 			key = \"${key}\";
 			content_type = \"${content_type}\";
 		})"
 	)
 
-	batch_id_did=$(./uwc did get "${create_batch_response}" "0.batch_id")
+	batch_id_did=$(./uc did get "${create_batch_response}" "0.batch_id")
 	echo batch_id = $batch_id_did
 	eval "batch_id_did=${batch_id_did}"
 
-	file_bytes=$(./uwc did encode --mode blob $filepath)
+	file_bytes=$(./uc did encode --mode blob $filepath)
 
 	create_chunk_args='(record {
 		batch_id = '$batch_id_did';
@@ -45,16 +45,16 @@ do
 	echo "$create_chunk_args" > ./create_chunk_execute_args.txt
 
 	create_chunk_response=$(
-		./uwc canister $root_wallet "create_chunk" ./create_chunk_execute_args.txt
+		./uc canister $root_union "create_chunk" ./create_chunk_execute_args.txt
 	)
 
 	eval "create_chunk_response=${create_chunk_response}"
 
-	chunk_id_did=$(./uwc did get "${create_chunk_response}" "0.chunk_id")
+	chunk_id_did=$(./uc did get "${create_chunk_response}" "0.chunk_id")
 	echo chunk_id = $chunk_id_did
 
 	lock_batches_response=$(
-		dfx canister $args call $root_wallet "lock_batches" "(record {
+		dfx canister $args call $root_union "lock_batches" "(record {
 			batch_ids = vec { ${batch_id_did} };
 		})"
 	)

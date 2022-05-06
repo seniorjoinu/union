@@ -1,18 +1,18 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { UnionWalletClient, ExecuteRequestData } from '@union-wallet/client';
+import { UnionClient, ExecuteRequestData } from '@union/client';
 import { Principal } from '@dfinity/principal';
 import { getAgent } from './agent';
 import { _SERVICE, canisterId, backendSerializer } from './backend';
 import { AuthReadyState, useAuth } from './auth';
 
-export const unionWalletClient = new UnionWalletClient({});
+export const unionClient = new UnionClient({});
 
 export const context = createContext({
   authorized: false,
   setAuthorized: (_: boolean) => {},
 });
 
-export const UnionWalletProvider = ({ children }: { children: any }) => {
+export const UnionProvider = ({ children }: { children: any }) => {
   const [authorized, setAuthorized] = useState(false);
   const { isAuthReady, isAuthentificated } = useAuth();
 
@@ -22,7 +22,7 @@ export const UnionWalletProvider = ({ children }: { children: any }) => {
   };
 
   useEffect(() => {
-    setAuthorized(unionWalletClient.isAuthorized());
+    setAuthorized(unionClient.isAuthorized());
   }, []);
 
   useEffect(() => {
@@ -30,18 +30,18 @@ export const UnionWalletProvider = ({ children }: { children: any }) => {
       return;
     }
 
-    unionWalletClient.logout();
-    setAuthorized(unionWalletClient.isAuthorized());
+    unionClient.logout();
+    setAuthorized(unionClient.isAuthorized());
   }, [isAuthReady, isAuthentificated]);
 
   return <context.Provider value={value}>{children}</context.Provider>;
 };
 
-export const useUnionWallet = () => {
+export const useUnion = () => {
   const { authorized, setAuthorized } = useContext(context);
 
   const refresh = useCallback(() => {
-    setAuthorized(unionWalletClient.isAuthorized());
+    setAuthorized(unionClient.isAuthorized());
   }, [setAuthorized]);
 
   const execute = useCallback(
@@ -58,7 +58,7 @@ export const useUnionWallet = () => {
 
       const candidArgs = backendSerializer[methodName](...args);
 
-      return unionWalletClient.execute(
+      return unionClient.execute(
         {
           title: 'Demo canister operation',
           description: `Call "${methodName}" in "${canisterId.toString()}" canister`,
@@ -86,8 +86,8 @@ export const useUnionWallet = () => {
   return {
     authorized,
     refresh,
-    client: unionWalletClient,
-    canister: unionWalletClient.getWalletActor(getAgent()),
+    client: unionClient,
+    canister: unionClient.getActor(getAgent()),
     execute,
   };
 };

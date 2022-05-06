@@ -36,12 +36,12 @@ args=
 # args=$@
 
 [ -z "$identity" ] && echo "Princpal does not found" && exit;
-[ -z "$root_wallet" ] && echo "Wallet does not found" && exit;
+[ -z "$root_union" ] && echo "Union does not found" && exit;
 
 log "[add-profile]" identity=$identity
-log "[add-profile]" root_wallet=$root_wallet
+log "[add-profile]" root_union=$root_union
 
-log "[add-profile] Add internet-identity principal to root wallet"
+log "[add-profile] Add internet-identity principal to root union"
 create_role_program_args='(record {
 	role_type = variant {
 		Profile = record {
@@ -61,7 +61,7 @@ create_role_args="(record {
 		RemoteCallSequence = vec {
 			record {
 				endpoint = record {
-					canister_id = principal \"${root_wallet}\";
+					canister_id = principal \"${root_union}\";
 					method_name = \"create_role\";
 				};
 				cycles = 0 : nat64;
@@ -75,4 +75,4 @@ create_role_args="(record {
 	}
 })"
 log "[add-profile]" payload=$create_role_args
-dfx canister $args call $root_wallet "execute" "$create_role_args"
+dfx canister $args call $root_union "execute" "$create_role_args"

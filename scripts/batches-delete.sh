@@ -23,7 +23,7 @@ delete_batches_args="(record {
 		RemoteCallSequence = vec {
 			record {
 				endpoint = record {
-					canister_id = principal \"${root_wallet}\";
+					canister_id = principal \"${root_union}\";
 					method_name = \"delete_batches\";
 				};
 				cycles = 1 : nat64;
@@ -37,6 +37,6 @@ delete_batches_args="(record {
 	}
 })"
 
-dfx canister $args call $root_wallet "execute" "${delete_batches_args}"
+dfx canister $args call $root_union "execute" "${delete_batches_args}"
 
 log "[batches-delete] Batches deleted"

@@ -26,11 +26,11 @@ then
 	cd $current_folder
 fi
 
-log "[infra-deploy] Build root wallet..."
+log "[infra-deploy] Build root union..."
 cd "${root_folder}/wallet-backend"
 rm -rf ./.dfx/local 2> /dev/null || echo ""
 dfx build --all --check
-log "[infra-deploy] Root wallet built"
+log "[infra-deploy] Root union built"
 
 log "[infra-deploy] Deploy deployer..."
 cd "${root_folder}/deployer-backend/canister"
@@ -47,7 +47,7 @@ gateway_backend=$(dfx canister $args id gateway)
 log "[infra-deploy] Gateway backend deployed"
 
 log "[infra-deploy] Building frontend..."
-cd "${root_folder}/gateway/frontend/gateway"
+cd "${root_folder}/gateway/frontend"
 rm -rf ./.dfx/local 2> /dev/null || echo ""
 yarn
 dfx build --all --check

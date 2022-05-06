@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import styled from 'styled-components';
-import { useUnionWallet } from '../../union';
+import { useUnion } from '../../union';
 import { useBackend } from '../../backend';
 import { TextArea as TA, Markdown as MD, SubmitButton } from '../atoms';
 import { withBorder } from '../withBorder';
@@ -91,7 +91,7 @@ export interface PostCreatorProps {
 export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) => {
   const [mode, setMode] = useState('write');
   const { canister, fetching } = useBackend();
-  const { authorized, execute } = useUnionWallet();
+  const { authorized, execute } = useUnion();
   const {
     control,
     setValue,
@@ -111,7 +111,7 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
     onSuccess();
   }, [getValues, setValue, onSuccess]);
 
-  const handlePublishFromWallet = useCallback(async () => {
+  const handlePublishFrom = useCallback(async () => {
     const { content } = getValues();
 
     await execute('add_post', [{ content }], {
@@ -164,9 +164,9 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
         {authorized && (
           <SubmitButton
             disabled={!isValid || !!fetching.add_post}
-            onClick={handlePublishFromWallet}
+            onClick={handlePublishFrom}
           >
-            Publish from wallet
+            Publish from union
           </SubmitButton>
         )}
       </Controls>

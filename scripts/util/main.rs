@@ -6,7 +6,7 @@ mod did;
 mod utils;
 
 #[derive(Parser)]
-#[clap(name("uwc"))]
+#[clap(name("uc"))]
 pub struct CliOpts {
     #[clap(subcommand)]
     command: Command,

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useUnionWallet } from '../../union';
+import { useUnion } from '../../union';
 import { ProfileModal, ProfileModalData } from '../ProfileModal';
 
 export interface UnionProfileModalProps {
@@ -10,7 +10,7 @@ export interface UnionProfileModalProps {
 }
 
 export const UnionProfileModal = ({ visible, onClose, ...p }: UnionProfileModalProps) => {
-  const { execute, client, refresh } = useUnionWallet();
+  const { execute, client, refresh } = useUnion();
 
   const handleSubmit = useCallback(
     async (data: ProfileModalData) => {
@@ -27,14 +27,14 @@ export const UnionProfileModal = ({ visible, onClose, ...p }: UnionProfileModalP
     [onClose, execute],
   );
 
-  if (!client.wallet) {
+  if (!client.union) {
     return null;
   }
 
   return (
     <ProfileModal
       {...p}
-      principal={client.wallet}
+      principal={client.union}
       onSubmit={handleSubmit}
       visible={visible}
       onLogout={() => {

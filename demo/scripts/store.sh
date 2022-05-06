@@ -2,15 +2,15 @@
 set -e
 
 args=
-uwc=../scripts/uwc
+uc=../scripts/uc
 
 # FIXME
 echo Building npm deps
-cd ../gateway/frontend/libs/client
+cd ../libs/client
 yarn build
 cd ../serialize
 yarn build
-cd ../../../../demo
+cd ../../demo
 
 yarn build
 
@@ -36,7 +36,7 @@ do
 	)
 	echo $key $content_type
 
-	file_bytes=$($uwc did encode --mode blob $filepath)
+	file_bytes=$($uc did encode --mode blob $filepath)
 	store_args='(record {
 		key = "'$key'";
 		content_type = "'$content_type'";
@@ -46,7 +46,7 @@ do
 	echo "$store_args" > ./tmp_args.txt
 
 	store_response=$(
-		$uwc canister $FEED_APP_CANISTER_ID "store" ./tmp_args.txt
+		$uc canister $FEED_APP_CANISTER_ID "store" ./tmp_args.txt
 	)
 
 	echo $store_response

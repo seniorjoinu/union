@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useBackend } from '../../backend';
 import { useAuth } from '../../auth';
-import { useUnionWallet } from '../../union';
+import { useUnion } from '../../union';
 import { Button as B, PureButton, Principal, Tooltip } from '../atoms';
 import { Logo as L } from './logo';
 import { UnionProfileModal } from './UnionProfileModal';
@@ -103,16 +103,16 @@ export const UnionLoginButton = ({
   onLogin = () => {},
   ...props
 }: UnionLoginButtonProps) => {
-  const { authorized, refresh, client } = useUnionWallet();
+  const { authorized, refresh, client } = useUnion();
   const { principal } = useAuth();
   const { canister, data } = useBackend();
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
-    if (!client.wallet) {
+    if (!client.union) {
       return;
     }
-    canister.get_profile(client.wallet);
+    canister.get_profile(client.union);
   }, [authorized]);
 
   const handleLogin = useCallback(async () => {
@@ -142,11 +142,11 @@ export const UnionLoginButton = ({
       {authorized && (
         <Tooltip>
           <TooltipContent>
-            <Info>Union wallet connected</Info>
+            <Info>Union connected</Info>
             {!!data.get_profile?.name && <Name>{data.get_profile?.name}</Name>}
-            {client.wallet && (
+            {client.union && (
               <Principal onClick={() => navigator.clipboard.writeText(principal.toString())}>
-                {client.wallet.toString()}
+                {client.union.toString()}
               </Principal>
             )}
             <Button onClick={() => setModalVisible(true)}>Change name</Button>
