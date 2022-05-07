@@ -17,6 +17,12 @@ pub struct GetSharesInfoOfAtResponse {
 }
 
 #[derive(CandidType, Deserialize)]
+pub struct GetMySharesInfoAtRequest {
+    pub group_id: GroupId,
+    pub at: u64,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct ListProgramExecutionEntryIdsRequest {
     pub page_req: PageRequest<ProgramExecutionFilter, ()>,
 }

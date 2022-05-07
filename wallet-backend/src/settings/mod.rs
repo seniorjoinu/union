@@ -4,7 +4,6 @@ use shared::validation::{validate_and_trim_str, ValidationError};
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct Settings {
-    gateway: Principal,
     history_ledgers: SortedByTimestamp<Principal>,
     name: String,
     description: String,
@@ -12,14 +11,12 @@ pub struct Settings {
 
 impl Settings {
     pub fn new(
-        gateway: Principal,
         history_ledger: Principal,
         name: String,
         description: String,
         timestamp: u64,
     ) -> Result<Self, ValidationError> {
         let mut it = Self {
-            gateway,
             history_ledgers: SortedByTimestamp::default(),
             name: Self::process_name(name)?,
             description: Self::process_description(description)?,
@@ -48,10 +45,6 @@ impl Settings {
 
     pub fn add_history_ledger(&mut self, history_ledger: Principal, timestamp: u64) {
         self.history_ledgers.push(timestamp, history_ledger);
-    }
-
-    pub fn get_gateway(&self) -> &Principal {
-        &self.gateway
     }
 
     pub fn get_most_actual_by_history_ledger(&self, to: &u64) -> &Principal {
@@ -83,16 +76,10 @@ impl Settings {
 
 static mut SETTINGS: Option<Settings> = None;
 
-pub fn init_settings(
-    gateway: Principal,
-    history_ledger: Principal,
-    name: String,
-    description: String,
-    timestamp: u64,
-) {
+pub fn init_settings(history_ledger: Principal, name: String, description: String, timestamp: u64) {
     unsafe {
         SETTINGS = Some(
-            Settings::new(gateway, history_ledger, name, description, timestamp)
+            Settings::new(history_ledger, name, description, timestamp)
                 .expect("Unable to init settings"),
         )
     }

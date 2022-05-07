@@ -11,7 +11,6 @@ pub struct SharesMoveEntry {
     from: Shareholder,
     to: Shareholder,
     qty: Shares,
-    total_supply: Shares,
 }
 
 impl SharesMoveEntry {
@@ -23,32 +22,27 @@ impl SharesMoveEntry {
             from: ev.from,
             to: ev.to,
             qty: ev.qty,
-            total_supply: ev.total_supply,
         }
     }
-    
+
     pub fn get_timestamp(&self) -> u64 {
         self.timestamp
     }
-    
+
     pub fn get_from(&self) -> &Shareholder {
         &self.from
     }
-    
+
     pub fn get_to(&self) -> &Shareholder {
         &self.to
     }
-    
+
     pub fn get_group_id(&self) -> GroupId {
         self.group_id
     }
-    
+
     pub fn get_qty(&self) -> &Shares {
         &self.qty
-    }
-    
-    pub fn get_total_supply(&self) -> &Shares {
-        &self.total_supply
     }
 }
 

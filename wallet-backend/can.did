@@ -46,8 +46,8 @@ type ProgramExecutionResult = variant {
 type PageRequest = record {
     page_index : nat32;
     page_size : nat32;
-    filter : empty;
-    sort : empty;
+    filter : null;
+    sort : null;
 };
 
 // ----------- ACCESS CONFIG ------------
@@ -123,7 +123,7 @@ type ListAccessConfigsPageRequest = record {
     page_index : nat32;
     page_size : nat32;
     filter : AccessConfigFilter;
-    sort : empty;
+    sort : null;
 };
 
 type ListAccessConfigsRequest = record {
@@ -192,7 +192,7 @@ type ListPermissionsPageRequest = record {
     page_index : nat32;
     page_size : nat32;
     filter : PermissionFilter;
-    sort : empty;
+    sort : null;
 };
 
 type ListPermissionsRequest = record {
@@ -409,7 +409,7 @@ type SharesInfo = record {
     timestamp: nat64;
     group_id: GroupId;
     principal_id: principal;
-    signature : empty;
+    signature : null;
 };
 
 type GetSharesInfoOfAtRequest = record {
@@ -422,6 +422,11 @@ type GetSharesInfoOfAtResponse = record {
     shares_info : opt SharesInfo;
 };
 
+type GetMySharesInfoAtRequest = record {
+    group_id : GroupId;
+    at : nat64;
+};
+
 type ProgramExecutionFilter = record {
     from_timestamp : opt nat64;
     to_timestamp : opt nat64;
@@ -432,7 +437,7 @@ type ListProgramExecutionEntryIdsPageRequest = record {
     page_index : nat32;
     page_size : nat32;
     filter : ProgramExecutionFilter;
-    sort : empty;
+    sort : null;
 };
 
 type ListProgramExecutionEntryIdsRequest = record {
@@ -457,7 +462,6 @@ type TimestampedRecord = record {
 };
 
 type Settings = record {
-    gateway : principal;
     history_ledgers : vec TimestampedRecord;
     name : text;
     description : text;
@@ -559,7 +563,7 @@ type ListChunksPageRequest = record {
     page_index : nat32;
     page_size : nat32;
     filter : ChunkFilter;
-    sort : empty;
+    sort : null;
 };
 
 type ListChunksRequest = record {
@@ -682,7 +686,7 @@ type ListVotingConfigsPageRequest = record {
     page_index : nat32;
     page_size : nat32;
     filter : VotingConfigFilter;
-    sort : empty;
+    sort : null;
 };
 
 type ListVotingConfigsRequest = record {
@@ -790,7 +794,7 @@ type Vote = variant {
     Common : MultiChoiceVote;
 };
 
-type CastVoteRequest = record {
+type CastMyVoteRequest = record {
     id : VotingId;
     vote : Vote;
 };
@@ -856,7 +860,7 @@ type ListVotingChoicesPageRequest = record {
     page_index : nat32;
     page_size : nat32;
     filter : ChoiceFilter;
-    sort : empty;
+    sort : null;
 };
 
 type ListVotingChoicesRequest = record {
@@ -893,7 +897,6 @@ type GetMyVoteResponse = record {
 // ---------------------------------------
 
 type InitRequest = record {
-    gateway : principal;
     history_ledger : principal;
     wallet_creator : principal;
     union_name : text;
@@ -938,6 +941,7 @@ service : (InitRequest) -> {
     // HISTORY LEDGER
     get_shares_info_of_at : (GetSharesInfoOfAtRequest) -> (GetSharesInfoOfAtResponse);
     list_program_execution_entry_ids : (ListProgramExecutionEntryIdsRequest) -> (ListProgramExecutionEntryIdsResponse);
+    get_my_shares_info_at : (GetMySharesInfoAtRequest) -> (GetSharesInfoOfAtResponse);
 
     // PERMISSION
     create_permission : (CreatePermissionRequest) -> (CreatePermissionResponse);
@@ -985,11 +989,11 @@ service : (InitRequest) -> {
     update_voting_choice : (UpdateVotingChoiceRequest) -> ();
     delete_voting_choice : (DeleteVotingChoiceRequest) -> ();
     delete_voting : (DeleteVotingRequest) -> ();
-    cast_vote : (CastVoteRequest) -> ();
     get_voting : (GetVotingRequest) -> (GetVotingResponse) query;
     list_votings : (ListVotingsRequest) -> (ListVotingsResponse) query;
     get_voting_choice : (GetVotingChoiceRequest) -> (GetVotingChoiceResponse) query;
     list_voting_choices : (ListVotingChoicesRequest) -> (ListVotingChoicesResponse) query;
     get_voting_results : (GetVotingResultsRequest) -> (GetVotingResultsResponse) query;
+    cast_my_vote : (CastMyVoteRequest) -> ();
     get_my_vote : (GetMyVoteRequest) -> (GetMyVoteResponse) query;
 }

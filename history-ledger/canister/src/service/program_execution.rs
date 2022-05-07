@@ -1,5 +1,6 @@
 use crate::repository::program_execution::model::ProgramExecutionEntry;
-use crate::repository::program_execution::types::{ProgramExecutionEntryId, ProgramExecutionFilter};
+use crate::repository::program_execution::types::ProgramExecutionEntryId;
+use history_ledger_client::api::ProgramExecutionFilter;
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::pageable::{Page, PageRequest};
 

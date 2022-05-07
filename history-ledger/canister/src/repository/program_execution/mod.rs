@@ -1,14 +1,12 @@
 use crate::repository::program_execution::model::ProgramExecutionEntry;
-use crate::repository::program_execution::types::{
-    ProgramExecutionEntryId, ProgramExecutionFilter,
-};
+use crate::repository::program_execution::types::ProgramExecutionEntryId;
 use candid::{CandidType, Deserialize};
+use history_ledger_client::api::ProgramExecutionFilter;
 use shared::mvc::{Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
 use shared::remote_call::{Program, RemoteCallEndpoint};
 use shared::sorted_by_timestamp::SortedByTimestamp;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use history_ledger_client::api::ProgramExecutionFilter;
 
 pub mod model;
 pub mod types;

@@ -23,7 +23,7 @@ pub struct Voting {
 
     name: String,
     description: String,
-    winners_need: usize,
+    winners_need: u32,
 
     total_voting_power_by_group: BTreeMap<GroupId, Shares>,
 
@@ -41,7 +41,7 @@ impl Voting {
         voting_config_id: VotingConfigId,
         name: String,
         description: String,
-        winners_need: usize,
+        winners_need: u32,
         proposer: Principal,
         timestamp: u64,
     ) -> Result<Self, ValidationError> {
@@ -83,7 +83,7 @@ impl Voting {
         &mut self,
         new_name: Option<String>,
         new_description: Option<String>,
-        new_winners_need: Option<usize>,
+        new_winners_need: Option<u32>,
         timestamp: u64,
     ) -> Result<(), ValidationError> {
         match &self.status {
@@ -224,7 +224,7 @@ impl Voting {
         &self.total_voting_power_by_group
     }
 
-    pub fn get_winners_need(&self) -> usize {
+    pub fn get_winners_need(&self) -> u32 {
         self.winners_need
     }
 

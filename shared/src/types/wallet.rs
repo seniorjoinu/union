@@ -55,6 +55,12 @@ pub struct SharesMoveEvent {
     pub from: Shareholder,
     pub to: Shareholder,
     pub qty: Shares,
+}
+
+#[derive(Event, Clone)]
+pub struct TotalSupplyUpdatedEvent {
+    pub group_id: GroupId,
+    pub timestamp: u64,
     pub total_supply: Shares,
 }
 

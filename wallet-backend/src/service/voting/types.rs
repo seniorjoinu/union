@@ -11,13 +11,22 @@ pub struct VotingService;
 pub enum VotingError {
     ValidationError(ValidationError),
     VotingConfigNotFound(VotingConfigId),
-    InvalidWinnersCount(usize, LenInterval),
+    InvalidWinnersCount(u32, LenInterval),
     ProfileNotExists(ProfileId),
     VotingNotFound(VotingId),
     VotingInInvalidStatus(VotingId),
     InvalidVote,
     ProgramNotAllowedByVotingConfig,
     ChoiceNotFound(ChoiceId),
+    VotingOnlyAllowedDuringRounds,
+    VoteFractionTooBig,
+    VoterCantApprove,
+    VoterCantReject,
+    VoterCantVote,
+    SharesInfoSignatureInvalid,
+    SharesInfoTimestampInvalid,
+    InsufficientSharesBalance,
+    SharesInfoDoesntBelongToVoter,
 }
 
 #[derive(CandidType, Deserialize)]

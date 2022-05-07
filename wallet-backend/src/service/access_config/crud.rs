@@ -30,6 +30,8 @@ impl AccessConfigService {
         new_permissions: Option<BTreeSet<PermissionId>>,
         new_allowees: Option<BTreeSet<AlloweeConstraint>>,
     ) -> Result<(), AccessConfigError> {
+        AccessConfigService::assert_not_default(id)?;
+
         if let Some(permissions) = &new_permissions {
             AccessConfigService::assert_permissions_exist(permissions)?;
         }
@@ -48,9 +50,7 @@ impl AccessConfigService {
     }
 
     pub fn delete_access_config(id: &AccessConfigId) -> Result<AccessConfig, AccessConfigError> {
-        if AccessConfig::repo().count() == 1 {
-            return Err(AccessConfigError::UnableToDeleteTheLastAccessConfig);
-        }
+        AccessConfigService::assert_not_default(id)?;
 
         AccessConfig::repo()
             .delete(id)

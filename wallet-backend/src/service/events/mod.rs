@@ -1,7 +1,11 @@
 use crate::emit;
 use candid::Principal;
 use shared::remote_call::{Program, ProgramExecutionResult};
-use shared::types::wallet::{GroupId, PrincipalShareholder, ProfileActivatedEvent, ProfileCreatedEvent, ProgramExecutedEvent_0, ProgramExecutedEvent_1, ProgramExecutedEvent_2, ProgramExecutedWith, Shareholder, Shares, SharesMoveEvent};
+use shared::types::wallet::{
+    GroupId, PrincipalShareholder, ProfileActivatedEvent, ProfileCreatedEvent,
+    ProgramExecutedEvent_0, ProgramExecutedEvent_1, ProgramExecutedEvent_2, ProgramExecutedWith,
+    Shareholder, Shares, SharesMoveEvent, TotalSupplyUpdatedEvent,
+};
 
 pub struct EventsService;
 
@@ -13,7 +17,11 @@ impl EventsService {
         result: ProgramExecutionResult,
         timestamp: u64,
     ) {
-        emit(ProgramExecutedEvent_0 { timestamp, initiator, with });
+        emit(ProgramExecutedEvent_0 {
+            timestamp,
+            initiator,
+            with,
+        });
         emit(ProgramExecutedEvent_1 { timestamp, program });
         emit(ProgramExecutedEvent_2 { timestamp, result })
     }
@@ -28,7 +36,6 @@ impl EventsService {
     ) {
         emit(SharesMoveEvent {
             group_id,
-            total_supply,
             qty,
             timestamp,
             to: Shareholder::Principal(PrincipalShareholder {
@@ -36,7 +43,12 @@ impl EventsService {
                 new_balance: to_new_balance,
             }),
             from: Shareholder::Void,
-        })
+        });
+        emit(TotalSupplyUpdatedEvent {
+            group_id,
+            timestamp,
+            total_supply,
+        });
     }
 
     pub fn emit_shares_burn_event(
@@ -49,7 +61,6 @@ impl EventsService {
     ) {
         emit(SharesMoveEvent {
             group_id,
-            total_supply,
             qty,
             timestamp,
             from: Shareholder::Principal(PrincipalShareholder {
@@ -57,7 +68,12 @@ impl EventsService {
                 new_balance: from_new_balance,
             }),
             to: Shareholder::Void,
-        })
+        });
+        emit(TotalSupplyUpdatedEvent {
+            group_id,
+            timestamp,
+            total_supply,
+        });
     }
 
     pub fn emit_shares_transfer_event(
@@ -67,12 +83,10 @@ impl EventsService {
         qty: Shares,
         from_new_balance: Shares,
         to_new_balance: Shares,
-        total_supply: Shares,
         timestamp: u64,
     ) {
         emit(SharesMoveEvent {
             group_id,
-            total_supply,
             qty,
             timestamp,
             to: Shareholder::Principal(PrincipalShareholder {
@@ -87,14 +101,14 @@ impl EventsService {
     }
 
     pub fn emit_profile_created_event(owner: Principal) {
-        emit(ProfileCreatedEvent {
+        /*emit(ProfileCreatedEvent {
             profile_owner: owner,
-        });
+        });*/
     }
 
     pub fn emit_profile_activated_event(owner: Principal) {
-        emit(ProfileActivatedEvent {
+        /*emit(ProfileActivatedEvent {
             profile_owner: owner,
-        });
+        });*/
     }
 }

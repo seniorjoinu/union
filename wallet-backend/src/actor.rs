@@ -1,9 +1,11 @@
 use crate::repository::{set_repositories, take_repositories};
+use crate::service::access_config::types::AccessConfigService;
 use crate::service::cron::CronService;
 use crate::service::events::EventsService;
 use crate::service::group::types::{GroupService, DEFAULT_GROUP_SHARES, HAS_PROFILE_GROUP_ID};
-use crate::service::init_services;
+use crate::service::permission::types::PermissionService;
 use crate::service::profile::types::ProfileService;
+use crate::service::voting_config::types::VotingConfigService;
 use crate::settings::{init_settings, set_settings, take_settings};
 use candid::{CandidType, Deserialize, Principal};
 use ic_cdk::api::time;
@@ -24,7 +26,6 @@ pub mod settings;
 
 #[derive(CandidType, Deserialize)]
 pub struct InitRequest {
-    pub gateway: Principal,
     pub history_ledger: Principal,
     pub wallet_creator: Principal,
     pub union_name: String,
@@ -34,14 +35,13 @@ pub struct InitRequest {
 #[init]
 fn init(req: InitRequest) {
     init_settings(
-        req.gateway,
         req.history_ledger,
         req.union_name,
         req.union_description,
         time(),
     );
 
-    init_services(id());
+    GroupService::init_has_profile_group();
 
     ProfileService::create_profile(
         req.wallet_creator,
@@ -50,13 +50,9 @@ fn init(req: InitRequest) {
     )
     .expect("Unable to create wallet creator profile");
 
-    GroupService::accept_shares(
-        HAS_PROFILE_GROUP_ID,
-        req.wallet_creator,
-        Shares::from(DEFAULT_GROUP_SHARES),
-        time(),
-    )
-    .expect("Unable to accept wallet creator shares");
+    PermissionService::init_allow_write_permissions(id());
+    VotingConfigService::init_default_voting_configs();
+    AccessConfigService::init_default_access_configs(req.wallet_creator);
 }
 
 #[post_upgrade]

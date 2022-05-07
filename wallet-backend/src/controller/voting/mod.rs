@@ -1,5 +1,5 @@
 use crate::controller::voting::api::{
-    CastVoteRequest, CreateVotingChoiceRequest, CreateVotingChoiceResponse, CreateVotingRequest,
+    CastMyVoteRequest, CreateVotingChoiceRequest, CreateVotingChoiceResponse, CreateVotingRequest,
     CreateVotingResponse, DeleteVotingChoiceRequest, DeleteVotingRequest, GetMyVoteRequest,
     GetMyVoteResponse, GetVotingChoiceRequest, GetVotingChoiceResponse, GetVotingRequest,
     GetVotingResponse, GetVotingResultsRequest, GetVotingResultsResponse, ListVotingChoicesRequest,
@@ -89,13 +89,6 @@ fn delete_voting(req: DeleteVotingRequest) {
     VotingService::delete_voting(&req.id).expect("Unable to delete voting");
 }
 
-#[update]
-fn cast_vote(req: CastVoteRequest) {
-    only_self();
-
-    VotingService::cast_vote(&req.id, req.vote, caller(), time()).expect("Unable to cast vote");
-}
-
 #[query]
 fn get_voting(req: GetVotingRequest) -> GetVotingResponse {
     only_self_or_with_access("get_voting");
@@ -139,6 +132,11 @@ fn get_voting_results(req: GetVotingResultsRequest) -> GetVotingResultsResponse 
 }
 
 // ------------------- PERSONAL ----------------------
+
+#[update]
+fn cast_my_vote(req: CastMyVoteRequest) {
+    VotingService::cast_vote(&req.id, req.vote, caller(), time()).expect("Unable to cast vote");
+}
 
 #[query]
 fn get_my_vote(req: GetMyVoteRequest) -> GetMyVoteResponse {

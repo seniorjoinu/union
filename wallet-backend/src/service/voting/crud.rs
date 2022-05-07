@@ -14,7 +14,7 @@ impl VotingService {
         voting_config_id: VotingConfigId,
         name: String,
         description: String,
-        winners_need: usize,
+        winners_need: u32,
         proposer: Principal,
         timestamp: u64,
     ) -> Result<VotingId, VotingError> {
@@ -34,8 +34,11 @@ impl VotingService {
         )
         .map_err(VotingError::ValidationError)?;
 
+        let id = Voting::repo().save(voting);
+        let mut voting = Voting::repo().get(&id).unwrap();
+
         let (rejection_choice, approval_choice) =
-            ChoiceService::create_rejection_and_approval_choices(voting.get_id().unwrap());
+            ChoiceService::create_rejection_and_approval_choices(id);
         voting.init_rejection_and_approval_choices(rejection_choice, approval_choice);
 
         CronService::schedule_round_end(&mut voting, &vc, timestamp);
@@ -47,14 +50,14 @@ impl VotingService {
         id: &VotingId,
         new_name: Option<String>,
         new_description: Option<String>,
-        new_winners_need: Option<usize>,
+        new_winners_need: Option<u32>,
         timestamp: u64,
     ) -> Result<(), VotingError> {
         let mut voting = VotingService::get_voting(id)?;
 
         // unwrapping because it should exist if it is listed
         let vc = VotingConfig::repo()
-            .get(&voting.get_voting_config_id())
+            .get(voting.get_voting_config_id())
             .unwrap();
 
         if let Some(winners_need) = &new_winners_need {

@@ -72,9 +72,9 @@ impl Repository<VotingConfig, VotingConfigId, VotingConfigFilter, ()> for Voting
             BTreeSet::default()
         };
 
-        if !index.is_empty() {
+        if index.is_empty() {
             index.append(&mut index2);
-        } else {
+        } else if !index2.is_empty() {
             index = index.intersection(&index2).cloned().collect();
         }
 
@@ -109,24 +109,15 @@ impl VotingConfigRepository {
             self.add_to_permissions_index(id, *permission_id);
         }
 
-        for gop in voting_config
-            .get_approval_threshold()
-            .list_groups()
-        {
+        for gop in voting_config.get_approval_threshold().list_groups() {
             self.add_to_group_index(id, gop);
         }
 
-        for gop in voting_config
-            .get_rejection_threshold()
-            .list_groups()
-        {
+        for gop in voting_config.get_rejection_threshold().list_groups() {
             self.add_to_group_index(id, gop);
         }
 
-        for gop in voting_config
-            .get_quorum_threshold()
-            .list_groups()
-        {
+        for gop in voting_config.get_quorum_threshold().list_groups() {
             self.add_to_group_index(id, gop);
         }
 
@@ -134,10 +125,7 @@ impl VotingConfigRepository {
             self.add_to_group_index(id, gop);
         }
 
-        for gop in voting_config
-            .get_next_round_threshold()
-            .list_groups()
-        {
+        for gop in voting_config.get_next_round_threshold().list_groups() {
             self.add_to_group_index(id, gop);
         }
     }
@@ -149,24 +137,15 @@ impl VotingConfigRepository {
             self.remove_from_permissions_index(&id, permission_id);
         }
 
-        for gop in voting_config
-            .get_approval_threshold()
-            .list_groups()
-        {
+        for gop in voting_config.get_approval_threshold().list_groups() {
             self.remove_from_group_index(&id, &gop);
         }
 
-        for gop in voting_config
-            .get_rejection_threshold()
-            .list_groups()
-        {
+        for gop in voting_config.get_rejection_threshold().list_groups() {
             self.remove_from_group_index(&id, &gop);
         }
 
-        for gop in voting_config
-            .get_quorum_threshold()
-            .list_groups()
-        {
+        for gop in voting_config.get_quorum_threshold().list_groups() {
             self.remove_from_group_index(&id, &gop);
         }
 
@@ -174,10 +153,7 @@ impl VotingConfigRepository {
             self.remove_from_group_index(&id, &gop);
         }
 
-        for gop in voting_config
-            .get_next_round_threshold()
-            .list_groups()
-        {
+        for gop in voting_config.get_next_round_threshold().list_groups() {
             self.remove_from_group_index(&id, &gop);
         }
     }

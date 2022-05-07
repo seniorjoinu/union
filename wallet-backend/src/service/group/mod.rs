@@ -150,8 +150,6 @@ impl GroupService {
             Token::repo().add_to_principal_index(to, token.get_id().unwrap());
         }
 
-        let total_supply = token.total_supply();
-
         Token::repo().save(token);
 
         EventsService::emit_shares_transfer_event(
@@ -161,7 +159,6 @@ impl GroupService {
             qty,
             from_balance,
             to_balance,
-            total_supply,
             timestamp,
         );
 

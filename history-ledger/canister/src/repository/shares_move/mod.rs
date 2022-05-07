@@ -4,7 +4,7 @@ use candid::{CandidType, Deserialize, Principal};
 use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
 use shared::sorted_by_timestamp::SortedByTimestamp;
-use shared::types::wallet::{GroupId, Shareholder};
+use shared::types::wallet::{GroupId, Shareholder, Shares};
 use std::collections::HashMap;
 
 pub mod model;
@@ -16,6 +16,7 @@ pub struct SharesMoveRepository {
     id_gen: IdGenerator,
 
     records_by_timestamp_index: HashMap<(GroupId, Principal), SortedByTimestamp<SharesMoveEntryId>>,
+    total_supplies_by_timestamp_index: HashMap<GroupId, SortedByTimestamp<Shares>>,
 }
 
 impl Repository<SharesMoveEntry, SharesMoveEntryId, SharesMoveEntryFilter, ()>
@@ -28,11 +29,11 @@ impl Repository<SharesMoveEntry, SharesMoveEntryId, SharesMoveEntryFilter, ()>
 
         let id = it.get_id().unwrap();
         if let Shareholder::Principal(ps) = it.get_from() {
-            self.add_to_timestamp_index(entry.group_id, ps.principal_id, entry.timestamp, id);
+            self.add_to_timestamp_index(it.get_group_id(), ps.principal_id, it.get_timestamp(), id);
         }
 
         if let Shareholder::Principal(ps) = it.get_to() {
-            self.add_to_timestamp_index(entry.group_id, ps.principal_id, entry.timestamp, id);
+            self.add_to_timestamp_index(it.get_group_id(), ps.principal_id, it.get_timestamp(), id);
         }
 
         self.records.insert(id, it);
@@ -53,7 +54,8 @@ impl Repository<SharesMoveEntry, SharesMoveEntryId, SharesMoveEntryFilter, ()>
             .records_by_timestamp_index
             .get(&(page_req.filter.group_id, page_req.filter.principal_id))
         {
-            let (has_next, iter) = index.get_all().into_iter().get_page(page_req);
+            let all = index.get_all();
+            let (has_next, iter) = all.iter().get_page(page_req);
             let data = iter.map(|id| self.get(id).unwrap()).collect();
 
             Page::new(data, has_next)
@@ -77,6 +79,30 @@ impl SharesMoveRepository {
         let id = entries.iter().next().unwrap();
 
         self.records.get(id).cloned()
+    }
+
+    pub fn push_total_supply(&mut self, group_id: GroupId, total_supply: Shares, timestamp: u64) {
+        self.total_supplies_by_timestamp_index
+            .entry(group_id)
+            .or_default()
+            .push(timestamp, total_supply);
+    }
+
+    pub fn total_supply_at(&self, group_id: &GroupId, timestamp: u64) -> Shares {
+        if let Some(index) = self.total_supplies_by_timestamp_index.get(group_id) {
+            if let Some(entries) = index.most_actual_by(&timestamp) {
+                entries
+                    .into_iter()
+                    .rev()
+                    .next()
+                    .cloned()
+                    .unwrap_or_default()
+            } else {
+                Shares::default()
+            }
+        } else {
+            Shares::default()
+        }
     }
 
     fn add_to_timestamp_index(

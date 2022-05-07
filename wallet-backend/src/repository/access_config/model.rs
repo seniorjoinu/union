@@ -9,7 +9,7 @@ use shared::types::wallet::AccessConfigId;
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeSet;
 
-#[derive(Clone, CandidType, Deserialize)]
+#[derive(Debug, Clone, CandidType, Deserialize)]
 pub struct AccessConfig {
     id: Option<AccessConfigId>,
     name: String,

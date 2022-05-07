@@ -80,7 +80,7 @@ type CandidRejectionCode = variant {
 type RawCandidCallResult = variant {
     Ok : blob;
     Err : record { 0 : CandidRejectionCode; 1 : text; };
-}
+};
 
 type ProgramExecutionResult = variant {
     Empty;

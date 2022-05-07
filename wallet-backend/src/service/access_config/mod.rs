@@ -4,9 +4,14 @@ use crate::repository::group::model::Group;
 use crate::repository::permission::model::Permission;
 use crate::repository::permission::types::{PermissionId, PermissionTarget};
 use crate::repository::profile::model::Profile;
-use crate::service::access_config::types::{AccessConfigError, AccessConfigService};
+use crate::service::access_config::types::{
+    AccessConfigError, AccessConfigService, ALLOW_VOTE_ACCESS_CONFIG_ID,
+};
 use crate::service::group::types::{GroupService, HAS_PROFILE_GROUP_ID};
-use crate::service::permission::types::ALLOW_ALL_PERMISSION_ID;
+use crate::service::permission::types::{
+    ALLOW_READ_PERMISSION_ID, ALLOW_SEND_FEEDBACK_PERMISSION_ID, ALLOW_VOTE_PERMISSION_ID,
+    ALLOW_WRITE_PERMISSION_ID,
+};
 use crate::EventsService;
 use candid::Principal;
 use shared::mvc::{HasRepository, Repository};
@@ -18,11 +23,27 @@ pub mod crud;
 pub mod types;
 
 impl AccessConfigService {
-    pub fn init_default_access_config() {
+    pub fn init_default_access_configs(wallet_creator_profile_id: Principal) {
+        let allow_vote_access_config_id = AccessConfigService::create_access_config(
+            String::from("Voting access"),
+            String::from("Non-deletable default access config. Allows 'Has profile' group members to call to any voting related method of this union."),
+            vec![ALLOW_VOTE_PERMISSION_ID].into_iter().collect(),
+            vec![AlloweeConstraint::Group(GroupCondition { id: HAS_PROFILE_GROUP_ID, min_shares: Shares::from(1) })].into_iter().collect(),
+        ).unwrap();
+
+        assert_eq!(allow_vote_access_config_id, ALLOW_VOTE_ACCESS_CONFIG_ID);
+
         AccessConfigService::create_access_config(
-            String::from("Default"),
-            String::from("Default access config. It allows all users with profiles to call any method (including query methods) of any canister through this union. You can delete or edit it, but be careful - you can lose access to your data."),
-            vec![ALLOW_ALL_PERMISSION_ID].into_iter().collect(),
+            String::from("Unlimited access"),
+            String::from("Allows calling to any method (including query methods) of this union. Be very careful editing or deleting this access config."),
+            vec![ALLOW_WRITE_PERMISSION_ID, ALLOW_READ_PERMISSION_ID].into_iter().collect(),
+            vec![AlloweeConstraint::Profile(wallet_creator_profile_id)].into_iter().collect(),
+        ).unwrap();
+
+        AccessConfigService::create_access_config(
+            String::from("Read-only"),
+            String::from("Allows to call any query method of this union. Be very careful editing or deleting this access config."),
+            vec![ALLOW_READ_PERMISSION_ID].into_iter().collect(),
             vec![AlloweeConstraint::Group(GroupCondition { min_shares: Shares::from(1), id: HAS_PROFILE_GROUP_ID })].into_iter().collect(),
         ).unwrap();
     }
@@ -33,8 +54,10 @@ impl AccessConfigService {
         caller: Principal,
         timestamp: u64,
     ) -> Result<ProgramExecutionResult, AccessConfigError> {
-        program.validate().map_err(AccessConfigError::ValidationError)?;
-        
+        program
+            .validate()
+            .map_err(AccessConfigError::ValidationError)?;
+
         let ac = AccessConfigService::get_access_config(id)?;
         AccessConfigService::assert_program_fits(&ac, &program)?;
         AccessConfigService::assert_caller_allowed(&ac, caller)?;
@@ -150,5 +173,13 @@ impl AccessConfigService {
         }
 
         Ok(())
+    }
+
+    fn assert_not_default(id: &AccessConfigId) -> Result<(), AccessConfigError> {
+        if *id == ALLOW_VOTE_ACCESS_CONFIG_ID {
+            Err(AccessConfigError::UnableToEditDefaultAccessConfig)
+        } else {
+            Ok(())
+        }
     }
 }

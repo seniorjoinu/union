@@ -1,6 +1,6 @@
 use crate::repository::permission::types::PermissionId;
 use bigdecimal::num_bigint::ToBigInt;
-use bigdecimal::{BigDecimal, ToPrimitive};
+use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
 use candid::types::{Serializer, Type};
 use candid::{CandidType, Deserialize, Nat};
 use serde::Deserializer;
@@ -28,6 +28,12 @@ impl Into<Nat> for Fraction {
         let (b, _) = self.0.with_scale(0).into_bigint_and_exponent();
 
         Nat(b.to_biguint().unwrap())
+    }
+}
+
+impl From<f64> for Fraction {
+    fn from(it: f64) -> Self {
+        Self(BigDecimal::from_f64(it).unwrap())
     }
 }
 
@@ -125,6 +131,10 @@ impl ThresholdValue {
 
         match &self {
             ThresholdValue::FractionOf(f) => {
+                if total_shares == Shares::default() {
+                    return false;
+                }
+
                 let voted_fraction = Fraction::from(voted_shares) / Fraction::from(total_shares);
 
                 voted_fraction >= f.fraction
@@ -180,15 +190,15 @@ pub struct RoundSettings {
 
 #[derive(Debug, Clone, Copy, CandidType, Deserialize)]
 pub struct LenInterval {
-    pub min: usize,
-    pub max: usize,
+    pub min: u32,
+    pub max: u32,
 }
 
 impl LenInterval {
     pub fn is_valid(&self) -> bool {
         self.min >= 1 && self.min <= self.max
     }
-    pub fn contains(&self, num: usize) -> bool {
+    pub fn contains(&self, num: u32) -> bool {
         num >= self.min && num <= self.max
     }
 }

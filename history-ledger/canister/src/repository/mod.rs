@@ -5,6 +5,7 @@ use crate::repository::shares_move::model::SharesMoveEntry;
 use crate::repository::shares_move::types::{SharesMoveEntryFilter, SharesMoveEntryId};
 use crate::repository::shares_move::SharesMoveRepository;
 use candid::{CandidType, Deserialize};
+use history_ledger_client::api::ProgramExecutionFilter;
 use ic_cdk::storage::{stable_restore, stable_save};
 use ic_cdk_macros::{post_upgrade, pre_upgrade};
 use shared::mvc::HasRepository;
@@ -58,7 +59,7 @@ impl
     HasRepository<
         ProgramExecutionEntry,
         ProgramExecutionEntryId,
-        (),
+        ProgramExecutionFilter,
         (),
         ProgramExecutionRepository,
     > for ProgramExecutionEntry

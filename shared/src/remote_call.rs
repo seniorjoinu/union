@@ -17,9 +17,9 @@ pub struct RemoteCallEndpoint {
 }
 
 impl RemoteCallEndpoint {
-    pub fn this(method_name: &str) -> Self {
+    pub fn new(canister_id: Principal, method_name: &str) -> Self {
         Self {
-            canister_id: id(),
+            canister_id,
             method_name: String::from(method_name),
         }
     }
@@ -126,14 +126,6 @@ impl RemoteCallPayload {
             },
             args: RemoteCallArgs::Encoded(encode_args(args).expect("Unable to encode args")),
             cycles,
-        }
-    }
-
-    pub fn this_empty(method_name: &str) -> Self {
-        Self {
-            endpoint: RemoteCallEndpoint::this(method_name),
-            args: RemoteCallArgs::CandidString(vec![]),
-            cycles: 0,
         }
     }
 

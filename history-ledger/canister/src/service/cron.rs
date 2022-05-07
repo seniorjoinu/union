@@ -1,6 +1,7 @@
-use crate::service::events as EventsService;
+use crate::service::events::EventsService;
 use crate::{cron_enqueue, cron_ready_tasks};
 use candid::{CandidType, Deserialize, Principal};
+use ic_cdk::spawn;
 use ic_cron::types::{Iterations, SchedulingOptions};
 
 #[derive(CandidType, Deserialize)]
@@ -30,7 +31,7 @@ impl CronService {
                 .expect("Invalid cron task")
             {
                 CronTaskKind::SubscribeToWalletEvents(p) => {
-                    EventsService::subscribe_to_wallet_events(p)
+                    spawn(EventsService::subscribe_to_wallet_events(p));
                 }
             };
         }

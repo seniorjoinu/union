@@ -26,6 +26,7 @@ impl PermissionService {
         new_description: Option<String>,
         new_targets: Option<BTreeSet<PermissionTarget>>,
     ) -> Result<(), PermissionError> {
+        PermissionService::assert_not_default(*id)?;
         let mut permission = PermissionService::get_permission(id)?;
 
         // WARNING! it is possible to change the permission while related votings are in-progress
@@ -40,7 +41,7 @@ impl PermissionService {
     }
 
     pub fn delete_permission(id: &PermissionId) -> Result<Permission, PermissionError> {
-        PermissionService::assert_not_allow_all_permission(*id)?;
+        PermissionService::assert_not_default(*id)?;
 
         if VotingConfig::repo().permission_has_related_voting_configs(id) {
             return Err(PermissionError::RelatedVotingConfigsExist);

@@ -13,7 +13,7 @@ pub struct CreateVotingRequest {
     pub voting_config_id: VotingConfigId,
     pub name: String,
     pub description: String,
-    pub winners_need: usize,
+    pub winners_need: u32,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -26,7 +26,7 @@ pub struct UpdateVotingRequest {
     pub id: VotingId,
     pub new_name: Option<String>,
     pub new_description: Option<String>,
-    pub new_winners_need: Option<usize>,
+    pub new_winners_need: Option<u32>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -35,7 +35,7 @@ pub struct DeleteVotingRequest {
 }
 
 #[derive(CandidType, Deserialize)]
-pub struct CastVoteRequest {
+pub struct CastMyVoteRequest {
     pub id: VotingId,
     pub vote: Vote,
 }

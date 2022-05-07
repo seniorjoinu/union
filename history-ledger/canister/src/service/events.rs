@@ -8,7 +8,7 @@ use shared::mvc::{HasRepository, Repository};
 use shared::types::wallet::{
     ProgramExecutedEvent_0, ProgramExecutedEvent_0Filter, ProgramExecutedEvent_1,
     ProgramExecutedEvent_1Filter, ProgramExecutedEvent_2, ProgramExecutedEvent_2Filter,
-    SharesMoveEvent, SharesMoveEventFilter,
+    SharesMoveEvent, SharesMoveEventFilter, TotalSupplyUpdatedEvent, TotalSupplyUpdatedEventFilter,
 };
 
 pub struct EventsService;
@@ -19,6 +19,7 @@ impl EventsService {
         let f2 = ProgramExecutedEvent_0Filter {};
         let f3 = ProgramExecutedEvent_1Filter {};
         let f4 = ProgramExecutedEvent_2Filter {};
+        let f5 = TotalSupplyUpdatedEventFilter {};
 
         // Warning! Method name should follow the name of the CONTROLLER method
         wallet_id
@@ -40,6 +41,10 @@ impl EventsService {
                         filter: f4.to_event_filter(),
                         method_name: String::from("process_events"),
                     },
+                    CallbackInfo {
+                        filter: f5.to_event_filter(),
+                        method_name: String::from("process_events"),
+                    },
                 ],
             })
             .await
@@ -57,10 +62,19 @@ impl EventsService {
 
                     SharesMoveEntry::repo().save(it);
                 }
+                "TotalSupplyUpdatedEvent" => {
+                    let ev: TotalSupplyUpdatedEvent = TotalSupplyUpdatedEvent::from_event(event);
+
+                    SharesMoveEntry::repo().push_total_supply(
+                        ev.group_id,
+                        ev.total_supply,
+                        ev.timestamp,
+                    );
+                }
                 "ProgramExecutedEvent_0" => {
                     let ev: ProgramExecutedEvent_0 = ProgramExecutedEvent_0::from_event(event);
                     let it = ProgramExecutionEntry::from_event(ev);
-                    
+
                     ProgramExecutionEntry::repo().save(it);
                 }
                 "ProgramExecutedEvent_1" => {

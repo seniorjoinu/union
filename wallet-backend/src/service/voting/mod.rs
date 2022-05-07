@@ -29,7 +29,7 @@ impl VotingService {
         let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
 
         if !matches!(voting.get_status(), VotingStatus::Round(_)) {
-            return Err(VotingError::InvalidVote);
+            return Err(VotingError::VotingOnlyAllowedDuringRounds);
         }
 
         let (choices, shares_info) = match vote {
@@ -55,7 +55,7 @@ impl VotingService {
                 let total_fraction: BigDecimal = m.vote.iter().map(|(_, f)| f.0.abs()).sum();
 
                 if total_fraction > BigDecimal::one() {
-                    return Err(VotingError::InvalidVote);
+                    return Err(VotingError::VoteFractionTooBig);
                 }
 
                 let votes = m
@@ -116,6 +116,14 @@ impl VotingService {
                 }
 
                 if *r == 0 {
+                    // TODO: also check winners/choices compatibility
+                    if let Some(cc) = vc.get_choices_count() {
+                        if !cc.contains(voting.get_choices().len() as u32) {
+                            voting.finish_fail(String::from("Choices count is invalid"), timestamp);
+                            return;
+                        }
+                    }
+
                     let approval_choice =
                         Choice::repo().get(&voting.get_approval_choice()).unwrap();
                     let approval_votes_per_group =
@@ -193,8 +201,8 @@ impl VotingService {
                         // TODO: what if we have more winners than we need?
 
                         let mut new_winners = RoundResult::new(*r);
-                        let mut cur_winners_count: usize =
-                            voting.get_winners().iter().map(|it| it.len()).sum();
+                        let mut cur_winners_count: u32 =
+                            voting.get_winners().iter().map(|it| it.len() as u32).sum();
 
                         for choice_id in win {
                             voting.remove_choice(&choice_id, timestamp);
@@ -227,7 +235,7 @@ impl VotingService {
                         voting.add_loser(new_losers, timestamp);
 
                         if voting.get_winners().len() + voting.get_choices().len()
-                            < voting.get_winners_need()
+                            < voting.get_winners_need() as usize
                         {
                             voting.finish_fail(
                                 String::from("Not enough choices to continue"),
@@ -373,7 +381,7 @@ impl VotingService {
 
     fn assert_winners_need_is_fine(
         vc: &VotingConfig,
-        winners_need: usize,
+        winners_need: u32,
     ) -> Result<(), VotingError> {
         if let Some(wc) = vc.get_winners_count() {
             if !wc.contains(winners_need) {
@@ -395,7 +403,7 @@ impl VotingService {
         if vc.get_approval_threshold().list_groups().contains(group_id) {
             Ok(())
         } else {
-            Err(VotingError::InvalidVote)
+            Err(VotingError::VoterCantApprove)
         }
     }
 
@@ -407,7 +415,7 @@ impl VotingService {
         {
             Ok(())
         } else {
-            Err(VotingError::InvalidVote)
+            Err(VotingError::VoterCantReject)
         }
     }
 
@@ -419,7 +427,7 @@ impl VotingService {
         if list.contains(group_id) {
             Ok(())
         } else {
-            Err(VotingError::InvalidVote)
+            Err(VotingError::VoterCantVote)
         }
     }
 
@@ -429,19 +437,19 @@ impl VotingService {
         caller: Principal,
     ) -> Result<(), VotingError> {
         if !shares_info.is_signature_valid() {
-            return Err(VotingError::InvalidVote);
+            return Err(VotingError::SharesInfoSignatureInvalid);
         }
 
         if voting.get_created_at() != shares_info.timestamp {
-            return Err(VotingError::InvalidVote);
+            return Err(VotingError::SharesInfoTimestampInvalid);
         }
 
         if shares_info.balance == Shares::default() {
-            return Err(VotingError::InvalidVote);
+            return Err(VotingError::InsufficientSharesBalance);
         }
 
         if shares_info.principal_id != caller {
-            return Err(VotingError::InvalidVote);
+            return Err(VotingError::SharesInfoDoesntBelongToVoter);
         }
 
         Ok(())
