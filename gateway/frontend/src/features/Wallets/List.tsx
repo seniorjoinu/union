@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { PageWrapper, Text, Button as B } from 'components';
+import { PageWrapper, Text, Button as B } from '@union/components';
 import { useGateway } from 'services';
 import { WalletItem } from './WalletItem';
 

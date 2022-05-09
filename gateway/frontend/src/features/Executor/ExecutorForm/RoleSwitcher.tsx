@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { Control, Controller } from 'react-hook-form';
-import { Text, Select, Option } from 'components';
+import { Text, Select, Option } from '@union/components';
 import { useTrigger } from 'toolkit';
 import { useUnion } from 'services';
 import { useCurrentUnion } from '../../Wallet/context';

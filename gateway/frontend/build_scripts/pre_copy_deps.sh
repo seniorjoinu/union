@@ -5,6 +5,8 @@ set -e
 echo Building npm deps
 cd ../../libs/serialize
 yarn build
+cd ../components
+yarn build
 cd ../../gateway/frontend
 
 cp ../../deployer-backend/canister/.dfx/local/canisters/union-deployer/union-deployer.did.d.ts ./src/assets/union-deployer.did.d.ts

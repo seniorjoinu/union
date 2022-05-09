@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Role, Permission } from 'union-ts';
-import { Text, TextProps, Button as B } from 'components';
+import { Text, TextProps, Button as B } from '@union/components';
 import { parseRole } from '../utils';
 import { PermissionDetailsView as PDV } from '../PermissionDetails';
 

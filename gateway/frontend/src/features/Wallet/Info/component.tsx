@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Text, SubmitButton as SB, ImageFile as IF } from 'components';
+import { PageWrapper, Text, SubmitButton as SB, ImageFile as IF } from '@union/components';
 import { useDeployer, useUnion } from 'services';
 import { downloadFileContent } from 'toolkit';
 import { NavLink } from 'react-router-dom';

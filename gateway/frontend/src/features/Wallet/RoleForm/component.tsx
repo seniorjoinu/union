@@ -8,7 +8,7 @@ import {
   TextField as TF,
   Button as B,
   ListSelect as LS,
-} from 'components';
+} from '@union/components';
 import { useRoles } from '../useRoles';
 import { parseRole } from '../utils';
 import { useSubmit } from './useSubmit';

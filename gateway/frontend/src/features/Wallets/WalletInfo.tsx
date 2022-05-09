@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Principal } from '@dfinity/principal';
-import { Text } from 'components';
+import { Text } from '@union/components';
 import { useUnion } from 'services';
 import styled from 'styled-components';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Text, PageWrapper } from 'components';
+import { Text, PageWrapper } from '@union/components';
 import { caseByCount } from 'toolkit';
 import moment from 'moment';
 import { HistoryEntry } from 'union-ts';

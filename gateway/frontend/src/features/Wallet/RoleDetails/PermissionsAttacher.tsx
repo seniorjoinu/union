@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
-import { ListSelect, Button as B } from 'components';
+import { ListSelect, Button as B } from '@union/components';
 import { Role } from 'union-ts';
 import { usePermissions } from '../usePermissions';
 import { useAttach } from '../useAttach';

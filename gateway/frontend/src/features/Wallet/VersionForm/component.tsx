@@ -6,7 +6,7 @@ import {
   MaskedTextField as MTF,
   Text,
   Button as B,
-} from 'components';
+} from '@union/components';
 import { useForm, Controller } from 'react-hook-form';
 import { useCreateVersion, FormData } from '../useVersion';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
-import { PageWrapper, Button as B, Text } from 'components';
+import { PageWrapper, Button as B, Text } from '@union/components';
 import { Principal } from '@dfinity/principal';
 
 const Item = styled(Text)``;

@@ -1,6 +1,12 @@
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, TextField as TF, Text, Button as B, ImageFile as IF } from 'components';
+import {
+  PageWrapper,
+  TextField as TF,
+  Text,
+  Button as B,
+  ImageFile as IF,
+} from '@union/components';
 import { useForm, Controller } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
 import { useSetInfo, useGetInfo, SetInfoFormData } from './useUnionInfo';

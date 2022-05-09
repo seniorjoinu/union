@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Text, Button as B, Accordeon as A } from 'components';
+import { PageWrapper, Text, Button as B, Accordeon as A } from '@union/components';
 import { NavLink } from 'react-router-dom';
 import { useUnion } from 'services';
 import { Role } from 'union-ts';

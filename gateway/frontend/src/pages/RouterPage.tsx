@@ -1,6 +1,6 @@
 import React from 'react';
 import { unstable_HistoryRouter as HistoryRouter, Routes, Navigate, Route } from 'react-router-dom';
-import { Progress } from 'components';
+import { Progress } from '@union/components';
 import { useAuth, AuthReadyState } from 'services';
 import { createBrowserHistory } from 'toolkit';
 import { Versions } from '../features/Versions';

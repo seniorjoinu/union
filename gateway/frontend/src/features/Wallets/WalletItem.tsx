@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
-import { Text, SimpleListItem } from 'components';
+import { Text, SimpleListItem } from '@union/components';
 import { initWalletController, useGateway } from 'services';
 import { parseRole } from '../Wallet/utils';
 import { WalletInfo } from './WalletInfo';

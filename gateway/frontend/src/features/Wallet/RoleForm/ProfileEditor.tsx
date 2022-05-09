@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
-import { PageWrapper, TextField as TF, Button as B } from 'components';
+import { PageWrapper, TextField as TF, Button as B } from '@union/components';
 import { ProfileFormData, useEditProfile } from './useEditProfile';
 
 const Button = styled(B)``;

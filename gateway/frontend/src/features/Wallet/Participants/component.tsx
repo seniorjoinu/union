@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Text, Button as B } from 'components';
+import { PageWrapper, Text, Button as B } from '@union/components';
 import { Profile } from 'union-ts';
 import { NavLink } from 'react-router-dom';
 import { useCurrentUnion } from '../context';

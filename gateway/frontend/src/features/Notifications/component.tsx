@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useGateway, initWalletController } from 'services';
-import { Text, PageWrapper, SubmitButton as B } from 'components';
+import { Text, PageWrapper, SubmitButton as B } from '@union/components';
 import styled from 'styled-components';
 import { Role } from 'union-ts';
 import { Principal } from '@dfinity/principal';

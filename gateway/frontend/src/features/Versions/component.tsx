@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { PageWrapper, Text, SubmitButton as B } from 'components';
+import { PageWrapper, Text, SubmitButton as B } from '@union/components';
 import { initWalletController, useDeployer } from 'services';
 import styled from 'styled-components';
 import moment from 'moment';

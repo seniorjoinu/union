@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
-import { PageWrapper, Text, Button as B, TextField } from 'components';
+import { PageWrapper, Text, Button as B, TextField } from '@union/components';
 import { checkPrincipal } from 'toolkit';
 import { walletSerializer } from 'services';
 import { useCurrentUnion } from '../context';

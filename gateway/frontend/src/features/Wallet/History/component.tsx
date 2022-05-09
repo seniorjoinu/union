@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, SubmitButton as B } from 'components';
+import { PageWrapper, SubmitButton as B } from '@union/components';
 import { NavLink as N } from 'react-router-dom';
 import { HistoryEntry } from 'union-ts';
 import { useUnion } from 'services';

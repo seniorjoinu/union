@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { NavLink, useParams } from 'react-router-dom';
-import { Text } from 'components';
+import { Text } from '@union/components';
 import { useDeployer, useUnion } from 'services';
 import { checkPrincipal } from 'toolkit';
 import { Principal } from '@dfinity/principal';

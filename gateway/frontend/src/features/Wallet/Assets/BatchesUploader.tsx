@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Controller, useForm } from 'react-hook-form';
-import { PageWrapper, Text, TextField as TF, SubmitButton as B } from 'components';
+import { PageWrapper, Text, TextField as TF, SubmitButton as B } from '@union/components';
 import { useNavigate } from 'react-router-dom';
 import { useBatchUploader } from '../useBatchUploader';
 

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams } from 'react-router-dom';
-import { Button as B } from 'components';
+import { Button as B } from '@union/components';
 import { useUnion } from 'services';
 import { useCurrentUnion } from '../../context';
 import { Entry } from './Entry';

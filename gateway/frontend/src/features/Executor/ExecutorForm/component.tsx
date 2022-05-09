@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import styled from 'styled-components';
 import { useForm, Controller } from 'react-hook-form';
-import { PageWrapper, Button as B, Text, TextField as TF, TextArea as TA } from 'components';
+import { PageWrapper, Button as B, Text, TextField as TF, TextArea as TA } from '@union/components';
 import { checkPrincipal, downloadFileContent, downloadFileBytes } from 'toolkit';
 import { Principal } from '@dfinity/principal';
 import { ExecuteResponse } from 'union-ts';

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Text } from 'components';
+import { PageWrapper, Text } from '@union/components';
 import { useCurrentUnion } from '../context';
 import { PermissionInfo as P } from './PermissionInfo';
 import { RoleInfo as R } from './RoleInfo';

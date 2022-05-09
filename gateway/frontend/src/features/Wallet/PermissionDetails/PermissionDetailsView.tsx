@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Text, TextProps, Button as B } from 'components';
+import { Text, TextProps, Button as B } from '@union/components';
 import { Permission, Role } from 'union-ts';
 import { parsePermission } from '../utils';
 import { RoleDetailsView } from '../RoleDetails';

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { NavLink } from 'react-router-dom';
-import { PageWrapper, Text, SubmitButton as B } from 'components';
+import { PageWrapper, Text, SubmitButton as B } from '@union/components';
 import { useUnion } from 'services';
 import deleteIcon from '../../../assets/delete.svg';
 import { useCurrentUnion } from '../context';

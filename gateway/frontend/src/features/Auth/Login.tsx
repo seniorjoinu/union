@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styled from 'styled-components';
-import { Select as S } from 'components';
+import { Select as S } from '@union/components';
 import { LoginButton, LoginButtonProps } from './LoginButton';
 
 const Select = styled(S)``;

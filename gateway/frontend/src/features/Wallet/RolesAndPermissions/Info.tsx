@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Text, Chips } from 'components';
+import { Text, Chips } from '@union/components';
 import pencil from '../../../assets/pencil.svg';
 
 const Title = styled(Text)`

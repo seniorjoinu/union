@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { useNavigate } from 'react-router-dom';
-import { PageWrapper, Text, SubmitButton as B } from 'components';
+import { PageWrapper, Text, SubmitButton as B } from '@union/components';
 import { useGateway } from 'services';
 import { checkPrincipal } from 'toolkit';
 import { useClient } from '../useClient';

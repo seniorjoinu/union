@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import styled from 'styled-components';
-import { Text } from 'components';
+import { Text } from '@union/components';
 import { useCandid } from '../useCandid';
 import { useCurrentUnion } from '../context';
 import { FormTarget } from './types';

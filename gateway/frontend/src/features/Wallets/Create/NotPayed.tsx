@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
-import { PageWrapper, SubmitButton as B, Text, Select as S, Option } from 'components';
+import { PageWrapper, SubmitButton as B, Text, Select as S, Option } from '@union/components';
 import { useAuth, useDeployer, useGateway } from 'services';
 import { useForm, Controller } from 'react-hook-form';
 

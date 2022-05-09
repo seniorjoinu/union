@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import { Text } from '../Text';
 import * as A from './arrow-bracket';
 

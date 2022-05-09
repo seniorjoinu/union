@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import { Controller, useForm } from 'react-hook-form';
-import { TextField as TF, Text, SubmitButton as B } from 'components';
+import { TextField as TF, Text, SubmitButton as B } from '@union/components';
 import { checkPrincipal } from 'toolkit';
 import { useBatches } from '../useBatches';
 

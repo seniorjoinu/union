@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Button as B, Select as S, Option } from 'components';
+import { PageWrapper, Button as B, Select as S, Option } from '@union/components';
 import { useForm, Controller } from 'react-hook-form';
 import { useDeployer } from 'services';
 import { UpgradeFormData, useUpgradeWallet } from './useUnionInfo';

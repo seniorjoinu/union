@@ -10,7 +10,7 @@ import {
   Button as B,
   MultiSelectSkeleton as MS,
   Accordeon as Acc,
-} from 'components';
+} from '@union/components';
 import { checkPrincipal } from 'toolkit';
 import { CanisterMethods as CM } from './CanisterMethods';
 import { useSubmit } from './useSubmit';

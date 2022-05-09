@@ -1,0 +1,11 @@
+.idea
+.cache
+.vscode
+dist
+*.txt
+node_modules
+coverage
+stats.json
+*.DS_Store
+npm-debug.log
+yarn-error.log

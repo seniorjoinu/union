@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { PageWrapper, TextField as TF, Select as S, Option, Button as B } from 'components';
+import { PageWrapper, TextField as TF, Select as S, Option, Button as B } from '@union/components';
 import { useForm, Controller } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
 import { useUpdateAssetCanister, UpdateAssetCanisterFormData } from './useSpawnCanister';

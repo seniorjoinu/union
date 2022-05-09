@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { useNavigate } from 'react-router-dom';
-import { PageWrapper, Text, SubmitButton as B, SimpleListItem } from 'components';
+import { PageWrapper, Text, SubmitButton as B, SimpleListItem } from '@union/components';
 import { useDeployer, useGateway } from 'services';
 import { WalletItem } from '../Wallets';
 

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Text } from 'components';
+import { Text } from '@union/components';
 import { useTrigger } from 'toolkit';
 import styled from 'styled-components';
 import { useUnion } from 'services';

@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Text } from 'components';
+import { Text } from '@union/components';
 import { HistoryEntry } from 'union-ts';
 
 const Result = styled(Text)`

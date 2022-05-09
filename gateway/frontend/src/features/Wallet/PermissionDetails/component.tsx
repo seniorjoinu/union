@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { Text } from 'components';
+import { Text } from '@union/components';
 import { useUnion } from 'services';
 import { useCurrentUnion } from '../context';
 import { useAttachedRoles } from '../useAttachedRoles';
