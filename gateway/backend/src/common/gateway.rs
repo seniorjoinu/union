@@ -1,4 +1,4 @@
-use crate::common::types::{Bill, BillStatus, GatewayError, RoleId};
+use crate::common::types::{Bill, BillStatus, GatewayError};
 use crate::{BillId, BillType};
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use std::collections::hash_map::Entry;
@@ -11,7 +11,6 @@ pub struct ProfileCreatedNotification {
     pub id: NotificationId,
     pub receiver: Principal,
     pub union_wallet_id: Principal,
-    pub role_id: RoleId,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -143,7 +142,6 @@ impl State {
         &mut self,
         receiver: Principal,
         union_wallet_id: Principal,
-        role_id: RoleId,
     ) -> NotificationId {
         let id = self.generate_notification_id();
 
@@ -151,7 +149,6 @@ impl State {
             id,
             receiver,
             union_wallet_id,
-            role_id,
         };
 
         match self.notifications_by_user.entry(notification.receiver) {

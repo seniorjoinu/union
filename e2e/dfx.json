@@ -1,21 +1,15 @@
 {
   "canisters": {
+    "history-ledger" : {
+      "build": "../history-ledger/canister/build.sh",
+      "candid": "../history-ledger/canister/can.did",
+      "wasm": "../history-ledger/canister/target/wasm32-unknown-unknown/release/union-history-ledger-opt.wasm",
+      "type": "custom"
+    },
     "wallet": {
       "build": "../wallet-backend/build.sh",
       "candid": "../wallet-backend/can.did",
       "wasm": "../wallet-backend/target/wasm32-unknown-unknown/release/union-wallet-opt.wasm",
-      "type": "custom"
-    },
-    "gateway": {
-      "build": "../gateway/backend/build.sh",
-      "candid": "../gateway/backend/can.did",
-      "wasm": "../gateway/backend/target/wasm32-unknown-unknown/release/union-gateway-opt.wasm",
-      "type": "custom"
-    },
-    "deployer": {
-      "build": "../deployer-backend/canister/build.sh",
-      "candid": "../deployer-backend/canister/can.did",
-      "wasm": "../deployer-backend/canister/target/wasm32-unknown-unknown/release/union-deployer-opt.wasm",
       "type": "custom"
     }
   },

@@ -197,8 +197,7 @@ pub fn get_state() -> &'static mut State {
 
 #[init]
 pub fn init(binary_controller: Principal, spawn_controller: Principal) {
-    let mut state = State::new(binary_controller, spawn_controller);
-    unsafe { STATE = Some(state) }
+    unsafe { STATE = Some(State::new(binary_controller, spawn_controller)) }
 }
 
 #[pre_upgrade]

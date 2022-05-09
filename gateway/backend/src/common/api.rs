@@ -1,4 +1,4 @@
-use crate::common::types::{BillId, BillPaymentProof, RoleId};
+use crate::common::types::{BillId, BillPaymentProof};
 use crate::ProfileCreatedNotification;
 use ic_cdk::export::candid::{CandidType, Deserialize, Principal};
 use ic_event_hub_macros::Event;
@@ -60,19 +60,4 @@ pub struct ControllerSpawnWalletResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetMyNotificationsResponse {
     pub notifications: Vec<ProfileCreatedNotification>,
-}
-
-// ------------------- EVENTS --------------------
-
-#[derive(Event)]
-pub struct ProfileCreatedEvent {
-    #[topic]
-    pub profile_owner: Principal,
-    pub profile_role_id: RoleId,
-}
-
-#[derive(Event)]
-pub struct ProfileActivatedEvent {
-    #[topic]
-    pub profile_owner: Principal,
 }

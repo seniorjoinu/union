@@ -17,9 +17,11 @@ ic-cdk = "0.5.0"
 ic-cdk-macros = "0.5.0"
 serde = "1.0.136"
 candid = "0.7.14"
-ic-cron = "0.6.1"
+ic-cron = "0.7.0"
 serde_bytes = "0.11.5"
 async-trait = "0.1.53"
 ic-event-hub = "0.3.1"
 ic-event-hub-macros = "0.3.1"
 shared = { path = "../shared" }
+history-ledger-client = { path = "../history-ledger/clients/rust" }
+bigdecimal = { version = "0.3.0" }

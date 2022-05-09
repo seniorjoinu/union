@@ -2,7 +2,6 @@ use ic_cdk::export::candid::{CandidType, Deserialize, Nat, Principal};
 use union_deployer_client::api::SpawnWalletRequest;
 
 pub type BillId = Nat;
-pub type RoleId = u32;
 
 #[derive(Debug)]
 pub enum GatewayError {

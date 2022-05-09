@@ -55,7 +55,6 @@ type ProfileCreatedNotification = record {
     id : NotificationId;
     receiver : principal;
     union_wallet_id : principal;
-    role_id : RoleId;
 };
 
 type GetMyNotificationsResponse = record {

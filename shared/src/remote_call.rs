@@ -1,22 +1,44 @@
 use crate::candid::{CandidCallResult, ToCandidType};
+use crate::types::Blob;
+use crate::validation::ValidationError;
 use candid::parser::value::IDLValue;
 use candid::ser::IDLBuilder;
-use candid::utils::ArgumentDecoder;
-use candid::{decode_args, CandidType, Deserialize, Principal};
+use candid::utils::{ArgumentDecoder, ArgumentEncoder};
+use candid::{decode_args, encode_args, CandidType, Deserialize, Principal};
 use ic_cdk::api::call::call_raw;
 use ic_cdk::id;
 
-#[derive(CandidType, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
+const WILDCARD: &str = "*";
+
+#[derive(CandidType, Deserialize, Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct RemoteCallEndpoint {
     pub canister_id: Principal,
     pub method_name: String,
 }
 
 impl RemoteCallEndpoint {
-    pub fn this(method_name: &str) -> Self {
+    pub fn new(canister_id: Principal, method_name: &str) -> Self {
         Self {
-            canister_id: id(),
+            canister_id,
             method_name: String::from(method_name),
+        }
+    }
+    
+    pub fn wildcard(canister_id: Principal) -> Self {
+        Self {
+            canister_id,
+            method_name: String::from(WILDCARD)
+        }
+    }
+    
+    pub fn is_wildcard(&self) -> bool {
+        self.method_name == WILDCARD
+    }
+    
+    pub fn to_wildcard(&self) -> Self {
+        Self {
+            canister_id: self.canister_id,
+            method_name: String::from(WILDCARD)
         }
     }
 }
@@ -24,16 +46,17 @@ impl RemoteCallEndpoint {
 #[derive(CandidType, Deserialize, Debug, Clone)]
 pub enum RemoteCallArgs {
     CandidString(Vec<String>),
-    Encoded(Vec<u8>),
+    Encoded(Blob),
 }
 
 impl RemoteCallArgs {
-    pub fn validate(&self) -> Result<(), String> {
+    pub fn validate(&self) -> Result<(), ValidationError> {
         match self {
             RemoteCallArgs::CandidString(str_args) => {
                 for (i, arg) in str_args.iter().enumerate() {
-                    arg.parse::<IDLValue>()
-                        .map_err(|e| format!("Invalid argument #{}: {:?}", i, e))?;
+                    arg.parse::<IDLValue>().map_err(|e| {
+                        ValidationError(format!("Invalid argument #{}: {:?}", i, e))
+                    })?;
                 }
 
                 Ok(())
@@ -42,24 +65,24 @@ impl RemoteCallArgs {
         }
     }
 
-    pub fn serialize_args(&self) -> Result<Vec<u8>, String> {
+    pub fn serialize_args(&self) -> Result<Vec<u8>, ValidationError> {
         match self {
             RemoteCallArgs::CandidString(str_args) => {
                 let mut builder = IDLBuilder::new();
 
                 for (i, arg) in str_args.iter().enumerate() {
-                    let idl_arg = arg
-                        .parse::<IDLValue>()
-                        .map_err(|e| format!("Invalid argument #{}: {:?}", i, e))?;
+                    let idl_arg = arg.parse::<IDLValue>().map_err(|e| {
+                        ValidationError(format!("Invalid argument #{}: {:?}", i, e))
+                    })?;
 
-                    builder
-                        .value_arg(&idl_arg)
-                        .map_err(|e| format!("Builder error on argument #{}: {:?}", i, e))?;
+                    builder.value_arg(&idl_arg).map_err(|e| {
+                        ValidationError(format!("Builder error on argument #{}: {:?}", i, e))
+                    })?;
                 }
 
                 builder
                     .serialize_to_vec()
-                    .map_err(|e| format!("Arguments serialization failed {:?}", e))
+                    .map_err(|e| ValidationError(format!("Arguments serialization failed {:?}", e)))
             }
             RemoteCallArgs::Encoded(blob) => Ok(blob.clone()),
         }
@@ -90,11 +113,19 @@ impl RemoteCallPayload {
         }
     }
 
-    pub fn this_empty(method_name: &str) -> Self {
+    pub fn new_encode<Tuple: ArgumentEncoder>(
+        canister_id: Principal,
+        method_name: &str,
+        args: Tuple,
+        cycles: u64,
+    ) -> Self {
         Self {
-            endpoint: RemoteCallEndpoint::this(method_name),
-            args: RemoteCallArgs::CandidString(vec![]),
-            cycles: 0,
+            endpoint: RemoteCallEndpoint {
+                canister_id,
+                method_name: String::from(method_name),
+            },
+            args: RemoteCallArgs::Encoded(encode_args(args).expect("Unable to encode args")),
+            cycles,
         }
     }
 
@@ -119,3 +150,52 @@ impl RemoteCallPayload {
 pub trait ArgumentDecoderOwned: for<'de> ArgumentDecoder<'de> {}
 
 impl<T> ArgumentDecoderOwned for T where T: for<'de> ArgumentDecoder<'de> {}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub enum Program {
+    Empty,
+    RemoteCallSequence(Vec<RemoteCallPayload>),
+}
+
+#[derive(CandidType, Deserialize, Debug, Clone)]
+pub enum ProgramExecutionResult {
+    Empty,
+    RemoteCallSequence(Vec<CandidCallResult<Blob>>),
+}
+
+impl Program {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        match self {
+            Program::Empty => Ok(()),
+            Program::RemoteCallSequence(seq) => {
+                for call in seq {
+                    call.args.validate()?;
+                }
+
+                Ok(())
+            }
+        }
+    }
+
+    pub async fn execute(&self) -> ProgramExecutionResult {
+        match self {
+            Program::Empty => ProgramExecutionResult::Empty,
+            Program::RemoteCallSequence(seq) => {
+                let mut results = vec![];
+
+                for call in seq {
+                    let result = call.do_call_raw().await;
+
+                    if result.is_err() {
+                        results.push(result);
+                        break;
+                    } else {
+                        results.push(result);
+                    }
+                }
+
+                ProgramExecutionResult::RemoteCallSequence(results)
+            }
+        }
+    }
+}

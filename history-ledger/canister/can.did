@@ -1,0 +1,139 @@
+type Id = nat64;
+
+// ------------------ SHARES MOVE --------------------
+
+type VotingConfigId = Id;
+type AccessConfigId = Id;
+type GroupId = Id;
+type Shares = nat;
+
+type GetSharesInfoOfAtRequest = record {
+    group_id : GroupId;
+    of : principal;
+    at : nat64;
+};
+
+type SharesInfo = record {
+    balance : Shares;
+    total_supply : Shares;
+    timestamp: nat64;
+    group_id: GroupId;
+    principal_id: principal;
+    signature : empty;
+};
+
+type GetSharesInfoOfAtResponse = record {
+    info_opt : opt SharesInfo;
+};
+
+// ------------------ PROGRAM EXECUTION -------------------
+
+type RemoteCallEndpoint = record {
+    canister_id : principal;
+    method_name : text;
+};
+
+type ProgramExecutionFilter = record {
+    from_timestamp : opt nat64;
+    to_timestamp : opt nat64;
+    endpoint : opt RemoteCallEndpoint;
+};
+
+type PageRequest = record {
+    page_index : nat32;
+    page_size : nat32;
+    filter : ProgramExecutionFilter;
+    sort : empty;
+};
+
+type Page = record {
+    data : vec nat64;
+    has_next : bool;
+};
+
+type RemoteCallArgs = variant {
+    CandidString : vec text;
+    Encoded : blob;
+};
+
+type RemoteCallPayload = record {
+    endpoint : RemoteCallEndpoint;
+    args : RemoteCallArgs;
+    cycles : nat64;
+};
+
+type Program = variant {
+    Empty;
+    RemoteCallSequence : vec RemoteCallPayload;
+};
+
+type CandidRejectionCode = variant {
+    NoError;
+    SysFatal;
+    SysTransient;
+    DestinationInvalid;
+    CanisterReject;
+    CanisterError;
+    Unknown;
+};
+
+type RawCandidCallResult = variant {
+    Ok : blob;
+    Err : record { 0 : CandidRejectionCode; 1 : text; };
+};
+
+type ProgramExecutionResult = variant {
+    Empty;
+    RemoteCallSequence : vec RawCandidCallResult;
+};
+
+type ListProgramExecutionEntryIdsRequest = record {
+    page_req : PageRequest;
+};
+
+type ListProgramExecutionEntryIdsResponse = record {
+    page : Page;
+};
+
+type GetProgramExecutionEntryMetaRequest = record {
+    id : nat64;
+};
+
+type ProgramExecutedWith = variant {
+    WithAccessConfig : AccessConfigId;
+    WithVotingConfig : VotingConfigId;
+};
+
+type GetProgramExecutionEntryMetaResponse = record {
+    initiator : principal;
+    program_executed_with : ProgramExecutedWith;
+};
+
+type GetProgramExecutionEntryProgramRequest = record {
+    id : nat64;
+};
+
+type GetProgramExecutionEntryProgramResponse = record {
+    program : opt Program;
+};
+
+type GetProgramExecutionEntryResultRequest = record {
+    id : nat64;
+};
+
+type GetProgramExecutionEntryResultResponse = record {
+    result : opt ProgramExecutionResult;
+};
+
+// ------------------ SERVICE ------------------
+
+service : (principal) -> {
+    // ------------------ SHARES MOVE --------------------
+    "get_shares_info_of_at" : (GetSharesInfoOfAtRequest) -> (GetSharesInfoOfAtResponse) query;
+
+    // ----------------- PROGRAM EXECUTION ----------------
+    "list_program_execution_entry_ids" : (ListProgramExecutionEntryIdsRequest) -> (ListProgramExecutionEntryIdsResponse) query;
+    "get_program_execution_entry_meta" : (GetProgramExecutionEntryMetaRequest) -> (GetProgramExecutionEntryMetaResponse) query;
+    "get_program_execution_entry_program" : (GetProgramExecutionEntryProgramRequest) -> (GetProgramExecutionEntryProgramResponse) query;
+    "get_program_execution_entry_result" : (GetProgramExecutionEntryResultRequest) -> (GetProgramExecutionEntryResultResponse) query;
+}
