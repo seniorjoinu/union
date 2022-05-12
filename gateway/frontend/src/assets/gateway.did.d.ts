@@ -17,7 +17,6 @@ export interface GetMyNotificationsResponse {
 export type NotificationId = bigint;
 export interface ProfileCreatedNotification {
   'id' : NotificationId,
-  'role_id' : RoleId,
   'union_wallet_id' : Principal,
   'receiver' : Principal,
 }

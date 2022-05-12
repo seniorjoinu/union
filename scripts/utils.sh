@@ -13,5 +13,9 @@ function parse_principal {
 	echo $@ | grep -Eo 'principal \"(\w|-)+\"' | grep -Eo '\"(\w|-)+\"' | grep -Eo '(\w|-)+'
 }
 
-root_folder=$(cd ../ && pwd)
-current_folder=$(pwd)
+ROOT_FOLDER=$(cd ../ && pwd)
+CURRENT_FOLDER=$(pwd)
+
+UNLIMITED_ACCESS_CONFIG_ID=1
+HAS_PROFILE_GROUP_ID=0
+EMERGENCY_VOTING_CONFIG_ID=0

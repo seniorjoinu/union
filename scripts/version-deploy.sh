@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -e
 . ./utils.sh
-source $root_folder/.env
+source $ROOT_FOLDER/.env
 
 # TODO get version and wasm_path args 
 version="0.0.0"
-wasm_path="${root_folder}/wallet-backend/target/wasm32-unknown-unknown/release/union-wallet-opt.wasm"
+wasm_path="${ROOT_FOLDER}/wallet-backend/target/wasm32-unknown-unknown/release/union-wallet-opt.wasm"
 
 log "[version-deploy] Create first version of union"
 create_binary_version_args='(record { version = "'$version'"; description = "Initial version" })'

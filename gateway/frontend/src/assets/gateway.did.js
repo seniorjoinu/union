@@ -14,10 +14,8 @@ export const idlFactory = ({ IDL }) => {
     'wallet_ids' : IDL.Vec(IDL.Principal),
   });
   const NotificationId = IDL.Nat64;
-  const RoleId = IDL.Nat32;
   const ProfileCreatedNotification = IDL.Record({
     'id' : NotificationId,
-    'role_id' : RoleId,
     'union_wallet_id' : IDL.Principal,
     'receiver' : IDL.Principal,
   });

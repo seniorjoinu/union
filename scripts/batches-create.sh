@@ -1,74 +1,76 @@
 #!/usr/bin/env bash
 set -e
 . ./utils.sh
-source $root_folder/.env
+source $ROOT_FOLDER/.env
 
-args=
-folder_path="${root_folder}/gateway/frontend/dist"
-log "[batches-create] Creating batches..."
+log TODO
 
-files=`cd $folder_path && find . -type f`
-rm ./create_chunk_execute_args.txt 2> /dev/null || echo ""
+# args=
+# folder_path="${ROOT_FOLDER}/gateway/frontend/dist"
+# log "[batches-create] Creating batches..."
 
-batch_ids=()
-exportable_batch_ids="( "
-for eachfile in $files
-do
-	key=${eachfile/\./}
-	filepath="${folder_path}${key}"
-	content_type=$(
-		if [[ $filepath == *.js ]]; then
-			echo "application/javascript"
-		else 
-			file -b --mime-type $filepath
-		fi
-	)
-	log $key $content_type
+# files=`cd $folder_path && find . -type f`
+# rm ./create_chunk_execute_args.txt 2> /dev/null || echo ""
 
-	create_batch_response=$(
-		dfx canister $args call $root_union "create_batch" "(record {
-			key = \"${key}\";
-			content_type = \"${content_type}\";
-		})"
-	)
+# batch_ids=()
+# exportable_batch_ids="( "
+# for eachfile in $files
+# do
+# 	key=${eachfile/\./}
+# 	filepath="${folder_path}${key}"
+# 	content_type=$(
+# 		if [[ $filepath == *.js ]]; then
+# 			echo "application/javascript"
+# 		else 
+# 			file -b --mime-type $filepath
+# 		fi
+# 	)
+# 	log $key $content_type
 
-	batch_id_did=$(./uc did get "${create_batch_response}" "0.batch_id")
-	echo batch_id = $batch_id_did
-	eval "batch_id_did=${batch_id_did}"
+# 	create_batch_response=$(
+# 		dfx canister $args call $root_union "create_batch" "(record {
+# 			key = \"${key}\";
+# 			content_type = \"${content_type}\";
+# 		})"
+# 	)
 
-	file_bytes=$(./uc did encode --mode blob $filepath)
+# 	batch_id_did=$(./uc did get "${create_batch_response}" "0.batch_id")
+# 	echo batch_id = $batch_id_did
+# 	eval "batch_id_did=${batch_id_did}"
 
-	create_chunk_args='(record {
-		batch_id = '$batch_id_did';
-		content = blob "'$file_bytes'";
-	})'
-	echo "$create_chunk_args" > ./create_chunk_execute_args.txt
+# 	file_bytes=$(./uc did encode --mode blob $filepath)
 
-	create_chunk_response=$(
-		./uc canister $root_union "create_chunk" ./create_chunk_execute_args.txt
-	)
+# 	create_chunk_args='(record {
+# 		batch_id = '$batch_id_did';
+# 		content = blob "'$file_bytes'";
+# 	})'
+# 	echo "$create_chunk_args" > ./create_chunk_execute_args.txt
 
-	eval "create_chunk_response=${create_chunk_response}"
+# 	create_chunk_response=$(
+# 		./uc canister $root_union "create_chunk" ./create_chunk_execute_args.txt
+# 	)
 
-	chunk_id_did=$(./uc did get "${create_chunk_response}" "0.chunk_id")
-	echo chunk_id = $chunk_id_did
+# 	eval "create_chunk_response=${create_chunk_response}"
 
-	lock_batches_response=$(
-		dfx canister $args call $root_union "lock_batches" "(record {
-			batch_ids = vec { ${batch_id_did} };
-		})"
-	)
+# 	chunk_id_did=$(./uc did get "${create_chunk_response}" "0.chunk_id")
+# 	echo chunk_id = $chunk_id_did
 
-	echo lock batches response = $lock_batches_response
-	echo ""
+# 	lock_batches_response=$(
+# 		dfx canister $args call $root_union "lock_batches" "(record {
+# 			batch_ids = vec { ${batch_id_did} };
+# 		})"
+# 	)
 
-	batch_ids+=("${batch_id_did}")
-	exportable_batch_ids+='"'$batch_id_did'" '
-done
+# 	echo lock batches response = $lock_batches_response
+# 	echo ""
 
-log "[batches-create] Batches successfull uploaded and locked"
-rm ./create_chunk_execute_args.txt 2> /dev/null
+# 	batch_ids+=("${batch_id_did}")
+# 	exportable_batch_ids+='"'$batch_id_did'" '
+# done
 
-exportable_batch_ids+=")"
-export batch_ids
-export exportable_batch_ids
+# log "[batches-create] Batches successfull uploaded and locked"
+# rm ./create_chunk_execute_args.txt 2> /dev/null
+
+# exportable_batch_ids+=")"
+# export batch_ids
+# export exportable_batch_ids
