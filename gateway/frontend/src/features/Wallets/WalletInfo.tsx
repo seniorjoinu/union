@@ -23,18 +23,18 @@ export const WalletInfo = ({ canisterId, ...p }: WalletInfoProps) => {
   const { canister, data } = useUnion(canisterId);
 
   useEffect(() => {
-    canister.get_info();
+    canister.get_settings();
   }, []);
 
-  if (!data.get_info) {
+  if (!data.get_settings) {
     return <Text>fetching...</Text>;
   }
 
-  const { info } = data.get_info;
+  const { settings } = data.get_settings;
 
   return (
     <Container {...p}>
-      <Text weight='medium'>{info.name}</Text>
+      <Text weight='medium'>{settings.name}</Text>
       <Text>{canisterId.toString()}</Text>
     </Container>
   );

@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "npm run copy_deps && vite",
-    "build": "npm run copy_deps && vite build",
+    "build": "npm run copy_deps && npm run build-frontend",
+    "build-frontend": "vite build",
     "copy_deps": "./build_scripts/pre_copy_deps.sh",
     "serve": "vite preview",
     "clean": "rm -rf ./dist",

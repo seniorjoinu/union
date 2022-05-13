@@ -98,15 +98,29 @@ export const Assets = ({ ...p }: AssetsProps) => {
   const { download } = useBatchDownloader();
 
   useEffect(() => {
-    canister.get_batches();
+    getBatches();
   }, []);
+
+  // TODO paging
+  const getBatches = useCallback(
+    () =>
+      canister.list_batches({
+        page_req: {
+          page_size: 100,
+          page_index: 0,
+          sort: null,
+          filter: null,
+        },
+      }),
+    [],
+  );
 
   const handleDelete = useCallback(
     async (id: bigint) => {
-      await canister.delete_unlocked_batches({ batch_ids: [id] });
-      await canister.get_batches();
+      await canister.delete_unlocked_batches({ ids: [id] });
+      await getBatches();
     },
-    [canister, remove],
+    [canister, remove, getBatches],
   );
 
   const handleExecuteDelete = useCallback(
@@ -118,15 +132,16 @@ export const Assets = ({ ...p }: AssetsProps) => {
 
   const handleLock = useCallback(
     async (id: bigint) => {
-      await canister.lock_batches({ batch_ids: [id] });
-      await canister.get_batches();
+      await canister.lock_batches({ ids: [id] });
+      await getBatches();
     },
-    [canister],
+    [canister, getBatches],
   );
 
   const batches = useMemo(
-    () => [...(data.get_batches?.batches || [])].sort((a, b) => Number(b[0]) - Number(a[0])),
-    [data.get_batches?.batches],
+    () =>
+      [...(data.list_batches?.page.data || [])].sort((a, b) => Number(b.id[0]) - Number(a.id[0])),
+    [data.list_batches?.page.data],
   );
 
   const selectedIds = useMemo(
@@ -155,7 +170,7 @@ export const Assets = ({ ...p }: AssetsProps) => {
             setSelected(() =>
               (selectedIds.length
                 ? {}
-                : batches.reduce((acc, next) => ({ ...acc, [Number(next[0])]: true }), {})),
+                : batches.reduce((acc, next) => ({ ...acc, [Number(next.id[0])]: true }), {})),
             )
           }
           checked={!!selectedIds.length}
@@ -167,41 +182,48 @@ export const Assets = ({ ...p }: AssetsProps) => {
           onClick={() => remove(selectedIds.map((s) => BigInt(s)))}
         />
       </SelectControls>
-      {!!fetching.get_batches && <Text>fetching</Text>}
-      {!fetching.get_batches && !batches.length && <Text>Batches does not exist</Text>}
+      {!!fetching.list_batches && <Text>fetching</Text>}
+      {!fetching.list_batches && !batches.length && <Text>Batches does not exist</Text>}
       {!!batches.length && (
         <Items>
-          {batches.map(([id, batch]) => (
-            <Item key={id.toString()}>
-              {/* FIXME refactoring + optimization */}
-              <input
-                type='checkbox'
-                onChange={(e) =>
-                  setSelected((selected) => ({ ...selected, [Number(id)]: !selected[Number(id)] }))
-                }
-                checked={!!selected[Number(id)]}
-              />
-              <Text>ID: {id.toString()}</Text>
-              <Text>Key: {batch.key}</Text>
-              <Text>Content type: {batch.content_type}</Text>
-              {!!batch.chunk_ids.length && <Text>Chunk ids: {batch.chunk_ids.join()}</Text>}
-              <Text>Locked: {String(batch.locked)}</Text>
-              <Controls>
-                {!batch.locked ? (
-                  <>
-                    <LockButton onClick={() => handleLock(id)}>Lock</LockButton>
-                    <DeleteButton onClick={() => handleDelete(id)}>Delete</DeleteButton>
-                  </>
-                ) : (
-                  <DeleteButton onClick={() => handleExecuteDelete(id)}>
-                    Execute delete
-                  </DeleteButton>
-                )}
-                <DownloadButton onClick={() => download({ batch })}>Download</DownloadButton>
-                {/* TODO check access for visibility */}
-              </Controls>
-            </Item>
-          ))}
+          {batches.map((batch) => {
+            const id = batch.id[0] || BigInt(0);
+
+            return (
+              <Item key={id.toString()}>
+                {/* FIXME refactoring + optimization */}
+                <input
+                  type='checkbox'
+                  onChange={(e) =>
+                    setSelected((selected) => ({
+                      ...selected,
+                      [Number(id)]: !selected[Number(id)],
+                    }))
+                  }
+                  checked={!!selected[Number(id)]}
+                />
+                <Text>ID: {id.toString()}</Text>
+                <Text>Key: {batch.key}</Text>
+                <Text>Content type: {batch.content_type}</Text>
+                {/* {!!batch.chunk_ids.length && <Text>Chunk ids: {batch.chunk_ids.join()}</Text>} */}
+                <Text>Locked: {String(batch.locked)}</Text>
+                <Controls>
+                  {!batch.locked ? (
+                    <>
+                      <LockButton onClick={() => handleLock(id)}>Lock</LockButton>
+                      <DeleteButton onClick={() => handleDelete(id)}>Delete</DeleteButton>
+                    </>
+                  ) : (
+                    <DeleteButton onClick={() => handleExecuteDelete(id)}>
+                      Execute delete
+                    </DeleteButton>
+                  )}
+                  <DownloadButton onClick={() => download({ batch })}>Download</DownloadButton>
+                  {/* TODO check access for visibility */}
+                </Controls>
+              </Item>
+            );
+          })}
         </Items>
       )}
       <BatchSender visible={!!selectedIds.length} batchIds={selectedIds} />

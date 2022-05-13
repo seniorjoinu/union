@@ -1,14 +1,12 @@
 import React, { useEffect, createContext, useContext, useMemo, useState, useCallback } from 'react';
-import { RoleAndPermission, Role, Permission } from 'union-ts';
 import { useUnion } from 'services';
 import { Principal } from '@dfinity/principal';
+import { Group, Profile } from 'union-ts';
 
 export interface CurrentWalletContext {
   principal: Principal;
-  rnp: RoleAndPermission | null;
-  setRoleAndPermission(rnp: Partial<RoleAndPermission>): void;
-  roles: Role[];
-  permissions: Permission[];
+  groups: Group[];
+  profile: Profile | null;
   fetching: ReturnType<typeof useUnion>['fetching'];
   errors: ReturnType<typeof useUnion>['errors'];
   fetchMyData(): void;
@@ -16,10 +14,8 @@ export interface CurrentWalletContext {
 
 const context = createContext<CurrentWalletContext>({
   principal: Principal.anonymous(),
-  rnp: null,
-  setRoleAndPermission: () => undefined,
-  roles: [],
-  permissions: [],
+  groups: [],
+  profile: null,
   fetching: {},
   errors: {},
   fetchMyData: () => undefined,
@@ -31,59 +27,29 @@ export interface ProviderProps {
 }
 
 export function Provider({ principal, children }: ProviderProps) {
-  const [rnp, setRnp] = useState<RoleAndPermission | null>(null);
   const { data, canister, fetching, errors } = useUnion(principal);
 
   useEffect(() => {
-    canister.get_my_roles();
-    canister.get_my_permissions();
+    canister.get_my_groups();
+    canister.get_my_profile();
   }, []);
 
-  const { roles } = data.get_my_roles || { roles: [] };
-  const { permissions } = data.get_my_permissions || { permissions: [] };
-
-  const setRoleAndPermission = useCallback(
-    (rnp: RoleAndPermission) => {
-      setRnp(rnp);
-    },
-    [setRnp],
+  const fetchMyData = useCallback(
+    async () => Promise.all([canister.get_my_groups(), canister.get_my_profile()]),
+    [],
   );
 
-  const fetchMyData = useCallback(() => {
-    canister.get_my_roles();
-    canister.get_my_permissions();
-  }, []);
-
-  const value: CurrentWalletContext = useMemo(() => {
-    let computedRnp = rnp;
-
-    if (!computedRnp) {
-      const roleId =
-        roles.find(
-          (r) =>
-            'QuantityOf' in r.role_type &&
-            r.role_type.QuantityOf.name.toLowerCase() == 'has profile',
-        )?.id || roles.find((r) => 'Everyone' in r.role_type)?.id;
-      const permissionId = permissions[0]?.id;
-      const rnpExist = typeof roleId !== 'undefined' && typeof permissionId !== 'undefined';
-
-      if (rnpExist) {
-        computedRnp = { role_id: roleId, permission_id: permissionId };
-        setRoleAndPermission(computedRnp);
-      }
-    }
-
-    return {
+  const value: CurrentWalletContext = useMemo(
+    () => ({
       principal,
-      rnp: computedRnp,
-      setRoleAndPermission,
-      roles,
-      permissions,
+      groups: data.get_my_groups?.groups || [],
+      profile: data.get_my_profile?.profile || null,
       fetching,
       errors,
       fetchMyData,
-    };
-  }, [principal, roles, permissions, fetching, errors, setRoleAndPermission, rnp]);
+    }),
+    [principal, fetching, errors, data.get_my_groups, data.get_my_profile],
+  );
 
   return <context.Provider value={value}>{children}</context.Provider>;
 }

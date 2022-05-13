@@ -21,11 +21,12 @@ export const useBatchDownloader = () => {
       try {
         const splitted = batch.key.split('/');
         const name = splitted[splitted.length - 1];
-        const contents = await Promise.all(
-          [...batch.chunk_ids]
-            // .sort((a, b) => Number(a) - Number(b))
-            .map(async (chunk_id) => (await canister.get_chunk({ chunk_id })).chunk_content),
-        );
+        const contents: number[][] = [];
+        // const contents = await Promise.all(
+        //   [...batch.chunk_ids]
+        //     // .sort((a, b) => Number(a) - Number(b))
+        //     .map(async (chunk_id) => (await canister.get_chunk({ chunk_id })).chunk.content),
+        // );
 
         const arr = new Uint8Array(contents.flat());
         const file = new File([arr], name, { type: batch.content_type });

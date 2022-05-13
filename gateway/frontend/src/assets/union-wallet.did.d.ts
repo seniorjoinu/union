@@ -1,25 +1,72 @@
 import type { Principal } from '@dfinity/principal';
-export interface ActivateProfileRequest { 'role_id' : RoleId }
-export interface AddEnumeratedRolesRequest {
-  'enumerated_roles_to_add' : Array<RoleId>,
-  'role_id' : RoleId,
+export interface AcceptMyGroupSharesRequest {
+  'qty' : Shares,
+  'group_id' : GroupId,
 }
-export interface AttachRoleToPermissionRequest {
-  'role_id' : RoleId,
-  'permission_id' : PermissionId,
+export interface AccessConfig {
+  'id' : [] | [AccessConfigId],
+  'permissions' : Array<PermissionId>,
+  'name' : string,
+  'description' : string,
+  'allowees' : Array<AlloweeConstraint>,
 }
-export interface AuthorizeExecutionRequest { 'task_id' : TaskId }
-export type AuthorizeExecutionResponse = ExecuteResponse;
+export interface AccessConfigFilter {
+  'permission' : [] | [PermissionId],
+  'group' : [] | [GroupId],
+  'profile' : [] | [ProfileId],
+}
+export type AccessConfigId = Id;
+export type AlloweeConstraint = { 'Group' : GroupCondition } |
+  { 'Profile' : ProfileId } |
+  { 'Everyone' : null };
 export interface Batch {
+  'id' : [] | [BatchId],
   'key' : Key,
   'content_type' : string,
   'locked' : boolean,
-  'chunk_ids' : Array<ChunkId>,
 }
-export type BatchId = bigint;
-export type CallResult = { 'Ok' : string } |
-  { 'Err' : [RejectionCode, string] };
-export type ChunkId = bigint;
+export type BatchId = Id;
+export interface BurnGroupSharesRequest {
+  'qty' : Shares,
+  'owner' : Principal,
+  'group_id' : GroupId,
+}
+export interface BurnMyGroupSharesRequest {
+  'qty' : Shares,
+  'group_id' : GroupId,
+}
+export type CandidRejectionCode = { 'NoError' : null } |
+  { 'CanisterError' : null } |
+  { 'SysTransient' : null } |
+  { 'DestinationInvalid' : null } |
+  { 'Unknown' : null } |
+  { 'SysFatal' : null } |
+  { 'CanisterReject' : null };
+export interface CastMyVoteRequest { 'id' : VotingId, 'vote' : Vote }
+export interface Choice {
+  'id' : [] | [ChoiceId],
+  'name' : string,
+  'description' : string,
+  'voting_id' : VotingId,
+  'voting_power_by_group' : Array<[GroupId, TokenId]>,
+  'program' : Program,
+}
+export interface ChoiceFilter { 'voting_id' : VotingId }
+export type ChoiceId = Id;
+export interface Chunk {
+  'id' : [] | [ChunkId],
+  'content' : Array<number>,
+  'batch_id' : BatchId,
+}
+export interface ChunkFilter { 'batch_id' : BatchId }
+export type ChunkId = Id;
+export interface CreateAccessConfigRequest {
+  'permissions' : Array<PermissionId>,
+  'name' : string,
+  'description' : string,
+  'allowees' : Array<AlloweeConstraint>,
+}
+export interface CreateAccessConfigResponse { 'id' : AccessConfigId }
 export interface CreateBatchRequest { 'key' : Key, 'content_type' : string }
 export interface CreateBatchResponse { 'batch_id' : BatchId }
 export interface CreateChunkRequest {
@@ -27,131 +74,297 @@ export interface CreateChunkRequest {
   'batch_id' : BatchId,
 }
 export interface CreateChunkResponse { 'chunk_id' : ChunkId }
+export interface CreateGroupRequest {
+  'transferable' : boolean,
+  'name' : string,
+  'description' : string,
+  'private' : boolean,
+}
+export interface CreateGroupResponse { 'group_id' : GroupId }
 export interface CreatePermissionRequest {
   'name' : string,
-  'scope' : PermissionScope,
+  'description' : string,
   'targets' : Array<PermissionTarget>,
 }
-export interface CreatePermissionResponse { 'permission_id' : PermissionId }
-export interface CreateRoleRequest { 'role_type' : RoleType }
-export interface CreateRoleResponse { 'role_id' : RoleId }
-export interface DeleteBatchesRequest { 'batch_ids' : Array<BatchId> }
-export interface DetachRoleFromPermissionRequest {
-  'role_id' : RoleId,
-  'permission_id' : PermissionId,
+export interface CreatePermissionResponse { 'id' : PermissionId }
+export interface CreateProfileRequest {
+  'id' : ProfileId,
+  'name' : string,
+  'description' : string,
 }
-export interface EditProfileRequest {
-  'new_description' : [] | [string],
-  'role_id' : RoleId,
-  'new_name' : [] | [string],
+export interface CreateVotingChoiceRequest {
+  'name' : string,
+  'description' : string,
+  'voting_id' : VotingId,
+  'program' : Program,
 }
+export interface CreateVotingChoiceResponse { 'choice_id' : ChoiceId }
+export interface CreateVotingConfigRequest {
+  'win' : ThresholdValue,
+  'winners_count' : [] | [LenInterval],
+  'permissions' : Array<PermissionId>,
+  'name' : string,
+  'description' : string,
+  'rejection' : ThresholdValue,
+  'next_round' : ThresholdValue,
+  'choices_count' : [] | [LenInterval],
+  'approval' : ThresholdValue,
+  'quorum' : ThresholdValue,
+  'round' : RoundSettings,
+}
+export interface CreateVotingConfigResponse { 'id' : VotingConfigId }
+export interface CreateVotingRequest {
+  'name' : string,
+  'description' : string,
+  'voting_config_id' : VotingConfigId,
+  'winners_need' : number,
+}
+export interface CreateVotingResponse { 'id' : VotingId }
+export interface DeclineMyGroupSharesRequest {
+  'qty' : Shares,
+  'group_id' : GroupId,
+}
+export interface DeleteAccessConfigRequest { 'id' : AccessConfigId }
+export interface DeleteBatchesRequest { 'ids' : Array<BatchId> }
+export interface DeleteGroupRequest { 'group_id' : GroupId }
+export interface DeletePermissionRequest { 'id' : PermissionId }
+export interface DeleteProfileRequest { 'id' : ProfileId }
+export interface DeleteVotingChoiceRequest {
+  'choice_id' : ChoiceId,
+  'voting_id' : VotingId,
+}
+export interface DeleteVotingConfigRequest { 'id' : VotingConfigId }
+export interface DeleteVotingRequest { 'id' : VotingId }
 export interface ExecuteRequest {
-  'rnp' : RoleAndPermission,
-  'title' : string,
-  'authorization_delay_nano' : bigint,
-  'description' : string,
+  'access_config_id' : AccessConfigId,
   'program' : Program,
 }
-export type ExecuteResponse = { 'ScheduledForAuthorization' : TaskId } |
-  { 'Executed' : HistoryEntryId };
-export interface File { 'content' : Array<number>, 'mime_type' : string }
-export interface FractionOf {
-  'name' : string,
-  'description' : string,
-  'fraction' : number,
-  'enumerated' : Array<RoleId>,
-}
-export interface GetBatchesResponse { 'batches' : Array<[BatchId, Batch]> }
+export interface ExecuteResponse { 'result' : ProgramExecutionResult }
+export type Fraction = string;
+export interface FractionOf { 'fraction' : Fraction, 'target' : Target }
+export interface GetAccessConfigRequest { 'id' : AccessConfigId }
+export interface GetAccessConfigResponse { 'access_config' : AccessConfig }
+export interface GetBatchRequest { 'id' : BatchId }
+export interface GetBatchResponse { 'batch' : Batch }
 export interface GetChunkRequest { 'chunk_id' : ChunkId }
-export interface GetChunkResponse { 'chunk_content' : Array<number> }
-export interface GetHistoryEntriesRequest { 'ids' : Array<HistoryEntryId> }
-export interface GetHistoryEntriesResponse { 'entries' : Array<HistoryEntry> }
-export interface GetHistoryEntryIdsResponse { 'ids' : Array<HistoryEntryId> }
-export interface GetInfoResponse { 'info' : UnionInfo }
-export interface GetMyPermissionsResponse { 'permissions' : Array<Permission> }
-export interface GetMyRolesResponse { 'roles' : Array<Role> }
-export interface GetPermissionIdsResponse { 'ids' : Array<PermissionId> }
-export interface GetPermissionsAttachedToRolesRequest {
-  'role_ids' : Array<RoleId>,
+export interface GetChunkResponse { 'chunk' : Chunk }
+export interface GetGroupRequest { 'group_id' : GroupId }
+export interface GetGroupResponse { 'group' : Group }
+export interface GetGroupSharesBalanceOfRequest {
+  'owner' : Principal,
+  'group_id' : GroupId,
 }
-export interface GetPermissionsAttachedToRolesResponse {
-  'result' : Array<[RoleId, Array<PermissionId>]>,
+export interface GetGroupSharesBalanceOfResponse { 'balance' : Shares }
+export interface GetGroupsOfRequest { 'principal_id' : Principal }
+export interface GetGroupsResponse { 'groups' : Array<Group> }
+export interface GetMyGroupSharesBalanceRequest { 'group_id' : GroupId }
+export interface GetMyGroupSharesBalanceResponse { 'balance' : Shares }
+export interface GetMySharesInfoAtRequest {
+  'at' : bigint,
+  'group_id' : GroupId,
 }
-export interface GetPermissionsByPermissionTargetRequest {
-  'target' : PermissionTarget,
+export interface GetMyVoteRequest {
+  'voting_id' : VotingId,
+  'group_id' : GroupId,
 }
-export interface GetPermissionsByPermissionTargetResponse {
-  'ids' : Array<PermissionId>,
+export interface GetMyVoteResponse { 'vote' : Array<[ChoiceId, Shares]> }
+export interface GetPermissionRequest { 'id' : PermissionId }
+export interface GetPermissionResponse { 'permission' : Permission }
+export interface GetProfileRequest { 'id' : ProfileId }
+export interface GetProfileResponse { 'profile' : Profile }
+export interface GetSettingsResponse { 'settings' : Settings }
+export interface GetSharesInfoOfAtRequest {
+  'at' : bigint,
+  'of' : Principal,
+  'group_id' : GroupId,
 }
-export interface GetPermissionsRequest { 'ids' : Array<PermissionId> }
-export interface GetPermissionsResponse { 'permissions' : Array<Permission> }
-export interface GetRoleIdsResponse { 'ids' : Array<RoleId> }
-export interface GetRolesAttachedToPermissionsRequest {
-  'permission_ids' : Array<PermissionId>,
+export interface GetSharesInfoOfAtResponse { 'shares_info' : [] | [SharesInfo] }
+export interface GetTotalGroupSharesRequest { 'group_id' : GroupId }
+export interface GetTotalGroupSharesResponse { 'total' : Shares }
+export interface GetVotingChoiceRequest {
+  'choice_id' : ChoiceId,
+  'voting_id' : VotingId,
 }
-export interface GetRolesAttachedToPermissionsResponse {
-  'result' : Array<[PermissionId, Array<RoleId>]>,
+export interface GetVotingChoiceResponse { 'choice' : Choice }
+export interface GetVotingConfigRequest { 'id' : VotingConfigId }
+export interface GetVotingConfigResponse { 'voting_config' : VotingConfig }
+export interface GetVotingRequest { 'id' : VotingId }
+export interface GetVotingResponse { 'voting' : Voting }
+export interface GetVotingResultsRequest { 'voting_id' : VotingId }
+export interface GetVotingResultsResponse {
+  'results' : Array<[ChoiceId, Array<[GroupId, Shares]>]>,
 }
-export interface GetRolesRequest { 'ids' : Array<RoleId> }
-export interface GetRolesResponse { 'roles' : Array<Role> }
-export interface GetScheduledForAuthorizationExecutionsRequest {
-  'task_ids' : [] | [Array<TaskId>],
-}
-export interface GetScheduledForAuthorizationExecutionsResponse {
-  'entries' : Array<[TaskId, HistoryEntry]>,
-}
-export interface HistoryEntry {
-  'id' : HistoryEntryId,
-  'title' : string,
-  'authorized_by' : Array<Principal>,
-  'entry_type' : HistoryEntryType,
-  'role_id' : RoleId,
-  'description' : string,
-  'timestamp' : bigint,
-  'permission_id' : PermissionId,
-  'program' : Program,
-}
-export type HistoryEntryId = bigint;
-export type HistoryEntryType = { 'Executed' : [bigint, Array<CallResult>] } |
-  { 'Declined' : [bigint, string] } |
-  { 'Pending' : null };
-export type Iterations = { 'Exact' : bigint } |
-  { 'Infinite' : null };
-export type Key = string;
-export interface LockBatchesRequest { 'batch_ids' : Array<BatchId> }
-export interface Permission {
-  'id' : PermissionId,
+export interface Group {
+  'id' : [] | [GroupId],
+  'token' : [] | [TokenId],
   'name' : string,
-  'scope' : PermissionScope,
+  'description' : string,
+  'private' : boolean,
+}
+export interface GroupCondition { 'id' : GroupId, 'min_shares' : Shares }
+export type GroupId = Id;
+export type Id = bigint;
+export interface InitRequest {
+  'union_description' : string,
+  'wallet_creator' : Principal,
+  'union_name' : string,
+  'history_ledger' : Principal,
+}
+export type Key = string;
+export interface LenInterval { 'max' : number, 'min' : number }
+export interface ListAccessConfigsPage {
+  'data' : Array<AccessConfig>,
+  'has_next' : boolean,
+}
+export interface ListAccessConfigsPageRequest {
+  'page_size' : number,
+  'page_index' : number,
+  'sort' : null,
+  'filter' : AccessConfigFilter,
+}
+export interface ListAccessConfigsRequest {
+  'page_req' : ListAccessConfigsPageRequest,
+}
+export interface ListAccessConfigsResponse { 'page' : ListAccessConfigsPage }
+export interface ListBatchesPage { 'data' : Array<Batch>, 'has_next' : boolean }
+export interface ListBatchesRequest { 'page_req' : PageRequest }
+export interface ListBatchesResponse { 'page' : ListBatchesPage }
+export interface ListChunksPage { 'data' : Array<Chunk>, 'has_next' : boolean }
+export interface ListChunksPageRequest {
+  'page_size' : number,
+  'page_index' : number,
+  'sort' : null,
+  'filter' : ChunkFilter,
+}
+export interface ListChunksRequest { 'page_req' : ListChunksPageRequest }
+export interface ListChunksResponse { 'page' : ListChunksPage }
+export interface ListGroupSharesPage {
+  'data' : Array<[Principal, Shares]>,
+  'has_next' : boolean,
+}
+export interface ListGroupSharesRequest {
+  'page_req' : PageRequest,
+  'group_id' : GroupId,
+}
+export interface ListGroupSharesResponse { 'page' : ListGroupSharesPage }
+export interface ListGroupsPage { 'data' : Array<Group>, 'has_next' : boolean }
+export interface ListGroupsRequest { 'page_req' : PageRequest }
+export interface ListGroupsResponse { 'page' : ListGroupsPage }
+export interface ListPermissionsPage {
+  'data' : Array<Permission>,
+  'has_next' : boolean,
+}
+export interface ListPermissionsPageRequest {
+  'page_size' : number,
+  'page_index' : number,
+  'sort' : null,
+  'filter' : PermissionFilter,
+}
+export interface ListPermissionsRequest {
+  'page_req' : ListPermissionsPageRequest,
+}
+export interface ListPermissionsResponse { 'page' : ListPermissionsPage }
+export interface ListProfilesPage {
+  'data' : Array<Profile>,
+  'has_next' : boolean,
+}
+export interface ListProfilesRequest { 'page_req' : PageRequest }
+export interface ListProfilesResponse { 'page' : ListProfilesPage }
+export interface ListProgramExecutionEntryIdsPage {
+  'data' : Array<bigint>,
+  'has_next' : boolean,
+}
+export interface ListProgramExecutionEntryIdsPageRequest {
+  'page_size' : number,
+  'page_index' : number,
+  'sort' : null,
+  'filter' : ProgramExecutionFilter,
+}
+export interface ListProgramExecutionEntryIdsRequest {
+  'page_req' : ListProgramExecutionEntryIdsPageRequest,
+}
+export interface ListProgramExecutionEntryIdsResponse {
+  'page' : ListProgramExecutionEntryIdsPage,
+  'history_ledger_canister_id' : Principal,
+}
+export interface ListVotingChoicesPage {
+  'data' : Array<Choice>,
+  'has_next' : boolean,
+}
+export interface ListVotingChoicesPageRequest {
+  'page_size' : number,
+  'page_index' : number,
+  'sort' : null,
+  'filter' : ChoiceFilter,
+}
+export interface ListVotingChoicesRequest {
+  'page_req' : ListVotingChoicesPageRequest,
+}
+export interface ListVotingChoicesResponse { 'page' : ListVotingChoicesPage }
+export interface ListVotingConfigsPage {
+  'data' : Array<VotingConfig>,
+  'has_next' : boolean,
+}
+export interface ListVotingConfigsPageRequest {
+  'page_size' : number,
+  'page_index' : number,
+  'sort' : null,
+  'filter' : VotingConfigFilter,
+}
+export interface ListVotingConfigsRequest {
+  'page_req' : ListVotingConfigsPageRequest,
+}
+export interface ListVotingConfigsResponse { 'page' : ListVotingConfigsPage }
+export interface ListVotingsPage {
+  'data' : Array<Voting>,
+  'has_next' : boolean,
+}
+export interface ListVotingsRequest { 'page_req' : PageRequest }
+export interface ListVotingsResponse { 'page' : ListVotingsPage }
+export interface LockBatchesRequest { 'ids' : Array<BatchId> }
+export interface MintGroupSharesRequest {
+  'qty' : Shares,
+  'owner' : Principal,
+  'group_id' : GroupId,
+}
+export interface MultiChoiceVote {
+  'vote' : Array<[ChoiceId, Fraction]>,
+  'shares_info' : SharesInfo,
+}
+export interface PageRequest {
+  'page_size' : number,
+  'page_index' : number,
+  'sort' : null,
+  'filter' : null,
+}
+export interface Permission {
+  'id' : [] | [PermissionId],
+  'name' : string,
+  'description' : string,
   'targets' : Array<PermissionTarget>,
 }
-export type PermissionId = number;
-export type PermissionScope = { 'Blacklist' : null } |
-  { 'Whitelist' : null };
+export interface PermissionFilter { 'target' : [] | [PermissionTarget] }
+export type PermissionId = Id;
 export type PermissionTarget = { 'Endpoint' : RemoteCallEndpoint } |
-  { 'SelfEmptyProgram' : null } |
-  { 'Canister' : Principal };
+  { 'SelfEmptyProgram' : null };
 export interface Profile {
-  'active' : boolean,
+  'id' : ProfileId,
   'name' : string,
   'description' : string,
-  'principal_id' : Principal,
 }
+export type ProfileId = Principal;
 export type Program = { 'Empty' : null } |
   { 'RemoteCallSequence' : Array<RemoteCallPayload> };
-export interface QuantityOf {
-  'name' : string,
-  'description' : string,
-  'enumerated' : Array<RoleId>,
-  'quantity' : number,
+export interface ProgramExecutionFilter {
+  'from_timestamp' : [] | [bigint],
+  'endpoint' : [] | [RemoteCallEndpoint],
+  'to_timestamp' : [] | [bigint],
 }
-export type RejectionCode = { 'NoError' : null } |
-  { 'CanisterError' : null } |
-  { 'SysTransient' : null } |
-  { 'DestinationInvalid' : null } |
-  { 'Unknown' : null } |
-  { 'SysFatal' : null } |
-  { 'CanisterReject' : null };
+export type ProgramExecutionResult = { 'Empty' : null } |
+  { 'RemoteCallSequence' : Array<RawCandidCallResult> };
+export interface QuantityOf { 'target' : Target, 'quantity' : Shares }
+export type RawCandidCallResult = { 'Ok' : Array<number> } |
+  { 'Err' : [CandidRejectionCode, string] };
 export type RemoteCallArgs = { 'CandidString' : Array<string> } |
   { 'Encoded' : Array<number> };
 export interface RemoteCallEndpoint {
@@ -163,123 +376,306 @@ export interface RemoteCallPayload {
   'args' : RemoteCallArgs,
   'cycles' : bigint,
 }
-export interface RemovePermissionRequest { 'permission_id' : PermissionId }
-export interface RemovePermissionResponse { 'permission' : Permission }
-export interface RemoveRoleRequest { 'role_id' : RoleId }
-export interface RemoveRoleResponse { 'role' : Role }
-export interface Role { 'id' : RoleId, 'role_type' : RoleType }
-export interface RoleAndPermission {
-  'role_id' : RoleId,
-  'permission_id' : PermissionId,
-}
-export type RoleId = number;
-export type RoleType = { 'FractionOf' : FractionOf } |
-  { 'Profile' : Profile } |
-  { 'Everyone' : null } |
-  { 'QuantityOf' : QuantityOf };
-export interface ScheduledTask {
-  'id' : TaskId,
-  'scheduled_at' : bigint,
-  'scheduling_options' : SchedulingOptions,
-  'rescheduled_at' : [] | [bigint],
-  'payload' : Task,
-  'delay_passed' : boolean,
-}
-export interface SchedulingOptions {
-  'interval_nano' : bigint,
-  'iterations' : Iterations,
-  'delay_nano' : bigint,
+export type RoundId = number;
+export interface RoundResult { 'choices' : Array<ChoiceId>, 'round' : RoundId }
+export interface RoundSettings {
+  'round_delay' : bigint,
+  'round_duration' : bigint,
 }
 export interface SendBatchRequest {
   'batch_id' : BatchId,
   'target_canister' : Principal,
 }
-export interface SubtractEnumeratedRolesRequest {
-  'enumerated_roles_to_subtract' : Array<RoleId>,
-  'role_id' : RoleId,
-}
-export interface Task { 'data' : Array<number> }
-export type TaskId = bigint;
-export interface UnionInfo {
-  'logo' : [] | [File],
+export interface Settings {
   'name' : string,
   'description' : string,
+  'history_ledgers' : Array<TimestampedRecord>,
 }
-export interface UpdateInfoRequest { 'new_info' : UnionInfo }
+export type Shares = bigint;
+export interface SharesInfo {
+  'signature' : null,
+  'balance' : Shares,
+  'group_id' : GroupId,
+  'timestamp' : bigint,
+  'principal_id' : Principal,
+  'total_supply' : Shares,
+}
+export interface SingleChoiceVote { 'shares_info' : SharesInfo }
+export type Target = { 'Group' : GroupId } |
+  { 'Thresholds' : Array<ThresholdValue> };
+export type TaskId = Id;
+export type ThresholdValue = { 'FractionOf' : FractionOf } |
+  { 'QuantityOf' : QuantityOf };
+export interface TimestampedRecord {
+  'records' : Array<Principal>,
+  'timestamp' : bigint,
+}
+export type TokenId = Id;
+export interface TransferGroupSharesRequest {
+  'to' : Principal,
+  'qty' : Shares,
+  'from' : Principal,
+  'group_id' : GroupId,
+}
+export interface TransferMyGroupSharesRequest {
+  'to' : Principal,
+  'qty' : Shares,
+  'group_id' : GroupId,
+}
+export interface UpdateAccessConfigRequest {
+  'id' : AccessConfigId,
+  'new_description' : [] | [string],
+  'new_allowees' : [] | [Array<AlloweeConstraint>],
+  'new_name' : [] | [string],
+  'new_permissions' : [] | [Array<PermissionId>],
+}
+export interface UpdateGroupRequest {
+  'new_description' : [] | [string],
+  'new_name' : [] | [string],
+  'group_id' : GroupId,
+}
+export interface UpdateMyProfileRequest {
+  'new_description' : [] | [string],
+  'new_name' : [] | [string],
+}
 export interface UpdatePermissionRequest {
+  'id' : PermissionId,
+  'new_description' : [] | [string],
   'new_targets' : [] | [Array<PermissionTarget>],
   'new_name' : [] | [string],
-  'permission_id' : PermissionId,
-  'new_scope' : [] | [PermissionScope],
 }
-export interface UpdateRoleRequest {
-  'role_id' : RoleId,
-  'new_role_type' : RoleType,
+export interface UpdateProfileRequest {
+  'id' : ProfileId,
+  'new_description' : [] | [string],
+  'new_name' : [] | [string],
 }
+export interface UpdateSettingsRequest {
+  'new_description' : [] | [string],
+  'new_name' : [] | [string],
+}
+export interface UpdateVotingChoiceRequest {
+  'new_description' : [] | [string],
+  'choice_id' : ChoiceId,
+  'new_program' : [] | [Program],
+  'new_name' : [] | [string],
+}
+export interface UpdateVotingConfigRequest {
+  'id' : VotingConfigId,
+  'description_opt' : [] | [string],
+  'next_round_opt' : [] | [ThresholdValue],
+  'name_opt' : [] | [string],
+  'quorum_opt' : [] | [ThresholdValue],
+  'approval_opt' : [] | [ThresholdValue],
+  'round_opt' : [] | [RoundSettings],
+  'choices_count_opt' : [] | [[] | [LenInterval]],
+  'winners_count_opt' : [] | [[] | [LenInterval]],
+  'rejection_opt' : [] | [ThresholdValue],
+  'win_opt' : [] | [ThresholdValue],
+  'permissions_opt' : [] | [Array<PermissionId>],
+}
+export interface UpdateVotingRequest {
+  'id' : VotingId,
+  'new_description' : [] | [string],
+  'new_winners_need' : [] | [number],
+  'new_name' : [] | [string],
+}
+export type Vote = { 'Rejection' : SingleChoiceVote } |
+  { 'Approval' : SingleChoiceVote } |
+  { 'Common' : MultiChoiceVote };
+export interface Voting {
+  'id' : [] | [VotingId],
+  'status' : VotingStatus,
+  'updated_at' : bigint,
+  'task_id' : [] | [TaskId],
+  'approval_choice' : [] | [ChoiceId],
+  'name' : string,
+  'description' : string,
+  'losers' : Array<RoundResult>,
+  'created_at' : bigint,
+  'voting_config_id' : VotingConfigId,
+  'rejection_choice' : [] | [ChoiceId],
+  'proposer' : Principal,
+  'winners_need' : number,
+  'choices' : Array<ChoiceId>,
+  'winners' : Array<RoundResult>,
+  'total_voting_power_by_group' : Array<[GroupId, Shares]>,
+}
+export interface VotingConfig {
+  'id' : [] | [VotingConfigId],
+  'win' : ThresholdValue,
+  'winners_count' : [] | [LenInterval],
+  'permissions' : Array<PermissionId>,
+  'name' : string,
+  'description' : string,
+  'rejection' : ThresholdValue,
+  'next_round' : ThresholdValue,
+  'choices_count' : [] | [LenInterval],
+  'approval' : ThresholdValue,
+  'quorum' : ThresholdValue,
+  'round' : RoundSettings,
+}
+export interface VotingConfigFilter {
+  'permission' : [] | [PermissionId],
+  'group' : [] | [GroupId],
+}
+export type VotingConfigId = Id;
+export type VotingId = Id;
+export type VotingStatus = { 'Fail' : string } |
+  { 'PreRound' : RoundId } |
+  { 'Round' : RoundId } |
+  { 'Rejected' : null } |
+  { 'Success' : null };
 export interface _SERVICE {
-  'activate_profile' : (arg_0: ActivateProfileRequest) => Promise<undefined>,
-  'add_enumerated_roles' : (arg_0: AddEnumeratedRolesRequest) => Promise<
+  'accept_my_group_shares' : (arg_0: AcceptMyGroupSharesRequest) => Promise<
       undefined
     >,
-  'attach_role_to_permission' : (
-      arg_0: AttachRoleToPermissionRequest,
-    ) => Promise<undefined>,
-  'authorize_execution' : (arg_0: AuthorizeExecutionRequest) => Promise<
-      AuthorizeExecutionResponse
+  'burn_group_shares' : (arg_0: BurnGroupSharesRequest) => Promise<undefined>,
+  'burn_my_group_shares' : (arg_0: BurnMyGroupSharesRequest) => Promise<
+      undefined
+    >,
+  'burn_unaccepted_group_shares' : (arg_0: BurnGroupSharesRequest) => Promise<
+      undefined
+    >,
+  'cast_my_vote' : (arg_0: CastMyVoteRequest) => Promise<undefined>,
+  'create_access_config' : (arg_0: CreateAccessConfigRequest) => Promise<
+      CreateAccessConfigResponse
     >,
   'create_batch' : (arg_0: CreateBatchRequest) => Promise<CreateBatchResponse>,
   'create_chunk' : (arg_0: CreateChunkRequest) => Promise<CreateChunkResponse>,
+  'create_group' : (arg_0: CreateGroupRequest) => Promise<CreateGroupResponse>,
   'create_permission' : (arg_0: CreatePermissionRequest) => Promise<
       CreatePermissionResponse
     >,
-  'create_role' : (arg_0: CreateRoleRequest) => Promise<CreateRoleResponse>,
+  'create_profile' : (arg_0: CreateProfileRequest) => Promise<undefined>,
+  'create_voting' : (arg_0: CreateVotingRequest) => Promise<
+      CreateVotingResponse
+    >,
+  'create_voting_choice' : (arg_0: CreateVotingChoiceRequest) => Promise<
+      CreateVotingChoiceResponse
+    >,
+  'create_voting_config' : (arg_0: CreateVotingConfigRequest) => Promise<
+      CreateVotingConfigResponse
+    >,
+  'decline_my_group_shares' : (arg_0: DeclineMyGroupSharesRequest) => Promise<
+      undefined
+    >,
+  'delete_access_config' : (arg_0: DeleteAccessConfigRequest) => Promise<
+      undefined
+    >,
   'delete_batches' : (arg_0: DeleteBatchesRequest) => Promise<undefined>,
+  'delete_group' : (arg_0: DeleteGroupRequest) => Promise<undefined>,
+  'delete_permission' : (arg_0: DeletePermissionRequest) => Promise<undefined>,
+  'delete_profile' : (arg_0: DeleteProfileRequest) => Promise<undefined>,
   'delete_unlocked_batches' : (arg_0: DeleteBatchesRequest) => Promise<
       undefined
     >,
-  'detach_role_from_permission' : (
-      arg_0: DetachRoleFromPermissionRequest,
-    ) => Promise<undefined>,
-  'edit_profile' : (arg_0: EditProfileRequest) => Promise<undefined>,
+  'delete_voting' : (arg_0: DeleteVotingRequest) => Promise<undefined>,
+  'delete_voting_choice' : (arg_0: DeleteVotingChoiceRequest) => Promise<
+      undefined
+    >,
+  'delete_voting_config' : (arg_0: DeleteVotingConfigRequest) => Promise<
+      undefined
+    >,
   'execute' : (arg_0: ExecuteRequest) => Promise<ExecuteResponse>,
-  'export_candid' : () => Promise<string>,
-  'get_batches' : () => Promise<GetBatchesResponse>,
+  'get_access_config' : (arg_0: GetAccessConfigRequest) => Promise<
+      GetAccessConfigResponse
+    >,
+  'get_batch' : (arg_0: GetBatchRequest) => Promise<GetBatchResponse>,
   'get_chunk' : (arg_0: GetChunkRequest) => Promise<GetChunkResponse>,
-  'get_history_entries' : (arg_0: GetHistoryEntriesRequest) => Promise<
-      GetHistoryEntriesResponse
+  'get_group' : (arg_0: GetGroupRequest) => Promise<GetGroupResponse>,
+  'get_group_shares_balance_of' : (
+      arg_0: GetGroupSharesBalanceOfRequest,
+    ) => Promise<GetGroupSharesBalanceOfResponse>,
+  'get_groups_of' : (arg_0: GetGroupsOfRequest) => Promise<GetGroupsResponse>,
+  'get_my_group_shares_balance' : (
+      arg_0: GetMyGroupSharesBalanceRequest,
+    ) => Promise<GetMyGroupSharesBalanceResponse>,
+  'get_my_groups' : () => Promise<GetGroupsResponse>,
+  'get_my_profile' : () => Promise<GetProfileResponse>,
+  'get_my_shares_info_at' : (arg_0: GetMySharesInfoAtRequest) => Promise<
+      GetSharesInfoOfAtResponse
     >,
-  'get_history_entry_ids' : () => Promise<GetHistoryEntryIdsResponse>,
-  'get_info' : () => Promise<GetInfoResponse>,
-  'get_my_permissions' : () => Promise<GetMyPermissionsResponse>,
-  'get_my_roles' : () => Promise<GetMyRolesResponse>,
-  'get_permission_ids' : () => Promise<GetPermissionIdsResponse>,
-  'get_permissions' : (arg_0: GetPermissionsRequest) => Promise<
-      GetPermissionsResponse
+  'get_my_unaccepted_group_shares_balance' : (
+      arg_0: GetMyGroupSharesBalanceRequest,
+    ) => Promise<GetMyGroupSharesBalanceResponse>,
+  'get_my_vote' : (arg_0: GetMyVoteRequest) => Promise<GetMyVoteResponse>,
+  'get_permission' : (arg_0: GetPermissionRequest) => Promise<
+      GetPermissionResponse
     >,
-  'get_permissions_attached_to_roles' : (
-      arg_0: GetPermissionsAttachedToRolesRequest,
-    ) => Promise<GetPermissionsAttachedToRolesResponse>,
-  'get_permissions_by_permission_target' : (
-      arg_0: GetPermissionsByPermissionTargetRequest,
-    ) => Promise<GetPermissionsByPermissionTargetResponse>,
-  'get_role_ids' : () => Promise<GetRoleIdsResponse>,
-  'get_roles' : (arg_0: GetRolesRequest) => Promise<GetRolesResponse>,
-  'get_roles_attached_to_permissions' : (
-      arg_0: GetRolesAttachedToPermissionsRequest,
-    ) => Promise<GetRolesAttachedToPermissionsResponse>,
-  'get_scheduled_for_authorization_executions' : (
-      arg_0: GetScheduledForAuthorizationExecutionsRequest,
-    ) => Promise<GetScheduledForAuthorizationExecutionsResponse>,
+  'get_profile' : (arg_0: GetProfileRequest) => Promise<GetProfileResponse>,
+  'get_settings' : () => Promise<GetSettingsResponse>,
+  'get_shares_info_of_at' : (arg_0: GetSharesInfoOfAtRequest) => Promise<
+      GetSharesInfoOfAtResponse
+    >,
+  'get_total_group_shares' : (arg_0: GetTotalGroupSharesRequest) => Promise<
+      GetTotalGroupSharesResponse
+    >,
+  'get_total_unaccepted_group_shares' : (
+      arg_0: GetTotalGroupSharesRequest,
+    ) => Promise<GetTotalGroupSharesResponse>,
+  'get_unaccepted_group_shares_balance_of' : (
+      arg_0: GetGroupSharesBalanceOfRequest,
+    ) => Promise<GetGroupSharesBalanceOfResponse>,
+  'get_voting' : (arg_0: GetVotingRequest) => Promise<GetVotingResponse>,
+  'get_voting_choice' : (arg_0: GetVotingChoiceRequest) => Promise<
+      GetVotingChoiceResponse
+    >,
+  'get_voting_config' : (arg_0: GetVotingConfigRequest) => Promise<
+      GetVotingConfigResponse
+    >,
+  'get_voting_results' : (arg_0: GetVotingResultsRequest) => Promise<
+      GetVotingResultsResponse
+    >,
+  'list_access_configs' : (arg_0: ListAccessConfigsRequest) => Promise<
+      ListAccessConfigsResponse
+    >,
+  'list_batches' : (arg_0: ListBatchesRequest) => Promise<ListBatchesResponse>,
+  'list_chunks' : (arg_0: ListChunksRequest) => Promise<ListChunksResponse>,
+  'list_group_shares' : (arg_0: ListGroupSharesRequest) => Promise<
+      ListGroupSharesResponse
+    >,
+  'list_groups' : (arg_0: ListGroupsRequest) => Promise<ListGroupsResponse>,
+  'list_permissions' : (arg_0: ListPermissionsRequest) => Promise<
+      ListPermissionsResponse
+    >,
+  'list_profiles' : (arg_0: ListProfilesRequest) => Promise<
+      ListProfilesResponse
+    >,
+  'list_program_execution_entry_ids' : (
+      arg_0: ListProgramExecutionEntryIdsRequest,
+    ) => Promise<ListProgramExecutionEntryIdsResponse>,
+  'list_unaccepted_group_shares' : (arg_0: ListGroupSharesRequest) => Promise<
+      ListGroupSharesResponse
+    >,
+  'list_voting_choices' : (arg_0: ListVotingChoicesRequest) => Promise<
+      ListVotingChoicesResponse
+    >,
+  'list_voting_configs' : (arg_0: ListVotingConfigsRequest) => Promise<
+      ListVotingConfigsResponse
+    >,
+  'list_votings' : (arg_0: ListVotingsRequest) => Promise<ListVotingsResponse>,
   'lock_batches' : (arg_0: LockBatchesRequest) => Promise<undefined>,
-  'remove_permission' : (arg_0: RemovePermissionRequest) => Promise<
-      RemovePermissionResponse
-    >,
-  'remove_role' : (arg_0: RemoveRoleRequest) => Promise<RemoveRoleResponse>,
+  'mint_group_shares' : (arg_0: MintGroupSharesRequest) => Promise<undefined>,
   'send_batch' : (arg_0: SendBatchRequest) => Promise<undefined>,
-  'subtract_enumerated_roles' : (
-      arg_0: SubtractEnumeratedRolesRequest,
-    ) => Promise<undefined>,
-  'update_info' : (arg_0: UpdateInfoRequest) => Promise<undefined>,
+  'transfer_group_shares' : (arg_0: TransferGroupSharesRequest) => Promise<
+      undefined
+    >,
+  'transfer_my_group_shares' : (arg_0: TransferMyGroupSharesRequest) => Promise<
+      undefined
+    >,
+  'update_access_config' : (arg_0: UpdateAccessConfigRequest) => Promise<
+      undefined
+    >,
+  'update_group' : (arg_0: UpdateGroupRequest) => Promise<undefined>,
+  'update_my_profile' : (arg_0: UpdateMyProfileRequest) => Promise<undefined>,
   'update_permission' : (arg_0: UpdatePermissionRequest) => Promise<undefined>,
-  'update_role' : (arg_0: UpdateRoleRequest) => Promise<undefined>,
+  'update_profile' : (arg_0: UpdateProfileRequest) => Promise<undefined>,
+  'update_settings' : (arg_0: UpdateSettingsRequest) => Promise<undefined>,
+  'update_voting' : (arg_0: UpdateVotingRequest) => Promise<undefined>,
+  'update_voting_choice' : (arg_0: UpdateVotingChoiceRequest) => Promise<
+      undefined
+    >,
+  'update_voting_config' : (arg_0: UpdateVotingConfigRequest) => Promise<
+      undefined
+    >,
 }

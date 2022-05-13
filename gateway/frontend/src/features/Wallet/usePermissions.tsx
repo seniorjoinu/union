@@ -7,13 +7,18 @@ export function usePermissions() {
   const { canister, fetching, data } = useUnion(principal);
 
   useEffect(() => {
-    canister
-      .get_permission_ids()
-      .then(({ ids }) => (ids.length ? canister.get_permissions({ ids }) : null));
+    canister.list_permissions({
+      page_req: {
+        page_size: 100,
+        page_index: 0,
+        sort: null,
+        filter: { target: [] },
+      },
+    });
   }, []);
 
   return {
-    permissions: data.get_permissions?.permissions || [],
-    fetching: !!fetching.get_permission_ids || !!fetching.get_permissions,
+    permissions: data.list_permissions?.page.data || [],
+    fetching: !!fetching.list_permissions,
   };
 }

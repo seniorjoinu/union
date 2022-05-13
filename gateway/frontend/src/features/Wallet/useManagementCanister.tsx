@@ -3,40 +3,34 @@ import { managementEncoder, managementSerializer } from 'services';
 import { useNavigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
 import { Principal } from '@dfinity/principal';
-import { ExternalExecutorFormData } from '../../features/Executor';
 import { useCurrentUnion } from './context';
 
 export interface UseCreateCanisterProps {}
 
 export const useCreateCanister = (_: UseCreateCanisterProps) => {
-  const { rnp, principal } = useCurrentUnion();
+  const { principal } = useCurrentUnion();
   const nav = useNavigate();
 
   const createCanister = useCallback(async () => {
-    if (!rnp) {
-      return Promise.reject();
-    }
-
-    const payload: ExternalExecutorFormData = {
-      title: 'Create canister',
-      description: 'Create canister with management canister',
-      rnp,
-      program: {
-        RemoteCallSequence: [
-          {
-            endpoint: {
-              canister_id: Principal.from(process.env.MANAGEMENT_CANISTER_ID),
-              method_name: 'create_canister',
-            },
-            cycles: BigInt(10 ** 9),
-            args: { CandidString: managementSerializer.create_canister({ settings: [] }) },
-          },
-        ],
-      },
-    };
-
-    nav(`/wallet/${principal}/execute`, { state: payload });
-  }, [principal, rnp]);
+    // const payload: ExternalExecutorFormData = {
+    //   title: 'Create canister',
+    //   description: 'Create canister with management canister',
+    //   rnp,
+    //   program: {
+    //     RemoteCallSequence: [
+    //       {
+    //         endpoint: {
+    //           canister_id: Principal.from(process.env.MANAGEMENT_CANISTER_ID),
+    //           method_name: 'create_canister',
+    //         },
+    //         cycles: BigInt(10 ** 9),
+    //         args: { CandidString: managementSerializer.create_canister({ settings: [] }) },
+    //       },
+    //     ],
+    //   },
+    // };
+    // nav(`/wallet/${principal}/execute`, { state: payload });
+  }, [principal]);
 
   return { createCanister };
 };
@@ -53,13 +47,10 @@ export interface UseUpdateCanisterProps {
 }
 
 export const useUpdateCanister = ({ getValues }: UseUpdateCanisterProps) => {
-  const { rnp, principal } = useCurrentUnion();
+  const { principal } = useCurrentUnion();
   const nav = useNavigate();
 
   const updateCanister = useCallback(async () => {
-    if (!rnp) {
-      return Promise.reject();
-    }
     const walletCanisterId = checkPrincipal(principal);
 
     if (!walletCanisterId) {
@@ -87,44 +78,44 @@ export const useUpdateCanister = ({ getValues }: UseUpdateCanisterProps) => {
       arg: args,
     });
 
-    const payload: ExternalExecutorFormData = {
-      title: 'Install code to canister',
-      description: 'Install code and set current wallet as controller',
-      rnp,
-      program: {
-        RemoteCallSequence: [
-          {
-            endpoint: {
-              canister_id: Principal.from(process.env.MANAGEMENT_CANISTER_ID),
-              method_name: 'install_code',
-            },
-            cycles: BigInt(0),
-            args: { Encoded: [...new Uint8Array(encoded)] },
-          },
-          {
-            endpoint: {
-              canister_id: Principal.from(process.env.MANAGEMENT_CANISTER_ID),
-              method_name: 'update_settings',
-            },
-            cycles: BigInt(0),
-            args: {
-              CandidString: managementSerializer.update_settings({
-                canister_id: canisterId,
-                settings: {
-                  controllers: [[walletCanisterId]],
-                  freezing_threshold: [],
-                  memory_allocation: [],
-                  compute_allocation: [],
-                },
-              }),
-            },
-          },
-        ],
-      },
-    };
+    // const payload: ExternalExecutorFormData = {
+    //   title: 'Install code to canister',
+    //   description: 'Install code and set current wallet as controller',
+    //   rnp,
+    //   program: {
+    //     RemoteCallSequence: [
+    //       {
+    //         endpoint: {
+    //           canister_id: Principal.from(process.env.MANAGEMENT_CANISTER_ID),
+    //           method_name: 'install_code',
+    //         },
+    //         cycles: BigInt(0),
+    //         args: { Encoded: [...new Uint8Array(encoded)] },
+    //       },
+    //       {
+    //         endpoint: {
+    //           canister_id: Principal.from(process.env.MANAGEMENT_CANISTER_ID),
+    //           method_name: 'update_settings',
+    //         },
+    //         cycles: BigInt(0),
+    //         args: {
+    //           CandidString: managementSerializer.update_settings({
+    //             canister_id: canisterId,
+    //             settings: {
+    //               controllers: [[walletCanisterId]],
+    //               freezing_threshold: [],
+    //               memory_allocation: [],
+    //               compute_allocation: [],
+    //             },
+    //           }),
+    //         },
+    //       },
+    //     ],
+    //   },
+    // };
 
-    nav(`/wallet/${principal}/execute`, { state: payload });
-  }, [getValues, principal, rnp]);
+    // nav(`/wallet/${principal}/execute`, { state: payload });
+  }, [getValues, principal]);
 
   return { updateCanister };
 };

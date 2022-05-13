@@ -8,20 +8,14 @@ import {
   ImageFile as IF,
 } from '@union/components';
 import { useForm, Controller } from 'react-hook-form';
-import { checkPrincipal } from 'toolkit';
-import { useSetInfo, useGetInfo, SetInfoFormData } from './useUnionInfo';
+import { useSetInfo, useGetSettings, SetInfoFormData } from './useUnionInfo';
 
 const ImageFile = styled(IF)``;
 const Button = styled(B)``;
 const TextField = styled(TF)``;
 
-const LogoContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
 const Container = styled(PageWrapper)`
-  & > ${TextField}, ${LogoContainer} {
+  & > ${TextField} {
     margin-bottom: 24px;
   }
 
@@ -36,7 +30,7 @@ const Container = styled(PageWrapper)`
 `;
 
 export const InfoForm = (p: Omit<InfoFormComponentProps, 'info'>) => {
-  const { data } = useGetInfo();
+  const { data } = useGetSettings();
 
   const info: SetInfoFormData | null = useMemo(() => {
     if (!data) {
@@ -46,11 +40,6 @@ export const InfoForm = (p: Omit<InfoFormComponentProps, 'info'>) => {
     return {
       name: data.name,
       description: data.description,
-      logo: data.logo[0]
-        ? new Blob([new Uint8Array(data.logo[0].content)], {
-            type: data.logo[0].mime_type,
-          })
-        : null,
     };
   }, [data]);
 
@@ -99,27 +88,6 @@ export const InfoFormComponent = ({ info, ...p }: InfoFormComponentProps) => {
         }}
         render={({ field, fieldState: { error } }) => (
           <TextField {...field} helperText={error?.message} label='Description' />
-        )}
-      />
-      <Controller
-        name='logo'
-        control={control}
-        rules={{ required: 'Required field' }}
-        render={({ field, fieldState: { error } }) => (
-          <LogoContainer>
-            <TextField
-              type='file'
-              accept='image/*'
-              helperText={error?.message}
-              label='image file'
-              onChange={(e) => {
-                const file = e.target.files?.item(0) || null;
-
-                setValue('logo', file, { shouldValidate: true });
-              }}
-            />
-            <ImageFile src={field.value} />
-          </LogoContainer>
         )}
       />
       <Button type='submit' disabled={!isValid} onClick={() => setInfo()}>

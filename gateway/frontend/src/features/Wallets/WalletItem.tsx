@@ -3,10 +3,9 @@ import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { Text, SimpleListItem } from '@union/components';
 import { initWalletController, useGateway } from 'services';
-import { parseRole } from '../Wallet/utils';
 import { WalletInfo } from './WalletInfo';
 
-const RoleName = styled(Text)`
+const Name = styled(Text)`
   padding: 0 8px;
   border-radius: 4px;
   background-color: #dfdfdf;
@@ -28,22 +27,16 @@ export const WalletItem = ({
   onClick = () => {},
   ...p
 }: WalletItemProps) => {
-  const [roleName, setRoleName] = useState<string>('');
+  const [name, setName] = useState<string>('');
 
   useEffect(() => {
     const canisterId = wallet.toString();
     const controller = initWalletController(canisterId);
 
-    controller.canister.get_my_roles().then(({ roles }) => {
-      const profile = roles.find((r) => 'Profile' in r.role_type);
-      const everyone = roles.find((r) => 'Everyone' in r.role_type);
-
-      const roleType = profile?.role_type || everyone?.role_type;
-      const parsed = roleType ? parseRole(roleType) : null;
-
-      setRoleName(parsed?.title || '');
+    controller.canister.get_my_profile().then(({ profile }) => {
+      setName(profile.name);
     });
-  }, [wallet, setRoleName]);
+  }, [wallet, setName]);
 
   return (
     <SimpleListItem
@@ -56,13 +49,13 @@ export const WalletItem = ({
             Root
           </Text>
         ),
-        roleName: !!roleName && <RoleName variant='p1'>{roleName}</RoleName>,
+        name: !!name && <Name variant='p1'>{name}</Name>,
         children,
       }}
       order={[
         { key: 'principal', basis: '50%' },
         { key: 'isRoot', basis: '10%' },
-        { key: 'roleName', basis: '20%', align: children ? 'center' : 'end' },
+        { key: 'name', basis: '20%', align: children ? 'center' : 'end' },
         ...(children ? [{ key: 'children' as const, basis: '20%', align: 'end' as const }] : []),
       ]}
       onClick={() => onClick(wallet)}

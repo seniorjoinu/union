@@ -4,6 +4,9 @@
 // Кольцевые зависимости нужно разруливать на уровне чанков ручками
 
 export const defaultManualChunks = (path: string, currentDir: string): string => {
+  if (path.includes('union/libs')) {
+    return 'libs';
+  }
   if (path.includes(`${currentDir}/src`) || path.includes(`${currentDir}/index`)) {
     return 'index';
   }
@@ -13,6 +16,9 @@ export const defaultManualChunks = (path: string, currentDir: string): string =>
 
   const id = path.slice(path.indexOf('node_modules/') + 1);
 
+  if (id.includes('@dfinity')) {
+    return 'dfinity';
+  }
   if (id.includes('react')) {
     return 'react';
   }

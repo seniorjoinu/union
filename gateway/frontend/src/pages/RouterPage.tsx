@@ -27,7 +27,7 @@ export function RouterPage() {
       <Routes>
         <Route path='/auth' element={<AuthPage to='/wallets' />} />
         {!isAuthentificated && <Route path='/*' element={<Navigate to='/auth' replace />} />}
-        <Route path='/' element={<Navigate to='/walets' replace />} />
+        <Route path='/' element={<Navigate to='/wallets' replace />} />
         <Route
           path='/*'
           element={

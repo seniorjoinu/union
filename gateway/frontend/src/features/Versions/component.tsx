@@ -72,8 +72,8 @@ export const Versions = ({ ...p }: VersionsProps) => {
 
     const controller = initWalletController(binaryController);
 
-    controller.canister.get_my_permissions().then(({ permissions }) => {
-      if (!permissions.length) {
+    controller.canister.get_my_groups().then(({ groups }) => {
+      if (!groups.length) {
         return;
       }
       setVersionControllerCanister(binaryController);

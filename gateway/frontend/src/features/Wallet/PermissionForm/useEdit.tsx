@@ -2,11 +2,10 @@ import React, { useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTrigger } from 'toolkit';
 import { useUnion, walletSerializer } from 'services';
-import { PermissionScope, PermissionTarget } from 'union-ts';
+import { PermissionTarget } from 'union-ts';
 import { Principal } from '@dfinity/principal';
 import { parsePermission } from '../utils';
 import { useCurrentUnion } from '../context';
-import { ExternalExecutorFormData } from '../../Executor';
 import { UseSubmitProps } from './types';
 
 export interface UseEditProps {
@@ -16,8 +15,9 @@ export interface UseEditProps {
 }
 
 export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
-  const { permissionId } = useParams();
-  const { rnp, principal } = useCurrentUnion();
+  const params = useParams();
+  const permissionId = BigInt(params.permissionId || -1);
+  const { principal } = useCurrentUnion();
   const { canister, fetching, data } = useUnion(principal);
 
   useEffect(() => {
@@ -25,80 +25,68 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
       return;
     }
 
-    canister.get_permissions({ ids: [Number(permissionId)] });
+    canister.get_permission({ id: permissionId });
   }, [setValue, permissionId]);
 
   useTrigger(
-    ({ permissions }) => {
-      if (!permissions.length) {
-        return;
-      }
-
-      const parsed = parsePermission(permissions[0]);
+    ({ permission }) => {
+      const parsed = parsePermission(permission);
       const targets = parsed.targets.map((t) => ({
-        canisterId: t.canisterId || t.principal || '',
+        canisterId: t.canisterId || '',
         methodName: t.method || '',
       }));
 
       setValue('name', parsed.name);
-      setValue('scope', parsed.scope);
+      setValue('description', parsed.description);
       setValue('targets', targets);
     },
-    data.get_permissions,
-    [data.get_permissions, setValue],
+    data.get_permission,
+    [data.get_permission, setValue],
   );
 
-  const onEdit = useCallback(async (): Promise<ExternalExecutorFormData> => {
-    const permission = data.get_permissions?.permissions[0];
+  const onEdit = useCallback(async () => {
+    const permission = data.get_permission?.permission;
 
-    if (!permissionId || !rnp || !permission) {
+    if (!permissionId || !permission) {
       return Promise.reject();
     }
 
     const old = parsePermission(permission);
 
     const values = getValues();
-    const scope = { [values.scope]: null } as PermissionScope;
 
     const targets: PermissionTarget[] = values.targets.map((t) => {
       if (!t.canisterId) {
         return { SelfEmptyProgram: null };
-      }
-      if (t.canisterId && !t.methodName) {
-        return { Canister: Principal.fromText(t.canisterId) };
       }
       return {
         Endpoint: { canister_id: Principal.fromText(t.canisterId), method_name: t.methodName },
       };
     });
 
-    const payload: ExternalExecutorFormData = {
-      title: 'Update permission',
-      description: 'Update permission through interface',
-      rnp,
-      program: {
-        RemoteCallSequence: [
-          {
-            endpoint: {
-              canister_id: principal,
-              method_name: 'update_permission',
-            },
-            cycles: BigInt(0),
-            args: {
-              CandidString: walletSerializer.update_permission({
-                permission_id: Number(permissionId),
-                new_name: old.name !== values.name ? [values.name] : [],
-                new_scope: old.scope !== values.scope ? [scope] : [],
-                new_targets: [targets], // TODO make check of change
-              }),
-            },
-          },
-        ],
-      },
-    };
-
-    return payload;
-  }, [getValues, permissionId, data.get_permissions]);
+    // const payload: ExternalExecutorFormData = {
+    //   program: {
+    //     RemoteCallSequence: [
+    //       {
+    //         endpoint: {
+    //           canister_id: principal,
+    //           method_name: 'update_permission',
+    //         },
+    //         cycles: BigInt(0),
+    //         args: {
+    //           CandidString: walletSerializer.update_permission({
+    //             id: permissionId,
+    //             new_name: old.name !== values.name ? [values.name] : [],
+    //             new_description: old.description !== values.description ? [values.description] : [],
+    //             new_targets: [targets], // TODO make check of change
+    //           }),
+    //         },
+    //       },
+    //     ],
+    //   },
+    // };
+    // return payload;
+  }, [getValues, permissionId, data.get_permission]);
 
   let fallback: JSX.Element | null = null;
 
@@ -110,11 +98,11 @@ export const useEdit = ({ create, setValue, getValues }: UseEditProps) => {
     fallback = <span>PermissionId is empty</span>;
   }
 
-  if (fetching.get_permissions) {
+  if (fetching.get_permission) {
     fallback = <span>fetching</span>;
   }
 
-  if (!data.get_permissions?.permissions.length) {
+  if (!data.get_permission?.permission) {
     fallback = <span>Permission does not found</span>;
   }
 

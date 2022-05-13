@@ -4,39 +4,35 @@ import styled from 'styled-components';
 import { Text } from '@union/components';
 import { useUnion } from 'services';
 import { useCurrentUnion } from '../context';
-import { useAttachedRoles } from '../useAttachedRoles';
 import { useRemove } from '../useRemove';
-import { useDetach } from '../useDetach';
 import { PermissionDetailsView } from './PermissionDetailsView';
-import { RolesAttacher } from './RolesAttacher';
 
 const Title = styled(Text)`
   margin-bottom: 64px;
 `;
 
 export interface PermissionDetailsProps {
-  edit(permissionId: number): void;
+  edit(permissionId: BigInt): void;
 }
 
 export const PermissionDetails = ({ edit }: PermissionDetailsProps) => {
-  const { permissionId } = useParams();
+  const params = useParams();
+  const permissionId = BigInt(params.permissionId || -1);
   const { removePermission } = useRemove();
-  const { detachRoleAndPermission } = useDetach();
   const { principal } = useCurrentUnion();
   const { canister, fetching, data } = useUnion(principal);
-  const { roles } = useAttachedRoles({ permissionId });
 
   useEffect(() => {
-    canister.get_permissions({ ids: [Number(permissionId)] });
+    canister.get_permission({ id: permissionId });
   }, [permissionId]);
 
-  const permission = data.get_permissions?.permissions[0];
+  const permission = data.get_permission?.permission;
 
   if (!permissionId) {
-    return <span>Unknown permission {permissionId}</span>;
+    return <span>Unknown permission {Number(permissionId)}</span>;
   }
 
-  if (fetching.get_permissions) {
+  if (fetching.list_permissions) {
     return <span>fetching</span>;
   }
 
@@ -49,12 +45,9 @@ export const PermissionDetails = ({ edit }: PermissionDetailsProps) => {
       <Title variant='h2'>{permission.name}</Title>
       <PermissionDetailsView
         permission={permission}
-        roles={roles}
-        detachRole={detachRoleAndPermission}
-        remove={() => removePermission([permission.id])}
-        edit={() => edit(permission.id)}
+        remove={() => removePermission([permissionId])}
+        edit={() => edit(permissionId)}
       />
-      <RolesAttacher permission={permission} />
     </>
   );
 };

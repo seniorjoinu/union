@@ -5,7 +5,7 @@ export interface FormTarget {
 
 export interface FormData {
   name: string;
-  scope: 'Blacklist' | 'Whitelist';
+  description: string;
   targets: FormTarget[];
 }
 

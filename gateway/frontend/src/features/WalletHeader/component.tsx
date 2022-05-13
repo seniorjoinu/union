@@ -54,17 +54,14 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
       {isInsideWallet && walletId && (
         <>
           <Items>
+            <Item variant='p2' as={NavLink} to={`wallet/${walletId}/profile`}>
+              Profile
+            </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/wallet`}>
               Wallet
             </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/assets`}>
               Assets
-            </Item>
-            <Item variant='p2' as={NavLink} to={`wallet/${walletId}/participants`}>
-              Participants
-            </Item>
-            <Item variant='p2' as={NavLink} to={`wallet/${walletId}/rnp`}>
-              Roles and Permissions
             </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/history`}>
               History

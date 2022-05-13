@@ -31,23 +31,41 @@ export interface NotificationsProps {
 
 export const Notifications = ({ ...p }: NotificationsProps) => {
   const [accepted, setAccepted] = useState<Record<string, true>>({});
-  const { canister, fetching, data } = useGateway(process.env.GATEWAY_CANISTER_ID);
+  const { canister: gateway, fetching, data } = useGateway(process.env.GATEWAY_CANISTER_ID);
 
   useEffect(() => {
-    canister.get_my_notifications();
+    gateway.get_my_notifications();
   }, []);
 
   const notifications = data.get_my_notifications?.notifications || [];
 
   const handleAccept = useCallback(
     async (id: string, canisterId: string) => {
-      // FIXME
-      console.error('FIXME role_id');
-      await initWalletController(canisterId).canister.activate_profile({ role_id: 0 });
-      await canister.attach_to_union_wallet({ union_wallet_id: Principal.fromText(canisterId) });
+      const { canister } = initWalletController(canisterId);
+
+      const groups = await canister.get_my_groups();
+
+      const responses = await Promise.all(
+        groups.groups.map(async (group) => {
+          if (!group.id[0]) {
+            return;
+          }
+          const shares = await canister.get_my_unaccepted_group_shares_balance({
+            group_id: group.id[0],
+          });
+
+          if (!Number(shares.balance)) {
+            return;
+          }
+          return canister.accept_my_group_shares({ group_id: group.id[0], qty: shares.balance });
+        }),
+      );
+
+      console.log('Accept responses', responses);
+      await gateway.attach_to_union_wallet({ union_wallet_id: Principal.fromText(canisterId) });
       setAccepted((accepted) => ({ ...accepted, [id]: true }));
     },
-    [canister, setAccepted],
+    [gateway, setAccepted],
   );
 
   return (

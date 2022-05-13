@@ -67,7 +67,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
   } = useForm<FormData>({
     defaultValues: {
       name: '',
-      scope: 'Blacklist',
+      description: '',
       targets: [],
     },
     mode: 'onTouched',
@@ -90,14 +90,11 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
         )}
       />
       <Controller
-        name='scope'
+        name='description'
         control={control}
         rules={{ required: 'Required field' }}
         render={({ field, fieldState: { error } }) => (
-          <Select {...field} helperText={error?.message} title='Permission type'>
-            <Option value='Blacklist'>Blacklist</Option>
-            <Option value='Whitelist'>Whitelist</Option>
-          </Select>
+          <TextField {...field} helperText={error?.message} label='Description' />
         )}
       />
       <Accordeon title={<AccordeonTitle variant='p1'>Candid of wallet</AccordeonTitle>}>

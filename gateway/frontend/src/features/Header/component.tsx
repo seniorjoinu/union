@@ -53,18 +53,16 @@ export function Header(p: HeaderProps) {
     if (!checkPrincipal(walletId)) {
       return;
     }
-    canister.get_my_roles();
+    canister.get_my_profile();
   }, [walletId, canister]);
 
   const profileName = useMemo(() => {
     if (!isInsideWallet || !walletId) {
       return '';
     }
-    const roles = data.get_my_roles?.roles || [];
-    const profile = roles.find((r) => 'Profile' in r.role_type);
-
-    return profile && 'Profile' in profile.role_type ? profile.role_type.Profile.name : '';
-  }, [data.get_my_roles, isInsideWallet && walletId]);
+    // TODO get groups
+    return data.get_my_profile?.profile.name || '';
+  }, [data.get_my_profile, isInsideWallet && walletId]);
 
   return (
     <Container {...p}>
@@ -72,15 +70,15 @@ export function Header(p: HeaderProps) {
         <Item variant='p1' as={NavLink} to='/wallets'>
           Wallets
         </Item>
-        <Item variant='p1' as={NavLink} to='/notifications'>
+        {/* <Item variant='p1' as={NavLink} to='/notifications'>
           Notifications
-        </Item>
+        </Item> */}
         <Item variant='p1' as={NavLink} to='/versions'>
           Versions
         </Item>
-        <Item variant='p1' as={NavLink} to='/explore'>
+        {/* <Item variant='p1' as={NavLink} to='/explore'>
           Explore
-        </Item>
+        </Item> */}
       </Items>
       <LoginButton name={profileName} />
     </Container>

@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { PageWrapper, Text, SubmitButton as SB, ImageFile as IF } from '@union/components';
 import { useDeployer, useUnion } from 'services';
-import { downloadFileContent } from 'toolkit';
 import { NavLink } from 'react-router-dom';
 import { Principal } from '@dfinity/principal';
+import moment from 'moment';
 import { useCurrentUnion } from '../context';
 
 const ImageFile = styled(IF)``;
@@ -44,28 +44,11 @@ export const Info = ({ ...p }: InfoProps) => {
   const deployer = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
 
   useEffect(() => {
-    canister.get_info();
+    canister.get_settings();
     deployer.canister.get_instances({ ids: [Principal.from(principal)] });
   }, []);
 
-  const downloadCandid = useCallback(async () => {
-    const candid = await canister.export_candid();
-
-    downloadFileContent(candid, 'can.did');
-  }, [canister]);
-
-  const info = data.get_info?.info || null;
-
-  const logo = useMemo(() => {
-    if (!info || !info.logo[0]) {
-      return null;
-    }
-    const fileInfo = info.logo[0];
-
-    return new Blob([new Uint8Array(fileInfo.content)], {
-      type: fileInfo.mime_type,
-    });
-  }, [info]);
+  const settings = data.get_settings?.settings || null;
 
   return (
     <Container {...p} title='Wallet info'>
@@ -76,19 +59,34 @@ export const Info = ({ ...p }: InfoProps) => {
         <Button forwardedAs={NavLink} to='upgrade-version'>
           Upgrade version
         </Button>
-        <Button onClick={downloadCandid}>Download can.did</Button>
       </Controls>
-      {!!fetching.get_info && <Text>fetching...</Text>}
-      {info && (
+      {!!fetching.get_settings && <Text>fetching...</Text>}
+      {settings && (
         <>
-          {logo && <ImageFile src={logo} />}
           <Field>ID: {principal.toString()}</Field>
-          <Field>Name: {info.name}</Field>
-          <Field>Description: {info.description}</Field>
+          <Field>Name: {settings.name}</Field>
+          <Field>Description: {settings.description}</Field>
           <Field>Version: {deployer.data.get_instances?.instances[0].binary_version || '?'}</Field>
-          <Field>Balance: ?</Field>
-          <Field>Storage: ?</Field>
-          {/* <Text>Description: {info.logo}</Text> */}
+          {settings.history_ledgers.map((ledger, i) => {
+            const timestamp = moment(Number(ledger.timestamp) / 10 ** 6).format(
+              'DD-MM-YY HH:mm:SS',
+            );
+
+            return (
+              <Field key={String(i)}>
+                <Field>Ledger #{i}</Field>
+                {ledger.records.map((r, j) => (
+                  <Field key={r.toString()}>
+                    Record #{j}: {r.toString()}
+                  </Field>
+                ))}
+
+                <Field>Timestamp: {timestamp}</Field>
+              </Field>
+            );
+          })}
+          {/* <Field>Balance: ?</Field>
+          <Field>Storage: ?</Field> */}
         </>
       )}
     </Container>

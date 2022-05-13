@@ -128,7 +128,7 @@ export const useBatchUploader = (p?: Partial<UseBatchUploaderProps>) => {
         console.log('!!!', chunk_ids);
 
         await canister.lock_batches({
-          batch_ids: [batch_id],
+          ids: [batch_id],
         });
       } catch (e) {
         console.error(e);
