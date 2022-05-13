@@ -89,9 +89,6 @@ export const LoginButton = ({
       <Button
         {...props}
         id='login'
-        variant='text'
-        size='M'
-        color='grey'
         onClick={() => logout().then(() => navigate('/', { replace: true }))}
       >
         Logout

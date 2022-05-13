@@ -3,7 +3,9 @@ import styled from 'styled-components';
 import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
 import { Provider } from './context';
-import { Profile } from './Profile';
+import { Profile, ChangeProfile } from './Profile';
+import { Groups } from './Groups';
+import { AccessConfigs } from './AccessConfigs';
 import { Info, InfoForm, UpgradeForm } from './Info';
 import { Assets, AssetsCanisterUpdater, BatchesUploader } from './Assets';
 import { PermissionDetails } from './PermissionDetails';
@@ -30,7 +32,12 @@ export const Wallet = () => {
     <Provider principal={principal}>
       <Container>
         <Routes>
+          <Route path='/groups' element={<Groups />} />
+          <Route path='/access-configs' element={<AccessConfigs />} />
+
           <Route path='/profile' element={<Profile />} />
+          <Route path='/profile/change' element={<ChangeProfile />} />
+
           <Route path='/wallet' element={<Info />} />
           <Route path='/wallet/edit-info' element={<InfoForm />} />
           <Route path='/wallet/upgrade-version' element={<UpgradeForm />} />
@@ -69,7 +76,7 @@ export const Wallet = () => {
               <ExternalExecutor canisterId={principal} redirectToHistory={() => nav('history')} />
             }
           /> */}
-          <Route path='' element={<Navigate to='history' replace />} />
+          <Route path='' element={<Navigate to='wallet' replace />} />
         </Routes>
       </Container>
     </Provider>

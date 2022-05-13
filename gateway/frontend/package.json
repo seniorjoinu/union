@@ -2,7 +2,8 @@
   "name": "union-frontend",
   "version": "0.0.0",
   "scripts": {
-    "dev": "npm run copy_deps && vite",
+    "dev": "npm run copy_deps && npm run dev-frontend",
+    "dev-frontend": "vite",
     "build": "npm run copy_deps && npm run build-frontend",
     "build-frontend": "vite build",
     "copy_deps": "./build_scripts/pre_copy_deps.sh",
@@ -14,7 +15,6 @@
   },
   "dependencies": {
     "@union/serialize": "*",
-    "@union/components": "*",
     "@dfinity/agent": "^0.10.4",
     "@dfinity/auth-client": "^0.10.4",
     "@dfinity/authentication": "^0.10.4",

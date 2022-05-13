@@ -12,8 +12,11 @@ const GlobalStyle = createGlobalStyle`
     height: 100%;
 
     * {
+      font-family: -apple-system, Stolzl, sans-serif;
+      font-family: -apple-system, OpenSans, sans-serif;
+      font-style: normal;
+      font-weight: 400;
       box-sizing: border-box;
-      font-family: -apple-system, Arial, sans-serif;
     }
   }
 

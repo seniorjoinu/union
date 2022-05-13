@@ -1,14 +1,20 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { PageWrapper, Text, SubmitButton as SB, ImageFile as IF } from '@union/components';
-import { useDeployer, useUnion } from 'services';
+import { useUnion } from 'services';
 import { NavLink } from 'react-router-dom';
-import { Principal } from '@dfinity/principal';
 import moment from 'moment';
 import { useCurrentUnion } from '../context';
 
 const ImageFile = styled(IF)``;
-const Field = styled(Text)``;
+const Field = styled(Text)`
+  display: flex;
+  flex-direction: column;
+
+  & > & {
+    margin-left: 8px;
+  }
+`;
 const Button = styled(SB)``;
 const Controls = styled.div`
   display: flex;
@@ -41,11 +47,9 @@ export interface InfoProps {
 export const Info = ({ ...p }: InfoProps) => {
   const { principal } = useCurrentUnion();
   const { canister, fetching, data } = useUnion(principal);
-  const deployer = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
 
   useEffect(() => {
     canister.get_settings();
-    deployer.canister.get_instances({ ids: [Principal.from(principal)] });
   }, []);
 
   const settings = data.get_settings?.settings || null;
@@ -66,7 +70,10 @@ export const Info = ({ ...p }: InfoProps) => {
           <Field>ID: {principal.toString()}</Field>
           <Field>Name: {settings.name}</Field>
           <Field>Description: {settings.description}</Field>
-          <Field>Version: {deployer.data.get_instances?.instances[0].binary_version || '?'}</Field>
+          <Field>Version: ?</Field>
+          <Field>Balance: ?</Field>
+          <Field>Storage: ?</Field>
+          <Field>Version: ?</Field>
           {settings.history_ledgers.map((ledger, i) => {
             const timestamp = moment(Number(ledger.timestamp) / 10 ** 6).format(
               'DD-MM-YY HH:mm:SS',
@@ -74,7 +81,7 @@ export const Info = ({ ...p }: InfoProps) => {
 
             return (
               <Field key={String(i)}>
-                <Field>Ledger #{i}</Field>
+                <Text>Ledger #{i}</Text>
                 {ledger.records.map((r, j) => (
                   <Field key={r.toString()}>
                     Record #{j}: {r.toString()}
@@ -85,8 +92,6 @@ export const Info = ({ ...p }: InfoProps) => {
               </Field>
             );
           })}
-          {/* <Field>Balance: ?</Field>
-          <Field>Storage: ?</Field> */}
         </>
       )}
     </Container>

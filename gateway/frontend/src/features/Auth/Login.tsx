@@ -21,7 +21,7 @@ export interface LoginProps {
 export function Login({ buttonProps, ...p }: LoginProps) {
   return (
     <Container {...p}>
-      <LoginButton {...buttonProps} size='L' variant='outlined' color='white' height={32} />
+      <LoginButton {...buttonProps} height={32} />
     </Container>
   );
 }

@@ -13,7 +13,7 @@ const Item = styled(Text)`
 
   &.active {
     color: black;
-    font-weight: 500;
+    font-weight: 600;
   }
 `;
 

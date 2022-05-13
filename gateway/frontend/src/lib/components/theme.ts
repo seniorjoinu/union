@@ -17,7 +17,7 @@ export const theme: ComponentsTheme = {
     },
   },
   common: {
-    borderRadius: '4px',
+    borderRadius: '0px',
   },
 };
 
