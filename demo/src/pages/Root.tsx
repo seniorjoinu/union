@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { createGlobalStyle } from 'styled-components';
 import { ProvideAuth } from '../auth';
 import { UnionProvider } from '../union';
@@ -26,7 +26,9 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-ReactDOM.render(
+const root = createRoot(document.getElementById('root')!);
+
+root.render(
   <React.StrictMode>
     <GlobalStyle />
     <ProvideAuth>
@@ -35,5 +37,4 @@ ReactDOM.render(
       </UnionProvider>
     </ProvideAuth>
   </React.StrictMode>,
-  document.getElementById('root'),
 );

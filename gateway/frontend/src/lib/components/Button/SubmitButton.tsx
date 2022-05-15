@@ -21,11 +21,19 @@ const Button = styled(B)<{ $loading: boolean }>`
 `;
 
 export interface SubmitButtonProps extends Omit<ButtonProps, 'onClick'> {
+  as?: any;
   loading?: boolean;
   onClick?(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void | Promise<any>;
 }
 
-export const SubmitButton = ({ onClick, disabled, loading, children, ...p }: SubmitButtonProps) => {
+export const SubmitButton = ({
+  onClick,
+  disabled,
+  loading,
+  children,
+  as,
+  ...p
+}: SubmitButtonProps) => {
   const [fetching, setFetching] = useState(false);
 
   const handleOnClick = useCallback(
@@ -47,6 +55,7 @@ export const SubmitButton = ({ onClick, disabled, loading, children, ...p }: Sub
   return (
     <Button
       {...p}
+      forwardedAs={as}
       disabled={disabled || fetching || loading}
       $loading={loading || fetching}
       onClick={handleOnClick}

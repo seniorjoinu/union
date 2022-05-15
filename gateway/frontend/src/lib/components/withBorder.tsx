@@ -1,5 +1,6 @@
 import * as React from 'react';
 import styled from 'styled-components';
+import { theme } from './theme';
 
 interface WithBorderProps {
   className?: string;
@@ -7,19 +8,24 @@ interface WithBorderProps {
 }
 export interface WithBorderOptions {
   color?: string;
+  hoverColor?: string;
   size?: number;
   withQuad?: boolean;
   quadFillColor?: string;
+  hoverQuadFillColor?: string;
 }
 
-const defaultOptions: Required<WithBorderOptions> = {
-  color: 'black',
+const defaultOptions: WithBorderOptions = {
+  color: theme.colors.grey,
   size: 8,
   withQuad: true,
-  quadFillColor: 'black',
+  quadFillColor: theme.colors.dark,
 };
 
-export const withBorder = <P extends object, R extends React.JSXElementConstructor<P>>(
+export const withBorder = <
+  P extends object,
+  R extends React.JSXElementConstructor<P> = React.JSXElementConstructor<P>
+>(
   Component: R,
   opts: WithBorderOptions = {},
 ): R => {
@@ -38,6 +44,26 @@ export const withBorder = <P extends object, R extends React.JSXElementConstruct
     display: flex;
     border-top: 1px solid var(--color);
     border-left: 1px solid var(--color);
+    transition: border-color 0.2s ease;
+    padding: 0 1px 1px 0;
+
+    &:hover {
+      border-color: ${options.hoverColor || options.color};
+
+      &::before,
+      &::after {
+        border-color: ${options.hoverColor || options.color};
+      }
+    }
+    &:hover ${BorderSlice} {
+      &::before {
+        border-color: ${options.hoverColor || options.color};
+      }
+      &::after {
+        border-color: ${options.hoverColor || options.color};
+        background-color: ${options.hoverQuadFillColor || options.quadFillColor};
+      }
+    }
 
     & > ${StyledComponent} {
       width: 100%;
@@ -57,10 +83,12 @@ export const withBorder = <P extends object, R extends React.JSXElementConstruct
     &::before {
       bottom: var(--slice);
       border-right: 1px solid var(--color);
+      transition: border-color 0.2s ease;
     }
     &::after {
       right: var(--slice);
       border-bottom: 1px solid var(--color);
+      transition: border-color 0.2s ease;
     }
 
     ${BorderSlice} {
@@ -71,6 +99,7 @@ export const withBorder = <P extends object, R extends React.JSXElementConstruct
         position: absolute;
         height: var(--slice);
         width: var(--slice);
+        transition: background-color, border-color 0.2s ease;
       }
 
       &::before {
@@ -92,11 +121,16 @@ export const withBorder = <P extends object, R extends React.JSXElementConstruct
     }
   `;
 
-  const WrappedComponent = (({ className, style, ...props }: P & WithBorderProps) => (
+  const WrappedComponent = (({
+    className,
+    style,
+    as,
+    ...props
+  }: P & WithBorderProps & { as: any }) => (
     <BorderWrapper className={className} style={style}>
       <BorderSlice />
       {/* @ts-expect-error */}
-      <StyledComponent {...(props as P)} />
+      <StyledComponent {...(props as P)} forwardedAs={as} />
     </BorderWrapper>
   )) as R;
 

@@ -4,7 +4,8 @@ import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-do
 import { checkPrincipal } from 'toolkit';
 import { Provider } from './context';
 import { Profile, ChangeProfile } from './Profile';
-import { Groups } from './Groups';
+import { Groups, GroupForm } from './Groups';
+import { Permissions } from './Permissions';
 import { AccessConfigs } from './AccessConfigs';
 import { Info, InfoForm, UpgradeForm } from './Info';
 import { Assets, AssetsCanisterUpdater, BatchesUploader } from './Assets';
@@ -33,6 +34,11 @@ export const Wallet = () => {
       <Container>
         <Routes>
           <Route path='/groups' element={<Groups />} />
+          <Route path='/groups/:groupId' element={<Groups />} />
+          <Route path='/groups/create' element={<GroupForm />} />
+
+          <Route path='/permissions' element={<Permissions />} />
+
           <Route path='/access-configs' element={<AccessConfigs />} />
 
           <Route path='/profile' element={<Profile />} />

@@ -45,6 +45,7 @@ export const Header = styled.div`
   flex-direction: row;
   justify-content: space-between;
   flex-shrink: 1;
+  flex-grow: 1;
   min-width: 0;
 
   & > * {

@@ -5,7 +5,9 @@ import { _SERVICE } from 'union-ts';
 import { idlFactory as idl } from 'union-idl';
 import { Principal } from '@dfinity/principal';
 
-export type IWalletController = Canister<_SERVICE>;
+export type { _SERVICE } from 'union-ts';
+
+export type IUnionController = Canister<_SERVICE>;
 
 export const initWalletController = (canisterId: string, handlers?: CanisterProps['handlers']) => {
   const canister = ((window as any).wallet = new Canister<_SERVICE>({

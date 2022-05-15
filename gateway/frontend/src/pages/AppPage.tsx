@@ -47,7 +47,8 @@ const Container = styled.main`
 
     & > * {
       height: 100%;
-      min-width: 700px;
+      min-width: 800px;
+      max-width: 800px;
       align-self: center;
     }
   }

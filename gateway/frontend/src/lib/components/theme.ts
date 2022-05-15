@@ -1,45 +1,32 @@
 export const theme: ComponentsTheme = {
   colors: {
-    dark: {
-      900: 'black',
-      800: 'black',
-    },
-    grey: {
-      10: 'grey',
-      90: 'grey',
-      100: 'grey',
-    },
-    primary: {
-      master: {
-        color: 'black',
-        darker: 'black',
-      },
-    },
-  },
-  common: {
-    borderRadius: '0px',
+    dark: '#0F0F0F',
+    light: '#FAFAFA',
+
+    grey: '#A1A1A1',
+    yellow: '#FCD621',
+    red: '#ED4040',
+    orange: '#F28221',
+    pink: '#FCADB8',
+    violet: '#7A52CC',
+    blue: '#4F7DCF',
+    lightBlue: '#4F7DCF',
+    green: '#73CC57',
   },
 };
 
 export interface ComponentsTheme {
   colors: {
-    dark: {
-      900: string;
-      800: string;
-    };
-    grey: {
-      10: string;
-      90: string;
-      100: string;
-    };
-    primary: {
-      master: {
-        color: string;
-        darker: string;
-      };
-    };
-  };
-  common: {
-    borderRadius: string;
+    dark: string;
+    light: string;
+    grey: string;
+    yellow: string;
+    red: string;
+    orange: string;
+    pink: string;
+    violet: string;
+    blue: string;
+    lightBlue: string;
+    green: string;
   };
 }

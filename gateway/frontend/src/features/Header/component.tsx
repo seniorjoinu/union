@@ -36,7 +36,7 @@ const Container = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 8px 16px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.dark[900]};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark};
 `;
 
 export interface HeaderProps extends IClassName {}

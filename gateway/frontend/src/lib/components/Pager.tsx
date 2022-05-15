@@ -29,7 +29,7 @@ const Container = styled.div`
   flex-direction: column;
 
   & > ${Item}:not(:last-child) {
-    margin-bottom: 8px;
+    margin-bottom: 16px;
   }
 
   ${Error}, ${Zeroscreen}, ${SubmitButton} {
@@ -92,7 +92,7 @@ export const Pager = <T extends {}>({
     fetchPageData();
   }, []);
 
-  const fetchPageData = useCallback(() => {
+  const fetchPageData = () => {
     setFetching(true);
     setError('');
     fetch({ index, size })
@@ -103,7 +103,7 @@ export const Pager = <T extends {}>({
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setFetching(false));
-  }, [index, size, fetch, setData, setIndex, setFetching, setError, setComplete]);
+  };
 
   return (
     <Container {...p}>

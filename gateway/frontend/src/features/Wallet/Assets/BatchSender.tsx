@@ -1,22 +1,13 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
 import styled from 'styled-components';
 import { Controller, useForm } from 'react-hook-form';
-import { TextField as TF, Text, SubmitButton as B } from '@union/components';
+import { TextField as TF, Text, SubmitButton as B, Checkbox } from '@union/components';
 import { checkPrincipal } from 'toolkit';
 import { useBatches } from '../useBatches';
 
 const Button = styled(B)``;
 const TextField = styled(TF)``;
 
-const CheckboxContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-
-  & > *:not(:last-child) {
-    margin-right: 8px;
-  }
-`;
 const Container = styled.div`
   display: flex;
   flex-direction: row;
@@ -24,11 +15,6 @@ const Container = styled.div`
 
   ${TextField} {
     flex-grow: 1;
-    margin-right: 8px;
-  }
-
-  ${CheckboxContainer} {
-    margin-bottom: 5px;
     margin-right: 8px;
   }
 `;
@@ -90,14 +76,9 @@ export const BatchSender = ({ batchIds, ...p }: BatchSenderProps) => {
         name='removeBatches'
         control={control}
         render={({ field }) => (
-          <CheckboxContainer>
-            <Text>Remove batches?</Text>
-            <input
-              type='checkbox'
-              onChange={(e) => field.onChange(!field.value)}
-              checked={!!field.value}
-            />
-          </CheckboxContainer>
+          <Checkbox checked={field.value} onChange={field.onChange}>
+            Remove batches?
+          </Checkbox>
         )}
       />
       <Button type='submit' disabled={!isValid || !batchIds.length} onClick={handleSend}>

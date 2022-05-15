@@ -12,24 +12,23 @@ export const Container = styled.li<{ isInteractive?: boolean; variant: 'outlined
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
-  border: 1px solid ${({ theme }) => theme.colors.grey[90]};
-  border-radius: ${({ theme }) => theme.common.borderRadius};
+  border: 1px solid ${({ theme }) => theme.colors.dark};
   background-color: ${({ variant, theme }) =>
-    (variant === 'contained' ? theme.colors.grey[10] : 'rgba(0, 0, 0, 0)')};
+    variant === 'contained' ? theme.colors.grey : 'rgba(0, 0, 0, 0)'};
   transition: border-color 0.3s ease;
   padding: 22px 24px;
   ${({ isInteractive }) =>
-    (isInteractive
+    isInteractive
       ? css`
           cursor: pointer;
 
           &:hover {
-            border-color: ${({ theme }) => theme.colors.grey[100]};
+            border-color: ${({ theme }) => theme.colors.grey};
           }
         `
       : css`
           cursor: default;
-        `)};
+        `};
 
   ${Cell} {
     flex-grow: 1;

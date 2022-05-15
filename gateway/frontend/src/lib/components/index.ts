@@ -13,5 +13,8 @@ export * from './Accordeon';
 export * from './Chips';
 export * from './Pager';
 export * from './Spinner';
+export * from './Field';
+export * from './Layout';
+export * from './Checkbox';
 export * from './withBorder';
 export * from './theme';

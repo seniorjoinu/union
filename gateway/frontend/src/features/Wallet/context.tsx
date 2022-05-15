@@ -1,11 +1,12 @@
-import React, { useEffect, createContext, useContext, useMemo, useState, useCallback } from 'react';
-import { useUnion } from 'services';
+import React, { useEffect, createContext, useContext, useMemo, useCallback } from 'react';
+import { useUnion, _SERVICE } from 'services';
 import { Principal } from '@dfinity/principal';
 import { Group, Profile } from 'union-ts';
 
 export interface CurrentWalletContext {
   principal: Principal;
   groups: Group[];
+  canister: _SERVICE;
   profile: Profile | null;
   fetching: ReturnType<typeof useUnion>['fetching'];
   errors: ReturnType<typeof useUnion>['errors'];
@@ -15,6 +16,8 @@ export interface CurrentWalletContext {
 const context = createContext<CurrentWalletContext>({
   principal: Principal.anonymous(),
   groups: [],
+  // @ts-expect-error
+  canister: null,
   profile: null,
   fetching: {},
   errors: {},
@@ -30,25 +33,39 @@ export function Provider({ principal, children }: ProviderProps) {
   const { data, canister, fetching, errors } = useUnion(principal);
 
   useEffect(() => {
-    canister.get_my_groups();
-    canister.get_my_profile();
+    fetchMyData();
   }, []);
 
-  const fetchMyData = useCallback(
-    async () => Promise.all([canister.get_my_groups(), canister.get_my_profile()]),
-    [],
-  );
+  const fetchMyData = useCallback(async () => {
+    if (!!fetching.get_my_groups || !!fetching.get_my_profile) {
+      return;
+    }
+    const res = await Promise.all([canister.get_my_groups(), canister.get_my_profile()]);
+
+    return [
+      ...res,
+      await canister.list_access_configs({
+        page_req: {
+          page_index: 0,
+          page_size: 100,
+          filter: { permission: [], group: [], profile: [res[1].profile.id] },
+          sort: null,
+        },
+      }),
+    ];
+  }, [fetching]);
 
   const value: CurrentWalletContext = useMemo(
     () => ({
       principal,
       groups: data.get_my_groups?.groups || [],
       profile: data.get_my_profile?.profile || null,
+      canister,
       fetching,
       errors,
       fetchMyData,
     }),
-    [principal, fetching, errors, data.get_my_groups, data.get_my_profile],
+    [canister, principal, fetching, errors, data.get_my_groups, data.get_my_profile],
   );
 
   return <context.Provider value={value}>{children}</context.Provider>;
