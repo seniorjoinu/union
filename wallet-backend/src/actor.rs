@@ -17,6 +17,7 @@ use ic_event_hub::{implement_event_emitter, implement_subscribe, implement_unsub
 use shared::time::secs;
 use shared::types::wallet::Shares;
 
+pub mod client;
 pub mod common;
 pub mod controller;
 pub mod guards;
@@ -78,7 +79,8 @@ fn pre_upgrade_hook() {
 
 implement_cron!();
 // forms batches each 10 seconds, sized up to 2MB - this sets max program payload size for votings
-implement_event_emitter!(secs(10), 2 * 1024 * 1024);
+//implement_event_emitter!(secs(10), 2 * 1024 * 1024);
+implement_event_emitter!(0, 2 * 1024 * 1024);
 
 // TODO: only allow for gateway and history ledgers
 implement_subscribe!();
