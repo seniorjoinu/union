@@ -3,23 +3,36 @@ type Shares = nat;
 type TokenId = Id;
 
 type RemoteCallEndpoint = record {
+    // Principal of the remote canister
     canister_id : principal;
+
+    // Name of the method to call
     method_name : text;
 };
 
 type RemoteCallArgs = variant {
+    // DFX-like string arguments (one string for each argument)
     CandidString : vec text;
+
+    // Encoded arguments as a single blob
     Encoded : blob;
 };
 
 type RemoteCallPayload = record {
+    // An endpoint to make the call
     endpoint : RemoteCallEndpoint;
+
+    // Arguments to pass
     args : RemoteCallArgs;
+
+    // Cycles to transfer with the call
     cycles : nat64;
 };
 
 type Program = variant {
     Empty;
+
+    // Make multiple calls to a remote canister one-by-one
     RemoteCallSequence : vec RemoteCallPayload;
 };
 
@@ -56,12 +69,19 @@ type AccessConfigId = Id;
 
 type GroupCondition = record {
     id : GroupId;
+
+    // Minimum amount of shares a user should have in order to proceed
     min_shares : Shares;
 };
 
 type AlloweeConstraint = variant {
+    // Allow anybody (even anonymous) to proceed
     Everyone;
+
+    // Only allow members of a particular group to proceed
     Group : GroupCondition;
+
+    // Only allow a profile owner to proceed
     Profile : ProfileId;
 };
 
@@ -69,23 +89,38 @@ type AccessConfig = record {
     id : opt AccessConfigId;
     name : text;
     description : text;
+
+    // What permissions this access config can use
     permissions : vec PermissionId;
+
+    // Which users can use this access config
     allowees : vec AlloweeConstraint;
 };
 
 type ExecuteRequest = record {
+    // An access config to use for this execution
     access_config_id : AccessConfigId;
+
+    // A program to execute
     program : Program;
 };
 
 type ExecuteResponse = record {
+    // A result of the execution
     result : ProgramExecutionResult;
 };
 
 type CreateAccessConfigRequest = record {
+    // Name of the access config
     name : text;
+
+    // Briefly describe when this access config should be used and why
     description : text;
+
+    // What permissions this access config can use
     permissions : vec PermissionId;
+
+    // Which users can use this access config
     allowees : vec AlloweeConstraint;
 };
 
@@ -95,9 +130,17 @@ type CreateAccessConfigResponse = record {
 
 type UpdateAccessConfigRequest = record {
     id : AccessConfigId;
+
+    // Name of the access config
     new_name : opt text;
+
+    // Briefly describe when this access config should be used and why
     new_description : opt text;
+
+    // What permissions this access config can use
     new_permissions : opt vec PermissionId;
+
+    // Which users can use this access config
     new_allowees : opt vec AlloweeConstraint;
 };
 
@@ -114,8 +157,13 @@ type GetAccessConfigResponse = record {
 };
 
 type AccessConfigFilter = record {
+    // Only access configs which allow usage of this permission
     permission : opt PermissionId;
+
+    // Only access configs allowed for this group
     group : opt GroupId;
+
+    // Only access configs allowed for this profile
     profile : opt ProfileId;
 };
 
@@ -127,6 +175,7 @@ type ListAccessConfigsPageRequest = record {
 };
 
 type ListAccessConfigsRequest = record {
+    // Pagination request
     page_req : ListAccessConfigsPageRequest;
 };
 
@@ -144,20 +193,31 @@ type ListAccessConfigsResponse = record {
 type PermissionId = Id;
 
 type PermissionTarget = variant {
+    // Only allow to execute empty programs
     SelfEmptyProgram;
+
+    // Only allow to execute calls to these whitelisted endpoints
     Endpoint : RemoteCallEndpoint;
 };
 
 type Permission = record {
     id : opt PermissionId;
     name : text;
+
+    // Verbal description of what this permission allows its owners to do
     description : text;
+
+    // What this permission allows its owners to do
     targets : vec PermissionTarget;
 };
 
 type CreatePermissionRequest = record {
     name : text;
+
+    // Verbal description of what this permission allows its owners to do
     description : text;
+
+    // What this permission allows its owners to do
     targets : vec PermissionTarget;
 };
 
@@ -168,7 +228,11 @@ type CreatePermissionResponse = record {
 type UpdatePermissionRequest = record {
     id : PermissionId;
     new_name : opt text;
+
+    // Verbal description of what this permission allows its owners to do
     new_description : opt text;
+
+    // What this permission allows its owners to do
     new_targets : opt vec PermissionTarget;
 };
 
@@ -185,6 +249,7 @@ type GetPermissionResponse = record {
 };
 
 type PermissionFilter = record {
+    // Only permissions which allow calls to this particular target
     target : opt PermissionTarget;
 };
 
@@ -215,12 +280,16 @@ type ProfileId = principal;
 type Profile = record {
     id : ProfileId;
     name : text;
+
+    // A little bit about profile owner
     description : text;
 };
 
 type CreateProfileRequest = record {
     id : ProfileId;
     name : text;
+
+    // A little bit about profile owner
     description : text;
 };
 
@@ -230,12 +299,16 @@ type DeleteProfileRequest = record {
 
 type UpdateMyProfileRequest = record {
     new_name : opt text;
+
+    // A little bit about me
     new_description : opt text;
 };
 
 type UpdateProfileRequest = record {
     id : ProfileId;
     new_name : opt text;
+
+    // A little bit about profile owner
     new_description : opt text;
 };
 
@@ -266,16 +339,30 @@ type GroupId = Id;
 
 type Group = record {
     id : opt GroupId;
+
+    // The name of the group
     name : text;
+
+    // Who are the users in this group, what's its purpose
     description : text;
+
+    // If the group is private, only users with a profile can participate in it
     private : bool;
+
     token : opt TokenId;
 };
 
 type CreateGroupRequest = record {
+    // The name of the group
     name : text;
+
+    // Who are the users in this group, what's its purpose
     description : text;
+
+    // If the group is private, only users with a profile can participate in it
     private : bool;
+
+    // Will group members be able to freely transfer shares (tokens) of this group
     transferable : bool;
 };
 
@@ -285,7 +372,11 @@ type CreateGroupResponse = record {
 
 type UpdateGroupRequest = record {
     group_id : GroupId;
+
+    // The name of the group
     new_name : opt text;
+
+    // Who are the users in this group, what's its purpose
     new_description : opt text;
 };
 
@@ -315,51 +406,86 @@ type ListGroupsResponse = record {
 };
 
 type MintGroupSharesRequest = record {
+    // Shares of this group will be minted
     group_id : GroupId;
+
+    // A user to mint new shares to
     owner : principal;
+
+    // An amount of new shares to mint
     qty : Shares;
 };
 
 type BurnGroupSharesRequest = record {
+    // Shares of this group will be burned
     group_id : GroupId;
+
+    // A user to burn shares of
     owner : principal;
+
+    // An amount of shares to burn
     qty : Shares;
 };
 
 type BurnMyGroupSharesRequest = record {
+    // Shares of this group will be burned
     group_id : GroupId;
+
+    // An amount of shares to burn
     qty : Shares;
 };
 
 type TransferGroupSharesRequest = record {
+    // Shares of this group will be transferred
     group_id : GroupId;
+
+    // A user that will send shares
     from : principal;
+
+    // A user that will receive shares
     to : principal;
+
+    // An amount of shares to transfer
     qty : Shares;
 };
 
 type TransferMyGroupSharesRequest = record {
+    // Shares of this group will be transferred
     group_id : GroupId;
+
+    // A user that will receive shares
     to : principal;
+
+    // An amount of shares to transfer
     qty : Shares;
 };
 
 type AcceptMyGroupSharesRequest = record {
+    // Shares of this group will be accepted
     group_id : GroupId;
+
+    // An amount of shares to accept
     qty : Shares;
 };
 
 type DeclineMyGroupSharesRequest = record {
+    // Shares of this group will be accepted
     group_id : GroupId;
+
+    // An amount of shares to accept
     qty : Shares;
 };
 
 type GetGroupSharesBalanceOfRequest = record {
+    // Shares of this group will be returned
     group_id : GroupId;
+
+    // A user to return shares of
     owner : principal;
 };
 
 type GetGroupSharesBalanceOfResponse = record {
+    // User's shares balance
     balance : Shares;
 };
 
@@ -368,6 +494,7 @@ type GetMyGroupSharesBalanceRequest = record {
 };
 
 type GetMyGroupSharesBalanceResponse = record {
+    // Your shares balance
     balance : Shares;
 };
 
@@ -376,6 +503,7 @@ type GetTotalGroupSharesRequest = record {
 };
 
 type GetTotalGroupSharesResponse = record {
+    // Total minted shares of the group
     total : Shares;
 };
 
@@ -394,27 +522,44 @@ type ListGroupSharesResponse = record {
 };
 
 type GetGroupsOfRequest = record {
+    // A user to get group list of
     principal_id : principal;
 };
 
 type GetGroupsResponse = record {
+    // Groups of the user
     groups : vec Group;
 };
 
 // ----------- HISTORY LEDGER -----------
 
 type SharesInfo = record {
+    // A shares balance of the user
     balance : Shares;
+
+    // A total amount of minted shares of the group
     total_supply : Shares;
+
+    // An exact timestamp when this data was valid
     timestamp: nat64;
+
+    // The group
     group_id: GroupId;
+
+    // The user
     principal_id: principal;
+
+    // A subnet signature
     signature : null;
 };
 
 type GetSharesInfoOfAtRequest = record {
     group_id : GroupId;
+
+    // User to get shares info of
     of : principal;
+
+    // Particular timestamp you're interested in
     at : nat64;
 };
 
@@ -424,12 +569,19 @@ type GetSharesInfoOfAtResponse = record {
 
 type GetMySharesInfoAtRequest = record {
     group_id : GroupId;
+
+    // Particular timestamp you're interested in
     at : nat64;
 };
 
 type ProgramExecutionFilter = record {
+    // Only include records after this timestamp
     from_timestamp : opt nat64;
+
+    // Only include records before this timestamp
     to_timestamp : opt nat64;
+
+    // Only include records of programs calling to this endpoint
     endpoint : opt RemoteCallEndpoint;
 };
 
@@ -450,25 +602,39 @@ type ListProgramExecutionEntryIdsPage = record {
 };
 
 type ListProgramExecutionEntryIdsResponse = record {
+    // A history ledger canister id to fetch the data by id from
     history_ledger_canister_id : principal;
+
+    // List of ids
     page : ListProgramExecutionEntryIdsPage;
 };
 
 // ----------------- SETTINGS -------------------
 
 type TimestampedRecord = record {
+    // This history ledger was recording starting from this
     timestamp : nat64;
+
+    // The history ledger
     records : vec principal;
 };
 
 type Settings = record {
+    // History ledgers of this union (contain various historical info)
     history_ledgers : vec TimestampedRecord;
+
+    // The name of this union
     name : text;
+
+    // More information about this union
     description : text;
 };
 
 type UpdateSettingsRequest = record {
+    // The name of this union
     new_name : opt text;
+
+    // More information about this union
     new_description : opt text;
 };
 
@@ -591,16 +757,24 @@ type LenInterval = record {
 
 type RoundSettings = record {
     round_duration : nat64;
+
+    // A delay before a new round will start (set to 0 for immediate round progression)
     round_delay : nat64;
 };
 
 type Target = variant {
+    // Combine multiple groups
     Thresholds : vec ThresholdValue;
+
+    // A single group
     Group : GroupId;
 };
 
 type ThresholdValue = variant {
+    // Absolute amount of shares
     QuantityOf : QuantityOf;
+
+    // Relative amount of shares (floating point number from 0.0 to 1.0)
     FractionOf : FractionOf;
 };
 
@@ -616,33 +790,73 @@ type FractionOf = record {
 
 type VotingConfig = record {
     id : opt VotingConfigId;
+
+    // The name of the voting config
     name : text;
+
+    // What this voting config should be used for
     description : text;
 
+    // An amount of choices within votings created with this voting config constraint
     choices_count : opt LenInterval;
+
+    // An amount of winners within votings created with this voting config constraint
     winners_count : opt LenInterval;
+
+    // Round settings
     round : RoundSettings;
 
+    // A set of permissions which can be used by votings created with this voting config
     permissions : vec PermissionId;
 
+    // Users who can approve a voting created with this voting config (absolute value)
     approval : ThresholdValue;
+
+    // Users who can reject the voting created with this voting config (absolute value)
     rejection : ThresholdValue;
+
+    // Users who should definitely vote in order for a voting to be legitimate (absolute value)
     quorum : ThresholdValue;
+
+    // Users who should vote for a choice in order for it to win the current round (value relative to quorum)
     win : ThresholdValue;
+
+    // Users who should vote for a choice in order for it to continue in the next round, if no choice wins the current round (value relative to quorum)
     next_round : ThresholdValue;
 };
 
 type CreateVotingConfigRequest = record {
+    // The name of the voting config
     name : text;
+
+    // What this voting config should be used for
     description : text;
+
+    // An amount of choices within votings created with this voting config constraint
     choices_count : opt LenInterval;
+
+    // An amount of winners within votings created with this voting config constraint
     winners_count : opt LenInterval;
+
+    // A set of permissions which can be used by votings created with this voting config
     permissions : vec PermissionId;
+
+    // Round settings
     round : RoundSettings;
+
+    // Users who can approve a voting created with this voting config (absolute value)
     approval : ThresholdValue;
+
+    // Users who can reject the voting created with this voting config (absolute value)
     rejection : ThresholdValue;
+
+    // Users who should definitely vote in order for a voting to be legitimate (absolute value)
     quorum : ThresholdValue;
+
+    // Users who should vote for a choice in order for it to win the current round (value relative to quorum)
     win : ThresholdValue;
+
+    // Users who should vote for a choice in order for it to continue in the next round, if no choice wins the current round (value relative to quorum)
     next_round : ThresholdValue;
 };
 
@@ -652,16 +866,38 @@ type CreateVotingConfigResponse = record {
 
 type UpdateVotingConfigRequest = record {
     id : VotingConfigId;
+
+    // The name of the voting config
     name_opt : opt text;
+
+    // What this voting config should be used for
     description_opt : opt text;
+
+    // An amount of choices within votings created with this voting config constraint
     choices_count_opt : opt opt LenInterval;
+
+    // An amount of winners within votings created with this voting config constraint
     winners_count_opt : opt opt LenInterval;
+
+    // A set of permissions which can be used by votings created with this voting config
     permissions_opt : opt vec PermissionId;
+
+    // Round settings
     round_opt : opt RoundSettings;
+
+    // Users who can approve a voting created with this voting config (absolute value)
     approval_opt : opt ThresholdValue;
+
+    // Users who can reject the voting created with this voting config (absolute value)
     rejection_opt : opt ThresholdValue;
+
+    // Users who should definitely vote in order for a voting to be legitimate (absolute value)
     quorum_opt : opt ThresholdValue;
+
+    // Users who should vote for a choice in order for it to win the current round (value relative to quorum)
     win_opt : opt ThresholdValue;
+
+    // Users who should vote for a choice in order for it to continue in the next round, if no choice wins the current round (value relative to quorum)
     next_round_opt : opt ThresholdValue;
 };
 
@@ -678,7 +914,10 @@ type GetVotingConfigResponse = record {
 };
 
 type VotingConfigFilter = record {
+    // Only include voting configs which list this group in any of its threshold values
     group : opt GroupId;
+
+    // Only include voting configs which allow votings to use this permission
     permission : opt PermissionId;
 };
 
@@ -710,15 +949,26 @@ type TaskId = Id;
 type RoundId = nat16;
 
 type VotingStatus = variant {
+    // Voting is inactive and waits for the next round to start (after the round delay)
     PreRound : RoundId;
+
+    // Voting is active, users can vote
     Round : RoundId;
+
+    // Voting is rejected - users don't like it
     Rejected;
+
+    // Voting is finished - the decision is made
     Success;
+
+    // Voting is finished - the decision is NOT made
     Fail : text;
 };
 
 type RoundResult = record {
+    // The round at which this result was achieved
     round : RoundId;
+
     choices : vec ChoiceId;
 };
 
@@ -726,22 +976,37 @@ type Voting = record {
     id : opt VotingId;
     voting_config_id : VotingConfigId;
 
+    // Voting status
     status : VotingStatus;
+
+    // The timestamp of voting creation; it is used for secure voting power calculation
     created_at : nat64;
+
     updated_at : nat64;
+
+    // The user who created this voting
     proposer : principal;
 
     task_id : opt TaskId;
 
     name : text;
+
+    // About this voting; what decision are we going to make
     description : text;
+
+    // How many choices should win in order for this voting to finish successfully
     winners_need : nat32;
 
+    // Total minted shares by group snapshot (at the timestamp of the voting creation)
     total_voting_power_by_group : vec record { 0 : GroupId; 1 : Shares; };
 
+    // Choices which already won
     winners : vec RoundResult;
+
+    // Choices which already lost
     losers : vec RoundResult;
 
+    // In-progress choices
     choices : vec ChoiceId;
 
     rejection_choice : opt ChoiceId;
@@ -752,15 +1017,24 @@ type Choice = record {
     id : opt ChoiceId;
     voting_id : VotingId;
     name : text;
+
+    // Verbal description of what the program of this choice will do
     description : text;
+
+    // The program to execute if this choice wins
     program : Program;
+
     voting_power_by_group : vec record { 0 : GroupId; 1 : TokenId; };
 };
 
 type CreateVotingRequest = record {
     voting_config_id : VotingConfigId;
     name : text;
+
+    // About this voting; what decision are we going to make
     description : text;
+
+    // How many choices should win in order for this voting to finish successfully
     winners_need : nat32;
 };
 
@@ -771,7 +1045,11 @@ type CreateVotingResponse = record {
 type UpdateVotingRequest = record {
     id : VotingId;
     new_name : opt text;
+
+    // About this voting; what decision are we going to make
     new_description : opt text;
+
+    // How many choices should win in order for this voting to finish successfully
     new_winners_need : opt nat32;
 };
 
@@ -785,6 +1063,8 @@ type SingleChoiceVote = record {
 
 type MultiChoiceVote = record {
     shares_info : SharesInfo;
+
+    // Relative value of your total voting power by choice
     vote : vec record { 0 : ChoiceId; 1 : Fraction; };
 };
 
@@ -822,7 +1102,11 @@ type ListVotingsResponse = record {
 
 type CreateVotingChoiceRequest = record {
     name : text;
+
+    // Verbal description of what the program of this choice will do
     description : text;
+
+    // The program to execute if this choice wins
     program : Program;
     voting_id : VotingId;
 };
@@ -834,7 +1118,11 @@ type CreateVotingChoiceResponse = record {
 type UpdateVotingChoiceRequest = record {
     choice_id : ChoiceId;
     new_name : opt text;
+
+    // Verbal description of what the program of this choice will do
     new_description : opt text;
+
+    // The program to execute if this choice wins
     new_program : opt Program;
 };
 
@@ -881,6 +1169,7 @@ type GetVotingResultsRequest = record {
 };
 
 type GetVotingResultsResponse = record {
+    // Total voted shares by group by choice
     results : vec record { 0 : ChoiceId; 1 : vec record { 0 : GroupId; 1 : Shares; }; };
 };
 
@@ -890,6 +1179,7 @@ type GetMyVoteRequest = record {
 };
 
 type GetMyVoteResponse = record {
+    // Voted shares by choice
     vote : vec record { 0 : ChoiceId; 1 : Shares; };
 };
 
@@ -906,60 +1196,136 @@ type InitRequest = record {
 service : (InitRequest) -> {
 
     // ACCESS CONFIG
+
+    // Allows users to personally execute programs using an access config
     execute : (ExecuteRequest) -> (ExecuteResponse);
+
+    // Allows to create a new access config
     create_access_config : (CreateAccessConfigRequest) -> (CreateAccessConfigResponse);
+
+    // Allows to update existing access config
     update_access_config : (UpdateAccessConfigRequest) -> ();
+
+    // Allows deletion of access configs
     delete_access_config : (DeleteAccessConfigRequest) -> ();
+
+    // Returns an access config if it exists, throws error otherwise
     get_access_config : (GetAccessConfigRequest) -> (GetAccessConfigResponse) query;
+
+    // Returns a page of access configs
     list_access_configs : (ListAccessConfigsRequest) -> (ListAccessConfigsResponse) query;
 
     // GROUP
+
     create_group : (CreateGroupRequest) -> (CreateGroupResponse);
+
     update_group : (UpdateGroupRequest) -> ();
+
     delete_group : (DeleteGroupRequest) -> ();
+
+    // Returns a group if it exists, throws error otherwise
     get_group : (GetGroupRequest) -> (GetGroupResponse) query;
+
+    // Returns a page of groups
     list_groups : (ListGroupsRequest) -> (ListGroupsResponse) query;
+
+    // Mint new group shares for a user
     mint_group_shares : (MintGroupSharesRequest) -> ();
+
+    // Forcefully burn group shares of a user
     burn_group_shares : (BurnGroupSharesRequest) -> ();
+
+    // Forcefully burns unaccepted groups shares
     burn_unaccepted_group_shares : (BurnGroupSharesRequest) -> ();
+
+    // Forcefully transfers tokens of a user to another user
     transfer_group_shares : (TransferGroupSharesRequest) -> ();
+
+    // Returns group shares balance of a user
     get_group_shares_balance_of : (GetGroupSharesBalanceOfRequest) -> (GetGroupSharesBalanceOfResponse) query;
+
+    // Returns unaccepted group shares balance of a user
     get_unaccepted_group_shares_balance_of : (GetGroupSharesBalanceOfRequest) -> (GetGroupSharesBalanceOfResponse) query;
+
+    // Returns total amount of minted shares of a group
     get_total_group_shares : (GetTotalGroupSharesRequest) -> (GetTotalGroupSharesResponse) query;
+
+    // Returns total amount of minted unaccepted shares of a group
     get_total_unaccepted_group_shares : (GetTotalGroupSharesRequest) -> (GetTotalGroupSharesResponse) query;
+
+    // Returns a page of group shares by user
     list_group_shares : (ListGroupSharesRequest) -> (ListGroupSharesResponse) query;
+
+    // Returns a page of unaccepted group shares by user
     list_unaccepted_group_shares : (ListGroupSharesRequest) -> (ListGroupSharesResponse) query;
+
+    // Returns groups of a user
     get_groups_of : (GetGroupsOfRequest) -> (GetGroupsResponse) query;
+
+    // Burns your group shares
     burn_my_group_shares : (BurnMyGroupSharesRequest) -> ();
+
+    // Transfers your group shares
     transfer_my_group_shares : (TransferMyGroupSharesRequest) -> ();
+
+    // Accepts your group shares
     accept_my_group_shares : (AcceptMyGroupSharesRequest) -> ();
+
+    // Declines your unaccepted group shares
     decline_my_group_shares : (DeclineMyGroupSharesRequest) -> ();
+
+    // Returns your group shares balance
     get_my_group_shares_balance : (GetMyGroupSharesBalanceRequest) -> (GetMyGroupSharesBalanceResponse) query;
+
+    // Returns your unaccepted group shares balance
     get_my_unaccepted_group_shares_balance : (GetMyGroupSharesBalanceRequest) -> (GetMyGroupSharesBalanceResponse) query;
+
+    // Returns your groups
     get_my_groups : () -> (GetGroupsResponse) query;
 
     // HISTORY LEDGER
+
+    // Returns shares info (signed proof of shares possession) of a user
     get_shares_info_of_at : (GetSharesInfoOfAtRequest) -> (GetSharesInfoOfAtResponse);
+
+    // Returns page of history entry ids
     list_program_execution_entry_ids : (ListProgramExecutionEntryIdsRequest) -> (ListProgramExecutionEntryIdsResponse);
+
+    // Returns your shares info (signed proof of shares possession)
     get_my_shares_info_at : (GetMySharesInfoAtRequest) -> (GetSharesInfoOfAtResponse);
 
-    // PERMISSION
+
     create_permission : (CreatePermissionRequest) -> (CreatePermissionResponse);
+
     update_permission : (UpdatePermissionRequest) -> ();
+
     delete_permission : (DeletePermissionRequest) -> ();
+
+    // Returns a permission
     get_permission : (GetPermissionRequest) -> (GetPermissionResponse) query;
+
+    // Returns a page of permissions
     list_permissions : (ListPermissionsRequest) -> (ListPermissionsResponse) query;
 
-    // PROFILE
+
     create_profile : (CreateProfileRequest) -> ();
+
     delete_profile : (DeleteProfileRequest) -> ();
+
     update_profile : (UpdateProfileRequest) -> ();
+
+    // Returns a profile
     get_profile : (GetProfileRequest) -> (GetProfileResponse) query;
+
+    // Returns a page of profiles
     list_profiles : (ListProfilesRequest) -> (ListProfilesResponse) query;
+
     update_my_profile : (UpdateMyProfileRequest) -> ();
     get_my_profile : () -> (GetProfileResponse) query;
 
     // SETTINGS
+
+    // Updates union settings
     update_settings : (UpdateSettingsRequest) -> ();
     get_settings : () -> (GetSettingsResponse) query;
 
