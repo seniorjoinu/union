@@ -38,7 +38,7 @@ export interface CanisterMethodsProps {
 export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsProps>(
   ({ value, onChange, disabled, ...p }, ref) => {
     const { principal } = useCurrentUnion();
-    const { did } = useCandid({ canisterId: principal });
+    const { methods } = useCandid({ canisterId: principal });
     const principalStr = principal.toString();
 
     const processMethod = useCallback(
@@ -65,8 +65,8 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
 
     return (
       <Container ref={ref} {...p}>
-        {!did && <Spinner size={20} />}
-        {did?.methods.map((methodName) => (
+        {!methods.length && <Spinner size={20} />}
+        {methods.map((methodName) => (
           <Method
             key={methodName}
             variant='p2'
