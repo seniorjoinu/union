@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PageWrapper, Text, SubmitButton as B } from '@union/components';
-import { initWalletController, useDeployer } from 'services';
+import { initUnionController, useDeployer } from 'services';
 import styled from 'styled-components';
 import moment from 'moment';
 import { downloadFile } from 'toolkit';
@@ -28,7 +28,7 @@ const Item = styled.div`
   flex-direction: column;
   align-items: flex-start;
   padding: 8px;
-  border: 1px solid grey;
+  border: 1px solid ${({ theme }) => theme.colors.grey};
 
   & > *:not(:last-child) {
     margin-bottom: 8px;
@@ -70,7 +70,7 @@ export const Versions = ({ ...p }: VersionsProps) => {
       return;
     }
 
-    const controller = initWalletController(binaryController);
+    const controller = initUnionController(binaryController);
 
     controller.canister.get_my_groups().then(({ groups }) => {
       if (!groups.length) {

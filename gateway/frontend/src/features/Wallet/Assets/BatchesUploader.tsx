@@ -72,7 +72,7 @@ export const BatchesUploader = (p: BatchesUploaderProps) => {
     defaultValues: {
       batches: [],
     },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
 
   const handleUpload = useCallback(async () => {

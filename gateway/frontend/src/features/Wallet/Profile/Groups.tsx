@@ -6,7 +6,7 @@ import { useCurrentUnion } from '../context';
 const GroupItem = styled.div`
   display: flex;
   flex-direction: column;
-  border: 1px solid grey;
+  border: 1px solid ${({ theme }) => theme.colors.grey};
   padding: 8px;
 `;
 

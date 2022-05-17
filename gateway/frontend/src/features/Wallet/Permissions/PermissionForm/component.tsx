@@ -5,52 +5,40 @@ import {
   PageWrapper,
   Text,
   Select as LS,
-  Option,
   TextField as TF,
-  Button as B,
   MultiSelectSkeleton as MS,
-  Accordeon as Acc,
+  AccourdeonBordered as Acc,
+  Column,
 } from '@union/components';
 import { checkPrincipal } from 'toolkit';
+import { useNavigate } from 'react-router-dom';
+import { UnionSubmitButton } from '../../../../components/UnionSubmit';
+import { useCurrentUnion } from '../../context';
 import { CanisterMethods as CM } from './CanisterMethods';
-import { useSubmit } from './useSubmit';
 import { FormData } from './types';
+import { useEdit } from './useEdit';
+import { useCreate } from './useCreate';
 
 const Accordeon = styled(Acc)``;
 const AccordeonTitle = styled(Text)``;
+const Separator = styled(Text)`
+  color: ${({ theme }) => theme.colors.grey};
+`;
 const CanisterMethods = styled(CM)``;
 const MultiSelectSkeleton = styled(MS)``;
 const Select = styled(LS)``;
-const Button = styled(B)``;
 const TextField = styled(TF)``;
 const MultiSelectTextField = styled(TF)``;
 
-const MultiSelectFields = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-
-  & > *:not(:last-child) {
-    margin-bottom: 8px;
-  }
-`;
+const MultiSelectFields = styled(Column)``;
 
 const Container = styled(PageWrapper)`
-  ${AccordeonTitle} {
-    padding: 8px 16px;
+  ${AccordeonTitle}, ${CanisterMethods} {
+    padding: 8px;
   }
 
-  ${CanisterMethods} {
-    padding: 16px;
-  }
-
-  ${TextField}, ${Select}, ${MultiSelectSkeleton}, ${Accordeon} {
+  ${TextField}, ${Select}, ${MultiSelectSkeleton} {
     margin-bottom: 24px;
-  }
-
-  ${Button} {
-    margin-top: 32px;
-    align-self: center;
   }
 `;
 
@@ -63,24 +51,26 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
     control,
     setValue,
     getValues,
-    formState: { isValid },
+    formState: { isValid, errors },
   } = useForm<FormData>({
     defaultValues: {
       name: '',
       description: '',
       targets: [],
     },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
-  const { fallback, submitting, onSubmit } = useSubmit({ create, setValue, getValues });
-  const submit = onSubmit;
+  const nav = useNavigate();
+  const { principal } = useCurrentUnion();
+  const { getCreatePermissionPayload } = useCreate({ getValues });
+  const { getUpdatePermissionPayload, fallback } = useEdit({ setValue, getValues });
 
-  if (fallback) {
+  if (!create && fallback) {
     return fallback;
   }
 
   return (
-    <Container title={create ? 'Create new permission' : 'Edit permission'}>
+    <Container title={create ? 'Create new permission' : 'Edit permission'} withBack>
       <Controller
         name='name'
         control={control}
@@ -97,28 +87,10 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
           <TextField {...field} helperText={error?.message} label='Description' />
         )}
       />
-      <Accordeon title={<AccordeonTitle variant='p1'>Candid of wallet</AccordeonTitle>}>
-        <Controller
-          name='targets'
-          control={control}
-          rules={{
-            validate: {
-              isPrincipal: (value) =>
-                !value.length ||
-                !value.find(
-                  (v) => v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
-                ) ||
-                'Incorrect principal',
-            },
-          }}
-          render={({ field }) => <CanisterMethods {...field} />}
-        />
-      </Accordeon>
       <Controller
         name='targets'
         control={control}
         rules={{
-          // required: 'Required field',
           validate: {
             isPrincipal: (value) =>
               !value.length ||
@@ -132,17 +104,46 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
           <MultiSelectSkeleton
             {...field}
             helperText={error?.message}
-            label='Target canister'
+            label='Targets'
             renderElement={(v) =>
-              (!v.canisterId && !v.methodName
+              (!v.canisterId
                 ? 'Empty program'
                 : `${v.canisterId || '*'}:${v.methodName || '*'}${v.methodName ? '()' : ''}`)
             }
           >
             {(
-              refs, // FIXME это точно нужно будет нормально переделать на отдельный компонент
+              refs, // FIXME separate component
             ) => (
               <MultiSelectFields>
+                <Accordeon
+                  title={
+                    <AccordeonTitle variant='p3'>
+                      Select from union{' '}
+                      <Text variant='p3' weight='medium'>
+                        {principal.toString()}
+                      </Text>{' '}
+                      candid
+                    </AccordeonTitle>
+                  }
+                >
+                  <Controller
+                    name='targets'
+                    control={control}
+                    rules={{
+                      validate: {
+                        isPrincipal: (value) =>
+                          !value.length ||
+                          !value.find(
+                            (v) =>
+                              v.canisterId.trim() && checkPrincipal(v.canisterId.trim()) == null,
+                          ) ||
+                          'Incorrect principal',
+                      },
+                    }}
+                    render={({ field }) => <CanisterMethods {...field} />}
+                  />
+                </Accordeon>
+                <Separator variant='p2'>or fill another canister data (empty allowed)</Separator>
                 <MultiSelectTextField
                   ref={(r) => r && (refs.current[0] = r)}
                   id='canisterId'
@@ -158,9 +159,27 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
           </MultiSelectSkeleton>
         )}
       />
-      <Button type='submit' disabled={!isValid || submitting} onClick={submit}>
-        {create ? 'Create' : 'Update'}
-      </Button>
+      {create ? (
+        <UnionSubmitButton
+          canisterId={principal}
+          methodName='create_permission'
+          getPayload={() => [getCreatePermissionPayload()]}
+          onExecuted={() => nav(-1)}
+          disabled={!isValid}
+        >
+          Create permission
+        </UnionSubmitButton>
+      ) : (
+        <UnionSubmitButton
+          canisterId={principal}
+          methodName='update_permission'
+          getPayload={() => [getUpdatePermissionPayload()]}
+          onExecuted={() => nav(-1)}
+          disabled={!isValid}
+        >
+          Update permission
+        </UnionSubmitButton>
+      )}
     </Container>
   );
 };

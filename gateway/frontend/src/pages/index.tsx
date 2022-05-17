@@ -10,6 +10,7 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
     padding: 0;
     height: 100%;
+    background: ${theme.colors.light};
 
     * {
       font-family: -apple-system, Stolzl, sans-serif;

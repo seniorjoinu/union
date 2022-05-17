@@ -20,6 +20,10 @@ const Container = styled(Column)`
         color: ${({ theme }) => theme.colors.grey};
       }
     }
+
+    &:last-child {
+      color: ${({ theme }) => theme.colors.grey};
+    }
   }
 `;
 

@@ -1,7 +1,8 @@
 import * as React from 'react';
 import AnimateHeight from 'react-animate-height';
 import { CSSTransition } from 'react-transition-group';
-import { Container, Header, HeaderHandler, Children, Arrow, Title, Borders } from './styles';
+import { withBorder } from '../withBorder';
+import { Container, Header, HeaderHandler, Children, Mark, Title } from './styles';
 import { ExpanderContext } from './context';
 
 const DEFAULT_TIMEOUT = 300;
@@ -10,7 +11,6 @@ export interface AccordeonProps {
   className?: string;
   style?: React.CSSProperties;
   title: React.ReactNode;
-  border?: Borders;
   isStatic?: boolean;
   disabled?: boolean;
   isDefaultOpened?: boolean;
@@ -25,7 +25,6 @@ export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
       className = '',
       style,
       title,
-      border = 'border',
       timeout = DEFAULT_TIMEOUT,
       children,
       isStatic = false,
@@ -60,12 +59,12 @@ export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
           isStatic,
         }}
       >
-        <Container ref={ref} className={className} style={style} border={border}>
-          <HeaderHandler onClick={handleOpen} isStatic={isStatic} border={border}>
+        <Container ref={ref} className={className} style={style}>
+          <HeaderHandler onClick={handleOpen} isStatic={isStatic}>
             <Header>
               <Title variant='h5'>{title}</Title>
             </Header>
-            {!isStatic && !disabled && <Arrow $isOpened={!!isOpened} />}
+            {!isStatic && !disabled && <Mark $isOpened={!!isOpened} />}
           </HeaderHandler>
           <AnimateHeight height={height} duration={timeout}>
             <CSSTransition in={isOpened} unmountOnExit timeout={timeout}>
@@ -77,3 +76,5 @@ export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
     );
   },
 );
+
+export const AccourdeonBordered = withBorder<AccordeonProps>(Accordeon, { withQuad: false });

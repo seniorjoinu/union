@@ -2,8 +2,11 @@ export const theme: ComponentsTheme = {
   colors: {
     dark: '#0F0F0F',
     light: '#FAFAFA',
+    // dark: '#FAFAFA',
+    // light: '#0F0F0F',
 
     grey: '#A1A1A1',
+    lightGrey: '#dadada',
     yellow: '#FCD621',
     red: '#ED4040',
     orange: '#F28221',
@@ -20,6 +23,7 @@ export interface ComponentsTheme {
     dark: string;
     light: string;
     grey: string;
+    lightGrey: string;
     yellow: string;
     red: string;
     orange: string;

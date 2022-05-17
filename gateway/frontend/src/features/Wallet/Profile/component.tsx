@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { PageWrapper, SubmitButton as B, Text } from '@union/components';
 import { useGateway, useUnion } from 'services';
 import { useNavigate } from 'react-router-dom';
-import { HAS_PROFILE_GROUP_ID } from '../../../envs';
+import { HAS_PROFILE_GROUP_ID } from 'envs';
 import { useCurrentUnion } from '../context';
 import { Groups } from './Groups';
 
@@ -53,6 +53,9 @@ export const Profile = ({ ...p }: ProfileProps) => {
     await canister.accept_my_group_shares({ group_id: HAS_PROFILE_GROUP_ID, qty });
 
     await gateway.canister.attach_to_union_wallet({ union_wallet_id: principal });
+    await canister.get_my_unaccepted_group_shares_balance({
+      group_id: HAS_PROFILE_GROUP_ID,
+    });
   }, [gateway, groups, principal, data.get_my_unaccepted_group_shares_balance?.balance]);
 
   return (
@@ -63,8 +66,6 @@ export const Profile = ({ ...p }: ProfileProps) => {
         )}
         <Button onClick={() => nav('change')}>Change profile</Button>
       </Controls>
-      {/* {!!fetching.list_batches && <Text>fetching</Text>} */}
-      {/* {!fetching.list_batches && !batches.length && <Text>Batches does not exist</Text>} */}
       <Text>{profile?.name}</Text>
       <Text>{profile?.description}</Text>
       <Groups />

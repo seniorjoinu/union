@@ -7,8 +7,7 @@ import logo from '../../assets/logo.svg';
 
 const Name = styled(Text)`
   padding: 0 8px;
-  border-radius: 4px;
-  background-color: #dfdfdf;
+  background-color: ${({ theme }) => theme.colors.lightGrey};
 `;
 const CroppedString = styled(CS)``;
 

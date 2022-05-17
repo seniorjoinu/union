@@ -1,10 +1,13 @@
-import { Accordeon, Field, Pager } from '@union/components';
-import React, { useCallback } from 'react';
-import { useUnion } from 'services';
+import { Accordeon, Field, Text } from '@union/components';
+import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { AccessConfig } from 'union-ts';
 import { GroupInfo } from '../Groups';
-import { useCurrentUnion } from '../context';
+import { PermissionInfo } from '../Permissions';
+
+const Zeroscreen = styled(Text)`
+  color: ${({ theme }) => theme.colors.grey};
+`;
 
 const Container = styled.div`
   display: flex;
@@ -26,40 +29,62 @@ export interface AccessConfigItemProps {
   className?: string;
   style?: React.CSSProperties;
   accessConfig: AccessConfig;
+  opened?: boolean;
+  children?: React.ReactNode;
 }
 
-export const AccessConfigItem = styled(({ accessConfig, ...p }: AccessConfigItemProps) => {
-  const { principal } = useCurrentUnion();
-  const { canister } = useUnion(principal);
+export const AccessConfigItem = styled(
+  ({ accessConfig, opened, children, ...p }: AccessConfigItemProps) => {
+    const ref = useRef<HTMLElement>(null);
 
-  const handleToggle = useCallback(() => {
-    // canister.list_groups({page_req: 100, })
-  }, [canister]);
+    useEffect(() => {
+      if (!opened || !ref.current) {
+        return;
+      }
+      ref.current.scrollIntoView({ behavior: 'smooth' }); // FIXME shift with header height
+    }, []);
 
-  return (
-    <Accordeon title={accessConfig.name} border='no-border' onToggle={handleToggle} {...p}>
-      <Container>
-        <Field>{accessConfig.description}</Field>
-        <Field title='Allowees' weight={{ title: 'medium' }}>
-          {accessConfig.allowees.map((allowee, i) =>
-            ('Group' in allowee ? (
-              <GroupInfo
+    return (
+      <Accordeon title={accessConfig.name} ref={ref} isDefaultOpened={opened} {...p}>
+        <Container>
+          {children}
+          <Field>{accessConfig.description}</Field>
+          <Field title='Allowees' weight={{ title: 'medium' }}>
+            {!accessConfig.allowees.length && (
+              <Zeroscreen variant='p3'>Allowees are not attached</Zeroscreen>
+            )}
+            {accessConfig.allowees.map((allowee, i) =>
+              ('Group' in allowee ? (
+                <GroupInfo
+                  key={String(i)}
+                  groupId={allowee.Group.id}
+                  to={`../groups/${String(allowee.Group.id)}`}
+                />
+              ) : 'Profile' in allowee ? (
+                <Field key={String(i)} title='Profile' variant={{ value: 'p3' }}>
+                  {allowee.Profile.toString()}
+                </Field>
+              ) : (
+                <Field key={String(i)} title='Everyone' variant={{ value: 'p3' }}>
+                  Everyone
+                </Field>
+              )),
+            )}
+          </Field>
+          <Field title='Permissions' weight={{ title: 'medium' }}>
+            {!accessConfig.permissions.length && (
+              <Zeroscreen variant='p3'>Permissions are not attached</Zeroscreen>
+            )}
+            {accessConfig.permissions.map((permissinId, i) => (
+              <PermissionInfo
                 key={String(i)}
-                groupId={allowee.Group.id}
-                to={`../groups/${String(allowee.Group.id)}`}
+                permissionId={permissinId}
+                to={`../permissions/${String(permissinId)}`}
               />
-            ) : 'Profile' in allowee ? (
-              <Field key={String(i)} title='Profile' variant={{ value: 'p3' }}>
-                {allowee.Profile.toString()}
-              </Field>
-            ) : (
-              <Field key={String(i)} title='Everyone' variant={{ value: 'p3' }}>
-                Everyone
-              </Field>
-            )),
-          )}
-        </Field>
-      </Container>
-    </Accordeon>
-  );
-})``;
+            ))}
+          </Field>
+        </Container>
+      </Accordeon>
+    );
+  },
+)``;

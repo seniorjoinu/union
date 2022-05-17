@@ -29,14 +29,14 @@ const Container = styled.main`
     left: 0;
     right: 0;
     z-index: 3;
-    background: white;
+    background: ${({ theme }) => theme.colors.light};
   }
 
   ${Header} {
   }
 
   ${WalletHeader} {
-    border-bottom: 1px solid grey;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.grey};
   }
 
   ${Section} {

@@ -36,7 +36,7 @@ export const withBorder = <
 
   const BorderSlice = styled.i``;
 
-  const BorderWrapper = styled.div`
+  const BorderWrapper = styled.div<{ $disabled: boolean }>`
     --color: ${options.color};
     --slice: ${options.size}px;
 
@@ -46,6 +46,8 @@ export const withBorder = <
     border-left: 1px solid var(--color);
     transition: border-color 0.2s ease;
     padding: 0 1px 1px 0;
+    pointer-events: ${({ $disabled }) => ($disabled ? 'none' : 'all')};
+    opacity: ${({ $disabled }) => ($disabled ? '0.5' : '1')};
 
     &:hover {
       border-color: ${options.hoverColor || options.color};
@@ -107,7 +109,7 @@ export const withBorder = <
         bottom: 0;
         border-top: 1px solid var(--color);
         border-left: 1px solid var(--color);
-        background-color: white;
+        background-color: ${({ theme }) => theme.colors.light};
       }
       &::after {
         content: ${options.withQuad ? "''" : 'none'};
@@ -121,18 +123,15 @@ export const withBorder = <
     }
   `;
 
-  const WrappedComponent = (({
-    className,
-    style,
-    as,
-    ...props
-  }: P & WithBorderProps & { as: any }) => (
-    <BorderWrapper className={className} style={style}>
-      <BorderSlice />
-      {/* @ts-expect-error */}
-      <StyledComponent {...(props as P)} forwardedAs={as} />
-    </BorderWrapper>
-  )) as R;
+  const WrappedComponent = (React.forwardRef<HTMLElement, P & WithBorderProps & { as?: any }>(
+    ({ className, style, as, ...props }, ref) => (
+      <BorderWrapper className={className} style={style} $disabled={!!(props as any).disabled}>
+        <BorderSlice />
+        {/* @ts-expect-error */}
+        <StyledComponent {...(props as P)} forwardedAs={as} ref={ref} />
+      </BorderWrapper>
+    ),
+  ) as unknown) as R;
 
   // @ts-expect-error
   return styled(WrappedComponent)``;

@@ -42,7 +42,7 @@ export const BatchSender = ({ batchIds, ...p }: BatchSenderProps) => {
       canisterId: '',
       removeBatches: true,
     },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
 
   const handleSend = useCallback(async () => {

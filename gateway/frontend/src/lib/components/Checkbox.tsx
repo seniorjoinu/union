@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Text } from './Text';
+import { theme } from './theme';
 
 const Icon = (p: React.SVGAttributes<SVGElement>) => (
   <svg
@@ -11,14 +12,14 @@ const Icon = (p: React.SVGAttributes<SVGElement>) => (
     xmlns='http://www.w3.org/2000/svg'
     {...p}
   >
-    <path d='M30 60H0V90H30V60Z' fill='black' />
-    <path d='M60 60H30V90H60V60Z' fill='black' />
-    <path d='M90 60H60V90H90V60Z' fill='black' />
-    <path d='M90 30H60V60H90V30Z' fill='black' />
-    <path d='M30 30H0V60H30V30Z' fill='black' />
-    <path d='M30 0H0V30H30V0Z' fill='black' />
-    <path d='M60 0H30V30H60V0Z' fill='black' />
-    <path d='M30.5 30.5H59.5V59.5H30.5V30.5Z' fill='currentColor' stroke='white' />
+    <path d='M30 60H0V90H30V60Z' fill={theme.colors.dark} />
+    <path d='M60 60H30V90H60V60Z' fill={theme.colors.dark} />
+    <path d='M90 60H60V90H90V60Z' fill={theme.colors.dark} />
+    <path d='M90 30H60V60H90V30Z' fill={theme.colors.dark} />
+    <path d='M30 30H0V60H30V30Z' fill={theme.colors.dark} />
+    <path d='M30 0H0V30H30V0Z' fill={theme.colors.dark} />
+    <path d='M60 0H30V30H60V0Z' fill={theme.colors.dark} />
+    <path d='M30.5 30.5H59.5V59.5H30.5V30.5Z' fill='currentColor' stroke={theme.colors.light} />
   </svg>
 );
 
@@ -80,5 +81,5 @@ export const Checkbox = styled(
         {children}
       </Text>
     </Container>
-    ),
+  ),
 )``;

@@ -16,5 +16,8 @@ export * from './Spinner';
 export * from './Field';
 export * from './Layout';
 export * from './Checkbox';
+export * from './Tooltip';
+export * from './EntitySelect';
 export * from './withBorder';
+export * from './useClickOutside';
 export * from './theme';

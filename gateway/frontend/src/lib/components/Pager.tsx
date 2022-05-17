@@ -37,7 +37,7 @@ const Container = styled.div`
   }
 `;
 
-export const layout = {
+export const pagerLayout = {
   Container,
   Item,
   Spinner,

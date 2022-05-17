@@ -1,16 +1,20 @@
 import React, { useCallback, useState } from 'react';
 import styled from 'styled-components';
-import { Text } from '@union/components';
-import { useCandid } from '../useCandid';
-import { useCurrentUnion } from '../context';
+import { Spinner as SP, Text } from '@union/components';
+import { useCandid } from '../../useCandid';
+import { useCurrentUnion } from '../../context';
 import { FormTarget } from './types';
+
+const Spinner = styled(SP)`
+  align-self: center;
+`;
 
 const Method = styled(Text)<{ $selected: boolean }>`
   cursor: pointer;
-  color: ${({ $selected }) => ($selected ? 'black' : 'grey')};
+  color: ${({ $selected, theme }) => ($selected ? theme.colors.dark : theme.colors.grey)};
 
   &:hover {
-    color: black;
+    color: ${({ theme }) => theme.colors.dark};
   }
 `;
 
@@ -61,7 +65,8 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
 
     return (
       <Container ref={ref} {...p}>
-        {did.methods.map((methodName) => (
+        {!did && <Spinner size={20} />}
+        {did?.methods.map((methodName) => (
           <Method
             key={methodName}
             variant='p2'

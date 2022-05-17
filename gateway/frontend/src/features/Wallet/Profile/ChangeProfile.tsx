@@ -62,7 +62,7 @@ export const ChangeProfileComponent = ({
     formState: { isValid },
   } = useForm<ChangeProfileFormData>({
     defaultValues: { ...data },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
 
   const submit = useCallback(

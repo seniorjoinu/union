@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { walletSerializer } from 'services';
+import { unionSerializer } from 'services';
 import { useCurrentUnion } from './context';
 
 export function useRemove() {
@@ -18,7 +18,7 @@ export function useRemove() {
       //       },
       //       cycles: BigInt(0),
       //       args: {
-      //         CandidString: walletSerializer.delete_permission({
+      //         CandidString: unionSerializer.delete_permission({
       //           id: permissionId,
       //         }),
       //       },

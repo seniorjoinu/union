@@ -40,19 +40,7 @@ export function Provider({ principal, children }: ProviderProps) {
     if (!!fetching.get_my_groups || !!fetching.get_my_profile) {
       return;
     }
-    const res = await Promise.all([canister.get_my_groups(), canister.get_my_profile()]);
-
-    return [
-      ...res,
-      await canister.list_access_configs({
-        page_req: {
-          page_index: 0,
-          page_size: 100,
-          filter: { permission: [], group: [], profile: [res[1].profile.id] },
-          sort: null,
-        },
-      }),
-    ];
+    return await Promise.all([canister.get_my_groups(), canister.get_my_profile()]);
   }, [fetching]);
 
   const value: CurrentWalletContext = useMemo(

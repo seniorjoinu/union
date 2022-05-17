@@ -33,7 +33,7 @@ export const UpgradeForm = (p: UpgradeFormProps) => {
     formState: { isValid },
   } = useForm<UpgradeFormData>({
     defaultValues: { version: '' },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
   const { canister, data } = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
   const { upgradeWalletVersion } = useUpgradeWallet({ getValues });

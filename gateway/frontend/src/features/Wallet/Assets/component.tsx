@@ -30,11 +30,11 @@ const BatchSender = styled(BS)<{ visible: boolean }>`
   left: 0;
   right: 0;
   padding: 16px 32px;
-  border-top: 1px solid grey;
+  border-top: 1px solid ${({ theme }) => theme.colors.grey};
   transform: ${({ visible }) => (visible ? 'translateY(0)' : 'translateY(100%)')};
   transition: transform 0.3s ease;
   z-index: 3;
-  background: white;
+  background: ${({ theme }) => theme.colors.light};
 `;
 
 const Item = styled.div`
@@ -42,7 +42,7 @@ const Item = styled.div`
   flex-direction: column;
   align-items: flex-start;
   padding: 8px;
-  border: 1px solid grey;
+  border: 1px solid ${({ theme }) => theme.colors.grey};
 
   & > *:not(:last-child) {
     margin-bottom: 8px;

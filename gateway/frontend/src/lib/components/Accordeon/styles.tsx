@@ -1,8 +1,6 @@
 import styled from 'styled-components';
 import { Text } from '../Text';
-import * as A from './arrow-bracket';
-
-export type Borders = 'border' | 'no-border';
+import { Mark as M } from '../Select/Mark';
 
 export const Title = styled(Text)`
   display: flex;
@@ -14,29 +12,39 @@ export const Title = styled(Text)`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: black;
+  color: ${({ theme }) => theme.colors.dark};
 `;
 
-export const HeaderHandler = styled.header<{ isStatic: boolean; border: Borders }>`
+export const Mark = styled(M)<{ $isOpened: boolean }>`
+  flex-shrink: 0;
+  flex-grow: 0;
+  height: 9px;
+  width: 9px;
+  transition: transform 0.2s, color 0.2s ease;
+  color: ${({ theme }) => theme.colors.dark};
+  transform: rotate(${({ $isOpened }) => ($isOpened ? '0deg' : '45deg')});
+`;
+
+export const HeaderHandler = styled.header<{ isStatic: boolean }>`
+  position: relative;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  position: relative;
   cursor: ${({ isStatic }) => (isStatic ? 'default' : 'pointer')};
+
+  &:hover {
+    ${Mark} {
+      color: ${({ theme }) => theme.colors.grey};
+    }
+  }
+
+  ${Mark} {
+    margin-right: 8px;
+  }
 
   & > * {
     z-index: 2;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    border-bottom: ${({ border }) => (border == 'border' ? '1px solid grey' : 'none')};
-    z-index: 1;
   }
 `;
 
@@ -68,33 +76,21 @@ export const Children = styled.div`
   flex-direction: column;
 `;
 
-export const Arrow = styled(A.ArrowBracket)<{ $isOpened: boolean }>`
-  flex-shrink: 0;
-  flex-grow: 0;
-  transition: transform 200ms ease;
-  fill: darkgrey;
-  transform: scaleY(${({ $isOpened }) => ($isOpened ? -1 : 1)});
-`;
-
-export const Container = styled.section<{ border: Borders }>`
+export const Container = styled.section`
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border-radius: 4px;
-  border: ${({ border }) => (border == 'border' ? '1px solid grey' : 'none')};
   transition: border-color 200ms ease;
 
   & & {
-    border-radius: 0;
     border-left-width: 0;
     border-right-width: 0;
 
     ${Title} {
-      color: black;
+      color: ${({ theme }) => theme.colors.dark};
     }
 
     ${Header}::after {
-      background-color: lightgrey;
+      background-color: ${({ theme }) => theme.colors.grey};
     }
   }
   & & + & {

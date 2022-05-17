@@ -7,11 +7,7 @@ const HelperText = styled(Text)`
   color: red;
 `;
 const AddButton = styled(Button)``;
-const RemoveButton = styled(Button)`
-  border: none;
-  color: red;
-  padding: 0;
-`;
+const RemoveButton = styled(Button)``;
 const Label = styled(Text)``;
 const Input = styled.input`
   min-height: 32px;
@@ -102,11 +98,13 @@ export const MultiSelectSkeleton = React.forwardRef<HTMLDivElement, MultiSelectS
         // eslint-disable-next-line no-param-reassign
         ref.value = '';
       });
-    }, [fieldRefs, onChange, value]);
+    }, [fieldRefs.current, onChange, value]);
 
     return (
       <Container {...p} ref={ref}>
-        <Label variant='p1'>{label}</Label>
+        <Label variant='p1' weight='medium'>
+          {label}
+        </Label>
         <Children>
           {children(fieldRefs)}
           {helperText && <HelperText variant='caption'>{helperText}</HelperText>}

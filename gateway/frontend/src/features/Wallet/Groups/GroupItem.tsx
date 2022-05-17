@@ -25,16 +25,17 @@ export interface GroupItemProps {
   style?: React.CSSProperties;
   group: Group;
   opened?: boolean;
+  children?: React.ReactNode;
 }
 
-export const GroupItem = styled(({ group, opened, ...p }: GroupItemProps) => {
+export const GroupItem = styled(({ group, opened, children, ...p }: GroupItemProps) => {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!opened || !ref.current) {
       return;
     }
-    ref.current.scrollIntoView({ behavior: 'smooth' });
+    ref.current.scrollIntoView({ behavior: 'smooth' }); // FIXME shift with header height
   }, []);
 
   return (
@@ -49,10 +50,10 @@ export const GroupItem = styled(({ group, opened, ...p }: GroupItemProps) => {
         </Head>
       }
       isDefaultOpened={opened}
-      border='no-border'
       {...p}
     >
       <Container>
+        {children}
         <Field title='Share id' align='row'>
           {String(group.token)}
         </Field>

@@ -12,7 +12,7 @@ const Item = styled(Text)`
   color: #575757;
 
   &.active {
-    color: black;
+    color: ${({ theme }) => theme.colors.dark};
     font-weight: 600;
   }
 `;

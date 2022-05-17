@@ -17,6 +17,7 @@ const Container = styled.button`
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
 
   background: rgba(0, 0, 0, 0);
   border: 1px solid ${({ theme }) => theme.colors.dark};

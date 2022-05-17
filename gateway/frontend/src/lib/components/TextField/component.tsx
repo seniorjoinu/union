@@ -12,6 +12,9 @@ const Label = styled(Text)`
 `;
 const Input = withBorder(styled.input`
   min-height: 32px;
+  outline: none;
+  background-color: ${({ theme }) => theme.colors.light};
+  color: ${({ theme }) => theme.colors.dark};
 
   ${getFontStyles('p3', 'regular')}
 `);
@@ -35,14 +38,14 @@ const Container = styled.div`
 `;
 
 export interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
+  label?: React.ReactNode;
   helperText?: string | undefined | null;
 }
 
 export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
   ({ className, style, label, helperText, ...p }, ref) => (
     <Container className={className} style={style}>
-      <Label>{label}</Label>
+      {label && <Label>{label}</Label>}
       <Input {...p} ref={ref} />
       {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
     </Container>
@@ -50,7 +53,7 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
 );
 
 export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label: string;
+  label?: React.ReactNode;
   helperText?: string | undefined | null;
 }
 
@@ -65,14 +68,14 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
 );
 
 export interface MaskedTextFieldProps extends InputMaskProps {
-  label: string;
+  label?: React.ReactNode;
   helperText?: string | undefined | null;
 }
 
 export const MaskedTextField = React.forwardRef<HTMLInputElement, MaskedTextFieldProps>(
   ({ className, style, label, helperText, ...p }, ref) => (
     <Container className={className} style={style}>
-      <Label>{label}</Label>
+      {label && <Label>{label}</Label>}
       <Input {...p} as={InputMask} inputRef={ref} />
       {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
     </Container>

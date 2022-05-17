@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useGateway, initWalletController } from 'services';
+import { useGateway, initUnionController } from 'services';
 import { Text, PageWrapper, SubmitButton as B } from '@union/components';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
@@ -11,7 +11,7 @@ const Item = styled.div`
   flex-direction: column;
   align-items: flex-start;
   padding: 8px;
-  border: 1px solid grey;
+  border: 1px solid ${({ theme }) => theme.colors.grey};
 
   & > *:not(:last-child) {
     margin-bottom: 8px;
@@ -41,7 +41,7 @@ export const Notifications = ({ ...p }: NotificationsProps) => {
 
   const handleAccept = useCallback(
     async (id: string, canisterId: string) => {
-      const { canister } = initWalletController(canisterId);
+      const { canister } = initUnionController(canisterId);
 
       const groups = await canister.get_my_groups();
 

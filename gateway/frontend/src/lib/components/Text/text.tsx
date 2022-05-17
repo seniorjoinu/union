@@ -15,10 +15,9 @@ export const Text = styled.span<TextProps>`
   padding: 0;
   text-decoration: none;
 
-  ${({ color }) =>
-    color &&
+  ${({ color, theme }) =>
     css`
-      color: ${color};
+      color: ${color || theme.colors.dark};
     `};
   ${({ variant = 'p2', weight = 'regular', font }) =>
     variant != 'inherit' && getFontStyles(variant, weight, font)};

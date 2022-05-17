@@ -14,7 +14,7 @@ export const useCandid = ({
   canisterId,
   getCandidMethodName = 'export_candid',
 }: UseCandidProps) => {
-  const [did, setDid] = useState<ParseResult>({ methods: [] });
+  const [did, setDid] = useState<ParseResult | null>(null);
   const { authClient } = useAuth();
 
   useEffect(() => {

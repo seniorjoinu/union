@@ -5,13 +5,12 @@ import { checkPrincipal } from 'toolkit';
 import { Provider } from './context';
 import { Profile, ChangeProfile } from './Profile';
 import { Groups, GroupForm } from './Groups';
-import { Permissions } from './Permissions';
-import { AccessConfigs } from './AccessConfigs';
+import { Permissions, PermissionForm } from './Permissions';
+import { AccessConfigs, AccessConfigForm } from './AccessConfigs';
 import { Info, InfoForm, UpgradeForm } from './Info';
 import { Assets, AssetsCanisterUpdater, BatchesUploader } from './Assets';
 import { PermissionDetails } from './PermissionDetails';
 import { VersionForm } from './VersionForm';
-import { PermissionForm } from './PermissionForm';
 
 const Container = styled.div`
   display: flex;
@@ -38,8 +37,13 @@ export const Wallet = () => {
           <Route path='/groups/create' element={<GroupForm />} />
 
           <Route path='/permissions' element={<Permissions />} />
+          <Route path='/permissions/:permissionId' element={<Permissions />} />
+          <Route path='/permissions/create' element={<PermissionForm create />} />
+          <Route path='/permissions/edit/:permissionId' element={<PermissionForm />} />
 
           <Route path='/access-configs' element={<AccessConfigs />} />
+          <Route path='/access-configs/:accessConfigId' element={<AccessConfigs />} />
+          <Route path='/access-configs/create' element={<AccessConfigForm />} />
 
           <Route path='/profile' element={<Profile />} />
           <Route path='/profile/change' element={<ChangeProfile />} />

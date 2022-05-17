@@ -1,21 +1,17 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, TextField as TF, SubmitButton as SB, Checkbox } from '@union/components';
+import { PageWrapper, TextField as TF, Checkbox } from '@union/components';
 import { useForm, Controller } from 'react-hook-form';
-import { useUnion } from 'services';
-import { CreateGroupRequest } from 'union-ts';
+import { CreateGroupRequest, _SERVICE } from 'union-ts';
+import { useNavigate } from 'react-router-dom';
+import { UnionSubmitButton } from '../../../components/UnionSubmit';
 import { useCurrentUnion } from '../context';
 
 const TextField = styled(TF)``;
-const Button = styled(SB)``;
 
 const Container = styled(PageWrapper)`
   & > ${TextField}, & > ${Checkbox} {
     margin-bottom: 24px;
-  }
-
-  ${Button} {
-    align-self: flex-start;
   }
 `;
 
@@ -47,58 +43,18 @@ export const GroupFormComponent = ({
   data: GroupFormFormData;
 }) => {
   const { principal } = useCurrentUnion();
-  const { canister } = useUnion(principal);
+  const nav = useNavigate();
   const {
     control,
     getValues,
     formState: { isValid },
   } = useForm<GroupFormFormData>({
     defaultValues: { ...data },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
 
-  useEffect(() => {
-    // export const ALLOW_WRITE_PERMISSION_ID = 0n;
-    // export const ALLOW_READ_PERMISSION_ID = 1n;
-    // export const ALLOW_SEND_FEEDBACK_PERMISSION_ID = 2n;
-    // export const ALLOW_VOTE_PERMISSION_ID = 3n;
-
-    // export const HAS_PROFILE_GROUP_ID = 0n;
-
-    // export const ALLOW_VOTE_ACCESS_CONFIG_ID = 0n;
-    // export const UNLIMITED_ACCESS_CONFIG_ID = 1n;
-    // export const READ_ONLY_ACCESS_CONFIG_ID = 2n;
-
-    // export const EMERGENCY_VOTING_CONFIG_ID = 0n;
-    // export const FEEDBACK_VOTING_CONFIG_ID = 1n;
-
-    canister.list_access_configs({
-      page_req: {
-        page_index: 0,
-        page_size: 10,
-        sort: null,
-        filter: {
-          permission: [],
-          group: [],
-          profile: [],
-        },
-      },
-    });
-    // canister.get_permission({id: BigInt(0)})
-    // .then(p => {
-    // 	p.permission.targets[0]
-    // });
-  }, []);
-
-  const submit = useCallback(
-    async (data: GroupFormFormData) => {
-      await canister.create_group(data);
-    },
-    [canister],
-  );
-
   return (
-    <Container {...p} title='Form' withBack>
+    <Container {...p} title='Create group' withBack>
       <Controller
         name='name'
         control={control}
@@ -133,9 +89,15 @@ export const GroupFormComponent = ({
           </Checkbox>
         )}
       />
-      <Button type='submit' disabled={!isValid} onClick={() => submit(getValues())}>
-        Submit
-      </Button>
+      <UnionSubmitButton
+        canisterId={principal}
+        methodName='create_group'
+        getPayload={() => [getValues()]}
+        onExecuted={() => nav(-1)}
+        disabled={!isValid}
+      >
+        Create group
+      </UnionSubmitButton>
     </Container>
   );
 };

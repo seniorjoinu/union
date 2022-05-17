@@ -8,10 +8,10 @@ const WalletInfo = styled(Text)`
 `;
 const Item = styled(Text)`
   text-decoration: none;
-  color: #575757;
+  color: #${({ theme }) => theme.colors.grey};
 
   &.active {
-    color: black;
+    color: ${({ theme }) => theme.colors.dark};
     font-weight: 500;
   }
 `;

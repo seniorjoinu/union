@@ -64,7 +64,7 @@ export const InfoFormComponent = ({ info, ...p }: InfoFormComponentProps) => {
     formState: { isValid },
   } = useForm<SetInfoFormData>({
     defaultValues: { ...info },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
   const { setInfo } = useSetInfo({ getValues });
 

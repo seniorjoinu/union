@@ -1,7 +1,7 @@
 import { Principal } from '@dfinity/principal';
 import React, { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { gatewaySerializer, useUnion, walletEncoder } from 'services';
+import { gatewaySerializer, useUnion, unionEncoder } from 'services';
 import { useCurrentUnion } from '../context';
 
 export interface SetInfoFormData {
@@ -21,7 +21,7 @@ export const useSetInfo = ({ getValues }: UseSetInfoProps) => {
     async (verbose?: { title?: string; description?: string }) => {
       const values = getValues();
 
-      const encoded = walletEncoder.update_settings({
+      const encoded = unionEncoder.update_settings({
         new_name: [values.name],
         new_description: [values.description],
       });

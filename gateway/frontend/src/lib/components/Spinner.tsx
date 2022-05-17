@@ -4,7 +4,7 @@ import styled from 'styled-components';
 export const DEFAULT_SPINNER_SIZE = 10;
 
 export const Spinner = styled.div<{ size?: number }>`
-  --color: black;
+  --color: ${({ theme }) => theme.colors.dark};
   --size-square: ${({ size = DEFAULT_SPINNER_SIZE }) => size / 2}px;
 
   display: grid;

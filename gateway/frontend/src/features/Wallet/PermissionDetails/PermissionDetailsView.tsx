@@ -32,8 +32,7 @@ const Items = styled.div`
 
   & > * {
     padding: 8px;
-    border: 1px solid grey;
-    border-radius: 4px;
+    border: 1px solid ${({ theme }) => theme.colors.grey};
   }
 
   & > *:not(:last-child) {
