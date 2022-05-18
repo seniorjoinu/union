@@ -1,15 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { CroppedString as CS, Button, ButtonProps, Text } from '@union/components';
+import { Button, ButtonProps, Chips, CopyableText, cropString } from '@union/components';
 import { useAuth } from 'services';
 import logo from '../../assets/logo.svg';
 
-const Name = styled(Text)`
-  padding: 0 8px;
-  background-color: ${({ theme }) => theme.colors.lightGrey};
-`;
-const CroppedString = styled(CS)``;
+const Name = styled(Chips)``;
 
 const Principal = styled.span`
   white-space: nowrap;
@@ -30,7 +26,7 @@ const Container = styled.div`
     margin-right: 16px;
   }
 
-  ${CroppedString} {
+  ${CopyableText} {
     margin-right: 8px;
   }
 
@@ -82,9 +78,9 @@ export const LoginButton = ({
   return (
     <Container>
       {name && <Name variant='p1'>{name}</Name>}
-      <CroppedString variant='p1' onClick={() => navigator.clipboard.writeText(principal)}>
-        {principal}
-      </CroppedString>
+      <CopyableText variant='p1' copyText={principal}>
+        {cropString(principal)}
+      </CopyableText>
       <Button
         {...props}
         id='login'

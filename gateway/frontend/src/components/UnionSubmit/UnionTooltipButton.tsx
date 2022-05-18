@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { SubmitButton as SB, SubmitButtonProps, Column, TooltipButton } from '@union/components';
 import { _SERVICE } from 'services';
-import { useUnionSubmit, UnionSubmitProps, UnionSubmitResult } from './hook';
+import { useUnionSubmit, UnionSubmitProps, UnionSubmitResult, AnyService } from './hook';
 
 const SubmitButton = styled(SB)`
   white-space: nowrap;
@@ -13,7 +13,7 @@ export interface UnionTooltipButtonProps<
   T extends keyof _SERVICE = keyof _SERVICE,
   P = Parameters<_SERVICE[T]>
 > extends SubmitButtonProps,
-    UnionSubmitProps<T> {
+    UnionSubmitProps<_SERVICE & AnyService, T, P> {
   getPayload(): P;
   buttonContent: React.ReactNode;
   submitVotingVerbose?: React.ReactNode;
@@ -28,6 +28,7 @@ export const UnionTooltipButton = <T extends keyof _SERVICE = keyof _SERVICE>({
 }: UnionTooltipButtonProps<T>) => {
   const submitProps = useUnionSubmit({
     canisterId,
+    unionId: canisterId,
     onClick,
     onExecuted,
     methodName,
@@ -46,7 +47,7 @@ export interface UnionTooltipButtonComponentProps<
   T extends keyof _SERVICE = keyof _SERVICE,
   P = Parameters<_SERVICE[T]>
 > extends SubmitButtonProps,
-    UnionSubmitResult<T, P> {
+    UnionSubmitResult<_SERVICE & AnyService, T, P> {
   getPayload(): P;
   buttonContent: React.ReactNode;
   submitVotingVerbose?: React.ReactNode;
@@ -86,6 +87,9 @@ export const UnionTooltipButtonComponent = <
       style={style}
       buttonContent={buttonContent}
       loading={submitting}
+      variant={p.variant}
+      weight={p.weight}
+      color={p.color}
     >
       <Container>
         {isAllowed && (

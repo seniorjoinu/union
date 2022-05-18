@@ -1,4 +1,4 @@
-import { Text, Accordeon, theme, Field } from '@union/components';
+import { Text, Accordeon, Field, Chips, Row } from '@union/components';
 import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { Group } from 'union-ts';
@@ -7,13 +7,14 @@ const Head = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
   width: 100%;
 `;
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 8px;
+  padding: 8px 0;
 
   & > *:not(:last-child) {
     margin-bottom: 8px;
@@ -44,9 +45,6 @@ export const GroupItem = styled(({ group, opened, children, ...p }: GroupItemPro
       title={
         <Head>
           <Text variant='h5'>{group.name}</Text>
-          <Text variant='p1' color={theme.colors.grey}>
-            {group.private ? 'Private' : ''}
-          </Text>
         </Head>
       }
       isDefaultOpened={opened}
@@ -54,10 +52,11 @@ export const GroupItem = styled(({ group, opened, children, ...p }: GroupItemPro
     >
       <Container>
         {children}
-        <Field title='Share id' align='row'>
-          {String(group.token)}
-        </Field>
-        <Field>{group.description}</Field>
+        <Row>
+          {group.private && <Chips variant='p3'>private</Chips>}
+          <Chips variant='p3'>share id {String(group.token)}</Chips>
+        </Row>
+        <Field variant={{ value: 'p3' }}>{group.description}</Field>
       </Container>
     </Accordeon>
   );

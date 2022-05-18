@@ -1,10 +1,7 @@
-import React, { useEffect, useMemo } from 'react';
+import React from 'react';
 import styled from 'styled-components';
-import { NavLink, useParams } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Text } from '@union/components';
-import { useDeployer, useUnion } from 'services';
-import { checkPrincipal } from 'toolkit';
-import { Principal } from '@dfinity/principal';
 import { LoginButton } from '../Auth/LoginButton';
 
 const Item = styled(Text)`
@@ -42,28 +39,6 @@ const Container = styled.div`
 export interface HeaderProps extends IClassName {}
 
 export function Header(p: HeaderProps) {
-  const param = useParams();
-  const location = param['*'] || '';
-
-  const isInsideWallet = location.startsWith('wallet/');
-  const walletId = location.split('wallet/')[1]?.split('/')[0] || '';
-  const { data, canister } = useUnion(walletId ? Principal.from(walletId) : Principal.anonymous());
-
-  useEffect(() => {
-    if (!checkPrincipal(walletId)) {
-      return;
-    }
-    canister.get_my_profile();
-  }, [walletId, canister]);
-
-  const profileName = useMemo(() => {
-    if (!isInsideWallet || !walletId) {
-      return '';
-    }
-    // TODO get groups
-    return data.get_my_profile?.profile.name || '';
-  }, [data.get_my_profile, isInsideWallet && walletId]);
-
   return (
     <Container {...p}>
       <Items>
@@ -80,7 +55,7 @@ export function Header(p: HeaderProps) {
           Explore
         </Item> */}
       </Items>
-      <LoginButton name={profileName} />
+      <LoginButton />
     </Container>
   );
 }

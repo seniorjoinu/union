@@ -22,6 +22,10 @@ const Selected = styled(Text)`
   white-space: pre;
   ${getFontStyles('p3', 'regular')}
 `;
+const Placeholder = styled(Text)`
+  ${getFontStyles('p3', 'regular')}
+  color: ${({ theme }) => theme.colors.grey};
+`;
 
 const SelectContainer = withBorder(
   styled(Row)`
@@ -170,7 +174,7 @@ export const AdvancedSelect = React.forwardRef<HTMLDivElement, AdvancedSelectPro
       >
         {label && <Label>{label}</Label>}
         <SelectContainer onClick={() => setOpened((opened) => !opened)}>
-          <Selected>{value.join(',\n') || placeholder}</Selected>
+          <Selected>{value.join(',\n') || <Placeholder>{placeholder}</Placeholder>}</Selected>
           <Icon />
         </SelectContainer>
         <ctx.Provider value={{ onChange: handleChange, value }}>

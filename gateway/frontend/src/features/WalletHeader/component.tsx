@@ -1,10 +1,23 @@
-import React from 'react';
-import { Text } from '@union/components';
+import React, { useEffect, useMemo } from 'react';
+import { Chips, Row, Text, CopyableText } from '@union/components';
 import { NavLink, useParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { useUnion } from 'services';
+import { Principal } from '@dfinity/principal';
+import { checkPrincipal } from 'toolkit';
 
-const WalletInfo = styled(Text)`
-  color: #acacac;
+const Name = styled(Chips)`
+  padding: 0 8px;
+`;
+
+const WalletInfo = styled(Row)``;
+const WalletId = styled(Text)`
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.grey};
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.dark};
+  }
 `;
 const Item = styled(Text)`
   text-decoration: none;
@@ -48,6 +61,22 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
 
   const isInsideWallet = location.startsWith('wallet/');
   const walletId = location.split('wallet/')[1]?.split('/')[0];
+  const { data, canister } = useUnion(walletId ? Principal.from(walletId) : Principal.anonymous());
+
+  useEffect(() => {
+    if (!checkPrincipal(walletId)) {
+      return;
+    }
+    canister.get_my_profile();
+  }, [walletId, canister]);
+
+  const profileName = useMemo(() => {
+    if (!isInsideWallet || !walletId) {
+      return '';
+    }
+    // TODO get groups
+    return data.get_my_profile?.profile.name || '';
+  }, [data.get_my_profile, isInsideWallet && walletId]);
 
   return (
     <Container {...p}>
@@ -76,7 +105,10 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
               History
             </Item>
           </Items>
-          <WalletInfo variant='p2'>{walletId}</WalletInfo>
+          <WalletInfo>
+            {profileName && <Name>{profileName}</Name>}
+            <CopyableText variant='p2'>{walletId}</CopyableText>
+          </WalletInfo>
         </>
       )}
     </Container>

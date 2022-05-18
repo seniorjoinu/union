@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Principal } from '@dfinity/principal';
 import { IDL } from '@dfinity/candid';
 import { Actor, ActorSubclass } from '@dfinity/agent';
+import { lexer, Parser, TProg } from '@union/candid-parser';
 import { useAuth } from 'services';
 import { sort } from 'toolkit';
-import { lexer, Parser, TProg } from '@union/candid-parser';
 
 export interface UseCandidProps {
   canisterId: Principal;

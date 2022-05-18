@@ -1,19 +1,27 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Text as T, getFontStyles } from '../Text';
+import { Text as T, TextProps } from '../Text';
 import { theme } from '../theme';
 import { withBorder } from '../withBorder';
 
 const Text = styled(T)`
   display: flex;
-
-  &,
-  & > * {
-    ${getFontStyles('p3', 'medium')}
-  }
 `;
 
-const Container = styled.button`
+const getPadding = (variant: TextProps['variant']) => {
+  if (variant == 'caption') {
+    return '2px 10px';
+  }
+  if (variant?.startsWith('p')) {
+    return '4px 12px';
+  }
+  if (variant?.startsWith('h')) {
+    return '6px 16px';
+  }
+  return '4px 12px';
+};
+
+const Container = styled.button<{ $variant: TextProps['variant'] }>`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -21,7 +29,7 @@ const Container = styled.button`
 
   background: rgba(0, 0, 0, 0);
   border: 1px solid ${({ theme }) => theme.colors.dark};
-  padding: 4px 12px;
+  padding: ${({ $variant }) => getPadding($variant)};
   text-decoration: none;
   cursor: pointer;
   color: ${({ theme }) => theme.colors.dark};
@@ -37,11 +45,23 @@ const Container = styled.button`
   }
 `;
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  weight?: TextProps['weight'];
+  variant?: TextProps['variant'];
+  color?: TextProps['color'];
+}
 
-export const PureButton = ({ children, ...p }: ButtonProps) => (
-  <Container {...p}>
-    <Text>{children}</Text>
+export const PureButton = ({
+  children,
+  variant = 'p3',
+  color,
+  weight = 'medium',
+  ...p
+}: ButtonProps) => (
+  <Container {...p} $variant={variant}>
+    <Text variant={variant} color={color} weight={weight} nest>
+      {children}
+    </Text>
   </Container>
 );
 

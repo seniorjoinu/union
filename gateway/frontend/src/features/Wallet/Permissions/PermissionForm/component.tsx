@@ -161,6 +161,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
       />
       {create ? (
         <UnionSubmitButton
+          unionId={principal}
           canisterId={principal}
           methodName='create_permission'
           getPayload={() => [getCreatePermissionPayload()]}
@@ -171,6 +172,7 @@ export const PermissionForm = ({ create }: PermissionFormProps) => {
         </UnionSubmitButton>
       ) : (
         <UnionSubmitButton
+          unionId={principal}
           canisterId={principal}
           methodName='update_permission'
           getPayload={() => [getUpdatePermissionPayload()]}

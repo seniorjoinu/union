@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
-import { Text, SimpleListItem, theme } from '@union/components';
-import { initUnionController, useGateway } from 'services';
+import { Text, SimpleListItem } from '@union/components';
+import { initUnionController } from 'services';
 import { WalletInfo } from './WalletInfo';
 
 const Name = styled(Text)`
@@ -44,7 +44,7 @@ export const WalletItem = ({
         id: wallet.toString(),
         principal: <WalletInfo canisterId={wallet} />,
         isRoot: rootWallet?.toString() == wallet.toString() && (
-          <Text variant='p1' color={theme.colors.grey}>
+          <Text variant='p1' color='grey'>
             Root
           </Text>
         ),

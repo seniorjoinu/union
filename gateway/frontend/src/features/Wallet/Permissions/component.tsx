@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Pager, getFontStyles, Button as B, Row as R, Text } from '@union/components';
+import { PageWrapper, Pager, Button as B, Row as R } from '@union/components';
 import { useUnion } from 'services';
 import { Permission } from 'union-ts';
 import { NavLink, useParams } from 'react-router-dom';
@@ -9,10 +9,6 @@ import { UnionTooltipButtonComponent, useUnionSubmit } from '../../../components
 import { useCurrentUnion } from '../context';
 import { PermissionItem } from './PermissionItem';
 
-const DeleteText = styled(Text)`
-  color: red;
-  ${getFontStyles('p3', 'medium')}
-`;
 const Button = styled(B)``;
 const Controls = styled(R)`
   justify-content: flex-end;
@@ -22,9 +18,14 @@ const Controls = styled(R)`
   }
 `;
 
+const ItemControls = styled(Controls)``;
+
 const Container = styled(PageWrapper)`
   ${Controls} {
     margin-bottom: 16px;
+  }
+  ${ItemControls} {
+    margin-bottom: 4px;
   }
 `;
 
@@ -39,6 +40,7 @@ export const Permissions = styled(({ ...p }: PermissionsProps) => {
   const { canister } = useUnion(principal);
   const [optimisticDeleted, setOptimisticDeleted] = useState<Record<string, true>>({});
   const deleteUnionButtonProps = useUnionSubmit({
+    unionId: principal,
     canisterId: principal,
     methodName: 'delete_permission',
     onExecuted: (p) => setOptimisticDeleted((v) => ({ ...v, [String(p[0]?.id)]: true })),
@@ -69,26 +71,29 @@ export const Permissions = styled(({ ...p }: PermissionsProps) => {
           return (
             !optimisticDeleted[id] && (
               <PermissionItem permission={item} opened={permissionId == id}>
-                <Controls>
+                <ItemControls>
                   {!DEFAULT_PERMISSION_IDS.includes(item.id[0]!) && (
                     <>
                       <Button
                         forwardedAs={NavLink}
                         to={permissionId ? `../permissions/edit/${id}` : `edit/${id}`}
+                        variant='caption'
                       >
                         Edit
                       </Button>
                       <UnionTooltipButtonComponent
                         {...deleteUnionButtonProps}
-                        buttonContent={<DeleteText>Delete</DeleteText>}
-                        submitVotingVerbose={<DeleteText>Create voting</DeleteText>}
+                        buttonContent='Delete'
+                        variant='caption'
+                        color='red'
+                        submitVotingVerbose='Create voting'
                         getPayload={() => [{ id: item.id[0] }]}
                       >
-                        <DeleteText>Delete</DeleteText>
+                        Delete
                       </UnionTooltipButtonComponent>
                     </>
                   )}
-                </Controls>
+                </ItemControls>
               </PermissionItem>
             )
           );

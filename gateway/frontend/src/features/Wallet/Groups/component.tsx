@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Pager, Row as R, Button as B, Text, getFontStyles } from '@union/components';
+import { PageWrapper, Pager, Row as R, Button as B } from '@union/components';
 import { Group } from 'union-ts';
 import { useUnion } from 'services';
 import { NavLink, useParams } from 'react-router-dom';
@@ -8,11 +8,6 @@ import { DEFAULT_GROUP_IDS } from 'envs';
 import { UnionTooltipButtonComponent, useUnionSubmit } from '../../../components/UnionSubmit';
 import { useCurrentUnion } from '../context';
 import { GroupItem } from './GroupItem';
-
-const DeleteText = styled(Text)`
-  color: red;
-  ${getFontStyles('p3', 'medium')}
-`;
 
 const Button = styled(B)``;
 const Controls = styled(R)`
@@ -22,10 +17,14 @@ const Controls = styled(R)`
     display: none;
   }
 `;
+const ItemControls = styled(Controls)``;
 
 const Container = styled(PageWrapper)`
   ${Controls} {
     margin-bottom: 16px;
+  }
+  ${ItemControls} {
+    margin-bottom: 4px;
   }
 `;
 
@@ -40,6 +39,7 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
   const { canister } = useUnion(principal);
   const [optimisticDeleted, setOptimisticDeleted] = useState<Record<string, true>>({});
   const deleteUnionButtonProps = useUnionSubmit({
+    unionId: principal,
     canisterId: principal,
     methodName: 'delete_group',
     onExecuted: (p) => setOptimisticDeleted((v) => ({ ...v, [String(p[0]?.group_id)]: true })),
@@ -64,24 +64,39 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
             },
           })
         }
-        renderItem={(group: Group) =>
-          !optimisticDeleted[String(group.id[0])] && (
-            <GroupItem group={group} opened={groupId == String(group.id[0])}>
-              <Controls>
-                {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && (
-                  <UnionTooltipButtonComponent
-                    {...deleteUnionButtonProps}
-                    buttonContent={<DeleteText>Delete</DeleteText>}
-                    submitVotingVerbose={<DeleteText>Create voting</DeleteText>}
-                    getPayload={() => [{ group_id: group.id[0] }]}
-                  >
-                    <DeleteText>Delete</DeleteText>
-                  </UnionTooltipButtonComponent>
-                )}
-              </Controls>
-            </GroupItem>
-          )
-        }
+        renderItem={(group: Group) => {
+          const id = String(group.id[0]);
+
+          return (
+            !optimisticDeleted[id] && (
+              <GroupItem group={group} opened={groupId == id}>
+                <ItemControls>
+                  {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && (
+                    <>
+                      <Button
+                        forwardedAs={NavLink}
+                        to={groupId ? `../groups/edit/${id}` : `edit/${id}`}
+                        variant='caption'
+                      >
+                        Edit
+                      </Button>
+                      <UnionTooltipButtonComponent
+                        {...deleteUnionButtonProps}
+                        variant='caption'
+                        color='red'
+                        buttonContent='Delete'
+                        submitVotingVerbose='Create voting'
+                        getPayload={() => [{ group_id: group.id[0] }]}
+                      >
+                        Delete
+                      </UnionTooltipButtonComponent>
+                    </>
+                  )}
+                </ItemControls>
+              </GroupItem>
+            )
+          );
+        }}
       />
     </Container>
   );

@@ -13,19 +13,14 @@ import {
   Text,
 } from '@union/components';
 import { useForm, Controller } from 'react-hook-form';
-import {
-  AlloweeConstraint,
-  CreateAccessConfigRequest,
-  Group,
-  Permission,
-  Profile,
-  _SERVICE,
-} from 'union-ts';
+import { Group, Permission, Profile, _SERVICE } from 'union-ts';
 import { useNavigate } from 'react-router-dom';
 import { useUnion } from 'services';
-import { Principal } from '@dfinity/principal';
-import { UnionSubmitButton } from '../../../components/UnionSubmit';
-import { useCurrentUnion } from '../context';
+import { UnionSubmitButton } from '../../../../components/UnionSubmit';
+import { useCurrentUnion } from '../../context';
+import { AccessConfigFormData, AlloweeConstraintForm } from './types';
+import { useCreate } from './useCreate';
+import { useEdit } from './useEdit';
 
 const AlloweeTitle = styled(Text)``;
 const TextField = styled(TF)``;
@@ -52,90 +47,43 @@ const Container = styled(PageWrapper)`
   }
 `;
 
-interface AlloweeConstraintForm {
-  type: 'Group' | 'Profile' | 'Everyone';
-  group?: Group;
-  profile?: Profile;
-  minShares?: bigint;
-}
-export interface AccessConfigFormFormData {
-  name: string;
-  description: string;
-  permissions: Permission[];
-  allowees: AlloweeConstraintForm[];
-}
-
 export interface AccessConfigFormProps {
   className?: string;
   style?: React.CSSProperties;
+  create?: boolean;
 }
 
-export const AccessConfigForm = ({ ...p }: AccessConfigFormProps) => {
-  const data: AccessConfigFormFormData = useMemo(
-    () => ({
-      name: '',
-      description: '',
-      permissions: [],
-      allowees: [],
-    }),
-    [],
-  );
-
-  return <AccessConfigFormComponent {...p} data={data} />;
-};
-
-export const AccessConfigFormComponent = ({
-  data,
-  ...p
-}: AccessConfigFormProps & {
-  data: AccessConfigFormFormData;
-}) => {
+export const AccessConfigForm = ({ create, ...p }: AccessConfigFormProps) => {
   const { principal } = useCurrentUnion();
   const { canister } = useUnion(principal);
   const nav = useNavigate();
   const {
     control,
     getValues,
+    setValue,
     formState: { isValid },
-  } = useForm<AccessConfigFormFormData>({
-    defaultValues: { ...data },
+  } = useForm<AccessConfigFormData>({
+    defaultValues: {
+      name: '',
+      description: '',
+      permissions: [],
+      allowees: [],
+    },
     mode: 'onChange',
   });
 
-  const getPayload = useCallback((): CreateAccessConfigRequest => {
-    const { permissions, ...values } = getValues();
+  const { getCreatePayload } = useCreate({ getValues: getValues as () => AccessConfigFormData });
+  const { getUpdatePayload, fallback } = useEdit({
+    getValues: getValues as () => AccessConfigFormData,
+    setValue,
+  });
 
-    const result = {
-      ...values,
-      permissions: permissions.map((p) => p.id[0]!),
-      allowees: values.allowees
-        .map((a) => {
-          switch (a.type) {
-            case 'Everyone': {
-              return { Everyone: null };
-            }
-            case 'Group': {
-              if (!a.group) {
-                return null;
-              }
-              return { Group: { id: a.group.id[0]!, min_shares: a.minShares || BigInt(0) } };
-            }
-            case 'Profile': {
-              if (!a.profile) {
-                return null;
-              }
-              return { Profile: Principal.from(a.profile.id) };
-            }
-          }
-        })
-        .filter((a): a is AlloweeConstraint => !!a),
-    };
-
-    return result;
-  }, [getValues]);
+  if (!create && fallback) {
+    return fallback;
+  }
 
   return (
-    <Container {...p} title='Create access config' withBack>
+    <Container {...p} title={create ? 'Create new access config' : 'Edit access config'} withBack>
       <Controller
         name='name'
         control={control}
@@ -329,15 +277,29 @@ export const AccessConfigFormComponent = ({
           </>
         )}
       />
-      <UnionSubmitButton
-        canisterId={principal}
-        methodName='create_access_config'
-        getPayload={() => [getPayload()]}
-        onExecuted={() => nav(-1)}
-        disabled={!isValid}
-      >
-        Create access config
-      </UnionSubmitButton>
+      {create ? (
+        <UnionSubmitButton
+          canisterId={principal}
+          unionId={principal}
+          methodName='create_access_config'
+          getPayload={() => [getCreatePayload()]}
+          onExecuted={() => nav(-1)}
+          disabled={!isValid}
+        >
+          Create access config
+        </UnionSubmitButton>
+      ) : (
+        <UnionSubmitButton
+          unionId={principal}
+          canisterId={principal}
+          methodName='update_access_config'
+          getPayload={() => [getUpdatePayload()]}
+          onExecuted={() => nav(-1)}
+          disabled={!isValid}
+        >
+          Update access config
+        </UnionSubmitButton>
+      )}
     </Container>
   );
 };

@@ -1,4 +1,4 @@
-import { Accordeon, Field, Text, Column } from '@union/components';
+import { Accordeon, Field, Text, Row as R, Chips } from '@union/components';
 import React, { useEffect, useMemo, useRef } from 'react';
 import styled from 'styled-components';
 import { Permission } from 'union-ts';
@@ -7,19 +7,29 @@ const Zeroscreen = styled(Text)`
   color: ${({ theme }) => theme.colors.grey};
 `;
 
+const TitleChips = styled(Chips)`
+  padding: 2px 8px;
+  border-color: ${({ theme }) => theme.colors.dark};
+`;
+
+const Row = styled(R)`
+  flex-wrap: wrap;
+  & > * {
+    margin-bottom: 4px;
+  }
+`;
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 8px;
+  padding: 8px 0;
 
   & > *:not(:last-child) {
     margin-bottom: 8px;
   }
 
-  & > ${Field} {
-    ${Column}, & > * > ${Field} {
-      padding-left: 8px;
-    }
+  ${Field} ${Field}, ${Zeroscreen} {
+    padding-left: 8px;
   }
 `;
 
@@ -63,24 +73,38 @@ export const PermissionItem = styled(
       <Accordeon title={permission.name} ref={ref} isDefaultOpened={opened} {...p}>
         <Container>
           {children}
-          <Field>{permission.description}</Field>
+          <Field variant={{ value: 'p3' }}>{permission.description}</Field>
           <Field title='Targets' weight={{ title: 'medium' }}>
             {!Object.keys(targets).length && (
               <Zeroscreen variant='p3'>Targets are not attached</Zeroscreen>
             )}
             {Object.keys(targets).map((canisterId) =>
               (canisterId ? (
-                <Field key={canisterId} title={canisterId}>
-                  <Column>
+                <Field
+                  key={canisterId}
+                  title={
+                    <TitleChips variant='p3' color='dark' important>
+                      {canisterId}
+                    </TitleChips>
+                  }
+                >
+                  <Row>
                     {targets[canisterId].map((method) => (
-                      <Text key={method} variant='p3'>
+                      <Chips key={method} variant='p3'>
                         {method}
-                      </Text>
+                      </Chips>
                     ))}
-                  </Column>
+                  </Row>
                 </Field>
               ) : (
-                <Field key='empty' title='Empty program' />
+                <Field
+                  key='empty'
+                  title={
+                    <TitleChips variant='p3' color='dark' important>
+                      Empty program
+                    </TitleChips>
+                  }
+                />
               )),
             )}
           </Field>

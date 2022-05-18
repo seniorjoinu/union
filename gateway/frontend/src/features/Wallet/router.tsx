@@ -7,7 +7,7 @@ import { Profile, ChangeProfile } from './Profile';
 import { Groups, GroupForm } from './Groups';
 import { Permissions, PermissionForm } from './Permissions';
 import { AccessConfigs, AccessConfigForm } from './AccessConfigs';
-import { Info, InfoForm, UpgradeForm } from './Info';
+import { Info, UpdateInfoForm, UpgradeForm } from './Info';
 import { Assets, AssetsCanisterUpdater, BatchesUploader } from './Assets';
 import { PermissionDetails } from './PermissionDetails';
 import { VersionForm } from './VersionForm';
@@ -34,22 +34,30 @@ export const Wallet = () => {
         <Routes>
           <Route path='/groups' element={<Groups />} />
           <Route path='/groups/:groupId' element={<Groups />} />
-          <Route path='/groups/create' element={<GroupForm />} />
+          <Route path='/groups/create' element={<GroupForm create />} />
+          <Route path='/groups/edit/:groupId' element={<GroupForm create={false} />} />
 
           <Route path='/permissions' element={<Permissions />} />
           <Route path='/permissions/:permissionId' element={<Permissions />} />
           <Route path='/permissions/create' element={<PermissionForm create />} />
-          <Route path='/permissions/edit/:permissionId' element={<PermissionForm />} />
+          <Route
+            path='/permissions/edit/:permissionId'
+            element={<PermissionForm create={false} />}
+          />
 
           <Route path='/access-configs' element={<AccessConfigs />} />
           <Route path='/access-configs/:accessConfigId' element={<AccessConfigs />} />
-          <Route path='/access-configs/create' element={<AccessConfigForm />} />
+          <Route
+            path='/access-configs/edit/:accessConfigId'
+            element={<AccessConfigForm create={false} />}
+          />
+          <Route path='/access-configs/create' element={<AccessConfigForm create />} />
 
           <Route path='/profile' element={<Profile />} />
           <Route path='/profile/change' element={<ChangeProfile />} />
 
           <Route path='/wallet' element={<Info />} />
-          <Route path='/wallet/edit-info' element={<InfoForm />} />
+          <Route path='/wallet/edit-info' element={<UpdateInfoForm />} />
           <Route path='/wallet/upgrade-version' element={<UpgradeForm />} />
 
           <Route path='/assets' element={<Assets />} />

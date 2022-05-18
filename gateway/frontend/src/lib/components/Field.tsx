@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Text as T, TextVariant, TextWeight } from './Text';
-import { theme } from './theme';
 
 const Text = styled(T)``;
 
@@ -66,11 +65,11 @@ export const Field = styled(
 
     return (
       <Container {...p} $align={align} $margin={margin}>
-        <Text variant={variant.title} weight={weight.title} color={theme.colors.dark}>
+        <Text variant={variant.title} weight={weight.title} color='dark'>
           {title}
           {!!title && align == 'row' ? ':' : ''}
         </Text>
-        <Text variant={variant.value} weight={weight.value} color={theme.colors.grey}>
+        <Text variant={variant.value} weight={weight.value} color='grey'>
           {children}
         </Text>
       </Container>

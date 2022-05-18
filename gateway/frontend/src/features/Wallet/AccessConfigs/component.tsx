@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Pager, Button as B, Row as R, Text, getFontStyles } from '@union/components';
+import { PageWrapper, Pager, Button as B, Row as R } from '@union/components';
 import { useUnion } from 'services';
 import { AccessConfig } from 'union-ts';
 import { NavLink, useParams } from 'react-router-dom';
@@ -9,10 +9,6 @@ import { UnionTooltipButtonComponent, useUnionSubmit } from '../../../components
 import { useCurrentUnion } from '../context';
 import { AccessConfigItem } from './AccessConfigItem';
 
-const DeleteText = styled(Text)`
-  color: red;
-  ${getFontStyles('p3', 'medium')}
-`;
 const Button = styled(B)``;
 const Controls = styled(R)`
   justify-content: flex-end;
@@ -21,10 +17,14 @@ const Controls = styled(R)`
     display: none;
   }
 `;
+const ItemControls = styled(Controls)``;
 
 const Container = styled(PageWrapper)`
   ${Controls} {
     margin-bottom: 16px;
+  }
+  ${ItemControls} {
+    margin-bottom: 4px;
   }
 `;
 
@@ -39,6 +39,7 @@ export const AccessConfigs = styled(({ ...p }: AccessConfigsProps) => {
   const { canister } = useUnion(principal);
   const [optimisticDeleted, setOptimisticDeleted] = useState<Record<string, true>>({});
   const deleteUnionButtonProps = useUnionSubmit({
+    unionId: principal,
     canisterId: principal,
     methodName: 'delete_access_config',
     onExecuted: (p) => setOptimisticDeleted((v) => ({ ...v, [String(p[0]?.id)]: true })),
@@ -63,24 +64,39 @@ export const AccessConfigs = styled(({ ...p }: AccessConfigsProps) => {
             },
           })
         }
-        renderItem={(item: AccessConfig) =>
-          !optimisticDeleted[String(item.id[0])] && (
-            <AccessConfigItem accessConfig={item} opened={accessConfigId == String(item.id[0])}>
-              <Controls>
-                {!DEFAULT_ACCESS_CONFIG_IDS.includes(item.id[0]!) && (
-                  <UnionTooltipButtonComponent
-                    {...deleteUnionButtonProps}
-                    buttonContent={<DeleteText>Delete</DeleteText>}
-                    submitVotingVerbose={<DeleteText>Create voting</DeleteText>}
-                    getPayload={() => [{ id: item.id[0] }]}
-                  >
-                    <DeleteText>Delete</DeleteText>
-                  </UnionTooltipButtonComponent>
-                )}
-              </Controls>
-            </AccessConfigItem>
-          )
-        }
+        renderItem={(item: AccessConfig) => {
+          const id = String(item.id[0]);
+
+          return (
+            !optimisticDeleted[id] && (
+              <AccessConfigItem accessConfig={item} opened={accessConfigId == id}>
+                <ItemControls>
+                  {!DEFAULT_ACCESS_CONFIG_IDS.includes(item.id[0]!) && (
+                    <>
+                      <Button
+                        forwardedAs={NavLink}
+                        to={accessConfigId ? `../permissions/edit/${id}` : `edit/${id}`}
+                        variant='caption'
+                      >
+                        Edit
+                      </Button>
+                      <UnionTooltipButtonComponent
+                        {...deleteUnionButtonProps}
+                        variant='caption'
+                        color='red'
+                        buttonContent='Delete'
+                        submitVotingVerbose='Create voting'
+                        getPayload={() => [{ id: item.id[0] }]}
+                      >
+                        Delete
+                      </UnionTooltipButtonComponent>
+                    </>
+                  )}
+                </ItemControls>
+              </AccessConfigItem>
+            )
+          );
+        }}
       />
     </Container>
   );

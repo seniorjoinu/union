@@ -1,9 +1,13 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { PageWrapper, Button as B, Select as S, Option } from '@union/components';
 import { useForm, Controller } from 'react-hook-form';
 import { useDeployer } from 'services';
-import { UpgradeFormData, useUpgradeWallet } from './useUnionInfo';
+import { UpgradeWalletVersionRequest } from 'deployer-ts';
+import { useNavigate } from 'react-router-dom';
+import { Principal } from '@dfinity/principal';
+import { DeployerSubmitButton } from '../../../components/UnionSubmit';
+import { useCurrentUnion } from '../context';
 
 const Select = styled(S)``;
 const Button = styled(B)``;
@@ -20,6 +24,10 @@ const Container = styled(PageWrapper)`
   }
 `;
 
+export interface UpgradeFormData {
+  version: string;
+}
+
 export interface UpgradeFormProps {
   className?: string;
   style?: React.CSSProperties;
@@ -35,8 +43,9 @@ export const UpgradeForm = (p: UpgradeFormProps) => {
     defaultValues: { version: '' },
     mode: 'onChange',
   });
+  const nav = useNavigate();
+  const { principal } = useCurrentUnion();
   const { canister, data } = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
-  const { upgradeWalletVersion } = useUpgradeWallet({ getValues });
 
   useEffect(() => {
     canister
@@ -60,6 +69,15 @@ export const UpgradeForm = (p: UpgradeFormProps) => {
     setValue('version', versions[0].version, { shouldValidate: true });
   }, [setValue, getValues, versions]);
 
+  const getUpdatePayload = useCallback((): UpgradeWalletVersionRequest => {
+    const { version } = getValues();
+
+    return {
+      new_version: version,
+      canister_id: principal,
+    };
+  }, [getValues, principal]);
+
   return (
     <Container {...p} title='Upgrade wallet binary version' withBack>
       <Controller
@@ -76,9 +94,16 @@ export const UpgradeForm = (p: UpgradeFormProps) => {
           </Select>
         )}
       />
-      <Button type='submit' disabled={!isValid} onClick={() => upgradeWalletVersion()}>
-        Save
-      </Button>
+      <DeployerSubmitButton
+        unionId={principal}
+        canisterId={Principal.from(process.env.UNION_DEPLOYER_CANISTER_ID)}
+        methodName='upgrade_wallet_version'
+        getPayload={() => [getUpdatePayload()]}
+        onExecuted={() => nav(-1)}
+        disabled={!isValid}
+      >
+        Upgrade version
+      </DeployerSubmitButton>
     </Container>
   );
 };

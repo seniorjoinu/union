@@ -5,10 +5,13 @@ import { AccessConfig, _SERVICE } from 'union-ts';
 // @ts-expect-error
 import { idlFactory as idl } from 'union-idl';
 import { Principal } from '@dfinity/principal';
+import { IDL } from '@dfinity/candid';
 
 export type { _SERVICE } from 'union-ts';
 
 export type IUnionController = Canister<_SERVICE>;
+
+export const unionIdl = idl as IDL.InterfaceFactory;
 
 export const initUnionController = (canisterId: string, handlers?: CanisterProps['handlers']) => {
   const canister = ((window as any).union = new Canister<_SERVICE>({
@@ -21,17 +24,16 @@ export const initUnionController = (canisterId: string, handlers?: CanisterProps
   return canister;
 };
 
-export const useUnion = (canisterId: Principal) => {
-  const [methodAccess, setMethodAccess] = useState<Record<keyof _SERVICE, AccessConfig[]>>(
-    {} as Record<keyof _SERVICE, AccessConfig[]>,
+export const useUnion = <S = _SERVICE>(canisterId: Principal) => {
+  const [methodAccess, setMethodAccess] = useState<Record<keyof S, AccessConfig[]>>(
+    {} as Record<keyof S, AccessConfig[]>,
   );
   const canister = useCanister(canisterId.toString(), initUnionController);
 
   const getMethodAccess = useCallback(
-    async (p: Omit<GetMethodAccessConfigProps, 'canister' | 'unionCanisterId'>) => {
+    async (p: Omit<GetMethodAccessConfigProps, 'canister'>) => {
       const accessConfigs = await getMethodAccessConfig({
         canister: canister.canister,
-        unionCanisterId: canisterId,
         ...p,
       });
       setMethodAccess((access) => ({ ...access, [p.methodName]: accessConfigs }));
@@ -45,15 +47,15 @@ export const useUnion = (canisterId: Principal) => {
 
 export interface GetMethodAccessConfigProps {
   canister: _SERVICE;
-  methodName: keyof _SERVICE;
-  unionCanisterId: Principal;
+  methodName: string;
+  canisterId: Principal;
   profile: Principal;
 }
 
 const getMethodAccessConfig = async ({
   canister,
   methodName,
-  unionCanisterId,
+  canisterId,
   profile,
 }: GetMethodAccessConfigProps) => {
   const {
@@ -63,7 +65,7 @@ const getMethodAccessConfig = async ({
       page_index: 0,
       page_size: 100, // FIXME resolve paging
       sort: null,
-      filter: { target: [{ Endpoint: { canister_id: unionCanisterId, method_name: methodName } }] },
+      filter: { target: [{ Endpoint: { canister_id: canisterId, method_name: methodName } }] },
     },
   });
 

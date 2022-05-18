@@ -37,10 +37,6 @@ const Icon = (p: React.SVGAttributes<SVGElement>) => (
       d='M64.0001 42.7868L42.7869 64L64.0001 85.2132L85.2133 64L64.0001 42.7868Z'
       fill='currentColor'
     />
-    <path
-      d='M106.426 42.7868L85.2131 64L106.426 85.2132L127.64 64L106.426 42.7868Z'
-      fill='currentColor'
-    />
   </svg>
 );
 

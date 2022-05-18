@@ -5,6 +5,7 @@ import { _SERVICE } from 'gateway-ts';
 import { idlFactory as idl } from 'gateway-idl';
 
 export type IGatewayController = Canister<_SERVICE>;
+export type GatewayService = _SERVICE;
 
 export const initGatewayController = (canisterId: string, handlers?: CanisterProps['handlers']) => {
   const canister = ((window as any).gateway = new Canister<_SERVICE>({
