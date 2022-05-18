@@ -47,36 +47,32 @@ impl Repository<VotingConfig, VotingConfigId, VotingConfigFilter, ()> for Voting
     }
 
     fn list(&self, page_req: &PageRequest<VotingConfigFilter, ()>) -> Page<VotingConfig> {
-        if page_req.filter.permission.is_none() && page_req.filter.group.is_none() {
-            let (has_next, iter) = self.voting_configs.iter().get_page(page_req);
-            let data = iter.map(|(_, it)| it.clone()).collect();
-
-            return Page::new(data, has_next);
-        }
-
-        let mut index = if let Some(permission_id) = page_req.filter.permission {
-            self.voting_configs_by_permission_index
+        let index = if let Some(permission_id) = page_req.filter.permission {
+            let mut index = self
+                .voting_configs_by_permission_index
                 .get(&permission_id)
                 .cloned()
-                .unwrap_or_default()
-        } else {
-            BTreeSet::default()
-        };
+                .unwrap_or_default();
 
-        let mut index2 = if let Some(group_id) = page_req.filter.group {
+            if let Some(group_id) = page_req.filter.group {
+                if let Some(index1) = self.voting_configs_by_group_index.get(&group_id) {
+                    index = index.intersection(index1).cloned().collect()
+                }
+            }
+
+            index
+        } else if let Some(group_id) = page_req.filter.group {
             self.voting_configs_by_group_index
                 .get(&group_id)
                 .cloned()
                 .unwrap_or_default()
         } else {
-            BTreeSet::default()
-        };
+            // if no filter set - return all
+            let (has_next, iter) = self.voting_configs.iter().get_page(page_req);
+            let data = iter.map(|(_, it)| it.clone()).collect();
 
-        if index.is_empty() {
-            index.append(&mut index2);
-        } else if !index2.is_empty() {
-            index = index.intersection(&index2).cloned().collect();
-        }
+            return Page::new(data, has_next);
+        };
 
         let (has_next, iter) = index.iter().get_page(page_req);
         let data = iter.map(|id| self.get(id).unwrap()).collect();

@@ -944,6 +944,12 @@ type ListVotingConfigsResponse = record {
 // ----------------- VOTINGS ------------------
 
 type VotingId = Id;
+type NestedVotingId = Id;
+type RemoteVotingId = variant {
+    Common : VotingId;
+    Nested : NestedVotingId;
+};
+
 type ChoiceId = Id;
 type TaskId = Id;
 type RoundId = nat16;
@@ -1015,7 +1021,7 @@ type Voting = record {
 
 type Choice = record {
     id : opt ChoiceId;
-    voting_id : VotingId;
+    voting_id : RemoteVotingId;
     name : text;
 
     // Verbal description of what the program of this choice will do
@@ -1108,7 +1114,7 @@ type CreateVotingChoiceRequest = record {
 
     // The program to execute if this choice wins
     program : Program;
-    voting_id : VotingId;
+    voting_id : RemoteVotingId;
 };
 
 type CreateVotingChoiceResponse = record {
@@ -1141,7 +1147,7 @@ type GetVotingChoiceResponse = record {
 };
 
 type ChoiceFilter = record {
-    voting_id : VotingId;
+    voting_id : RemoteVotingId;
 };
 
 type ListVotingChoicesPageRequest = record {

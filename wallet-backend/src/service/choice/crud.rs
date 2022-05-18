@@ -9,6 +9,7 @@ use shared::mvc::{HasRepository, Repository};
 use shared::pageable::{Page, PageRequest};
 use shared::remote_call::Program;
 use shared::types::wallet::{ChoiceId, VotingId};
+use crate::repository::nested_voting::types::RemoteVotingId;
 
 impl ChoiceService {
     pub fn create_choice(

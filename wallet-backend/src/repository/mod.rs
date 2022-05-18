@@ -12,6 +12,14 @@ use crate::repository::chunk::types::{ChunkFilter, ChunkId};
 use crate::repository::chunk::ChunkRepository;
 use crate::repository::group::model::Group;
 use crate::repository::group::GroupRepository;
+use crate::repository::nested_voting::model::NestedVoting;
+use crate::repository::nested_voting::types::{NestedVotingFilter, NestedVotingId};
+use crate::repository::nested_voting::NestedVotingRepository;
+use crate::repository::nested_voting_config::model::NestedVotingConfig;
+use crate::repository::nested_voting_config::types::{
+    NestedVotingConfigFilter, NestedVotingConfigId,
+};
+use crate::repository::nested_voting_config::NestedVotingConfigRepository;
 use crate::repository::permission::model::Permission;
 use crate::repository::permission::types::{PermissionFilter, PermissionId};
 use crate::repository::permission::PermissionRepository;
@@ -36,6 +44,8 @@ pub mod batch;
 pub mod choice;
 pub mod chunk;
 pub mod group;
+pub mod nested_voting;
+pub mod nested_voting_config;
 pub mod permission;
 pub mod profile;
 pub mod token;
@@ -49,6 +59,8 @@ pub struct Repositories {
     choice: ChoiceRepository,
     chunk: ChunkRepository,
     group: GroupRepository,
+    nested_voting: NestedVotingRepository,
+    nested_voting_config: NestedVotingConfigRepository,
     profile: ProfileRepository,
     permission: PermissionRepository,
     token: TokenRepository,
@@ -141,5 +153,27 @@ impl HasRepository<VotingConfig, VotingConfigId, VotingConfigFilter, (), VotingC
 impl HasRepository<Voting, VotingId, (), (), VotingRepository> for Voting {
     fn repo() -> &'static mut VotingRepository {
         &mut get_repositories().voting
+    }
+}
+
+impl
+    HasRepository<
+        NestedVotingConfig,
+        NestedVotingConfigId,
+        NestedVotingConfigFilter,
+        (),
+        NestedVotingConfigRepository,
+    > for NestedVotingConfig
+{
+    fn repo() -> &'static mut NestedVotingConfigRepository {
+        &mut get_repositories().nested_voting_config
+    }
+}
+
+impl HasRepository<NestedVoting, NestedVotingId, NestedVotingFilter, (), NestedVotingRepository>
+    for NestedVoting
+{
+    fn repo() -> &'static mut NestedVotingRepository {
+        &mut get_repositories().nested_voting
     }
 }

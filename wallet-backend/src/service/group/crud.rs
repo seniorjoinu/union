@@ -36,6 +36,8 @@ impl GroupService {
             return Err(GroupError::RelatedVotingConfigsExist);
         }
 
+        // TODO: check for existing nested voting configs
+        
         let group = Group::repo()
             .delete(&group_id)
             .ok_or(GroupError::GroupNotFound(group_id))?;

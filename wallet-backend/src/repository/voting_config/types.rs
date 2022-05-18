@@ -6,7 +6,7 @@ use candid::{CandidType, Deserialize, Nat};
 use serde::Deserializer;
 use shared::types::wallet::{GroupId, Shares};
 use std::collections::{BTreeMap, BTreeSet};
-use std::ops::{Div, Mul};
+use std::ops::{AddAssign, Div, Mul};
 use std::str::FromStr;
 
 pub const VOTING_CONFIG_NAME_MIN_LEN: usize = 1;
@@ -62,6 +62,12 @@ impl Mul for Fraction {
 
     fn mul(self, rhs: Self) -> Self::Output {
         Fraction(self.0 * rhs.0)
+    }
+}
+
+impl AddAssign for Fraction {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
     }
 }
 
