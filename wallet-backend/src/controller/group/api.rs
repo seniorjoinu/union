@@ -1,4 +1,5 @@
 use crate::repository::group::model::Group;
+use crate::service::access_config::types::QueryDelegationProof;
 use candid::{CandidType, Deserialize, Principal};
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::{GroupId, Shares};
@@ -31,6 +32,7 @@ pub struct DeleteGroupRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetGroupRequest {
     pub group_id: GroupId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -41,6 +43,7 @@ pub struct GetGroupResponse {
 #[derive(CandidType, Deserialize)]
 pub struct ListGroupsRequest {
     pub page_req: PageRequest<(), ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -99,6 +102,7 @@ pub struct DeclineMyGroupSharesRequest {
 pub struct GetGroupSharesBalanceOfRequest {
     pub group_id: GroupId,
     pub owner: Principal,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -119,6 +123,7 @@ pub struct GetMyGroupSharesBalanceResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetTotalGroupSharesRequest {
     pub group_id: GroupId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -130,6 +135,7 @@ pub struct GetTotalGroupSharesResponse {
 pub struct ListGroupSharesRequest {
     pub group_id: GroupId,
     pub page_req: PageRequest<(), ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -140,9 +146,10 @@ pub struct ListGroupSharesResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetGroupsOfRequest {
     pub principal_id: Principal,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
 pub struct GetGroupsResponse {
-    pub groups: Vec<Group>
+    pub groups: Vec<Group>,
 }

@@ -1,23 +1,23 @@
-use ic_cdk::api::time;
-use ic_cdk::caller;
-use crate::controller::access_config::api::{CreateAccessConfigRequest, CreateAccessConfigResponse, DeleteAccessConfigRequest, ExecuteRequest, ExecuteResponse, GetAccessConfigRequest, GetAccessConfigResponse, ListAccessConfigsRequest, ListAccessConfigsResponse, UpdateAccessConfigRequest};
-use crate::guards::{only_self_or_with_access, only_self};
+use crate::controller::access_config::api::{
+    CreateAccessConfigRequest, CreateAccessConfigResponse, DeleteAccessConfigRequest,
+    ExecuteRequest, ExecuteResponse, GetAccessConfigRequest, GetAccessConfigResponse,
+    GetMyQueryDelegationProofRequest, GetMyQueryDelegationProofResponse, ListAccessConfigsRequest,
+    ListAccessConfigsResponse, UpdateAccessConfigRequest,
+};
+use crate::guards::{only_self, only_self_or_with_access};
 use crate::service::access_config::types::AccessConfigService;
+use ic_cdk::api::time;
+use ic_cdk::{caller, id};
 use ic_cdk_macros::{query, update};
 
 pub mod api;
 
 #[update]
 async fn execute(req: ExecuteRequest) -> ExecuteResponse {
-    let result = AccessConfigService::execute(
-        &req.access_config_id,
-        req.program,
-        caller(),
-        time()
-    )
+    let result = AccessConfigService::execute(&req.access_config_id, req.program, caller(), time())
         .await
         .expect("Unable to execute");
-    
+
     ExecuteResponse { result }
 }
 
@@ -58,7 +58,7 @@ fn delete_access_config(req: DeleteAccessConfigRequest) {
 
 #[query]
 fn get_access_config(req: GetAccessConfigRequest) -> GetAccessConfigResponse {
-    only_self_or_with_access("get_access_config");
+    only_self_or_with_access("get_access_config", req.query_delegation_proof_opt);
 
     let access_config =
         AccessConfigService::get_access_config(&req.id).expect("Unable to get access config");
@@ -67,8 +67,23 @@ fn get_access_config(req: GetAccessConfigRequest) -> GetAccessConfigResponse {
 
 #[query]
 fn list_access_configs(req: ListAccessConfigsRequest) -> ListAccessConfigsResponse {
-    only_self_or_with_access("list_access_configs");
+    only_self_or_with_access("list_access_configs", req.query_delegation_proof_opt);
 
     let page = AccessConfigService::list_access_configs(&req.page_req);
     ListAccessConfigsResponse { page }
+}
+
+// ------------- PERSONAL --------------
+
+#[query]
+fn get_my_query_delegation_proof(
+    req: GetMyQueryDelegationProofRequest,
+) -> GetMyQueryDelegationProofResponse {
+    let proof = AccessConfigService::get_query_delegation_proof(
+        id(),
+        caller(),
+        req.requested_targets,
+        time(),
+    );
+    GetMyQueryDelegationProofResponse { proof }
 }

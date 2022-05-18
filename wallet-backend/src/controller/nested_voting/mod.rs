@@ -13,15 +13,15 @@ use ic_cdk_macros::{query, update};
 pub mod api;
 
 #[update]
-fn create_nested_voting(req: CreateNestedVotingRequest) -> CreateNestedVotingResponse {
+async fn create_nested_voting(req: CreateNestedVotingRequest) -> CreateNestedVotingResponse {
     only_self();
 
     let id = NestedVotingService::create_nested_voting(
         req.remote_voting_id,
         req.remote_group_id,
         req.local_nested_voting_config_id,
-        time(),
     )
+    .await
     .expect("Unable to create nested voting");
 
     CreateNestedVotingResponse { id }
@@ -36,7 +36,7 @@ fn delete_nested_voting(req: DeleteNestedVotingRequest) {
 
 #[query]
 fn get_nested_voting(req: GetNestedVotingRequest) -> GetNestedVotingResponse {
-    only_self_or_with_access("get_nested_voting");
+    only_self_or_with_access("get_nested_voting", req.query_delegation_proof_opt);
 
     let nested_voting =
         NestedVotingService::get_nested_voting(&req.id).expect("Unable to get nested voting");
@@ -46,7 +46,7 @@ fn get_nested_voting(req: GetNestedVotingRequest) -> GetNestedVotingResponse {
 
 #[query]
 fn list_nested_votings(req: ListNestedVotingsRequest) -> ListNestedVotingsResponse {
-    only_self_or_with_access("list_nested_votings");
+    only_self_or_with_access("list_nested_votings", req.query_delegation_proof_opt);
 
     let page = NestedVotingService::list_nested_votings(&req.page_req);
 

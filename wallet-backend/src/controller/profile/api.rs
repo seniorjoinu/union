@@ -1,4 +1,5 @@
 use crate::repository::profile::model::Profile;
+use crate::service::access_config::types::QueryDelegationProof;
 use candid::{CandidType, Deserialize};
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::ProfileId;
@@ -31,6 +32,7 @@ pub struct UpdateProfileRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetProfileRequest {
     pub id: ProfileId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -41,6 +43,7 @@ pub struct GetProfileResponse {
 #[derive(CandidType, Deserialize)]
 pub struct ListProfilesRequest {
     pub page_req: PageRequest<(), ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]

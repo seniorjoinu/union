@@ -113,6 +113,13 @@ impl AccessConfigRepository {
             .cloned()
             .unwrap_or_default()
     }
+    
+    pub fn get_access_configs_by_group(&self, group_id: &GroupId) -> BTreeSet<AccessConfigId> {
+        self.access_configs_by_group_index
+            .get(group_id)
+            .cloned()
+            .unwrap_or_default()
+    }
 
     pub fn group_has_related_access_configs(&self, group_id: &GroupId) -> bool {
         if let Some(index) = self.access_configs_by_group_index.get(group_id) {

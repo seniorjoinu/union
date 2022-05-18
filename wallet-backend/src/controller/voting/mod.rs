@@ -91,7 +91,7 @@ fn delete_voting(req: DeleteVotingRequest) {
 
 #[query]
 fn get_voting(req: GetVotingRequest) -> GetVotingResponse {
-    only_self_or_with_access("get_voting");
+    only_self_or_with_access("get_voting", req.query_delegation_proof_opt);
 
     let voting = VotingService::get_voting(&req.id).expect("Unable to get voting");
     GetVotingResponse { voting }
@@ -99,7 +99,7 @@ fn get_voting(req: GetVotingRequest) -> GetVotingResponse {
 
 #[query]
 fn list_votings(req: ListVotingsRequest) -> ListVotingsResponse {
-    only_self_or_with_access("list_votings");
+    only_self_or_with_access("list_votings", req.query_delegation_proof_opt);
 
     let page = VotingService::list_votings(&req.page_req);
     ListVotingsResponse { page }
@@ -107,7 +107,7 @@ fn list_votings(req: ListVotingsRequest) -> ListVotingsResponse {
 
 #[query]
 fn get_voting_choice(req: GetVotingChoiceRequest) -> GetVotingChoiceResponse {
-    only_self_or_with_access("get_voting_choice");
+    only_self_or_with_access("get_voting_choice", req.query_delegation_proof_opt);
 
     let choice = ChoiceService::get_voting_choice(&req.choice_id, &req.voting_id)
         .expect("Unable to get voting choice");
@@ -116,7 +116,7 @@ fn get_voting_choice(req: GetVotingChoiceRequest) -> GetVotingChoiceResponse {
 
 #[query]
 fn list_voting_choices(req: ListVotingChoicesRequest) -> ListVotingChoicesResponse {
-    only_self_or_with_access("list_voting_choices");
+    only_self_or_with_access("list_voting_choices", req.query_delegation_proof_opt);
 
     let page = ChoiceService::list_choices(&req.page_req);
     ListVotingChoicesResponse { page }
@@ -124,7 +124,7 @@ fn list_voting_choices(req: ListVotingChoicesRequest) -> ListVotingChoicesRespon
 
 #[query]
 fn get_voting_results(req: GetVotingResultsRequest) -> GetVotingResultsResponse {
-    only_self_or_with_access("get_voting_results");
+    only_self_or_with_access("get_voting_results", req.query_delegation_proof_opt);
 
     let results =
         VotingService::get_voting_results(&req.voting_id).expect("Unable to get voting results");

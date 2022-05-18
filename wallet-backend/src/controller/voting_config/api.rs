@@ -3,6 +3,7 @@ use crate::repository::voting_config::model::VotingConfig;
 use crate::repository::voting_config::types::{
     LenInterval, RoundSettings, ThresholdValue, VotingConfigFilter,
 };
+use crate::service::access_config::types::QueryDelegationProof;
 use candid::{CandidType, Deserialize};
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::VotingConfigId;
@@ -52,6 +53,7 @@ pub struct DeleteVotingConfigRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetVotingConfigRequest {
     pub id: VotingConfigId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -62,6 +64,7 @@ pub struct GetVotingConfigResponse {
 #[derive(CandidType, Deserialize)]
 pub struct ListVotingConfigsRequest {
     pub page_req: PageRequest<VotingConfigFilter, ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]

@@ -56,7 +56,7 @@ async fn send_batch(req: SendBatchRequest) {
 
 #[query]
 fn get_batch(req: GetBatchRequest) -> GetBatchResponse {
-    only_self_or_with_access("get_batch");
+    only_self_or_with_access("get_batch", req.query_delegation_proof_opt);
 
     let batch = StreamingService::get_batch(&req.id).expect("Unable to get batch");
     GetBatchResponse { batch }
@@ -64,7 +64,7 @@ fn get_batch(req: GetBatchRequest) -> GetBatchResponse {
 
 #[query]
 fn list_batches(req: ListBatchesRequest) -> ListBatchesResponse {
-    only_self_or_with_access("list_batches");
+    only_self_or_with_access("list_batches", req.query_delegation_proof_opt);
 
     let page = StreamingService::list_batches(&req.page_req);
     ListBatchesResponse { page }
@@ -81,7 +81,7 @@ fn create_chunk(req: CreateChunkRequest) -> CreateChunkResponse {
 
 #[query]
 fn get_chunk(req: GetChunkRequest) -> GetChunkResponse {
-    only_self_or_with_access("get_chunk");
+    only_self_or_with_access("get_chunk", req.query_delegation_proof_opt);
 
     let chunk = StreamingService::get_chunk(&req.chunk_id).expect("Unable to get chunk");
     GetChunkResponse { chunk }
@@ -89,7 +89,7 @@ fn get_chunk(req: GetChunkRequest) -> GetChunkResponse {
 
 #[query]
 fn list_chunks(req: ListChunksRequest) -> ListChunksResponse {
-    only_self_or_with_access("list_chunks");
+    only_self_or_with_access("list_chunks", req.query_delegation_proof_opt);
 
     let page = StreamingService::list_chunks(&req.page_req);
     ListChunksResponse { page }

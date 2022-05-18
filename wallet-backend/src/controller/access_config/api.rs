@@ -1,11 +1,12 @@
-use std::collections::BTreeSet;
+use crate::repository::access_config::model::AccessConfig;
+use crate::repository::access_config::types::{AccessConfigFilter, AlloweeConstraint};
+use crate::repository::permission::types::{PermissionId, PermissionTarget};
+use crate::service::access_config::types::QueryDelegationProof;
 use candid::{CandidType, Deserialize};
 use shared::pageable::{Page, PageRequest};
 use shared::remote_call::{Program, ProgramExecutionResult};
 use shared::types::wallet::AccessConfigId;
-use crate::repository::access_config::model::AccessConfig;
-use crate::repository::access_config::types::{AccessConfigFilter, AlloweeConstraint};
-use crate::repository::permission::types::PermissionId;
+use std::collections::BTreeSet;
 
 #[derive(CandidType, Deserialize)]
 pub struct ExecuteRequest {
@@ -47,7 +48,8 @@ pub struct DeleteAccessConfigRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct GetAccessConfigRequest {
-    pub id: AccessConfigId
+    pub id: AccessConfigId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -57,10 +59,23 @@ pub struct GetAccessConfigResponse {
 
 #[derive(CandidType, Deserialize)]
 pub struct ListAccessConfigsRequest {
-    pub page_req: PageRequest<AccessConfigFilter, ()>
+    pub page_req: PageRequest<AccessConfigFilter, ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
 pub struct ListAccessConfigsResponse {
-    pub page: Page<AccessConfig>
+    pub page: Page<AccessConfig>,
+}
+
+// ----------- PERSONAL ------------
+
+#[derive(CandidType, Deserialize)]
+pub struct GetMyQueryDelegationProofRequest {
+    pub requested_targets: BTreeSet<PermissionTarget>,
+}
+
+#[derive(CandidType, Deserialize)]
+pub struct GetMyQueryDelegationProofResponse {
+    pub proof: QueryDelegationProof,
 }

@@ -1,6 +1,7 @@
 use crate::repository::nested_voting::model::NestedVoting;
 use crate::repository::nested_voting::types::{NestedVotingFilter, NestedVotingId, RemoteVotingId};
 use crate::repository::nested_voting_config::types::NestedVotingConfigId;
+use crate::service::access_config::types::QueryDelegationProof;
 use crate::service::voting::types::MultiChoiceVote;
 use candid::{CandidType, Deserialize};
 use shared::pageable::{Page, PageRequest};
@@ -27,6 +28,7 @@ pub struct DeleteNestedVotingRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetNestedVotingRequest {
     pub id: NestedVotingId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -37,6 +39,7 @@ pub struct GetNestedVotingResponse {
 #[derive(CandidType, Deserialize)]
 pub struct ListNestedVotingsRequest {
     pub page_req: PageRequest<NestedVotingFilter, ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]

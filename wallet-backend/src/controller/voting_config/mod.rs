@@ -60,7 +60,7 @@ fn delete_voting_config(req: DeleteVotingConfigRequest) {
 
 #[query]
 fn get_voting_config(req: GetVotingConfigRequest) -> GetVotingConfigResponse {
-    only_self_or_with_access("get_voting_config");
+    only_self_or_with_access("get_voting_config", req.query_delegation_proof_opt);
 
     let voting_config =
         VotingConfigService::get_voting_config(&req.id).expect("Unable to get voting config");
@@ -69,7 +69,7 @@ fn get_voting_config(req: GetVotingConfigRequest) -> GetVotingConfigResponse {
 
 #[query]
 fn list_voting_configs(req: ListVotingConfigsRequest) -> ListVotingConfigsResponse {
-    only_self_or_with_access("list_voting_configs");
+    only_self_or_with_access("list_voting_configs", req.query_delegation_proof_opt);
 
     let page = VotingConfigService::list_voting_configs(&req.page_req);
     ListVotingConfigsResponse { page }
