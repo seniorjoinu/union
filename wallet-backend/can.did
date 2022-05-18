@@ -56,6 +56,14 @@ type ProgramExecutionResult = variant {
     RemoteCallSequence : vec RawCandidCallResult;
 };
 
+type QueryDelegationProof = record {
+    union_id : principal;
+    delegate_id : principal;
+    allowed_query_targets : principal;
+    expires_at : nat64;
+    signature : null;
+};
+
 type PageRequest = record {
     page_index : nat32;
     page_size : nat32;
@@ -150,6 +158,7 @@ type DeleteAccessConfigRequest = record {
 
 type GetAccessConfigRequest = record {
     id : AccessConfigId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetAccessConfigResponse = record {
@@ -177,6 +186,7 @@ type ListAccessConfigsPageRequest = record {
 type ListAccessConfigsRequest = record {
     // Pagination request
     page_req : ListAccessConfigsPageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListAccessConfigsPage = record {
@@ -186,6 +196,14 @@ type ListAccessConfigsPage = record {
 
 type ListAccessConfigsResponse = record {
     page : ListAccessConfigsPage;
+};
+
+type GetMyQueryDelegationProofRequest = record {
+    requested_targets : vec PermissionTarget;
+};
+
+type GetMyQueryDelegationProofResponse = record {
+    proof : QueryDelegationProof;
 };
 
 // ----------- PERMISSIONS --------------
@@ -242,6 +260,7 @@ type DeletePermissionRequest = record {
 
 type GetPermissionRequest = record {
     id : PermissionId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetPermissionResponse = record {
@@ -262,6 +281,7 @@ type ListPermissionsPageRequest = record {
 
 type ListPermissionsRequest = record {
     page_req : ListPermissionsPageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListPermissionsPage = record {
@@ -314,6 +334,7 @@ type UpdateProfileRequest = record {
 
 type GetProfileRequest = record {
     id : ProfileId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetProfileResponse = record {
@@ -322,6 +343,7 @@ type GetProfileResponse = record {
 
 type ListProfilesRequest = record {
     page_req : PageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListProfilesPage = record {
@@ -386,6 +408,7 @@ type DeleteGroupRequest = record {
 
 type GetGroupRequest = record {
     group_id : GroupId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetGroupResponse = record {
@@ -394,6 +417,7 @@ type GetGroupResponse = record {
 
 type ListGroupsRequest = record {
     page_req : PageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListGroupsPage = record {
@@ -482,6 +506,8 @@ type GetGroupSharesBalanceOfRequest = record {
 
     // A user to return shares of
     owner : principal;
+
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetGroupSharesBalanceOfResponse = record {
@@ -500,6 +526,7 @@ type GetMyGroupSharesBalanceResponse = record {
 
 type GetTotalGroupSharesRequest = record {
     group_id : GroupId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetTotalGroupSharesResponse = record {
@@ -510,6 +537,7 @@ type GetTotalGroupSharesResponse = record {
 type ListGroupSharesRequest = record {
     group_id : GroupId;
     page_req : PageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListGroupSharesPage = record {
@@ -524,6 +552,8 @@ type ListGroupSharesResponse = record {
 type GetGroupsOfRequest = record {
     // A user to get group list of
     principal_id : principal;
+
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetGroupsResponse = record {
@@ -561,6 +591,8 @@ type GetSharesInfoOfAtRequest = record {
 
     // Particular timestamp you're interested in
     at : nat64;
+
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetSharesInfoOfAtResponse = record {
@@ -594,6 +626,7 @@ type ListProgramExecutionEntryIdsPageRequest = record {
 
 type ListProgramExecutionEntryIdsRequest = record {
     page_req : ListProgramExecutionEntryIdsPageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListProgramExecutionEntryIdsPage = record {
@@ -638,6 +671,10 @@ type UpdateSettingsRequest = record {
     new_description : opt text;
 };
 
+type GetSettingsRequest = record {
+    query_delegation_proof_opt : opt QueryDelegationProof;
+};
+
 type GetSettingsResponse = record {
     settings : Settings;
 };
@@ -672,6 +709,7 @@ type CreateBatchResponse = record {
 
 type GetBatchRequest = record {
     id : BatchId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetBatchResponse = record {
@@ -693,6 +731,7 @@ type SendBatchRequest = record {
 
 type ListBatchesRequest = record {
     page_req : PageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListBatchesPage = record {
@@ -715,6 +754,7 @@ type CreateChunkResponse = record {
 
 type GetChunkRequest = record {
     chunk_id : ChunkId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetChunkResponse = record {
@@ -734,6 +774,7 @@ type ListChunksPageRequest = record {
 
 type ListChunksRequest = record {
     page_req : ListChunksPageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListChunksPage = record {
@@ -907,6 +948,7 @@ type DeleteVotingConfigRequest = record {
 
 type GetVotingConfigRequest = record {
     id : VotingConfigId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetVotingConfigResponse = record {
@@ -930,6 +972,7 @@ type ListVotingConfigsPageRequest = record {
 
 type ListVotingConfigsRequest = record {
     page_req : ListVotingConfigsPageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListVotingConfigsPage = record {
@@ -944,12 +987,6 @@ type ListVotingConfigsResponse = record {
 // ----------------- VOTINGS ------------------
 
 type VotingId = Id;
-type NestedVotingId = Id;
-type RemoteVotingId = variant {
-    Common : VotingId;
-    Nested : NestedVotingId;
-};
-
 type ChoiceId = Id;
 type TaskId = Id;
 type RoundId = nat16;
@@ -1087,6 +1124,7 @@ type CastMyVoteRequest = record {
 
 type GetVotingRequest = record {
     id : VotingId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetVotingResponse = record {
@@ -1095,6 +1133,7 @@ type GetVotingResponse = record {
 
 type ListVotingsRequest = record {
     page_req : PageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListVotingsPage = record {
@@ -1134,12 +1173,13 @@ type UpdateVotingChoiceRequest = record {
 
 type DeleteVotingChoiceRequest = record {
     choice_id : ChoiceId;
-    voting_id : VotingId;
+    voting_id : RemoteVotingId;
 };
 
 type GetVotingChoiceRequest = record {
     choice_id : ChoiceId;
-    voting_id : VotingId;
+    voting_id : RemoteVotingId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetVotingChoiceResponse = record {
@@ -1159,6 +1199,7 @@ type ListVotingChoicesPageRequest = record {
 
 type ListVotingChoicesRequest = record {
     page_req : ListVotingChoicesPageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type ListVotingChoicesPage = record {
@@ -1172,6 +1213,7 @@ type ListVotingChoicesResponse = record {
 
 type GetVotingResultsRequest = record {
     voting_id : VotingId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
 type GetVotingResultsResponse = record {
@@ -1187,6 +1229,173 @@ type GetMyVoteRequest = record {
 type GetMyVoteResponse = record {
     // Voted shares by choice
     vote : vec record { 0 : ChoiceId; 1 : Shares; };
+};
+
+// ----------- NESTED VOTING CONFIG -------------
+
+type NestedVotingConfigId = Id;
+
+type NestedVotingConfig = record {
+    id : opt NestedVotingConfigId;
+    name : text;
+    description : text;
+    remote_union_id : principal;
+    remote_voting_config_id : RemoteVotingConfigId;
+    vote_calculation : NestedVoteCalculation;
+    allowee_groups : vec record { 0 : GroupId; 1 : Fraction; };
+};
+
+type RemoteVotingConfigId = variant {
+    Common : VotingConfigId;
+    Nested : NestedVotingConfigId;
+};
+
+type NestedVoteCalculation = variant {
+    Total;
+    Turnout;
+};
+
+type CreateNestedVotingConfigRequest = record {
+    name : text;
+    description : text;
+    remote_union_id : principal;
+    remote_voting_config_id : RemoteVotingConfigId;
+    vote_calculation : NestedVoteCalculation;
+    allowee_groups : vec record { 0 : GroupId; 1 : Fraction; };
+};
+
+type CreateNestedVotingConfigResponse = record {
+    id : NestedVotingConfigId;
+};
+
+type UpdateNestedVotingConfigRequest = record {
+    id : NestedVotingConfigId;
+    name_opt : opt text;
+    description_opt : opt text;
+    vote_calculation_opt : opt NestedVoteCalculation;
+    allowee_groups_opt : opt record { 0 : GroupId; 1 : Fraction; };
+};
+
+type DeleteNestedVotingConfigRequest = record {
+    id : NestedVotingConfigId;
+};
+
+type GetNestedVotingConfigRequest = record {
+    id : NestedVotingConfigId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
+};
+
+type GetNestedVotingConfigResponse = record {
+    nested_voting_config : NestedVotingConfig;
+};
+
+type NestedVotingConfigFilter = record {
+    remote_voting_config : opt record { 0 : principal; 1 : VotingConfigId };
+    remote_nested_voting_config : opt record { 0 : principal; 1 : NestedVotingConfigId };
+};
+
+type ListNestedVotingConfigsPageRequest = record {
+    page_index : nat32;
+    page_size : nat32;
+    filter : NestedVotingConfigFilter;
+    sort : null;
+};
+
+type ListNestedVotingConfigsRequest = record {
+    page_req : ListNestedVotingConfigsPageRequest;
+    query_delegation_proof_opt : opt QueryDelegationProof;
+};
+
+type ListNestedVotingConfigsPage = record {
+    data : vec NestedVotingConfig;
+    has_next : bool;
+};
+
+type ListNestedVotingConfigsResponse = record {
+    page : ListNestedVotingConfigsPage;
+};
+
+// ------------- NESTED VOTING --------------
+
+type NestedVotingId = Id;
+
+type NestedVoting = record {
+    id : opt NestedVotingId;
+    remote_voting_id : RemoteVotingId;
+    voting_config_id : NestedVotingConfigId;
+    shares_info : SharesInfo;
+    total_voting_power_by_group : vec record { 0 : GroupId; 1 : Shares };
+    frozen : bool;
+    winners : vec RoundResult;
+    losers : vec RoundResult;
+    choices : vec ChoiceId;
+    choices_map : vec record { 0 : ChoiceId; 1 : ChoiceId };
+};
+
+type RemoteVotingId = variant {
+    Common : VotingId;
+    Nested : NestedVotingId;
+};
+
+type CreateNestedVotingRequest = record {
+    remote_voting_id : RemoteVotingId;
+    remote_group_id : GroupId;
+    local_nested_voting_config_id : NestedVotingConfigId;
+};
+
+type CreateNestedVotingResponse = record {
+    id : NestedVotingId;
+};
+
+type DeleteNestedVotingRequest = record {
+    id : NestedVotingId;
+};
+
+type GetNestedVotingRequest = record {
+    id : NestedVotingId;
+    query_delegation_proof_opt : opt QueryDelegationProof;
+};
+
+type GetNestedVotingResponse = record {
+    nested_voting : NestedVoting;
+};
+
+type NestedVotingFilter = record {
+    nested_voting_config : opt NestedVotingConfigId;
+};
+
+type ListNestedVotingsPageRequest = record {
+    page_index : nat32;
+    page_size : nat32;
+    filter : NestedVotingFilter;
+    sort : null;
+};
+
+type ListNestedVotingsRequest = record {
+    page_req : ListNestedVotingsPageRequest;
+};
+
+type ListNestedVotingsPage = record {
+    data : vec NestedVoting;
+    has_next : bool;
+};
+
+type ListNestedVotingsResponse = record {
+    page : ListNestedVotingsPage;
+};
+
+type CastMyNestedVoteRequest = record {
+    id : NestedVotingId;
+    vote : MultiChoiceVote;
+};
+
+type GetMyNestedVoteRequest = record {
+    id : NestedVotingId;
+    group_id : GroupId;
+};
+
+type GetMyNestedVoteResponse = record {
+    my_vote : vec record { 0 : ChoiceId; 1 : Shares; };
 };
 
 // ---------------------------------------
@@ -1206,20 +1415,17 @@ service : (InitRequest) -> {
     // Allows users to personally execute programs using an access config
     execute : (ExecuteRequest) -> (ExecuteResponse);
 
-    // Allows to create a new access config
     create_access_config : (CreateAccessConfigRequest) -> (CreateAccessConfigResponse);
 
-    // Allows to update existing access config
     update_access_config : (UpdateAccessConfigRequest) -> ();
 
-    // Allows deletion of access configs
     delete_access_config : (DeleteAccessConfigRequest) -> ();
 
-    // Returns an access config if it exists, throws error otherwise
     get_access_config : (GetAccessConfigRequest) -> (GetAccessConfigResponse) query;
 
-    // Returns a page of access configs
     list_access_configs : (ListAccessConfigsRequest) -> (ListAccessConfigsResponse) query;
+
+    get_my_query_delegation_proof : (GetMyQueryDelegationProofRequest) -> (GetMyQueryDelegationProofResponse) query;
 
     // GROUP
 
@@ -1333,7 +1539,7 @@ service : (InitRequest) -> {
 
     // Updates union settings
     update_settings : (UpdateSettingsRequest) -> ();
-    get_settings : () -> (GetSettingsResponse) query;
+    get_settings : (GetSettingsRequest) -> (GetSettingsResponse) query;
 
     // STREAMING
     create_batch : (CreateBatchRequest) -> (CreateBatchResponse);
@@ -1368,4 +1574,19 @@ service : (InitRequest) -> {
     get_voting_results : (GetVotingResultsRequest) -> (GetVotingResultsResponse) query;
     cast_my_vote : (CastMyVoteRequest) -> ();
     get_my_vote : (GetMyVoteRequest) -> (GetMyVoteResponse) query;
+
+    // NESTED VOTING CONFIG
+    create_nested_voting_config : (CreateNestedVotingConfigRequest) -> (CreateNestedVotingConfigResponse);
+    update_nested_voting_config : (UpdateNestedVotingConfigRequest) -> ();
+    delete_nested_voting_config : (DeleteNestedVotingConfigRequest) -> ();
+    get_nested_voting_config : (GetNestedVotingConfigRequest) -> (GetNestedVotingConfigResponse) query;
+    list_nested_voting_configs : (ListNestedVotingConfigsRequest) -> (ListNestedVotingConfigsResponse) query;
+
+    // NESTED VOTING
+    create_nested_voting : (CreateNestedVotingRequest) -> (CreateNestedVotingResponse);
+    delete_nested_voting : (DeleteNestedVotingRequest) -> ();
+    get_nested_voting : (GetNestedVotingRequest) -> (GetNestedVotingResponse) query;
+    list_nested_votings : (ListNestedVotingsRequest) -> (ListNestedVotingsResponse) query;
+    get_my_nested_vote : (GetMyNestedVoteRequest) -> (GetMyNestedVoteResponse) query;
+    cast_my_nested_vote : (CastMyNestedVoteRequest) -> ();
 }

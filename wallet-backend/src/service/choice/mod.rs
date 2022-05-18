@@ -1,4 +1,5 @@
 use crate::repository::choice::model::Choice;
+use crate::repository::nested_voting::types::RemoteVotingId;
 use crate::repository::token::model::Token;
 use crate::repository::token::types::ChoiceOrGroup;
 use crate::service::choice::types::{ChoiceError, ChoiceService};
@@ -14,11 +15,11 @@ pub mod types;
 impl ChoiceService {
     pub fn get_voting_choice(
         choice_id: &ChoiceId,
-        voting_id: &VotingId,
+        voting_id: &RemoteVotingId,
     ) -> Result<Choice, ChoiceError> {
         let choice = ChoiceService::get_choice(choice_id)?;
 
-        if choice.get_voting_id() != voting_id {
+        if choice.get_voting_id() != *voting_id {
             Err(ChoiceError::ChoiceNotFound(*choice_id))
         } else {
             Ok(choice)

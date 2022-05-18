@@ -47,7 +47,10 @@ impl NestedVotingService {
             RemoteVotingId::Common(id) => {
                 let (resp,) = local_vc
                     .get_remote_union_id()
-                    .get_voting(GetVotingRequest { id })
+                    .get_voting(GetVotingRequest {
+                        id,
+                        query_delegation_proof_opt: None,
+                    })
                     .await
                     .map_err(|(c, m)| NestedVotingError::NetworkingError(c, m))?;
 
@@ -82,6 +85,7 @@ impl NestedVotingService {
                     .get_remote_union_id()
                     .get_voting_config(GetVotingConfigRequest {
                         id: *remote_voting.get_voting_config_id(),
+                        query_delegation_proof_opt: None,
                     })
                     .await
                     .map_err(|(c, m)| NestedVotingError::NetworkingError(c, m))?;
@@ -116,7 +120,10 @@ impl NestedVotingService {
             RemoteVotingId::Nested(id) => {
                 let (resp,) = local_vc
                     .get_remote_union_id()
-                    .get_nested_voting(GetNestedVotingRequest { id })
+                    .get_nested_voting(GetNestedVotingRequest {
+                        id,
+                        query_delegation_proof_opt: None,
+                    })
                     .await
                     .map_err(|(c, m)| NestedVotingError::NetworkingError(c, m))?;
                 let remote_voting = resp.nested_voting;
@@ -145,6 +152,7 @@ impl NestedVotingService {
                     .get_remote_union_id()
                     .get_nested_voting_config(GetNestedVotingConfigRequest {
                         id: remote_voting.get_voting_config_id(),
+                        query_delegation_proof_opt: None,
                     })
                     .await
                     .map_err(|(c, m)| NestedVotingError::NetworkingError(c, m))?;
