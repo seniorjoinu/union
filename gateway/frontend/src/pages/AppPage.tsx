@@ -29,14 +29,14 @@ const Container = styled.main`
     left: 0;
     right: 0;
     z-index: 3;
-    background: white;
+    background: ${({ theme }) => theme.colors.light};
   }
 
   ${Header} {
   }
 
   ${WalletHeader} {
-    border-bottom: 1px solid grey;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.grey};
   }
 
   ${Section} {
@@ -47,7 +47,8 @@ const Container = styled.main`
 
     & > * {
       height: 100%;
-      min-width: 700px;
+      min-width: 800px;
+      max-width: 800px;
       align-self: center;
     }
   }

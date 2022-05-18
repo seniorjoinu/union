@@ -36,7 +36,7 @@ export const AssetsCanisterUpdater = ({ ...p }: AssetsCanisterUpdaterProps) => {
       file: null,
       mode: 'install',
     },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
   const { updateCanister } = useUpdateAssetCanister({ getValues });
 

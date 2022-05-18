@@ -3,12 +3,14 @@ import styled from 'styled-components';
 import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
 import { Provider } from './context';
-import { Profile } from './Profile';
-import { Info, InfoForm, UpgradeForm } from './Info';
+import { Profile, ChangeProfile } from './Profile';
+import { Groups, GroupForm } from './Groups';
+import { Permissions, PermissionForm } from './Permissions';
+import { AccessConfigs, AccessConfigForm } from './AccessConfigs';
+import { Info, UpdateInfoForm, UpgradeForm } from './Info';
 import { Assets, AssetsCanisterUpdater, BatchesUploader } from './Assets';
 import { PermissionDetails } from './PermissionDetails';
 import { VersionForm } from './VersionForm';
-import { PermissionForm } from './PermissionForm';
 
 const Container = styled.div`
   display: flex;
@@ -30,9 +32,32 @@ export const Wallet = () => {
     <Provider principal={principal}>
       <Container>
         <Routes>
+          <Route path='/groups' element={<Groups />} />
+          <Route path='/groups/:groupId' element={<Groups />} />
+          <Route path='/groups/create' element={<GroupForm create />} />
+          <Route path='/groups/edit/:groupId' element={<GroupForm create={false} />} />
+
+          <Route path='/permissions' element={<Permissions />} />
+          <Route path='/permissions/:permissionId' element={<Permissions />} />
+          <Route path='/permissions/create' element={<PermissionForm create />} />
+          <Route
+            path='/permissions/edit/:permissionId'
+            element={<PermissionForm create={false} />}
+          />
+
+          <Route path='/access-configs' element={<AccessConfigs />} />
+          <Route path='/access-configs/:accessConfigId' element={<AccessConfigs />} />
+          <Route
+            path='/access-configs/edit/:accessConfigId'
+            element={<AccessConfigForm create={false} />}
+          />
+          <Route path='/access-configs/create' element={<AccessConfigForm create />} />
+
           <Route path='/profile' element={<Profile />} />
+          <Route path='/profile/change' element={<ChangeProfile />} />
+
           <Route path='/wallet' element={<Info />} />
-          <Route path='/wallet/edit-info' element={<InfoForm />} />
+          <Route path='/wallet/edit-info' element={<UpdateInfoForm />} />
           <Route path='/wallet/upgrade-version' element={<UpgradeForm />} />
 
           <Route path='/assets' element={<Assets />} />
@@ -69,7 +94,7 @@ export const Wallet = () => {
               <ExternalExecutor canisterId={principal} redirectToHistory={() => nav('history')} />
             }
           /> */}
-          <Route path='' element={<Navigate to='history' replace />} />
+          <Route path='' element={<Navigate to='wallet' replace />} />
         </Routes>
       </Container>
     </Provider>

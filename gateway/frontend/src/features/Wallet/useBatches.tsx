@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useUnion, walletSerializer } from 'services';
+import { useUnion, unionSerializer } from 'services';
 import { useNavigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
 import { Principal } from '@dfinity/principal';
@@ -22,7 +22,7 @@ export function useBatches() {
       //         },
       //         cycles: BigInt(0),
       //         args: {
-      //           CandidString: walletSerializer.delete_batches({
+      //           CandidString: unionSerializer.delete_batches({
       //             batch_ids: batchIds,
       //           }),
       //         },
@@ -45,7 +45,6 @@ export function useBatches() {
       const canisterId = checkPrincipal(targetCanister);
 
       if (!canisterId) {
-
       }
 
       // const payload: ExternalExecutorFormData = {
@@ -62,7 +61,7 @@ export function useBatches() {
       //         },
       //         cycles: BigInt(0),
       //         args: {
-      //           CandidString: walletSerializer.send_batch({
+      //           CandidString: unionSerializer.send_batch({
       //             batch_id: batchId,
       //             target_canister: canisterId,
       //           }),
@@ -77,7 +76,7 @@ export function useBatches() {
       //               },
       //               cycles: BigInt(0),
       //               args: {
-      //                 CandidString: walletSerializer.delete_batches({
+      //                 CandidString: unionSerializer.delete_batches({
       //                   batch_ids: batchIds,
       //                 }),
       //               },

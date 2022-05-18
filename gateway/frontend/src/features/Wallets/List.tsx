@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { PageWrapper, Text, Button as B } from '@union/components';
+import { PageWrapper, Text, Button as B, Spinner } from '@union/components';
 import { useGateway } from 'services';
 import { WalletItem } from './WalletItem';
 
@@ -13,12 +13,16 @@ const List = styled.div`
   & > *:not(:last-child) {
     margin-bottom: 16px;
   }
+
+  & > ${Spinner} {
+    align-self: center;
+  }
 `;
 
 const Panel = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-end;
 `;
 
 const Button = styled(B)``;
@@ -45,7 +49,6 @@ export const WalletsList = () => {
   return (
     <Container title='Union-wallets'>
       <Panel>
-        <Text>Spawned wallets {fetching.get_attached_union_wallets ? 'fetching' : ''}</Text>
         <Button forwardedAs={NavLink} to='/wallets/create'>
           + Create wallet
         </Button>
@@ -59,6 +62,7 @@ export const WalletsList = () => {
             onClick={(wallet) => nav(`/wallet/${wallet.toString()}`)}
           />
         ))}
+        {!!fetching.get_attached_union_wallets && <Spinner size={20} />}
         {!wallets.length && !loading && (
           <Text>There are no union wallets. You can create new wallet</Text>
         )}

@@ -3,8 +3,12 @@ import { buildSerializer, buildEncoder } from '@union/serialize';
 import { _SERVICE } from 'deployer-ts';
 // @ts-expect-error
 import { idlFactory as idl } from 'deployer-idl';
+import { IDL } from '@dfinity/candid';
 
 export type IDeployerController = Canister<_SERVICE>;
+export type DeployerService = _SERVICE;
+
+export const deployerIdl = idl as IDL.InterfaceFactory;
 
 export const initDeployerController = (
   canisterId: string,

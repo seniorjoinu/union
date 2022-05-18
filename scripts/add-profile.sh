@@ -47,6 +47,19 @@ create_profile_program_args='(record {
 	name = \"'$profile_name'\";
 	description = \"'$profile_name' profile created by add-profile.sh\";
 })'
+
+response=$(dfx canister call --query $root_union get_access_config "(record { id = ${UNLIMITED_ACCESS_CONFIG_ID} : nat64 })")
+existing_allowees=$(./uc did get "${response}" "0.access_config.allowees.#items")
+escaped_existing_allowees="${existing_allowees//\"/\\\"}"
+update_access_config_program_args='(record {
+	id = '$UNLIMITED_ACCESS_CONFIG_ID' : nat64;
+	new_allowees = vec {
+		'${existing_allowees//\"/\\\"}'
+		variant {
+			Profile = principal \"'$identity'\"
+		};
+	};
+})'
 create_profile_args="(record {
 	access_config_id = ${UNLIMITED_ACCESS_CONFIG_ID} : nat64;
 	program = variant {
@@ -62,7 +75,19 @@ create_profile_args="(record {
 						\"${create_profile_program_args}\"
 					}	: vec text
 				};
-			}
+			};
+			record {
+				endpoint = record {
+					canister_id = principal \"${root_union}\";
+					method_name = \"update_access_config\";
+				};
+				cycles = 0 : nat64;
+				args = variant {
+					CandidString = vec {
+						\"${update_access_config_program_args}\"
+					}	: vec text
+				};
+			};
 		}
 	}
 })"
@@ -72,4 +97,6 @@ dfx canister $args call $root_union "execute" "$create_profile_args"
 COLOR="33"
 log "WARNING: TODO need deploy root union and ledger with gateway_backend for notifications"
 COLOR="96"
-log "Go to http://${gateway_frontend}.localhost:8000/wallet/${root_union} and accept your shares"
+log "Go to http://${gateway_frontend}.localhost:8000/wallet/${root_union}/profile and accept your shares"
+log "Or production http://${gateway_frontend}.ic0.app/wallet/${root_union}/profile"
+log "Or local http://localhost:3000/wallet/${root_union}/profile"

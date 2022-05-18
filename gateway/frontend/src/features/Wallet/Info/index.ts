@@ -1,3 +1,3 @@
 export * from './component';
-export * from './InfoForm';
+export * from './UpdateInfoForm';
 export * from './UpgradeForm';

@@ -32,8 +32,7 @@ const Items = styled.div`
 
   & > * {
     padding: 8px;
-    border: 1px solid grey;
-    border-radius: 4px;
+    border: 1px solid ${({ theme }) => theme.colors.grey};
   }
 
   & > *:not(:last-child) {
@@ -77,21 +76,9 @@ export const PermissionDetailsView = ({
   return (
     <Container {...p}>
       <Controls>
-        {detach && (
-          <DetachButton size='S' onClick={detach}>
-            Detach
-          </DetachButton>
-        )}
-        {edit && (
-          <DetachButton size='S' onClick={edit}>
-            Edit
-          </DetachButton>
-        )}
-        {remove && (
-          <RemoveButton size='S' onClick={remove}>
-            Remove
-          </RemoveButton>
-        )}
+        {detach && <DetachButton onClick={detach}>Detach</DetachButton>}
+        {edit && <DetachButton onClick={edit}>Edit</DetachButton>}
+        {remove && <RemoveButton onClick={remove}>Remove</RemoveButton>}
       </Controls>
       <Title variant={variant}>Name: {parsedPermission.name}</Title>
       {!!parsedPermission.targets.length && (

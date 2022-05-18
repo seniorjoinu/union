@@ -14,7 +14,6 @@ pub struct CandidOpts {
 
 #[derive(clap::Subcommand)]
 pub enum Command {
-    Decode(CandidDecodeOpts),
     Encode(CandidEncodeOpts),
     Get(CandidGetOpts),
 }
@@ -32,15 +31,6 @@ pub struct CandidEncodeOpts {
 }
 
 #[derive(Parser)]
-#[clap(name("decode"))]
-pub struct CandidDecodeOpts {
-	argument: String,
-
-	#[clap(long, possible_values(&["blob", "hex"]))]
-	mode: String,
-}
-
-#[derive(Parser)]
 #[clap(name("get"))]
 pub struct CandidGetOpts {
 	argument: String,
@@ -49,7 +39,6 @@ pub struct CandidGetOpts {
 
 pub async fn execute(opts: CandidOpts) {
 	match opts.command {
-			Command::Decode(v) => decode(v).await,
 			Command::Encode(v) => encode(v).await,
 			Command::Get(v) => println!("{}", get(v).await),
 	}
@@ -135,34 +124,6 @@ pub async fn encode(opts: CandidEncodeOpts) {
 	std::io::stdout().write_all(hex.as_bytes()).unwrap();
 }
 
-pub async fn decode(opts: CandidDecodeOpts) {
-	let arg = opts.argument;
-	unreachable!()
-	// let hex = match opts.mode.as_str() {
-	// 	"hex" => hex::decode(&blob),
-	// 	"blob" => {
-	// 		use candid::parser::value::IDLValue;
-	// 		match pretty_parse::<IDLValue>("blob", &blob)? {
-	// 				IDLValue::Vec(vec) => vec
-	// 						.iter()
-	// 						.map(|v| {
-	// 								if let IDLValue::Nat8(u) = v {
-	// 										*u
-	// 								} else {
-	// 										unreachable!()
-	// 								}
-	// 						})
-	// 						.collect(),
-	// 				_ => unreachable!(),
-	// 		}
-	// 	},
-	// 	_ => unreachable!(),
-	// };
-	// let value = IDLArgs::from_bytes(&bytes)?
-	// println!("{}", value);
-	// std::io::stdout().write_all(hex.as_bytes()).unwrap();
-}
-
 pub async fn get(opts: CandidGetOpts) -> String {
 	let arg = opts.argument;
 	let mut selectors = opts.selector.split('.');
@@ -193,6 +154,8 @@ pub async fn get(opts: CandidGetOpts) -> String {
 		.get(index)
 		.ok_or(format!("Invalid first selector '{}'", index_selector))
 		.unwrap();
+
+	let mut computed_value = String::from("");
 
 	selectors.for_each(|x| {
 		match value {
@@ -232,6 +195,12 @@ pub async fn get(opts: CandidGetOpts) -> String {
 
 							vector.iter().position(|r| r == elem).unwrap()
 						},
+						"items" => {
+							for item in vector.iter() {
+								computed_value.push_str(&format!(" {:?};", item).as_str());
+							}
+							return;
+						},
 						_ => { panic!("Unknown operation {}", x) }
 					}
 				} else {
@@ -264,7 +233,11 @@ pub async fn get(opts: CandidGetOpts) -> String {
 		}
 	});
 
-	format!("{:?}", value)
+	if computed_value.is_empty() {
+		format!("{:?}", value)
+	} else {
+		format!("{}", computed_value)
+	}
 }
 
 fn parse_idl_number(x: String) -> usize {

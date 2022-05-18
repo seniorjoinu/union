@@ -5,7 +5,9 @@ set -e
 echo Building npm deps
 cd ../../libs/serialize
 yarn build
-cd ../components
+# cd ../components
+# yarn build
+cd ../candid-parser
 yarn build
 cd ../../gateway/frontend
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { createGlobalStyle, ThemeProvider } from 'styled-components';
 import { theme } from '@union/components';
 import { ProvideAuth } from 'services';
@@ -10,10 +10,14 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
     padding: 0;
     height: 100%;
+    background: ${theme.colors.light};
 
     * {
+      font-family: -apple-system, Stolzl, sans-serif;
+      font-family: -apple-system, OpenSans, sans-serif;
+      font-style: normal;
+      font-weight: 400;
       box-sizing: border-box;
-      font-family: -apple-system, Arial, sans-serif;
     }
   }
 
@@ -26,14 +30,16 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-ReactDOM.render(
-  <React.StrictMode>
+const root = createRoot(document.getElementById('root')!);
+
+root.render(
+  // FIXME React.StrictMode incorrectly renders component twice. Try return React.StrictMode and check Pager useEffect
+  <>
     <GlobalStyle />
     <ThemeProvider theme={theme}>
       <ProvideAuth>
         <RouterPage />
       </ProvideAuth>
     </ThemeProvider>
-  </React.StrictMode>,
-  document.getElementById('root'),
+  </>,
 );

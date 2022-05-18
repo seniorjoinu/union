@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { walletSerializer } from 'services';
+import { unionSerializer } from 'services';
 import { useCurrentUnion } from './context';
 
 export function useAttach() {
@@ -28,7 +28,7 @@ export function useAttach() {
       //           },
       //           cycles: BigInt(0),
       //           args: {
-      //             CandidString: walletSerializer.attach_role_to_permission({
+      //             CandidString: unionSerializer.attach_role_to_permission({
       //               role_id: Number(roleId),
       //               permission_id: Number(permissionId),
       //             }),

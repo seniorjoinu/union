@@ -18,6 +18,8 @@
     "paths": {
       "services": ["src/services/index.ts"],
       "toolkit": ["src/lib/toolkit/index.ts"],
+      "envs": ["src/envs.ts"],
+      "@union/components": ["src/lib/components/index.ts"],
       "management-ts": ["src/assets/management.did.d.ts"],
       "management-idl": ["src/assets/management.did.js"],
       "gateway-ts": ["src/assets/gateway.did.d.ts"],

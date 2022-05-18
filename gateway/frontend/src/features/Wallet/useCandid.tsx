@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Principal } from '@dfinity/principal';
 import { IDL } from '@dfinity/candid';
 import { Actor, ActorSubclass } from '@dfinity/agent';
+import { lexer, Parser, TProg } from '@union/candid-parser';
 import { useAuth } from 'services';
-import { checkPrincipal } from 'toolkit';
+import { sort } from 'toolkit';
 
 export interface UseCandidProps {
   canisterId: Principal;
@@ -14,7 +15,7 @@ export const useCandid = ({
   canisterId,
   getCandidMethodName = 'export_candid',
 }: UseCandidProps) => {
-  const [did, setDid] = useState<ParseResult>({ methods: [] });
+  const [prog, setProg] = useState<TProg | null>(null);
   const { authClient } = useAuth();
 
   useEffect(() => {
@@ -27,46 +28,36 @@ export const useCandid = ({
       canisterId,
     });
 
-    actor[getCandidMethodName]().then(parse).then(setDid);
+    actor[getCandidMethodName]().then(parseCandid).then(setProg);
   }, []);
 
-  return { did };
+  const methods = useMemo(
+    () =>
+      (prog?.getIdlActor()?._fields.map(([name]) => name) || []).sort((a, b) =>
+        sort.string({ a, b, asc: true }),
+      ),
+    [prog],
+  );
+
+  return { prog, methods };
 };
 
-export interface ParseResult {
-  methods: string[];
-}
+export const parseCandid = (candid: any): TProg => {
+  if (typeof candid !== 'string') {
+    throw new Error('Wrong candid');
+  }
+  const lexerResult = lexer.tokenize(candid);
 
-const parse = (did: any): ParseResult => {
-  const result: ParseResult = { methods: [] };
+  Parser.input = lexerResult.tokens;
+  const prog = Parser.prog();
 
-  if (typeof did !== 'string') {
-    return result;
+  if (Parser.errors.length > 0) {
+    for (const i in Parser.errors) {
+      console.error(`Parser error #${i}: `, Parser.errors[i]);
+    }
+
+    throw new Error('Throwing due to previous errors');
   }
 
-  console.log(0, { did });
-
-  const serviceStr = did
-    .replace(/[\n\t ]/g, '')
-    .replace(/'/g, '"')
-    .match(/service\:(|\((.*?)\)\->){(.*?)\}/g); // get service:{} braces content
-
-  if (!serviceStr || !serviceStr.length) {
-    return result;
-  }
-
-  const serviceContent = serviceStr.pop()!.match(/(?<=\{)\s*[^{]*?(?=[\}])/g); // get method names as is (maybe with quotes)
-
-  if (!serviceContent || !serviceContent[0]) {
-    return result;
-  }
-
-  const methodNames = serviceContent[0].match(/(\w+)(?=("|)\:\()/g); // get method content inside quotes - will be methodname
-
-  result.methods = [...(methodNames || [])];
-
-  return result;
+  return prog;
 };
-
-// @ts-expect-error
-window.parse = parse;

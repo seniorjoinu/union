@@ -42,7 +42,7 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
       description: '',
       file: null,
     },
-    mode: 'onTouched',
+    mode: 'onChange',
   });
   const { create } = useCreateVersion({ getValues });
 

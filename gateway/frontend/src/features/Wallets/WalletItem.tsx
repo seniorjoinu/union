@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { Text, SimpleListItem } from '@union/components';
-import { initWalletController, useGateway } from 'services';
+import { initUnionController } from 'services';
 import { WalletInfo } from './WalletInfo';
 
 const Name = styled(Text)`
   padding: 0 8px;
-  border-radius: 4px;
-  background-color: #dfdfdf;
+  background-color: ${({ theme }) => theme.colors.lightGrey};
 `;
 
 export interface WalletItemProps {
@@ -31,7 +30,7 @@ export const WalletItem = ({
 
   useEffect(() => {
     const canisterId = wallet.toString();
-    const controller = initWalletController(canisterId);
+    const controller = initUnionController(canisterId);
 
     controller.canister.get_my_profile().then(({ profile }) => {
       setName(profile.name);
