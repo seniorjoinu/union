@@ -54,8 +54,31 @@ impl Repository<Permission, PermissionId, PermissionFilter, ()> for PermissionRe
     fn list(&self, page_req: &PageRequest<PermissionFilter, ()>) -> Page<Permission> {
         if let Some(target) = &page_req.filter.target {
             let ids_opt = self.permissions_by_permission_target_index.get(target);
+            let ids_wide_opt = if let PermissionTarget::Endpoint(e) = target {
+                if e.is_wildcard() {
+                    None
+                } else {
+                    self.permissions_by_permission_target_index
+                        .get(&PermissionTarget::Endpoint(e.to_wildcard()))
+                }
+            } else {
+                None
+            };
+
             if let Some(ids) = ids_opt {
-                let (has_next, iter) = ids.iter().get_page(page_req);
+                if let Some(ids_wide) = ids_wide_opt {
+                    let (has_next, iter) = ids.union(ids_wide).get_page(page_req);
+                    let data = iter.map(|id| self.get(id).unwrap()).collect();
+
+                    Page::new(data, has_next)
+                } else {
+                    let (has_next, iter) = ids.iter().get_page(page_req);
+                    let data = iter.map(|id| self.get(id).unwrap()).collect();
+
+                    Page::new(data, has_next)
+                }
+            } else if let Some(ids_wide) = ids_wide_opt {
+                let (has_next, iter) = ids_wide.iter().get_page(page_req);
                 let data = iter.map(|id| self.get(id).unwrap()).collect();
 
                 Page::new(data, has_next)

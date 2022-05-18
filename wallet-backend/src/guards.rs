@@ -38,6 +38,16 @@ pub fn only_self_or_with_access(method_name: &str, proof_opt: Option<QueryDelega
             proof
                 .validate(caller, time(), &targets)
                 .expect("Access denied");
+
+            return;
+        } else {
+            trap(
+                format!(
+                    "Access denied: {} has no access to {}",
+                    proof.union_id, method_name
+                )
+                .as_str(),
+            );
         }
     }
 

@@ -59,7 +59,7 @@ type ProgramExecutionResult = variant {
 type QueryDelegationProof = record {
     union_id : principal;
     delegate_id : principal;
-    allowed_query_targets : principal;
+    allowed_query_targets : vec PermissionTarget;
     expires_at : nat64;
     signature : null;
 };

@@ -57,7 +57,13 @@ impl NestedVotingService {
                 let remote_voting = resp.voting;
 
                 let frozen = match remote_voting.get_status() {
-                    VotingStatus::Round(_) => false,
+                    VotingStatus::Round(r) => {
+                        if *r == 0 {
+                            return Err(NestedVotingError::RemoteVotingInInvalidStatus);
+                        }
+
+                        false
+                    }
                     VotingStatus::PreRound(_) => true,
                     _ => return Err(NestedVotingError::RemoteVotingInInvalidStatus),
                 };

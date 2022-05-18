@@ -49,7 +49,8 @@ describe('groups', () => {
             group_id: groupId
         });
         const {total: totalSupply1} = await walletCreator.wallet.actor.get_total_group_shares({
-            group_id: groupId
+            group_id: groupId,
+            query_delegation_proof_opt: [],
         });
 
         assert(user1Balance1 == user2Balance1);
@@ -84,7 +85,8 @@ describe('groups', () => {
             group_id: groupId
         });
         const {total: totalSupply3} = await walletCreator.wallet.actor.get_total_group_shares({
-            group_id: groupId
+            group_id: groupId,
+            query_delegation_proof_opt: [],
         });
 
         assert(user1Balance3 == user2Balance3);

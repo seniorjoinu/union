@@ -19,7 +19,7 @@ pub enum AccessConfigError {
     AccessConfigNotFound(AccessConfigId),
     UnableToEditDefaultAccessConfig,
     CallerNotAllowed,
-    InvalidProgram,
+    ProgramNotAllowedByAccessConfig,
 }
 
 #[derive(CandidType, Deserialize)]

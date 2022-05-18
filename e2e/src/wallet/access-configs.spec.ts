@@ -98,7 +98,8 @@ describe('access configs', () => {
                     profile: [walletCreatorPrincipal]
                 },
                 sort: null,
-            }
+            },
+            query_delegation_proof_opt: [],
         });
 
         assert(page1.has_next);
@@ -114,7 +115,8 @@ describe('access configs', () => {
                     profile: [walletCreatorPrincipal]
                 },
                 sort: null,
-            }
+            },
+            query_delegation_proof_opt: [],
         });
 
         assert(!page2.has_next);
@@ -130,7 +132,8 @@ describe('access configs', () => {
                     profile: [walletCreatorPrincipal]
                 },
                 sort: null,
-            }
+            },
+            query_delegation_proof_opt: [],
         });
 
         assert(!page3.has_next);

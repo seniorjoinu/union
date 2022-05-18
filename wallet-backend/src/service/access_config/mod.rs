@@ -17,9 +17,9 @@ use crate::{EventsService, PermissionService};
 use candid::Principal;
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::remote_call::{Program, ProgramExecutionResult, RemoteCallEndpoint};
+use shared::time::days;
 use shared::types::wallet::{AccessConfigId, ProgramExecutedWith, Shares};
 use std::collections::BTreeSet;
-use shared::time::days;
 
 pub mod crud;
 pub mod types;
@@ -77,7 +77,11 @@ impl AccessConfigService {
         Ok(result)
     }
 
-    pub fn caller_has_access_to_method(canister_id: Principal, method_name: &str, caller: Principal) -> bool {
+    pub fn caller_has_access_to_method(
+        canister_id: Principal,
+        method_name: &str,
+        caller: Principal,
+    ) -> bool {
         let target_exact = PermissionTarget::Endpoint(RemoteCallEndpoint {
             canister_id,
             method_name: method_name.to_string(),
@@ -100,7 +104,7 @@ impl AccessConfigService {
 
         false
     }
-    
+
     fn caller_has_access_to_target(target: &PermissionTarget, caller: Principal) -> bool {
         let mut permission_ids = Permission::repo().get_permissions_by_target(target);
 
@@ -126,13 +130,13 @@ impl AccessConfigService {
     ) -> QueryDelegationProof {
         let groups_of_delegate = GroupService::get_groups_of(&delegate_id);
         let mut allowed_query_targets = Vec::new();
-        
+
         for target in requested_targets {
             if AccessConfigService::caller_has_access_to_target(&target, delegate_id) {
                 allowed_query_targets.push(target);
             }
         }
-        
+
         // TODO: implement subnet signature
         QueryDelegationProof {
             union_id: this_union_id,
@@ -140,7 +144,7 @@ impl AccessConfigService {
             allowed_query_targets,
             // TODO: make expiration timeout configurable
             expires_at: timestamp + days(1),
-            signature: ()
+            signature: (),
         }
     }
 
@@ -183,7 +187,7 @@ impl AccessConfigService {
             }
         }
 
-        Err(AccessConfigError::InvalidProgram)
+        Err(AccessConfigError::ProgramNotAllowedByAccessConfig)
     }
 
     fn assert_permissions_exist(

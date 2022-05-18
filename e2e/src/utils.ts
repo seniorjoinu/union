@@ -217,6 +217,14 @@ export const expectThrowsAsync = async (method: Promise<any>, errorMessage?: str
     expect(error).to.be.an('Error', errorMessage);
 }
 
+export function stringify(it: any, spaces?: number) {
+    return JSON.stringify(it, (key, value) =>
+        typeof value === 'bigint'
+            ? value.toString()
+            : value // return everything else unchanged
+    , spaces)
+}
+
 export async function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

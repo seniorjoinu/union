@@ -4,7 +4,7 @@ import {
     EMERGENCY_VOTING_CONFIG_ID,
     HAS_PROFILE_GROUP_ID,
     ISetup,
-    setup,
+    setup, stringify,
     UNLIMITED_ACCESS_CONFIG_ID
 } from "../utils";
 import {Ed25519KeyIdentity} from "@dfinity/identity";
@@ -91,7 +91,7 @@ describe('votings', () => {
         await user1.wallet.actor.create_voting_choice({
             name: 'Make user1 a king',
             description: 'test',
-            voting_id: votingId,
+            voting_id: { Common: votingId },
             program: {
                 RemoteCallSequence: [{
                     endpoint: {canister_id: user1.wallet.canisterId, method_name: 'update_access_config'},
@@ -108,7 +108,7 @@ describe('votings', () => {
         await user1.wallet.actor.create_voting_choice({
             name: 'Make user2 a king',
             description: 'test',
-            voting_id: votingId,
+            voting_id: { Common: votingId },
             program: {
                 RemoteCallSequence: [{
                     endpoint: {canister_id: user1.wallet.canisterId, method_name: 'update_access_config'},
@@ -125,7 +125,7 @@ describe('votings', () => {
         await user1.wallet.actor.create_voting_choice({
             name: 'Make wallet creator a king',
             description: 'test',
-            voting_id: votingId,
+            voting_id: { Common: votingId },
             program: {
                 RemoteCallSequence: [{
                     endpoint: {canister_id: user1.wallet.canisterId, method_name: 'update_access_config'},
@@ -137,7 +137,7 @@ describe('votings', () => {
             }
         });
 
-        const {voting: voting0} = await user1.wallet.actor.get_voting({id: votingId});
+        const {voting: voting0} = await user1.wallet.actor.get_voting({id: votingId, query_delegation_proof_opt: []});
 
         const {shares_info: user1SharesInfo} = await user1.walletPersonal.actor.get_my_shares_info_at({
             group_id: HAS_PROFILE_GROUP_ID,
@@ -155,7 +155,7 @@ describe('votings', () => {
         // skip first minute because of how emergency voting config works
         await delay(1000 * 65);
 
-        const {voting} = await user1.wallet.actor.get_voting({id: votingId});
+        const {voting} = await user1.wallet.actor.get_voting({id: votingId, query_delegation_proof_opt: []});
 
         console.log(stringify(voting));
 
@@ -199,7 +199,7 @@ describe('votings', () => {
         // waiting for round end
         await delay(1000 * 60);
 
-        const {voting: voting1} = await user1.wallet.actor.get_voting({id: votingId});
+        const {voting: voting1} = await user1.wallet.actor.get_voting({id: votingId, query_delegation_proof_opt: []});
 
         console.log(stringify(voting1));
         assert(voting1.status.hasOwnProperty('Success'));
@@ -219,7 +219,8 @@ describe('votings', () => {
                     endpoint: [],
                 },
                 sort: null
-            }
+            },
+            query_delegation_proof_opt: [],
         });
 
         for (let id of page.data) {
@@ -230,7 +231,7 @@ describe('votings', () => {
             console.log(id, stringify(program_executed_with), stringify(initiator), stringify(program), stringify(result));
         }
 
-        const {access_config: accessConfig} = await user1.wallet.actor.get_access_config({id: UNLIMITED_ACCESS_CONFIG_ID});
+        const {access_config: accessConfig} = await user1.wallet.actor.get_access_config({id: UNLIMITED_ACCESS_CONFIG_ID, query_delegation_proof_opt: []});
 
         console.log(stringify(accessConfig));
         assert(accessConfig.allowees[0].hasOwnProperty('Profile'));
@@ -238,10 +239,3 @@ describe('votings', () => {
     });
 });
 
-const stringify = (it: any) => {
-    return JSON.stringify(it, (key, value) =>
-        typeof value === 'bigint'
-            ? value.toString()
-            : value // return everything else unchanged
-    )
-}
