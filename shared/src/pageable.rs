@@ -1,7 +1,7 @@
 use candid::{CandidType, Deserialize};
-use ic_cdk::print;
 use std::collections::btree_map::Iter as BTreeMapIter;
 use std::collections::btree_set::Iter as BTreeSetIter;
+use std::collections::btree_set::Union as BTreeSetUnion;
 use std::collections::hash_map::Iter as HashMapIter;
 use std::collections::vec_deque::Iter as VecIter;
 use std::iter::{Skip, Take};
@@ -118,6 +118,25 @@ impl<'a, T> Pageable for BTreeSetIter<'a, T> {
 
 impl<'a, T> Pageable for SliceIter<'a, T> {
     type BaseType = SliceIter<'a, T>;
+
+    fn get_page<F, S>(self, req: &PageRequest<F, S>) -> (bool, Take<Skip<Self::BaseType>>) {
+        let has_next = self
+            .clone()
+            .skip((req.page_size * req.page_index + req.page_size) as usize)
+            .peekable()
+            .peek()
+            .is_some();
+
+        let it = self
+            .skip((req.page_size * req.page_index) as usize)
+            .take(req.page_size as usize);
+
+        (has_next, it)
+    }
+}
+
+impl<'a, T: Ord> Pageable for BTreeSetUnion<'a, T> {
+    type BaseType = BTreeSetUnion<'a, T>;
 
     fn get_page<F, S>(self, req: &PageRequest<F, S>) -> (bool, Take<Skip<Self::BaseType>>) {
         let has_next = self

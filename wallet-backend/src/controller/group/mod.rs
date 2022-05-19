@@ -1,4 +1,13 @@
-use crate::controller::group::api::{AcceptMyGroupSharesRequest, BurnGroupSharesRequest, BurnMyGroupSharesRequest, CreateGroupRequest, CreateGroupResponse, DeclineMyGroupSharesRequest, DeleteGroupRequest, GetGroupRequest, GetGroupResponse, GetGroupSharesBalanceOfRequest, GetGroupSharesBalanceOfResponse, GetGroupsOfRequest, GetGroupsResponse, GetMyGroupSharesBalanceRequest, GetMyGroupSharesBalanceResponse, GetTotalGroupSharesRequest, GetTotalGroupSharesResponse, ListGroupSharesRequest, ListGroupSharesResponse, ListGroupsRequest, ListGroupsResponse, MintGroupSharesRequest, TransferGroupSharesRequest, TransferMyGroupSharesRequest, UpdateGroupRequest};
+use crate::controller::group::api::{
+    AcceptMyGroupSharesRequest, BurnGroupSharesRequest, BurnMyGroupSharesRequest,
+    CreateGroupRequest, CreateGroupResponse, DeclineMyGroupSharesRequest, DeleteGroupRequest,
+    GetGroupRequest, GetGroupResponse, GetGroupSharesBalanceOfRequest,
+    GetGroupSharesBalanceOfResponse, GetGroupsOfRequest, GetGroupsResponse,
+    GetMyGroupSharesBalanceRequest, GetMyGroupSharesBalanceResponse, GetTotalGroupSharesRequest,
+    GetTotalGroupSharesResponse, ListGroupSharesRequest, ListGroupSharesResponse,
+    ListGroupsRequest, ListGroupsResponse, MintGroupSharesRequest, TransferGroupSharesRequest,
+    TransferMyGroupSharesRequest, UpdateGroupRequest,
+};
 use crate::guards::{only_self, only_self_or_with_access};
 use crate::service::group::types::GroupService;
 use ic_cdk::api::time;
@@ -35,7 +44,7 @@ fn delete_group(req: DeleteGroupRequest) {
 
 #[query]
 fn get_group(req: GetGroupRequest) -> GetGroupResponse {
-    only_self_or_with_access("get_group");
+    only_self_or_with_access("get_group", req.query_delegation_proof_opt);
 
     let group = GroupService::get_group(req.group_id).expect("Unable to get group");
     GetGroupResponse { group }
@@ -43,7 +52,7 @@ fn get_group(req: GetGroupRequest) -> GetGroupResponse {
 
 #[query]
 fn list_groups(req: ListGroupsRequest) -> ListGroupsResponse {
-    only_self_or_with_access("list_groups");
+    only_self_or_with_access("list_groups", req.query_delegation_proof_opt);
 
     let page = GroupService::list_groups(&req.page_req);
     ListGroupsResponse { page }
@@ -85,7 +94,10 @@ fn transfer_group_shares(req: TransferGroupSharesRequest) {
 fn get_group_shares_balance_of(
     req: GetGroupSharesBalanceOfRequest,
 ) -> GetGroupSharesBalanceOfResponse {
-    only_self_or_with_access("get_group_shares_balance_of");
+    only_self_or_with_access(
+        "get_group_shares_balance_of",
+        req.query_delegation_proof_opt,
+    );
 
     let balance = GroupService::get_group_shares_balance_of(req.group_id, &req.owner)
         .expect("Unable to get group shares balance of");
@@ -97,7 +109,10 @@ fn get_group_shares_balance_of(
 fn get_unaccepted_group_shares_balance_of(
     req: GetGroupSharesBalanceOfRequest,
 ) -> GetGroupSharesBalanceOfResponse {
-    only_self_or_with_access("get_unaccepted_group_shares_balance_of");
+    only_self_or_with_access(
+        "get_unaccepted_group_shares_balance_of",
+        req.query_delegation_proof_opt,
+    );
 
     let balance = GroupService::get_unaccepted_group_shares_balance_of(req.group_id, &req.owner)
         .expect("Unable to get unaccepted group shares balance of");
@@ -107,7 +122,7 @@ fn get_unaccepted_group_shares_balance_of(
 
 #[query]
 fn get_total_group_shares(req: GetTotalGroupSharesRequest) -> GetTotalGroupSharesResponse {
-    only_self_or_with_access("get_total_group_shares");
+    only_self_or_with_access("get_total_group_shares", req.query_delegation_proof_opt);
 
     let total = GroupService::get_total_group_shares(req.group_id)
         .expect("Unable to get total group shares");
@@ -119,7 +134,10 @@ fn get_total_group_shares(req: GetTotalGroupSharesRequest) -> GetTotalGroupShare
 fn get_total_unaccepted_group_shares(
     req: GetTotalGroupSharesRequest,
 ) -> GetTotalGroupSharesResponse {
-    only_self_or_with_access("get_total_unaccepted_group_shares");
+    only_self_or_with_access(
+        "get_total_unaccepted_group_shares",
+        req.query_delegation_proof_opt,
+    );
 
     let total = GroupService::get_total_unaccepted_group_shares(req.group_id)
         .expect("Unable to get total unaccepted group shares");
@@ -129,7 +147,7 @@ fn get_total_unaccepted_group_shares(
 
 #[query]
 fn list_group_shares(req: ListGroupSharesRequest) -> ListGroupSharesResponse {
-    only_self_or_with_access("list_group_shares");
+    only_self_or_with_access("list_group_shares", req.query_delegation_proof_opt);
 
     let page = GroupService::list_group_shares(req.group_id, &req.page_req)
         .expect("Unable to list group shares");
@@ -139,7 +157,10 @@ fn list_group_shares(req: ListGroupSharesRequest) -> ListGroupSharesResponse {
 
 #[query]
 fn list_unaccepted_group_shares(req: ListGroupSharesRequest) -> ListGroupSharesResponse {
-    only_self_or_with_access("list_unaccepted_group_shares");
+    only_self_or_with_access(
+        "list_unaccepted_group_shares",
+        req.query_delegation_proof_opt,
+    );
 
     let page = GroupService::list_group_unaccepted_shares(req.group_id, &req.page_req)
         .expect("Unable to list unaccepted group shares");
@@ -149,8 +170,8 @@ fn list_unaccepted_group_shares(req: ListGroupSharesRequest) -> ListGroupSharesR
 
 #[query]
 fn get_groups_of(req: GetGroupsOfRequest) -> GetGroupsResponse {
-    only_self_or_with_access("get_groups_of");
-    
+    only_self_or_with_access("get_groups_of", req.query_delegation_proof_opt);
+
     let groups = GroupService::get_groups_of(&req.principal_id);
     GetGroupsResponse { groups }
 }

@@ -9,10 +9,9 @@ use ic_cdk_macros::update;
 
 pub mod api;
 
-// TODO: add personal copy of this function
 #[update]
 async fn get_shares_info_of_at(req: GetSharesInfoOfAtRequest) -> GetSharesInfoOfAtResponse {
-    only_self_or_with_access("get_shares_info_of_at");
+    only_self_or_with_access("get_shares_info_of_at", req.query_delegation_proof_opt);
 
     let shares_info = HistoryLedgerService::get_shares_info_of_at(req.group_id, req.of, req.at)
         .await
@@ -25,7 +24,10 @@ async fn get_shares_info_of_at(req: GetSharesInfoOfAtRequest) -> GetSharesInfoOf
 async fn list_program_execution_entry_ids(
     req: ListProgramExecutionEntryIdsRequest,
 ) -> ListProgramExecutionEntryIdsResponse {
-    only_self_or_with_access("list_program_execution_entry_ids");
+    only_self_or_with_access(
+        "list_program_execution_entry_ids",
+        req.query_delegation_proof_opt,
+    );
 
     let (page, history_ledger_canister_id) =
         HistoryLedgerService::list_program_execution_entry_ids(req.page_req)

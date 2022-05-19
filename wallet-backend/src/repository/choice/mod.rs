@@ -5,6 +5,7 @@ use shared::mvc::{IdGenerator, Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
 use shared::types::wallet::{ChoiceId, VotingId};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use crate::repository::nested_voting::types::{NestedVotingId, RemoteVotingId};
 
 pub mod model;
 pub mod types;
@@ -15,6 +16,7 @@ pub struct ChoiceRepository {
     id_gen: IdGenerator,
 
     choices_by_voting_index: BTreeMap<VotingId, BTreeSet<ChoiceId>>,
+    choices_by_nested_voting_index: BTreeMap<NestedVotingId, BTreeSet<ChoiceId>>,
 }
 
 impl Repository<Choice, ChoiceId, ChoiceFilter, ()> for ChoiceRepository {
@@ -24,11 +26,22 @@ impl Repository<Choice, ChoiceId, ChoiceFilter, ()> for ChoiceRepository {
         }
 
         let id = it.get_id().unwrap();
-
-        self.choices_by_voting_index
-            .entry(*it.get_voting_id())
-            .or_default()
-            .insert(id);
+        
+        match it.get_voting_id() {
+            RemoteVotingId::Common(voting_id) => {
+                self.choices_by_voting_index
+                    .entry(voting_id)
+                    .or_default()
+                    .insert(id);
+            },
+            RemoteVotingId::Nested(voting_id) => {
+                self.choices_by_nested_voting_index
+                    .entry(voting_id)
+                    .or_default()
+                    .insert(id);
+            }
+        }
+        
         self.choices.insert(id, it);
 
         id
@@ -36,10 +49,21 @@ impl Repository<Choice, ChoiceId, ChoiceFilter, ()> for ChoiceRepository {
 
     fn delete(&mut self, id: &ChoiceId) -> Option<Choice> {
         let it = self.choices.remove(id)?;
-        self.choices_by_voting_index
-            .get_mut(it.get_voting_id())
-            .unwrap()
-            .remove(id);
+        
+        match it.get_voting_id() {
+            RemoteVotingId::Common(voting_id) => {
+                self.choices_by_voting_index
+                    .get_mut(&voting_id)
+                    .unwrap()
+                    .remove(id);
+            },
+            RemoteVotingId::Nested(voting_id) => {
+                self.choices_by_nested_voting_index
+                    .get_mut(&voting_id)
+                    .unwrap()
+                    .remove(id);
+            }
+        }
 
         Some(it)
     }
@@ -49,8 +73,15 @@ impl Repository<Choice, ChoiceId, ChoiceFilter, ()> for ChoiceRepository {
     }
 
     fn list(&self, page_req: &PageRequest<ChoiceFilter, ()>) -> Page<Choice> {
-        let ids_opt = self.choices_by_voting_index.get(&page_req.filter.voting_id);
-
+        let ids_opt = match page_req.filter.voting_id {
+            RemoteVotingId::Common(id) => {
+                self.choices_by_voting_index.get(&id)
+            },
+            RemoteVotingId::Nested(id) => {
+                self.choices_by_nested_voting_index.get(&id)
+            }
+        };
+        
         match ids_opt {
             Some(ids) => {
                 let (has_next, iter) = ids.iter().get_page(page_req);

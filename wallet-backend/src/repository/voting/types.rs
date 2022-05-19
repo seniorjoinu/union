@@ -36,6 +36,8 @@ impl RoundResult {
         self.choices.insert(choice_id);
     }
 
+    pub fn get_round(&self) -> RoundId { self.round }
+    
     pub fn get_choices(&self) -> &BTreeSet<ChoiceId> {
         &self.choices
     }

@@ -1,6 +1,8 @@
 use crate::repository::choice::model::Choice;
 use crate::repository::choice::types::ChoiceFilter;
+use crate::repository::nested_voting::types::RemoteVotingId;
 use crate::repository::voting::model::Voting;
+use crate::service::access_config::types::QueryDelegationProof;
 use crate::service::voting::types::Vote;
 use candid::{CandidType, Deserialize};
 use shared::pageable::{Page, PageRequest};
@@ -43,6 +45,7 @@ pub struct CastMyVoteRequest {
 #[derive(CandidType, Deserialize)]
 pub struct GetVotingRequest {
     pub id: VotingId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -53,6 +56,7 @@ pub struct GetVotingResponse {
 #[derive(CandidType, Deserialize)]
 pub struct ListVotingsRequest {
     pub page_req: PageRequest<(), ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -65,7 +69,7 @@ pub struct CreateVotingChoiceRequest {
     pub name: String,
     pub description: String,
     pub program: Program,
-    pub voting_id: VotingId,
+    pub voting_id: RemoteVotingId,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -84,13 +88,14 @@ pub struct UpdateVotingChoiceRequest {
 #[derive(CandidType, Deserialize)]
 pub struct DeleteVotingChoiceRequest {
     pub choice_id: ChoiceId,
-    pub voting_id: VotingId,
+    pub voting_id: RemoteVotingId,
 }
 
 #[derive(CandidType, Deserialize)]
 pub struct GetVotingChoiceRequest {
     pub choice_id: ChoiceId,
-    pub voting_id: VotingId,
+    pub voting_id: RemoteVotingId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -101,6 +106,7 @@ pub struct GetVotingChoiceResponse {
 #[derive(CandidType, Deserialize)]
 pub struct ListVotingChoicesRequest {
     pub page_req: PageRequest<ChoiceFilter, ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -111,6 +117,7 @@ pub struct ListVotingChoicesResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetVotingResultsRequest {
     pub voting_id: VotingId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]

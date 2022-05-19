@@ -63,6 +63,13 @@ pub fn _get_all_write_endpoints(union_canister_id: Principal) -> Vec<RemoteCallE
         RemoteCallEndpoint::new(union_canister_id, "create_voting_config"),
         RemoteCallEndpoint::new(union_canister_id, "update_voting_config"),
         RemoteCallEndpoint::new(union_canister_id, "delete_voting_config"),
+        // NESTED VOTINGS
+        RemoteCallEndpoint::new(union_canister_id, "create_nested_voting"),
+        RemoteCallEndpoint::new(union_canister_id, "delete_nested_voting"),
+        // NESTED VOTING CONFIGS
+        RemoteCallEndpoint::new(union_canister_id, "create_nested_voting_config"),
+        RemoteCallEndpoint::new(union_canister_id, "update_nested_voting_config"),
+        RemoteCallEndpoint::new(union_canister_id, "delete_nested_voting_config"),
     ]
 }
 
@@ -106,6 +113,12 @@ pub fn _get_all_read_endpoints(union_canister_id: Principal) -> Vec<RemoteCallEn
         // VOTING CONFIGS
         RemoteCallEndpoint::new(union_canister_id, "get_voting_config"),
         RemoteCallEndpoint::new(union_canister_id, "list_voting_configs"),
+        // NESTED VOTINGS
+        RemoteCallEndpoint::new(union_canister_id, "get_nested_voting"),
+        RemoteCallEndpoint::new(union_canister_id, "list_nested_votings"),
+        // NESTED VOTING CONFIGS
+        RemoteCallEndpoint::new(union_canister_id, "get_nested_voting_config"),
+        RemoteCallEndpoint::new(union_canister_id, "list_nested_voting_configs"),
     ]
 }
 
@@ -127,5 +140,14 @@ pub fn _get_voting_endpoints(union_canister_id: Principal) -> Vec<RemoteCallEndp
         // VOTING CONFIGS QUERY
         RemoteCallEndpoint::new(union_canister_id, "get_voting_config"),
         RemoteCallEndpoint::new(union_canister_id, "list_voting_configs"),
+        // NESTED VOTINGS UPDATE
+        RemoteCallEndpoint::new(union_canister_id, "create_nested_voting"),
+        RemoteCallEndpoint::new(union_canister_id, "delete_nested_voting"),
+        // NESTED VOTINGS QUERY
+        RemoteCallEndpoint::new(union_canister_id, "get_nested_voting"),
+        RemoteCallEndpoint::new(union_canister_id, "list_nested_votings"),
+        // NESTED VOTING CONFIGS QUERY
+        RemoteCallEndpoint::new(union_canister_id, "get_nested_voting_config"),
+        RemoteCallEndpoint::new(union_canister_id, "list_nested_voting_configs"),
     ]
 }

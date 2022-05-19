@@ -1,5 +1,6 @@
 use crate::repository::choice::model::Choice;
 use crate::repository::choice::types::ChoiceFilter;
+use crate::repository::nested_voting::types::RemoteVotingId;
 use crate::repository::token::model::Token;
 use crate::repository::voting::model::Voting;
 use crate::service::choice::types::{ChoiceError, ChoiceService};
@@ -15,11 +16,15 @@ impl ChoiceService {
         name: String,
         description: String,
         program: Program,
-        voting_id: VotingId,
+        voting_id: RemoteVotingId,
         timestamp: u64,
     ) -> Result<ChoiceId, ChoiceError> {
         program.validate().map_err(ChoiceError::ValidationError)?;
-        
+        let voting_id = match voting_id {
+            RemoteVotingId::Common(id) => id,
+            _ => unreachable!(),
+        };
+
         let mut voting = VotingService::get_voting(&voting_id).map_err(ChoiceError::VotingError)?;
         let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
 
@@ -33,8 +38,13 @@ impl ChoiceService {
 
         VotingService::reset_approval_choice(&voting);
 
-        let choice = Choice::new(name, description, program, voting_id)
-            .map_err(ChoiceError::ValidationError)?;
+        let choice = Choice::new(
+            name,
+            description,
+            program,
+            RemoteVotingId::Common(voting_id),
+        )
+        .map_err(ChoiceError::ValidationError)?;
 
         let id = Choice::repo().save(choice);
 
@@ -61,17 +71,21 @@ impl ChoiceService {
         new_program: Option<Program>,
     ) -> Result<(), ChoiceError> {
         let mut choice = ChoiceService::get_choice(choice_id)?;
+        let voting_id = match choice.get_voting_id() {
+            RemoteVotingId::Common(id) => id,
+            _ => unreachable!(),
+        };
 
-        let voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
+        let voting = VotingService::get_voting(&voting_id).unwrap();
         let vc = VotingConfigService::get_voting_config(voting.get_voting_config_id()).unwrap();
 
         if !VotingService::is_editable(&voting) {
-            return Err(ChoiceError::UnableToEditVoting(*choice.get_voting_id()));
+            return Err(ChoiceError::UnableToEditVoting(voting_id));
         }
 
         if let Some(program) = &new_program {
             program.validate().map_err(ChoiceError::ValidationError)?;
-            
+
             if !VotingConfigService::does_program_fit(&vc, program) {
                 return Err(ChoiceError::ProgramNotAllowedByVotingConfig);
             }
@@ -88,18 +102,28 @@ impl ChoiceService {
         Ok(())
     }
 
-    pub fn delete_choice(choice_id: &ChoiceId, voting_id: &VotingId) -> Result<(), ChoiceError> {
+    pub fn delete_choice(
+        choice_id: &ChoiceId,
+        voting_id: &RemoteVotingId,
+    ) -> Result<(), ChoiceError> {
         let choice = ChoiceService::get_choice(choice_id)?;
 
-        if choice.get_voting_id() != voting_id {
-            return Err(ChoiceError::ChoiceNotFound(*choice_id));
-        }
+        match voting_id {
+            RemoteVotingId::Common(id) => {
+                if choice.get_voting_id() != *voting_id {
+                    return Err(ChoiceError::ChoiceNotFound(*choice_id));
+                }
 
-        let voting = VotingService::get_voting(choice.get_voting_id()).unwrap();
+                let voting = VotingService::get_voting(id).unwrap();
 
-        if !VotingService::is_editable(&voting) {
-            return Err(ChoiceError::UnableToEditVoting(*choice.get_voting_id()));
-        }
+                if !VotingService::is_editable(&voting) {
+                    return Err(ChoiceError::UnableToEditVoting(*id));
+                }
+            }
+            _ => {
+                // FIXME: should check if nested voting is deletable
+            }
+        };
 
         for (_, token_id) in choice.list_tokens_by_group() {
             Token::repo().delete(token_id).unwrap();

@@ -40,7 +40,7 @@ fn delete_permission(req: DeletePermissionRequest) {
 
 #[query]
 fn get_permission(req: GetPermissionRequest) -> GetPermissionResponse {
-    only_self_or_with_access("get_permission");
+    only_self_or_with_access("get_permission", req.query_delegation_proof_opt);
 
     let permission = PermissionService::get_permission(&req.id).expect("Unable to get permission");
     GetPermissionResponse { permission }
@@ -48,7 +48,7 @@ fn get_permission(req: GetPermissionRequest) -> GetPermissionResponse {
 
 #[query]
 fn list_permissions(req: ListPermissionsRequest) -> ListPermissionsResponse {
-    only_self_or_with_access("list_permissions");
+    only_self_or_with_access("list_permissions", req.query_delegation_proof_opt);
 
     let page = PermissionService::list_permissions(&req.page_req);
     ListPermissionsResponse { page }

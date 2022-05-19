@@ -9,11 +9,12 @@ use shared::remote_call::Program;
 use shared::types::wallet::{ChoiceId, GroupId, VotingId};
 use shared::validation::{validate_and_trim_str, ValidationError};
 use std::collections::BTreeMap;
+use crate::repository::nested_voting::types::RemoteVotingId;
 
 #[derive(Clone, CandidType, Deserialize)]
 pub struct Choice {
     id: Option<ChoiceId>,
-    voting_id: VotingId,
+    voting_id: RemoteVotingId,
     name: String,
     description: String,
     program: Program,
@@ -25,7 +26,7 @@ impl Choice {
         name: String,
         description: String,
         program: Program,
-        voting_id: VotingId,
+        voting_id: RemoteVotingId,
     ) -> Result<Self, ValidationError> {
         Ok(Self {
             id: None,
@@ -42,7 +43,7 @@ impl Choice {
             String::from("Reject"),
             String::from("I don't support this voting"),
             Program::Empty,
-            voting_id,
+            RemoteVotingId::Common(voting_id),
         )
         .unwrap()
     }
@@ -52,7 +53,7 @@ impl Choice {
             String::from("Approve"),
             String::from("This voting makes sense to me"),
             Program::Empty,
-            voting_id,
+            RemoteVotingId::Common(voting_id),
         )
         .unwrap()
     }
@@ -91,8 +92,8 @@ impl Choice {
         &self.voting_power_by_group
     }
 
-    pub fn get_voting_id(&self) -> &VotingId {
-        &self.voting_id
+    pub fn get_voting_id(&self) -> RemoteVotingId {
+        self.voting_id
     }
 
     pub fn get_program(&self) -> &Program {

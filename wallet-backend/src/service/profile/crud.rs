@@ -4,7 +4,7 @@ use crate::repository::token::model::Token;
 use crate::service::group::types::{GroupService, DEFAULT_GROUP_SHARES};
 use crate::service::profile::types::{ProfileError, ProfileService};
 use crate::EventsService;
-use shared::mvc::{HasRepository, Repository};
+use shared::mvc::{HasRepository, Model, Repository};
 use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::{ProfileId, Shares};
 
@@ -24,6 +24,8 @@ impl ProfileService {
         Profile::repo().save(profile);
 
         token.mint_unaccepted(id, Shares::from(DEFAULT_GROUP_SHARES));
+        Token::repo().add_to_principal_index(id, token.get_id().unwrap());
+
         Token::repo().save(token);
 
         EventsService::emit_profile_created_event(id);
@@ -61,6 +63,7 @@ impl ProfileService {
         let mut token = GroupService::get_token(&has_profile_group);
 
         ProfileService::remove_from_has_profile_group(&mut token, id);
+        Token::repo().remove_from_principal_index(&id, &token.get_id().unwrap());
         Token::repo().save(token);
 
         Ok(())

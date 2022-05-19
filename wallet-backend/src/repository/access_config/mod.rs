@@ -49,60 +49,52 @@ impl Repository<AccessConfig, AccessConfigId, AccessConfigFilter, ()> for Access
     }
 
     fn list(&self, page_req: &PageRequest<AccessConfigFilter, ()>) -> Page<AccessConfig> {
-        if page_req.filter.permission.is_none()
-            && page_req.filter.group.is_none()
-            && page_req.filter.profile.is_none()
-        {
-            let (has_next, iter) = self.access_configs.iter().get_page(page_req);
-            let data = iter.map(|(_, it)| it.clone()).collect();
-
-            return Page::new(data, has_next);
-        }
-
-        let mut index = if let Some(permission_id) = page_req.filter.permission {
-            self.access_configs_by_permission_index
+        let index = if let Some(permission_id) = page_req.filter.permission {
+            let mut index = self
+                .access_configs_by_permission_index
                 .get(&permission_id)
                 .cloned()
-                .unwrap_or_default()
-        } else {
-            BTreeSet::default()
-        };
+                .unwrap_or_default();
 
-        print(format!("{:?}", index));
+            if let Some(g) = page_req.filter.group {
+                if let Some(index1) = self.access_configs_by_group_index.get(&g) {
+                    index = index.intersection(&index1).cloned().collect();
+                }
+            }
 
-        let mut index1 = if let Some(g) = page_req.filter.group {
-            self.access_configs_by_group_index
+            if let Some(p) = page_req.filter.profile {
+                if let Some(index1) = self.access_configs_by_profile_index.get(&p) {
+                    index = index.intersection(&index1).cloned().collect()
+                }
+            }
+
+            index
+        } else if let Some(g) = page_req.filter.group {
+            let mut index = self
+                .access_configs_by_group_index
                 .get(&g)
                 .cloned()
-                .unwrap_or_default()
-        } else {
-            BTreeSet::default()
-        };
+                .unwrap_or_default();
 
-        print(format!("{:?}", index1));
+            if let Some(p) = page_req.filter.profile {
+                if let Some(index1) = self.access_configs_by_profile_index.get(&p) {
+                    index = index.intersection(&index1).cloned().collect()
+                }
+            }
 
-        let mut index2 = if let Some(p) = page_req.filter.profile {
+            index
+        } else if let Some(p) = page_req.filter.profile {
             self.access_configs_by_profile_index
                 .get(&p)
                 .cloned()
                 .unwrap_or_default()
         } else {
-            BTreeSet::default()
+            // if no filter was set - return all
+            let (has_next, iter) = self.access_configs.iter().get_page(page_req);
+            let data = iter.map(|(_, it)| it.clone()).collect();
+
+            return Page::new(data, has_next);
         };
-
-        print(format!("{:?}", index2));
-
-        if index.is_empty() {
-            index.append(&mut index1);
-        } else if !index1.is_empty() {
-            index = index.intersection(&index1).cloned().collect();
-        }
-
-        if index.is_empty() {
-            index.append(&mut index2);
-        } else if !index2.is_empty() {
-            index = index.intersection(&index2).cloned().collect();
-        }
 
         let (has_next, iter) = index.iter().get_page(page_req);
         let data = iter.map(|id| self.get(id).unwrap()).collect();
@@ -118,6 +110,13 @@ impl AccessConfigRepository {
     ) -> BTreeSet<AccessConfigId> {
         self.access_configs_by_permission_index
             .get(permission_id)
+            .cloned()
+            .unwrap_or_default()
+    }
+    
+    pub fn get_access_configs_by_group(&self, group_id: &GroupId) -> BTreeSet<AccessConfigId> {
+        self.access_configs_by_group_index
+            .get(group_id)
             .cloned()
             .unwrap_or_default()
     }

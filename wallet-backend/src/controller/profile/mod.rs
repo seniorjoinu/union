@@ -34,7 +34,7 @@ fn update_profile(req: UpdateProfileRequest) {
 
 #[query]
 fn get_profile(req: GetProfileRequest) -> GetProfileResponse {
-    only_self_or_with_access("get_profile");
+    only_self_or_with_access("get_profile", req.query_delegation_proof_opt);
 
     let profile = ProfileService::get_profile(req.id).expect("Unable to get profile");
 
@@ -43,7 +43,7 @@ fn get_profile(req: GetProfileRequest) -> GetProfileResponse {
 
 #[query]
 fn list_profiles(req: ListProfilesRequest) -> ListProfilesResponse {
-    only_self_or_with_access("list_profiles");
+    only_self_or_with_access("list_profiles", req.query_delegation_proof_opt);
 
     let page = ProfileService::list_profiles(&req.page_req);
 

@@ -1,6 +1,8 @@
 pub mod access_config;
 pub mod group;
 pub mod history_ledger;
+pub mod nested_voting;
+pub mod nested_voting_config;
 pub mod permission;
 pub mod profile;
 pub mod settings;

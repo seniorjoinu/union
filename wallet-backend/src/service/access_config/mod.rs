@@ -1,21 +1,23 @@
 use crate::repository::access_config::model::AccessConfig;
 use crate::repository::access_config::types::{AlloweeConstraint, GroupCondition};
+use crate::repository::access_config::AccessConfigRepository;
 use crate::repository::group::model::Group;
 use crate::repository::permission::model::Permission;
 use crate::repository::permission::types::{PermissionId, PermissionTarget};
 use crate::repository::profile::model::Profile;
 use crate::service::access_config::types::{
-    AccessConfigError, AccessConfigService, ALLOW_VOTE_ACCESS_CONFIG_ID,
+    AccessConfigError, AccessConfigService, QueryDelegationProof, ALLOW_VOTE_ACCESS_CONFIG_ID,
 };
 use crate::service::group::types::{GroupService, HAS_PROFILE_GROUP_ID};
 use crate::service::permission::types::{
     ALLOW_READ_PERMISSION_ID, ALLOW_SEND_FEEDBACK_PERMISSION_ID, ALLOW_VOTE_PERMISSION_ID,
     ALLOW_WRITE_PERMISSION_ID,
 };
-use crate::EventsService;
+use crate::{EventsService, PermissionService};
 use candid::Principal;
-use shared::mvc::{HasRepository, Repository};
+use shared::mvc::{HasRepository, Model, Repository};
 use shared::remote_call::{Program, ProgramExecutionResult, RemoteCallEndpoint};
+use shared::time::days;
 use shared::types::wallet::{AccessConfigId, ProgramExecutedWith, Shares};
 use std::collections::BTreeSet;
 
@@ -75,7 +77,11 @@ impl AccessConfigService {
         Ok(result)
     }
 
-    pub fn caller_has_access(canister_id: Principal, method_name: &str, caller: Principal) -> bool {
+    pub fn caller_has_access_to_method(
+        canister_id: Principal,
+        method_name: &str,
+        caller: Principal,
+    ) -> bool {
         let target_exact = PermissionTarget::Endpoint(RemoteCallEndpoint {
             canister_id,
             method_name: method_name.to_string(),
@@ -97,6 +103,49 @@ impl AccessConfigService {
         }
 
         false
+    }
+
+    fn caller_has_access_to_target(target: &PermissionTarget, caller: Principal) -> bool {
+        let mut permission_ids = Permission::repo().get_permissions_by_target(target);
+
+        for permission_id in permission_ids {
+            for config_id in AccessConfig::repo().get_access_configs_by_permission(&permission_id) {
+                // unwrapping, because it should exist if it is listed
+                let ac = AccessConfig::repo().get(&config_id).unwrap();
+
+                if AccessConfigService::assert_caller_allowed(&ac, caller).is_ok() {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
+    pub fn get_query_delegation_proof(
+        this_union_id: Principal,
+        delegate_id: Principal,
+        requested_targets: BTreeSet<PermissionTarget>,
+        timestamp: u64,
+    ) -> QueryDelegationProof {
+        let groups_of_delegate = GroupService::get_groups_of(&delegate_id);
+        let mut allowed_query_targets = Vec::new();
+
+        for target in requested_targets {
+            if AccessConfigService::caller_has_access_to_target(&target, delegate_id) {
+                allowed_query_targets.push(target);
+            }
+        }
+
+        // TODO: implement subnet signature
+        QueryDelegationProof {
+            union_id: this_union_id,
+            delegate_id,
+            allowed_query_targets,
+            // TODO: make expiration timeout configurable
+            expires_at: timestamp + days(1),
+            signature: (),
+        }
     }
 
     fn assert_caller_allowed(
@@ -138,7 +187,7 @@ impl AccessConfigService {
             }
         }
 
-        Err(AccessConfigError::InvalidProgram)
+        Err(AccessConfigError::ProgramNotAllowedByAccessConfig)
     }
 
     fn assert_permissions_exist(

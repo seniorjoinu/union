@@ -2,6 +2,7 @@ use crate::repository::batch::model::Batch;
 use crate::repository::batch::types::{BatchId, Key};
 use crate::repository::chunk::model::Chunk;
 use crate::repository::chunk::types::{ChunkFilter, ChunkId};
+use crate::service::access_config::types::QueryDelegationProof;
 use candid::{CandidType, Deserialize, Principal};
 use shared::pageable::{Page, PageRequest};
 use shared::types::Blob;
@@ -22,6 +23,7 @@ pub struct CreateBatchResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetBatchRequest {
     pub id: BatchId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -48,6 +50,7 @@ pub struct SendBatchRequest {
 #[derive(CandidType, Deserialize)]
 pub struct ListBatchesRequest {
     pub page_req: PageRequest<(), ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -71,6 +74,7 @@ pub struct CreateChunkResponse {
 #[derive(CandidType, Deserialize)]
 pub struct GetChunkRequest {
     pub chunk_id: ChunkId,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -81,6 +85,7 @@ pub struct GetChunkResponse {
 #[derive(CandidType, Deserialize)]
 pub struct ListChunksRequest {
     pub page_req: PageRequest<ChunkFilter, ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]

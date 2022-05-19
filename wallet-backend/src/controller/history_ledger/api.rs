@@ -1,3 +1,4 @@
+use crate::service::access_config::types::QueryDelegationProof;
 use candid::{CandidType, Deserialize, Principal};
 use history_ledger_client::api::ProgramExecutionFilter;
 use shared::pageable::{Page, PageRequest};
@@ -9,6 +10,7 @@ pub struct GetSharesInfoOfAtRequest {
     pub group_id: GroupId,
     pub of: Principal,
     pub at: u64,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -25,6 +27,7 @@ pub struct GetMySharesInfoAtRequest {
 #[derive(CandidType, Deserialize)]
 pub struct ListProgramExecutionEntryIdsRequest {
     pub page_req: PageRequest<ProgramExecutionFilter, ()>,
+    pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 
 #[derive(CandidType, Deserialize)]

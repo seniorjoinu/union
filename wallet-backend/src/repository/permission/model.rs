@@ -20,8 +20,21 @@ impl Permission {
     pub fn new(
         name: String,
         description: String,
-        targets: Vec<PermissionTarget>,
+        mut targets: Vec<PermissionTarget>,
     ) -> Result<Self, ValidationError> {
+        for target in &mut targets {
+            if let PermissionTarget::Endpoint(endpoint) = target {
+                endpoint.method_name = endpoint.method_name.trim().to_string();
+
+                if endpoint.method_name.is_empty() {
+                    return Err(ValidationError(format!(
+                        "Invalid target endpoint {:?}",
+                        endpoint
+                    )));
+                }
+            }
+        }
+
         let permission = Permission {
             id: None,
             name: Self::process_name(name)?,
@@ -47,7 +60,24 @@ impl Permission {
         }
 
         if let Some(targets) = new_targets {
-            self.targets = targets;
+            let mut result = BTreeSet::new();
+
+            for mut target in targets {
+                if let PermissionTarget::Endpoint(endpoint) = &mut target {
+                    endpoint.method_name = endpoint.method_name.trim().to_string();
+
+                    if endpoint.method_name.is_empty() {
+                        return Err(ValidationError(format!(
+                            "Invalid target endpoint {:?}",
+                            endpoint
+                        )));
+                    }
+                }
+
+                result.insert(target);
+            }
+
+            self.targets = result;
         }
 
         Ok(())

@@ -1,7 +1,7 @@
 use candid::{CandidType, Deserialize, Principal};
 use crate::types::wallet::{GroupId, Shares};
 
-#[derive(CandidType, Deserialize)]
+#[derive(Clone, CandidType, Deserialize)]
 pub struct SharesInfo {
     pub balance: Shares,
     pub total_supply: Shares,
