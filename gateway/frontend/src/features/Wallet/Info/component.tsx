@@ -42,7 +42,7 @@ export const Info = ({ ...p }: InfoProps) => {
   const { canister, fetching, data } = useUnion(principal);
 
   useEffect(() => {
-    canister.get_settings();
+    canister.get_settings({ query_delegation_proof_opt: [] });
   }, []);
 
   const settings = data.get_settings?.settings || null;

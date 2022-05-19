@@ -39,7 +39,7 @@ export const PermissionInfo = styled(({ permissionId, to, ...p }: PermissionInfo
   const { canister, data, fetching } = useUnion(principal);
 
   useEffect(() => {
-    canister.get_permission({ id: permissionId });
+    canister.get_permission({ id: permissionId, query_delegation_proof_opt: [] });
   }, []);
 
   if (fetching.get_permission) {

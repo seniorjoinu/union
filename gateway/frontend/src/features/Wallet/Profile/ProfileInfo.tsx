@@ -44,7 +44,7 @@ export const ProfileInfo = styled(({ profileId, to, mode = 'short', ...p }: Prof
   const { canister, data, fetching } = useUnion(principal);
 
   useEffect(() => {
-    canister.get_profile({ id: profileId });
+    canister.get_profile({ id: profileId, query_delegation_proof_opt: [] });
   }, []);
 
   if (fetching.get_profile) {

@@ -23,7 +23,7 @@ export const useEdit = ({ setValue, getValues }: UseEditProps) => {
       return;
     }
 
-    canister.get_permission({ id: BigInt(permissionId) });
+    canister.get_permission({ id: BigInt(permissionId), query_delegation_proof_opt: [] });
   }, [setValue, permissionId]);
 
   useTrigger(

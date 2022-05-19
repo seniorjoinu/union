@@ -23,7 +23,7 @@ export const WalletInfo = ({ canisterId, ...p }: WalletInfoProps) => {
   const { canister, data } = useUnion(canisterId);
 
   useEffect(() => {
-    canister.get_settings();
+    canister.get_settings({ query_delegation_proof_opt: [] });
   }, []);
 
   if (!data.get_settings) {

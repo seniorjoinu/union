@@ -62,6 +62,7 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
               filter: null,
               sort: null,
             },
+            query_delegation_proof_opt: [],
           })
         }
         renderItem={(group: Group) => {

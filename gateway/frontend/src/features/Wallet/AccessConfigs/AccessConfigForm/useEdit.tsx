@@ -21,7 +21,7 @@ export const useEdit = ({ setValue, getValues }: UseEditProps) => {
       return;
     }
 
-    canister.get_access_config({ id: BigInt(accessConfigId) });
+    canister.get_access_config({ id: BigInt(accessConfigId), query_delegation_proof_opt: [] });
   }, [setValue, accessConfigId]);
 
   useTrigger(
@@ -29,26 +29,30 @@ export const useEdit = ({ setValue, getValues }: UseEditProps) => {
       setValue('name', access_config.name);
       setValue('description', access_config.description);
 
-      Promise.all(access_config.permissions.map((id) => canister.get_permission({ id }))).then(
-        (permissions) =>
-          setValue(
-            'permissions',
-            permissions.map((p) => p.permission),
-          ),
+      Promise.all(
+        access_config.permissions.map((id) =>
+          canister.get_permission({ id, query_delegation_proof_opt: [] }),
+        ),
+      ).then((permissions) =>
+        setValue(
+          'permissions',
+          permissions.map((p) => p.permission),
+        ),
       );
 
       Promise.all(
         access_config.allowees.map<Promise<AlloweeConstraintForm>>((a) => {
           if ('Everyone' in a) {
             return Promise.resolve({ type: 'Everyone' });
-          } if ('Profile' in a) {
+          }
+          if ('Profile' in a) {
             return canister
-              .get_profile({ id: a.Profile })
+              .get_profile({ id: a.Profile, query_delegation_proof_opt: [] })
               .then(({ profile }) => ({ type: 'Profile', profile }));
           }
-            return canister
-              .get_group({ group_id: a.Group.id })
-              .then(({ group }) => ({ type: 'Group', group, minShares: a.Group.min_shares }));
+          return canister
+            .get_group({ group_id: a.Group.id, query_delegation_proof_opt: [] })
+            .then(({ group }) => ({ type: 'Group', group, minShares: a.Group.min_shares }));
         }),
       ).then((allowees) => setValue('allowees', allowees));
     },

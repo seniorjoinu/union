@@ -128,6 +128,7 @@ export const AccessConfigForm = ({ create, ...p }: AccessConfigFormProps) => {
                   sort: null,
                   filter: { target: [] },
                 },
+                query_delegation_proof_opt: [],
               })
             }
           />
@@ -203,6 +204,7 @@ export const AccessConfigForm = ({ create, ...p }: AccessConfigFormProps) => {
                                 sort: null,
                                 filter: null,
                               },
+                              query_delegation_proof_opt: [],
                             })
                           }
                         />
@@ -265,6 +267,7 @@ export const AccessConfigForm = ({ create, ...p }: AccessConfigFormProps) => {
                                 sort: null,
                                 filter: null,
                               },
+                              query_delegation_proof_opt: [],
                             })
                           }
                         />

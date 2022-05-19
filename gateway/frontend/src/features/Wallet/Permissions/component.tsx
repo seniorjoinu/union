@@ -63,6 +63,7 @@ export const Permissions = styled(({ ...p }: PermissionsProps) => {
               sort: null,
               filter: { target: [] },
             },
+            query_delegation_proof_opt: [],
           })
         }
         renderItem={(item: Permission) => {

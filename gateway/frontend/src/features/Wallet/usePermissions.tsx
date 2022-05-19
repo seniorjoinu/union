@@ -14,6 +14,7 @@ export function usePermissions() {
         sort: null,
         filter: { target: [] },
       },
+      query_delegation_proof_opt: [],
     });
   }, []);
 

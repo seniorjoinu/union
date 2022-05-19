@@ -67,6 +67,7 @@ const getMethodAccessConfig = async ({
       sort: null,
       filter: { target: [{ Endpoint: { canister_id: canisterId, method_name: methodName } }] },
     },
+    query_delegation_proof_opt: [],
   });
 
   let accessConfigs: AccessConfig[] = [];
@@ -88,6 +89,7 @@ const getMethodAccessConfig = async ({
           profile: [profile],
         },
       },
+      query_delegation_proof_opt: [],
     });
     if (!!data.length) {
       accessConfigs = data;

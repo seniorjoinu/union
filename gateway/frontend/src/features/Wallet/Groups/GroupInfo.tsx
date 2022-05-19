@@ -45,7 +45,7 @@ export const GroupInfo = styled(
     const { canister, data, fetching } = useUnion(principal);
 
     useEffect(() => {
-      canister.get_group({ group_id: groupId });
+      canister.get_group({ group_id: groupId, query_delegation_proof_opt: [] });
     }, []);
 
     if (fetching.get_group) {

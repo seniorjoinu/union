@@ -21,7 +21,7 @@ export const useEdit = ({ setValue, getValues }: UseEditProps) => {
       return;
     }
 
-    canister.get_group({ group_id: BigInt(groupId) });
+    canister.get_group({ group_id: BigInt(groupId), query_delegation_proof_opt: [] });
   }, [setValue, groupId]);
 
   useTrigger(

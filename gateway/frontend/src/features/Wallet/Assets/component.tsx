@@ -111,6 +111,7 @@ export const Assets = ({ ...p }: AssetsProps) => {
           sort: null,
           filter: null,
         },
+        query_delegation_proof_opt: [],
       }),
     [],
   );

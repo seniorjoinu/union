@@ -43,7 +43,7 @@ export const UpdateInfoForm = (p: Omit<UpdateInfoFormComponentProps, 'info'>) =>
   const { canister, data } = useUnion(principal);
 
   useEffect(() => {
-    canister.get_settings();
+    canister.get_settings({ query_delegation_proof_opt: [] });
   }, []);
 
   const info: SetUpdateInfoFormData | null = useMemo(() => {

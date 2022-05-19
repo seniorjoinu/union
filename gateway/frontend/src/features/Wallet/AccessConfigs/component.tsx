@@ -62,6 +62,7 @@ export const AccessConfigs = styled(({ ...p }: AccessConfigsProps) => {
               filter: { permission: [], group: [], profile: [] },
               sort: null,
             },
+            query_delegation_proof_opt: [],
           })
         }
         renderItem={(item: AccessConfig) => {
