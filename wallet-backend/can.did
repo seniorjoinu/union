@@ -1290,8 +1290,8 @@ type GetNestedVotingConfigResponse = record {
 };
 
 type NestedVotingConfigFilter = record {
-    remote_voting_config : opt record { 0 : principal; 1 : VotingConfigId };
-    remote_nested_voting_config : opt record { 0 : principal; 1 : NestedVotingConfigId };
+    remote_voting_config : opt record { 0 : principal; 1 : VotingConfigId; };
+    remote_nested_voting_config : opt record { 0 : principal; 1 : NestedVotingConfigId; };
 };
 
 type ListNestedVotingConfigsPageRequest = record {
@@ -1324,12 +1324,12 @@ type NestedVoting = record {
     remote_voting_id : RemoteVotingId;
     voting_config_id : NestedVotingConfigId;
     shares_info : SharesInfo;
-    total_voting_power_by_group : vec record { 0 : GroupId; 1 : Shares };
+    total_voting_power_by_group : vec record { 0 : GroupId; 1 : Shares; };
     frozen : bool;
     winners : vec RoundResult;
     losers : vec RoundResult;
     choices : vec ChoiceId;
-    choices_map : vec record { 0 : ChoiceId; 1 : ChoiceId };
+    choices_map : vec record { 0 : ChoiceId; 1 : ChoiceId; };
 };
 
 type RemoteVotingId = variant {
