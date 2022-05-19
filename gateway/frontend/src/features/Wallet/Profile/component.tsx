@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, SubmitButton as B, Text } from '@union/components';
+import { PageWrapper, SubmitButton as B, Field as F } from '@union/components';
 import { useGateway, useUnion } from 'services';
 import { useNavigate } from 'react-router-dom';
 import { HAS_PROFILE_GROUP_ID } from 'envs';
 import { useCurrentUnion } from '../context';
 import { Groups } from './Groups';
 
+const Field = styled(F)``;
 const Button = styled(B)``;
 
 const Controls = styled.div`
@@ -22,6 +23,10 @@ const Controls = styled.div`
 const Container = styled(PageWrapper)`
   ${Controls}, ${Groups} {
     margin-bottom: 24px;
+  }
+
+  ${Field} {
+    margin-bottom: 16px;
   }
 `;
 
@@ -66,8 +71,12 @@ export const Profile = ({ ...p }: ProfileProps) => {
         )}
         <Button onClick={() => nav('change')}>Change profile</Button>
       </Controls>
-      <Text>{profile?.name}</Text>
-      <Text>{profile?.description}</Text>
+      <Field title='Profile name' align='row'>
+        {profile?.name}
+      </Field>
+      <Field title='Description' align='row'>
+        {profile?.description}
+      </Field>
       <Groups />
     </Container>
   );

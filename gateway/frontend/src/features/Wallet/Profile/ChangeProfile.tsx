@@ -14,7 +14,7 @@ const Container = styled(PageWrapper)`
     margin-bottom: 24px;
   }
 
-  Button {
+  ${Button} {
     align-self: flex-start;
   }
 `;
@@ -66,15 +66,14 @@ export const ChangeProfileComponent = ({
   });
 
   const submit = useCallback(
-    async (data: ChangeProfileFormData) => {
-      // TODO check changing
+    async (payload: ChangeProfileFormData) => {
       await union.canister.update_my_profile({
-        new_name: [data.name],
-        new_description: [data.description],
+        new_name: data.name !== payload.name ? [payload.name] : [],
+        new_description: data.description !== payload.description ? [payload.description] : [],
       });
       nav(-1);
     },
-    [union, nav],
+    [union, nav, data],
   );
 
   const fetching = !!union.fetching.update_my_profile;

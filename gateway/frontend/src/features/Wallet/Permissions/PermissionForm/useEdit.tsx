@@ -62,7 +62,10 @@ export const useEdit = ({ setValue, getValues }: UseEditProps) => {
         return { SelfEmptyProgram: null };
       }
       return {
-        Endpoint: { canister_id: Principal.fromText(t.canisterId), method_name: t.methodName },
+        Endpoint: {
+          canister_id: Principal.fromText(t.canisterId),
+          method_name: t.methodName || '*',
+        },
       };
     });
 

@@ -19,7 +19,10 @@ export const useCreate = ({ getValues }: UseCreateProps) => {
         return { SelfEmptyProgram: null };
       }
       return {
-        Endpoint: { canister_id: Principal.fromText(t.canisterId), method_name: t.methodName },
+        Endpoint: {
+          canister_id: Principal.fromText(t.canisterId),
+          method_name: t.methodName || '*',
+        },
       };
     });
 
