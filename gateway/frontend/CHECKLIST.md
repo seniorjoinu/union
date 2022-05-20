@@ -1,0 +1,96 @@
+## Union methods using
+
+- [x] accept_my_group_shares
+- [ ] burn_group_shares
+- [ ] burn_my_group_shares
+- [ ] burn_unaccepted_group_shares
+- [ ] cast_my_nested_vote
+- [ ] cast_my_vote
+- [x] create_access_config
+- [ ] create_batch
+- [ ] create_chunk
+- [x] create_group
+- [ ] create_nested_voting
+- [ ] create_nested_voting_config
+- [x] create_permission
+- [ ] create_profile
+- [ ] create_voting
+- [ ] create_voting_choice
+- [x] create_voting_config
+- [x] decline_my_group_shares
+- [x] delete_access_config
+- [ ] delete_batches
+- [x] delete_group
+- [ ] delete_nested_voting
+- [ ] delete_nested_voting_config
+- [x] delete_permission
+- [ ] delete_profile
+- [ ] delete_unlocked_batches
+- [ ] delete_voting
+- [ ] delete_voting_choice
+- [x] delete_voting_config
+- [x] execute
+- [x] get_access_config
+- [ ] get_batch
+- [ ] get_chunk
+- [x] get_group
+- [ ] get_groups_of
+- [ ] get_group_shares_balance_of
+- [x] get_my_groups
+- [ ] get_my_group_shares_balance
+- [ ] get_my_nested_vote
+- [x] get_my_profile
+- [ ] get_my_query_delegation_proof
+- [ ] get_my_shares_info_at
+- [x] get_my_unaccepted_group_shares_balance
+- [ ] get_my_vote
+- [ ] get_nested_voting
+- [ ] get_nested_voting_config
+- [x] get_permission
+- [ ] get_profile
+- [x] get_settings
+- [ ] get_shares_info_of_at
+- [ ] get_total_group_shares
+- [ ] get_total_unaccepted_group_shares
+- [ ] get_unaccepted_group_shares_balance_of
+- [x] get_voting
+- [ ] get_voting_choice
+- [x] get_voting_config
+- [ ] get_voting_results
+- [x] list_access_configs
+- [ ] list_batches
+- [ ] list_chunks
+- [x] list_groups
+- [ ] list_group_shares
+- [ ] list_nested_votings
+- [ ] list_nested_voting_configs
+- [x] list_permissions
+- [ ] list_profiles
+- [ ] list_program_execution_entry_ids
+- [x] list_unaccepted_group_shares
+- [ ] list_votings
+- [ ] list_voting_choices
+- [x] list_voting_configs
+- [ ] lock_batches
+- [ ] mint_group_shares
+- [ ] send_batch
+- [ ] transfer_group_shares
+- [ ] transfer_my_group_shares
+- [x] update_access_config
+- [x] update_group
+- [x] update_my_profile
+- [ ] update_nested_voting_config
+- [x] update_permission
+- [ ] update_profile
+- [x] update_settings
+- [ ] update_voting
+- [ ] update_voting_choice
+- [x] update_voting_config
+
+## History ledger methods using
+
+- [ ] get_shares_info_of_at
+- [ ] list_program_execution_entry_ids
+- [ ] get_program_execution_entry_meta
+- [ ] get_program_execution_entry_program
+- [ ] get_program_execution_entry_result

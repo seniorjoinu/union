@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Controller, useForm } from 'react-hook-form';
 import { PageWrapper, Text, TextField as TF, SubmitButton as B } from '@union/components';
 import { useNavigate } from 'react-router-dom';
-import { useBatchUploader } from '../useBatchUploader';
+import { useBatchUploader } from './useBatchUploader';
 
 const Button = styled(B)``;
 const TextField = styled(TF)``;

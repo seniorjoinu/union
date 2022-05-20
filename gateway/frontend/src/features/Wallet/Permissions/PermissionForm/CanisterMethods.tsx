@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import styled from 'styled-components';
 import { Spinner as SP, Text } from '@union/components';
 import { useCandid } from '../../useCandid';

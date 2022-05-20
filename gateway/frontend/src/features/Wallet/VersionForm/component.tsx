@@ -8,7 +8,6 @@ import {
   Button as B,
 } from '@union/components';
 import { useForm, Controller } from 'react-hook-form';
-import { useCreateVersion, FormData } from '../useVersion';
 
 const Button = styled(B)``;
 const TextField = styled(TF)``;
@@ -24,6 +23,12 @@ const Container = styled(PageWrapper)`
     align-self: center;
   }
 `;
+
+export interface FormData {
+  version: string;
+  description: string;
+  file: File | null;
+}
 
 export interface VersionFormProps {
   className?: string;
@@ -44,7 +49,9 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
     },
     mode: 'onChange',
   });
-  const { create } = useCreateVersion({ getValues });
+  const create = (...args: any[]) => {
+    throw new Error('Not implemented');
+  };
 
   return (
     <Container {...p} title='Create version'>
@@ -97,9 +104,9 @@ export const VersionForm = ({ ...p }: VersionFormProps) => {
           />
         )}
       />
-      <Button type='submit' disabled={!isValid} onClick={() => create()}>
+      {/* <Button type='submit' disabled={!isValid} onClick={() => create()}>
         Create
-      </Button>
+      </Button> */}
     </Container>
   );
 };

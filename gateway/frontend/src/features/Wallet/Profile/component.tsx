@@ -48,26 +48,38 @@ export const Profile = ({ ...p }: ProfileProps) => {
     });
   }, []);
 
-  const handleAccept = useCallback(async () => {
-    const qty = data.get_my_unaccepted_group_shares_balance?.balance || BigInt(0);
+  const handleInvite = useCallback(
+    async (accept?: boolean) => {
+      const qty = data.get_my_unaccepted_group_shares_balance?.balance;
 
-    if (!qty) {
-      return;
-    }
+      if (typeof qty == 'undefined') {
+        return;
+      }
 
-    await canister.accept_my_group_shares({ group_id: HAS_PROFILE_GROUP_ID, qty });
+      if (accept) {
+        await canister.accept_my_group_shares({ group_id: HAS_PROFILE_GROUP_ID, qty });
+        await gateway.canister.attach_to_union_wallet({ union_wallet_id: principal });
+      } else {
+        await canister.decline_my_group_shares({ group_id: HAS_PROFILE_GROUP_ID, qty });
+      }
 
-    await gateway.canister.attach_to_union_wallet({ union_wallet_id: principal });
-    await canister.get_my_unaccepted_group_shares_balance({
-      group_id: HAS_PROFILE_GROUP_ID,
-    });
-  }, [gateway, groups, principal, data.get_my_unaccepted_group_shares_balance?.balance]);
+      await canister.get_my_unaccepted_group_shares_balance({
+        group_id: HAS_PROFILE_GROUP_ID,
+      });
+    },
+    [gateway, groups, principal, data.get_my_unaccepted_group_shares_balance?.balance],
+  );
 
   return (
     <Container {...p} title='My profile'>
       <Controls>
         {!!data.get_my_unaccepted_group_shares_balance?.balance && (
-          <Button onClick={handleAccept}>Accept invite</Button>
+          <>
+            <Button onClick={() => handleInvite(true)}>Accept invite</Button>
+            <Button onClick={() => handleInvite(false)} color='red'>
+              Decline invite
+            </Button>
+          </>
         )}
         <Button onClick={() => nav('change')}>Change profile</Button>
       </Controls>

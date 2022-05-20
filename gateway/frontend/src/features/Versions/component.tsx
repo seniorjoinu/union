@@ -5,11 +5,8 @@ import styled from 'styled-components';
 import moment from 'moment';
 import { downloadFile } from 'toolkit';
 import { NavLink } from 'react-router-dom';
-import { useRemoveVersion } from '../Wallet/useVersion';
 
-const DeleteButton = styled(B)`
-  color: red;
-`;
+const DeleteButton = styled(B)``;
 const AddButton = styled(B)``;
 const Button = styled(B)``;
 
@@ -54,7 +51,10 @@ export interface VersionsProps {
 export const Versions = ({ ...p }: VersionsProps) => {
   const [versionControllerCanister, setVersionControllerCanister] = useState('');
   const { canister, data, fetching } = useDeployer(process.env.UNION_DEPLOYER_CANISTER_ID);
-  const { remove } = useRemoveVersion();
+
+  const remove = (...args: any[]) => {
+    throw new Error('Not implemented');
+  };
 
   useEffect(() => {
     canister.get_binary_controller();
@@ -134,13 +134,14 @@ export const Versions = ({ ...p }: VersionsProps) => {
           </Text>
           <Controls>
             {!!v.binary[0] && <Button onClick={() => handleDownload(v.version)}>Download</Button>}
-            {!('Deleted' in v.status) && !!versionControllerCanister && (
+            {/* {!('Deleted' in v.status) && !!versionControllerCanister && (
               <DeleteButton
                 onClick={() => remove({ walletId: versionControllerCanister, version: v.version })}
+                color='red'
               >
                 Delete
               </DeleteButton>
-            )}
+            )} */}
           </Controls>
         </Item>
       ))}

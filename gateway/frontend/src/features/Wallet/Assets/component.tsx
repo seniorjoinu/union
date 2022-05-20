@@ -5,14 +5,11 @@ import { PageWrapper, Text, SubmitButton as B } from '@union/components';
 import { useUnion } from 'services';
 import deleteIcon from '../../../assets/delete.svg';
 import { useCurrentUnion } from '../context';
-import { useBatches } from '../useBatches';
-import { useBatchDownloader } from '../useBatchDownloader';
+import { useBatchDownloader } from './useBatchDownloader';
 import { BatchSender as BS } from './BatchSender';
 import { useCreateAssetsCanister } from './useSpawnCanister';
 
-const DeleteButton = styled(B)`
-  color: red;
-`;
+const DeleteButton = styled(B)``;
 const DeleteIcon = styled.img`
   cursor: pointer;
 
@@ -94,8 +91,11 @@ export const Assets = ({ ...p }: AssetsProps) => {
   const { principal } = useCurrentUnion();
   const { canister, fetching, data } = useUnion(principal);
   const { createCanister } = useCreateAssetsCanister();
-  const { remove } = useBatches();
   const { download } = useBatchDownloader();
+
+  const remove = (...args: any[]) => {
+    throw new Error('Not implemented');
+  };
 
   useEffect(() => {
     getBatches();
@@ -212,10 +212,12 @@ export const Assets = ({ ...p }: AssetsProps) => {
                   {!batch.locked ? (
                     <>
                       <LockButton onClick={() => handleLock(id)}>Lock</LockButton>
-                      <DeleteButton onClick={() => handleDelete(id)}>Delete</DeleteButton>
+                      <DeleteButton onClick={() => handleDelete(id)} color='red'>
+                        Delete
+                      </DeleteButton>
                     </>
                   ) : (
-                    <DeleteButton onClick={() => handleExecuteDelete(id)}>
+                    <DeleteButton onClick={() => handleExecuteDelete(id)} color='red'>
                       Execute delete
                     </DeleteButton>
                   )}

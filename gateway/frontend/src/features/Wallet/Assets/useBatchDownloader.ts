@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useUnion } from 'services';
 import { downloadFile } from 'toolkit';
 import { Batch } from 'union-ts';
-import { useCurrentUnion } from './context';
+import { useCurrentUnion } from '../context';
 
 export interface DownloadProps {
   batch: Batch;

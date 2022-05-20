@@ -208,6 +208,7 @@ export class TProg {
           // @ts-ignore
           rec[k] = recType.fields[k] == null ? IDL.Null : this.traverseIdlType(recType.fields[k]!);
         }
+        // comment might be added
         return IDL.Record(rec);
 
       case TTypeKind.Variant:
@@ -218,7 +219,7 @@ export class TProg {
           // @ts-ignore
           rec1[k] = varType.fields[k] == null ? IDL.Null : this.traverseIdlType(varType.fields[k]!);
         }
-        return IDL.Record(rec1);
+        return IDL.Variant(rec1);
 
       case TTypeKind.Func:
         let args: IDL.Type[] = [];

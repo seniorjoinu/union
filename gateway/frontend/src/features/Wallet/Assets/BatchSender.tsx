@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { Controller, useForm } from 'react-hook-form';
 import { TextField as TF, Text, SubmitButton as B, Checkbox } from '@union/components';
 import { checkPrincipal } from 'toolkit';
-import { useBatches } from '../useBatches';
 
 const Button = styled(B)``;
 const TextField = styled(TF)``;
@@ -31,7 +30,6 @@ interface FormData {
 }
 
 export const BatchSender = ({ batchIds, ...p }: BatchSenderProps) => {
-  const { send } = useBatches();
   const {
     control,
     getValues,
@@ -45,6 +43,9 @@ export const BatchSender = ({ batchIds, ...p }: BatchSenderProps) => {
     mode: 'onChange',
   });
 
+  const send = (...args: any[]) => {
+    throw new Error('Not implemented');
+  };
   const handleSend = useCallback(async () => {
     const { canisterId: rawCanisterId, removeBatches } = getValues();
 

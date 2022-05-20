@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useUnion } from 'services';
-import { useCurrentUnion } from './context';
+import { useCurrentUnion } from '../context';
 
 export interface UseBatchUploaderProps {
   chunkSize: number;

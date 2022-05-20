@@ -1,16 +1,17 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useParams, Routes, Route, Navigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
 import { Provider } from './context';
 import { Profile, ChangeProfile } from './Profile';
 import { Groups, GroupForm } from './Groups';
 import { Permissions, PermissionForm } from './Permissions';
 import { AccessConfigs, AccessConfigForm } from './AccessConfigs';
+import { VotingConfigs, VotingConfigForm } from './VotingConfigs';
 import { Info, UpdateInfoForm, UpgradeForm } from './Info';
 import { Assets, AssetsCanisterUpdater, BatchesUploader } from './Assets';
-import { PermissionDetails } from './PermissionDetails';
 import { VersionForm } from './VersionForm';
+import { Test } from './Test';
 
 const Container = styled.div`
   display: flex;
@@ -19,7 +20,6 @@ const Container = styled.div`
 
 export const Wallet = () => {
   const params = useParams();
-  const nav = useNavigate();
 
   const principalStr = params.id || '';
   const principal = checkPrincipal(principalStr);
@@ -53,6 +53,14 @@ export const Wallet = () => {
           />
           <Route path='/access-configs/create' element={<AccessConfigForm create />} />
 
+          <Route path='/voting-configs' element={<VotingConfigs />} />
+          <Route path='/voting-configs/:votingConfigId' element={<VotingConfigs />} />
+          <Route
+            path='/voting-configs/edit/:votingConfigId'
+            element={<VotingConfigForm create={false} />}
+          />
+          <Route path='/voting-configs/create' element={<VotingConfigForm create />} />
+
           <Route path='/profile' element={<Profile />} />
           <Route path='/profile/change' element={<ChangeProfile />} />
 
@@ -67,12 +75,8 @@ export const Wallet = () => {
 
           <Route path='/permission/create' element={<PermissionForm create />} />
           <Route path='/permission/edit/:permissionId' element={<PermissionForm />} />
-          <Route
-            path='/permission/:permissionId'
-            element={
-              <PermissionDetails edit={(permissionId) => nav(`permission/edit/${permissionId}`)} />
-            }
-          />
+
+          <Route path='/test' element={<Test />} />
 
           {/* <Route path='/history' element={<History createLink='execute' />} />
           <Route

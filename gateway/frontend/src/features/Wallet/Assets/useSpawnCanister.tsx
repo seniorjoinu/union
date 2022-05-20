@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { IDL } from '@dfinity/candid';
 import { Principal } from '@dfinity/principal';
 import { useCurrentUnion } from '../context';
-import { useCreateCanister, useUpdateCanister, UpdateFormData } from '../useManagementCanister';
+import { useCreateCanister, useUpdateCanister, UpdateFormData } from './useManagementCanister';
 
 export const useCreateAssetsCanister = () => useCreateCanister({});
 
