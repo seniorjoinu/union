@@ -1,131 +1,70 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
-import styled from 'styled-components';
-import {
-  PageWrapper,
-  TextField as TF,
-  Text,
-  Button as B,
-  ImageFile as IF,
-} from '@union/components';
-import { useForm, Controller } from 'react-hook-form';
-import { UpdateSettingsRequest } from 'union-ts';
+import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PageWrapper } from '@union/components';
+import styled from 'styled-components';
+import { UpdateSettingsRequest } from 'union-ts';
 import { useUnion } from 'services';
 import { UnionSubmitButton } from '../../../components/UnionSubmit';
+import { useRender } from '../../IDLRenderer';
 import { useCurrentUnion } from '../context';
 
-const ImageFile = styled(IF)``;
-const Button = styled(B)``;
-const TextField = styled(TF)``;
+const Container = styled(PageWrapper)``;
 
-const Container = styled(PageWrapper)`
-  & > ${TextField} {
-    margin-bottom: 24px;
-  }
-
-  ${ImageFile} {
-    height: 100px;
-    width: 100px;
-  }
-
-  ${Button} {
-    align-self: flex-start;
-  }
-`;
-
-export interface SetUpdateInfoFormData {
-  name: string;
-  description: string;
+export interface UpdateInfoFormProps {
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-export const UpdateInfoForm = (p: Omit<UpdateInfoFormComponentProps, 'info'>) => {
+export const UpdateInfoForm = styled(({ ...p }: UpdateInfoFormProps) => {
   const { principal } = useCurrentUnion();
-  const { canister, data } = useUnion(principal);
+  const nav = useNavigate();
+  const { canister, fetching, data } = useUnion(principal);
 
   useEffect(() => {
     canister.get_settings({ query_delegation_proof_opt: [] });
   }, []);
 
-  const info: SetUpdateInfoFormData | null = useMemo(() => {
+  const defaultValue: UpdateSettingsRequest | null = useMemo(() => {
     const settings = data.get_settings?.settings;
 
     if (!settings) {
-      return null;
+      return { new_name: [], new_description: [] };
     }
-
     return {
-      name: settings.name,
-      description: settings.description,
+      new_name: [settings.name],
+      new_description: [settings.description],
     };
   }, [data.get_settings?.settings]);
 
-  if (!info) {
-    return <Text>fetching...</Text>;
+  const { Form } = useRender<UpdateSettingsRequest>({
+    canisterId: principal,
+    type: 'UpdateSettingsRequest',
+  });
+
+  if (fetching.get_settings) {
+    return <span>fetching</span>;
   }
 
-  return <UpdateInfoFormComponent info={info} />;
-};
-
-export interface UpdateInfoFormComponentProps {
-  className?: string;
-  style?: React.CSSProperties;
-  info?: SetUpdateInfoFormData | null;
-}
-
-export const UpdateInfoFormComponent = ({ info, ...p }: UpdateInfoFormComponentProps) => {
-  const {
-    control,
-    getValues,
-    setValue,
-    formState: { isValid },
-  } = useForm<SetUpdateInfoFormData>({
-    defaultValues: { ...info },
-    mode: 'onChange',
-  });
-  const nav = useNavigate();
-  const { principal } = useCurrentUnion();
-
-  const getUpdatePayload = useCallback((): UpdateSettingsRequest => {
-    const { name, description } = getValues();
-
-    return {
-      new_name: !info?.name || info?.name !== name ? [name] : [],
-      new_description: !info?.description || info?.description !== description ? [description] : [],
-    };
-  }, [getValues, info]);
+  if (!data.get_settings?.settings || !defaultValue) {
+    return <span>Settings does not found</span>;
+  }
 
   return (
-    <Container {...p} title='Install wasm to canister' withBack>
-      <Controller
-        name='name'
-        control={control}
-        rules={{
-          required: 'Required field',
-        }}
-        render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} label='Name' />
+    <Container title='Update union info' withBack {...p}>
+      <Form defaultValue={defaultValue}>
+        {(ctx) => (
+          <UnionSubmitButton
+            unionId={principal}
+            canisterId={principal}
+            methodName='update_settings'
+            getPayload={() => [ctx.getValues() as UpdateSettingsRequest]}
+            onExecuted={() => nav(-1)}
+            disabled={!ctx.formState.isValid}
+          >
+            Update info
+          </UnionSubmitButton>
         )}
-      />
-      <Controller
-        name='description'
-        control={control}
-        rules={{
-          required: 'Required field',
-        }}
-        render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} label='Description' />
-        )}
-      />
-      <UnionSubmitButton
-        unionId={principal}
-        canisterId={principal}
-        methodName='update_settings'
-        getPayload={() => [getUpdatePayload()]}
-        onExecuted={() => nav(-1)}
-        disabled={!isValid}
-      >
-        Update
-      </UnionSubmitButton>
+      </Form>
     </Container>
   );
-};
+})``;

@@ -33,6 +33,7 @@ export interface UpgradeFormProps {
   style?: React.CSSProperties;
 }
 
+// TODO use IDLRenderer
 export const UpgradeForm = (p: UpgradeFormProps) => {
   const {
     control,

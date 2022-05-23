@@ -1,20 +1,10 @@
-import { Column } from '@union/components';
-import React from 'react';
+import { Button, Column, Row } from '@union/components';
+import React, { useCallback } from 'react';
 import styled from 'styled-components';
-import { Permission } from 'union-ts';
-import { useRender } from '../IDLRenderer';
+import { UpdateVotingConfigRequest } from 'union-ts';
+import { FormContext, useRender } from '../IDLRenderer';
 import { useCurrentUnion } from './context';
 
-const Portal = styled(Column)`
-  * {
-    display: flex;
-    flex-direction: column;
-
-    & > *:not(:last-child) {
-      margin-bottom: 8px;
-    }
-  }
-`;
 const Container = styled(Column)`
   display: flex;
   flex-direction: column;
@@ -31,26 +21,53 @@ export interface TestProps {
 
 export const Test = styled(({ ...p }: TestProps) => {
   const { principal } = useCurrentUnion();
-  const { Editor, Viewer } = useRender({ canisterId: principal, type: 'ThresholdValue' });
+  const renderer = useRender<UpdateVotingConfigRequest>({
+    canisterId: principal,
+    type: 'UpdateVotingConfigRequest',
+  });
+  const value = {};
 
-  const value: Permission = {
-    id: [BigInt(0)],
-    name: 'Test permission',
-    description: 'test description',
-    targets: [
-      { Endpoint: { canister_id: principal, method_name: 'get_groups' } },
-      { SelfEmptyProgram: null },
-    ],
-  };
+  const useFormEffect = useCallback((ctx: FormContext<UpdateVotingConfigRequest>) => {
+    // ctx.control.register('win_opt.0.QuantityOf.quantity', {
+    //   required: 'Please, fill name',
+    // });
+    //   ctx.control.register('description', {
+    //     required: 'Please, fill description',
+    //   });
+    //   // ctx.control.register('description', {
+    //   //   required: 'Please, fill description',
+    //   // });
+    //   ctx.control.register('targets', {
+    //     validate: {
+    //       length: (v) => v.length > 0 || 'Please, add targets',
+    //     },
+    //   });
+  }, []);
 
   return (
     <Container {...p}>
-      <Portal id='editor'>
-        <Editor selector='#editor' />
-      </Portal>
-      <Portal id='viewer'>
-        <Viewer value={value} selector='#viewer' />
-      </Portal>
+      <renderer.Form defaultValue={value} useFormEffect={useFormEffect}>
+        {(ctx) => (
+          <>
+            <Row>
+              <Button
+                onClick={() => {
+                  console.log('getValues', ctx.getValues());
+                }}
+              >
+                getValues
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log('Validate', renderer.traversedIdlType?.covariant(ctx.getValues()));
+                }}
+              >
+                Validate ({String(ctx.formState.isValid)})
+              </Button>
+            </Row>
+          </>
+        )}
+      </renderer.Form>
     </Container>
   );
 })``;

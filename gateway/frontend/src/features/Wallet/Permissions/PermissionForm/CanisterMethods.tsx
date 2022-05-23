@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react';
 import styled from 'styled-components';
 import { Spinner as SP, Text } from '@union/components';
+import { RemoteCallEndpoint } from 'union-ts';
 import { useCandid } from '../../useCandid';
 import { useCurrentUnion } from '../../context';
-import { FormTarget } from './types';
 
 const Spinner = styled(SP)`
   align-self: center;
@@ -31,8 +31,8 @@ export interface CanisterMethodsProps {
   className?: string;
   style?: React.CSSProperties;
   disabled?: boolean;
-  value: FormTarget[];
-  onChange(value: FormTarget[]): void;
+  value: RemoteCallEndpoint[];
+  onChange(value: RemoteCallEndpoint[]): void;
 }
 
 export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsProps>(
@@ -48,7 +48,7 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
         }
 
         const existingIndex = value.findIndex(
-          (v) => v.methodName == methodName && v.canisterId == principalStr,
+          (v) => v.method_name == methodName && v.canister_id?.toString() == principalStr,
         );
 
         if (existingIndex !== -1) {
@@ -57,7 +57,7 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
           newValue.splice(existingIndex, 1);
           onChange(newValue);
         } else {
-          onChange([...value, { canisterId: principalStr, methodName }]);
+          onChange([...value, { canister_id: principal, method_name: methodName }]);
         }
       },
       [principal, disabled, onChange, value],
@@ -72,7 +72,9 @@ export const CanisterMethods = React.forwardRef<HTMLDivElement, CanisterMethodsP
             variant='p2'
             onClick={() => processMethod(methodName)}
             $selected={
-              !!value.find((v) => v.methodName == methodName && v.canisterId == principalStr)
+              !!value.find(
+                (v) => v.method_name == methodName && v.canister_id?.toString() == principalStr,
+              )
             }
           >
             {methodName}

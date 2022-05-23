@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Text as T, TextVariant, TextWeight } from './Text';
+import { getFontStyles, Text as T, TextVariant, TextWeight } from './Text';
 
 const Text = styled(T)``;
 
-const Container = styled.div<{ $align: FieldProps['align']; $margin?: number }>`
+const Container = styled.div<{ $align: FieldProps['align']; $margin?: number; $text?: string }>`
 	display: flex;
 	flex-direction: ${({ $align }) => $align};
 
@@ -13,9 +13,20 @@ const Container = styled.div<{ $align: FieldProps['align']; $margin?: number }>`
 	}
 
 	& > ${Text}:first-child {
+    position: relative;
 		&:empty {
 			display: none;
 		}
+      &::before {
+    content: ${({ $text }) => ($text ? `"${$text}"` : 'none')};
+    position: absolute;
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    transform: translateY(100%);
+    color: ${({ theme }) => theme.colors.red};
+    ${getFontStyles('caption', 'regular')}
+  }
 	}
 	& > ${Text}:not(:first-child) {
 		flex-grow: 1;
@@ -32,6 +43,7 @@ export interface FieldProps {
   align?: 'row' | 'column';
   title?: React.ReactNode;
   children?: React.ReactNode;
+  helperText?: string;
   variant?: {
     title?: TextVariant;
     value?: TextVariant;
@@ -47,6 +59,7 @@ export const Field = styled(
     children,
     title,
     margin,
+    helperText,
     align = 'column',
     variant: propVariant,
     weight: propWeight,
@@ -64,7 +77,7 @@ export const Field = styled(
     };
 
     return (
-      <Container {...p} $align={align} $margin={margin}>
+      <Container {...p} $align={align} $margin={margin} $text={helperText}>
         <Text variant={variant.title} weight={weight.title} color='dark'>
           {title}
           {!!title && align == 'row' ? ':' : ''}

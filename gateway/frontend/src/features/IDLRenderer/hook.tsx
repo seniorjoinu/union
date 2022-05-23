@@ -1,9 +1,11 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Principal } from '@dfinity/principal';
 import { TId } from '@union/candid-parser';
-import { IDL, renderInput } from '@dfinity/candid';
+import { Column } from '@union/components';
+import { useForm, UseFormReturn } from 'react-hook-form';
 import { useCandid } from '../Wallet/useCandid';
-import { Render, RenderValue } from './candid-ui';
+import { Render } from './visitor';
+import { RenderContext, getProvider, Empty } from './utils';
 
 export interface UseRenderProps {
   canisterId: Principal;
@@ -13,57 +15,121 @@ export interface UseRenderProps {
 export interface UIProps {
   selector: string;
 }
-export interface EditorProps extends UIProps {}
-export interface ViewerProps extends UIProps {
+export interface EditorProps<T> extends RenderContext<T> {}
+
+export type FormContext<T> = RenderContext<T> & UseFormReturn<T>;
+export interface FormProps<T> {
+  defaultValue?: Partial<T>;
+  useFormEffect?(ctx: FormContext<T>): void;
+  children?(ctx: FormContext<T>): JSX.Element | null | false;
+}
+export interface ViewerProps {
   value: any;
 }
 
-export const useRender = ({ canisterId, type }: UseRenderProps) => {
+export const useRender = <T extends {}>({ canisterId, type }: UseRenderProps) => {
+  const Provider = getProvider<T>();
   const { prog } = useCandid({ canisterId });
 
-  const Editor: React.ComponentType<EditorProps> = useMemo(() => {
-    if (!prog) {
-      return () => <span>Prog is null</span>;
+  const traversedIdlType = useMemo(() => prog?.traverseIdlType(new TId(type)), [prog, type]);
+
+  const Editor = useMemo(() => {
+    if (!traversedIdlType) {
+      return () => <span>Type is null</span>;
     }
 
-    const traversedIdlType = prog.traverseIdlType(new TId(type));
+    const form = traversedIdlType.accept(new Render({ path: '' }), null);
+    const defaultValues = traversedIdlType.accept(new Empty(), null) as T;
 
-    const box = renderInput(traversedIdlType);
-
-    return ({ selector }: EditorProps) => {
+    return ({
+      setValue,
+      setData,
+      resetField,
+      getValues,
+      control,
+      getFieldState,
+      ...p
+    }: EditorProps<T>) => {
       useEffect(() => {
-        console.log('EDITOR', box);
-        box.render(document.querySelector(selector)!);
+        setData(defaultValues);
       }, []);
 
-      return <span>Editor</span>;
+      return (
+        <Column {...p}>
+          <Provider value={{ setValue, setData, resetField, getValues, control, getFieldState }}>
+            {form}
+          </Provider>
+        </Column>
+      );
     };
-  }, [prog]);
+  }, [traversedIdlType]);
 
-  const Viewer: React.ComponentType<ViewerProps> = useMemo(() => {
-    if (!prog) {
-      return () => <span>Prog is null</span>;
+  const Form = useMemo(() => {
+    if (!traversedIdlType) {
+      return () => <span>Type is null</span>;
     }
 
-    const traversedIdlType = prog.traverseIdlType(new TId(type));
+    const form = traversedIdlType.accept(new Render({ path: '' }), null);
+    const defaultValues = traversedIdlType.accept(new Empty(), null) as T;
 
-    const input = traversedIdlType.accept(new Render(), null);
+    return ({
+      defaultValue,
+      children = () => null,
+      useFormEffect = () => {},
+      ...p
+    }: FormProps<T>) => {
+      const {
+        control,
+        getValues,
+        setValue,
+        reset,
+        resetField,
+        getFieldState,
+        ...formReturn
+      } = useForm<T>({
+        // @ts-expect-error
+        defaultValues: {
+          ...defaultValues,
+          ...defaultValue,
+        },
+        mode: 'all',
+      });
 
-    return ({ value, selector }: ViewerProps) => {
       useEffect(() => {
-        input.render(document.querySelector(selector)!);
-        const box = traversedIdlType.accept(new RenderValue(), { input, value });
+        useFormEffect(ctx);
+      }, [useFormEffect]);
 
-        console.log('VIEWER', box, input);
-      }, []);
+      const setData = useCallback(
+        (data: T) => {
+          // @ts-expect-error
+          reset(data);
+        },
+        [reset],
+      );
 
-      return <span>Viewer</span>;
+      const value = {
+        control,
+        getFieldState,
+        setValue,
+        setData,
+        resetField,
+        getValues,
+      };
+      const ctx = { ...value, ...formReturn, reset };
+
+      return (
+        <Column {...p}>
+          <Provider value={value}>{form}</Provider>
+          {children(ctx)}
+        </Column>
+      );
     };
-  }, [prog]);
+  }, [traversedIdlType]);
 
   return {
     prog,
+    traversedIdlType,
     Editor,
-    Viewer,
+    Form,
   };
 };

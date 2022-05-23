@@ -18,3 +18,19 @@ export const Column = styled.div<{ margin?: number }>`
     margin-bottom: ${({ margin = 8 }) => margin}px;
   }
 `;
+
+export const ShiftedColumn = styled(Column)`
+  position: relative;
+  margin-left: 16px;
+  padding-left: 16px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    border-left: 1px solid ${({ theme }) => theme.colors.grey};
+  }
+`;

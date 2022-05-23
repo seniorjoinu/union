@@ -43,8 +43,8 @@ export const FONT_PARAMS: Record<TextVariant, Record<TextWeight, FontParams>> = 
     medium: { size: 14, lineHeight: 22, weight: 600, paragraph: 10, font: 'Stolzl' },
   },
   caption: {
-    regular: { size: 12, lineHeight: 20, weight: 400, paragraph: 8, font: 'OpenSans' },
-    medium: { size: 12, lineHeight: 20, weight: 600, paragraph: 8, font: 'Stolzl' },
+    regular: { size: 12, lineHeight: 16, weight: 400, paragraph: 8, font: 'OpenSans' },
+    medium: { size: 12, lineHeight: 16, weight: 600, paragraph: 8, font: 'Stolzl' },
   },
 };
 

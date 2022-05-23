@@ -4,10 +4,10 @@ import { useParams, Routes, Route, Navigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
 import { Provider } from './context';
 import { Profile, ChangeProfile } from './Profile';
-import { Groups, GroupForm } from './Groups';
-import { Permissions, PermissionForm } from './Permissions';
-import { AccessConfigs, AccessConfigForm } from './AccessConfigs';
-import { VotingConfigs, VotingConfigForm } from './VotingConfigs';
+import { Groups, CreateGroupForm, UpdateGroupForm } from './Groups';
+import { Permissions, CreatePermissionForm, UpdatePermissionForm } from './Permissions';
+import { AccessConfigs, CreateAccessConfigForm, UpdateAccessConfigForm } from './AccessConfigs';
+import { VotingConfigs, CreateVotingConfigForm, UpdateVotingConfigForm } from './VotingConfigs';
 import { Info, UpdateInfoForm, UpgradeForm } from './Info';
 import { Assets, AssetsCanisterUpdater, BatchesUploader } from './Assets';
 import { VersionForm } from './VersionForm';
@@ -34,32 +34,23 @@ export const Wallet = () => {
         <Routes>
           <Route path='/groups' element={<Groups />} />
           <Route path='/groups/:groupId' element={<Groups />} />
-          <Route path='/groups/create' element={<GroupForm create />} />
-          <Route path='/groups/edit/:groupId' element={<GroupForm create={false} />} />
+          <Route path='/groups/create' element={<CreateGroupForm />} />
+          <Route path='/groups/edit/:groupId' element={<UpdateGroupForm />} />
 
           <Route path='/permissions' element={<Permissions />} />
           <Route path='/permissions/:permissionId' element={<Permissions />} />
-          <Route path='/permissions/create' element={<PermissionForm create />} />
-          <Route
-            path='/permissions/edit/:permissionId'
-            element={<PermissionForm create={false} />}
-          />
+          <Route path='/permissions/create' element={<CreatePermissionForm />} />
+          <Route path='/permissions/edit/:permissionId' element={<UpdatePermissionForm />} />
 
           <Route path='/access-configs' element={<AccessConfigs />} />
           <Route path='/access-configs/:accessConfigId' element={<AccessConfigs />} />
-          <Route
-            path='/access-configs/edit/:accessConfigId'
-            element={<AccessConfigForm create={false} />}
-          />
-          <Route path='/access-configs/create' element={<AccessConfigForm create />} />
+          <Route path='/access-configs/edit/:accessConfigId' element={<UpdateAccessConfigForm />} />
+          <Route path='/access-configs/create' element={<CreateAccessConfigForm />} />
 
           <Route path='/voting-configs' element={<VotingConfigs />} />
           <Route path='/voting-configs/:votingConfigId' element={<VotingConfigs />} />
-          <Route
-            path='/voting-configs/edit/:votingConfigId'
-            element={<VotingConfigForm create={false} />}
-          />
-          <Route path='/voting-configs/create' element={<VotingConfigForm create />} />
+          <Route path='/voting-configs/edit/:votingConfigId' element={<UpdateVotingConfigForm />} />
+          <Route path='/voting-configs/create' element={<CreateVotingConfigForm />} />
 
           <Route path='/profile' element={<Profile />} />
           <Route path='/profile/change' element={<ChangeProfile />} />
@@ -72,9 +63,6 @@ export const Wallet = () => {
           <Route path='/assets/create-batch' element={<BatchesUploader />} />
           <Route path='/assets/install-code' element={<AssetsCanisterUpdater />} />
           <Route path='/versions/create' element={<VersionForm />} />
-
-          <Route path='/permission/create' element={<PermissionForm create />} />
-          <Route path='/permission/edit/:permissionId' element={<PermissionForm />} />
 
           <Route path='/test' element={<Test />} />
 

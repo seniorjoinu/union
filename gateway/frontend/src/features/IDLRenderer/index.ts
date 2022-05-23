@@ -1,2 +1,2 @@
 export * from './hook';
-export * from './component';
+export { getProvider } from './utils';
