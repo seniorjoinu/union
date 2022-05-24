@@ -1,5 +1,5 @@
 import * as React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { theme } from './theme';
 
 interface WithBorderProps {
@@ -36,7 +36,7 @@ export const withBorder = <
 
   const BorderSlice = styled.i``;
 
-  const BorderWrapper = styled.div<{ $disabled: boolean }>`
+  const BorderWrapper = styled.div<{ $disabled: boolean; $noBorder: boolean }>`
     --color: ${options.color};
     --slice: ${options.size}px;
 
@@ -121,17 +121,40 @@ export const withBorder = <
         background-color: ${options.quadFillColor};
       }
     }
+
+    ${({ $noBorder }) =>
+      ($noBorder
+        ? css`
+            border-top: none;
+            border-left: none;
+
+            ${BorderSlice} {
+              display: none;
+            }
+
+            &::before,
+            &::after {
+              content: none;
+            }
+          `
+        : '')}
   `;
 
-  const WrappedComponent = (React.forwardRef<HTMLElement, P & WithBorderProps & { as?: any }>(
-    ({ className, style, as, ...props }, ref) => (
-      <BorderWrapper className={className} style={style} $disabled={!!(props as any).disabled}>
-        <BorderSlice />
-        {/* @ts-expect-error */}
-        <StyledComponent {...(props as P)} forwardedAs={as} ref={ref} />
-      </BorderWrapper>
-    ),
-  ) as unknown) as R;
+  const WrappedComponent = (React.forwardRef<
+    HTMLElement,
+    P & WithBorderProps & { as?: any; noBorder?: boolean }
+  >(({ className, style, as, noBorder, ...props }, ref) => (
+    <BorderWrapper
+      className={className}
+      style={style}
+      $disabled={!!(props as any).disabled}
+      $noBorder={!!noBorder}
+    >
+      <BorderSlice />
+      {/* @ts-expect-error */}
+      <StyledComponent {...(props as P)} forwardedAs={as} ref={ref} />
+    </BorderWrapper>
+  )) as unknown) as R;
 
   // @ts-expect-error
   return styled(WrappedComponent)``;

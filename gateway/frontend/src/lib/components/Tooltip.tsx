@@ -3,11 +3,12 @@ import styled from 'styled-components';
 import { withBorder } from './withBorder';
 
 const BordererdDiv = withBorder(styled.div``);
+const Container = styled.div``;
 
 export const Tooltip = styled(({ children, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div {...p}>
+  <Container {...p}>
     <BordererdDiv>{children}</BordererdDiv>
-  </div>
+  </Container>
 ))`
   pointer-events: none;
   opacity: 0;

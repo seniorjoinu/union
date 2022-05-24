@@ -52,15 +52,17 @@ export interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputEleme
   label?: React.ReactNode;
   helperText?: string | undefined | null;
   startAdornment?: React.ReactNode;
+  noBorder?: boolean;
 }
 
 export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ className, style, label, helperText, startAdornment, ...p }, ref) => (
+  ({ className, style, label, helperText, startAdornment, noBorder, ...p }, ref) => (
     <Container className={className} style={style}>
       {label && <Label>{label}</Label>}
       <RowInputWrapper>
         {startAdornment}
-        <Input {...p} ref={ref} />
+        {/* @ts-expect-error */}
+        <Input {...p} ref={ref} noBorder={noBorder} />
       </RowInputWrapper>
       {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
     </Container>

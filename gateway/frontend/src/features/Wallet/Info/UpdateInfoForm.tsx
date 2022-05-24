@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { UpdateSettingsRequest } from 'union-ts';
 import { useUnion } from 'services';
 import { UnionSubmitButton } from '../../../components/UnionSubmit';
-import { useRender } from '../../IDLRenderer';
+import { FieldSettings, useRender } from '../../IDLRenderer';
 import { useCurrentUnion } from '../context';
 
 const Container = styled(PageWrapper)``;
@@ -41,6 +41,14 @@ export const UpdateInfoForm = styled(({ ...p }: UpdateInfoFormProps) => {
     type: 'UpdateSettingsRequest',
   });
 
+  const settings: FieldSettings<UpdateSettingsRequest> = useMemo(
+    () => ({
+      new_name: { order: 1, label: 'Name' },
+      new_description: { order: 2, label: 'Description' },
+    }),
+    [],
+  );
+
   if (fetching.get_settings) {
     return <span>fetching</span>;
   }
@@ -51,7 +59,7 @@ export const UpdateInfoForm = styled(({ ...p }: UpdateInfoFormProps) => {
 
   return (
     <Container title='Update union info' withBack {...p}>
-      <Form defaultValue={defaultValue}>
+      <Form defaultValue={defaultValue} settings={settings}>
         {(ctx) => (
           <UnionSubmitButton
             unionId={principal}
@@ -59,7 +67,7 @@ export const UpdateInfoForm = styled(({ ...p }: UpdateInfoFormProps) => {
             methodName='update_settings'
             getPayload={() => [ctx.getValues() as UpdateSettingsRequest]}
             onExecuted={() => nav(-1)}
-            disabled={!ctx.formState.isValid}
+            disabled={!ctx.isValid}
           >
             Update info
           </UnionSubmitButton>

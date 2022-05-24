@@ -1,11 +1,14 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageWrapper } from '@union/components';
 import styled from 'styled-components';
 import { CreateAccessConfigRequest } from 'union-ts';
+import { Controller } from 'react-hook-form';
+import { Principal } from '@dfinity/principal';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender, FormContext } from '../../../IDLRenderer';
+import { useRender, FormContext, FieldSettings, RenderContext } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
+import { PermissionsListField, GroupListField, ProfileListField } from '../../IDLFields';
 
 const Container = styled(PageWrapper)``;
 
@@ -28,9 +31,76 @@ export const CreateAccessConfigForm = styled(({ ...p }: CreateAccessConfigFormPr
     ctx.control.register('description', { required: 'Field is required' });
   }, []);
 
+  const settings: FieldSettings<CreateAccessConfigRequest> = useMemo(
+    () => ({
+      name: { order: 1 },
+      description: { order: 2 },
+      permissions: {
+        order: 3,
+        adornment: {
+          kind: 'replace',
+          render: (ctx: RenderContext<CreateAccessConfigRequest>, path, name) => (
+            <Controller
+              name='permissions'
+              control={ctx.control}
+              render={({ field, fieldState: { error } }) => (
+                <PermissionsListField
+                  label={name}
+                  onChange={field.onChange}
+                  value={field.value}
+                  helperText={error?.message}
+                />
+              )}
+            />
+          ),
+        },
+      },
+      allowees: { order: 4 },
+      'allowees.-1.Group.id': {
+        adornment: {
+          kind: 'replace',
+          render: (ctx: RenderContext<CreateAccessConfigRequest>, path, name) => (
+            <Controller
+              name={path as 'allowees.-1.Group.id'}
+              control={ctx.control}
+              render={({ field, fieldState: { error } }) => (
+                <GroupListField
+                  label={name}
+                  onChange={field.onChange}
+                  value={field.value}
+                  helperText={error?.message}
+                />
+              )}
+            />
+          ),
+        },
+      },
+      'allowees.-1.Profile': {
+        adornment: {
+          kind: 'replace',
+          render: (ctx: RenderContext<CreateAccessConfigRequest>, path, name) => (
+            <Controller
+              name={path as 'allowees.-1.Profile'}
+              control={ctx.control}
+              render={({ field, fieldState: { error } }) => (
+                <ProfileListField
+                  label={name}
+                  onChange={field.onChange}
+                  value={field.value as Principal | null | void}
+                  helperText={error?.message}
+                />
+              )}
+            />
+          ),
+        },
+      },
+    }),
+    [],
+  );
+
   return (
     <Container title='Create new access config' withBack {...p}>
-      <Form useFormEffect={useFormEffect}>
+      <Form useFormEffect={useFormEffect} settings={settings}>
         {(ctx) => (
           <UnionSubmitButton
             unionId={principal}
@@ -38,7 +108,7 @@ export const CreateAccessConfigForm = styled(({ ...p }: CreateAccessConfigFormPr
             methodName='create_access_config'
             getPayload={() => [ctx.getValues() as CreateAccessConfigRequest]}
             onExecuted={() => nav(-1)}
-            disabled={!ctx.formState.isValid}
+            disabled={!ctx.isValid}
           >
             Create access config
           </UnionSubmitButton>

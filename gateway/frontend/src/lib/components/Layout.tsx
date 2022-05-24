@@ -10,12 +10,15 @@ export const Row = styled.div<{ margin?: number }>`
   }
 `;
 
-export const Column = styled.div<{ margin?: number }>`
+export const Column = styled.div<{ margin?: number; marginLast?: boolean }>`
   display: flex;
   flex-direction: column;
 
   & > *:not(:last-child) {
     margin-bottom: ${({ margin = 8 }) => margin}px;
+  }
+  & > *:last-child {
+    margin-bottom: ${({ marginLast, margin = 8 }) => (marginLast ? margin : 0)}px;
   }
 `;
 

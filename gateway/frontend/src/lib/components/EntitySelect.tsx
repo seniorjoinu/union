@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { AdvancedSelect as AS, AdvancedSelectProps, AdvancedOption } from './Select';
 import { Pager, PagerProps, pagerLayout } from './Pager';
@@ -25,9 +25,10 @@ const AdvancedSelect = styled(AS)`
 `;
 
 export interface EntitySelectProps<T>
-  extends Omit<AdvancedSelectProps, 'children'>,
+  extends Omit<AdvancedSelectProps, 'children' | 'value'>,
     Omit<PagerProps<T>, 'renderItem'> {
   valueGetter(item: T): string;
+  value: string[] | ((entities: T[]) => string[]);
 }
 
 export const EntitySelect = <T extends {}>({
@@ -35,13 +36,27 @@ export const EntitySelect = <T extends {}>({
   fetch,
   verbose,
   valueGetter,
+  value: propValue,
   ...p
-}: EntitySelectProps<T>) => (
-  <AdvancedSelect {...p}>
-    <Pager
-      size={size}
-      fetch={fetch}
-      renderItem={(item: T) => <AdvancedOption value={valueGetter(item)} obj={item} />}
-    />
-  </AdvancedSelect>
-);
+}: EntitySelectProps<T>) => {
+  // FIXME bad practice
+  const [entities, setEntities] = useState<T[]>([]);
+
+  const value = useMemo(() => {
+    if (Array.isArray(propValue)) {
+      return propValue;
+    }
+    return propValue(entities);
+  }, [entities, propValue]);
+
+  return (
+    <AdvancedSelect {...p} value={value}>
+      <Pager
+        size={size}
+        fetch={fetch}
+        renderItem={(item: T) => <AdvancedOption value={valueGetter(item)} obj={item} />}
+        onEntitiesChanged={setEntities}
+      />
+    </AdvancedSelect>
+  );
+};

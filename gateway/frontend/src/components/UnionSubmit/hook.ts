@@ -79,6 +79,7 @@ export const useUnionSubmit = <
 
         const { encoder, decoder } = getEnDec({ idl: canisterIdl });
 
+        console.log(`\x1b[33mexecute [${methodName}]`, payload);
         // @ts-expect-error
         const encoded = encoder[methodName](...(payload || []));
 

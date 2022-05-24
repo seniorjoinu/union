@@ -62,7 +62,7 @@ export const Test = styled(({ ...p }: TestProps) => {
                   console.log('Validate', renderer.traversedIdlType?.covariant(ctx.getValues()));
                 }}
               >
-                Validate ({String(ctx.formState.isValid)})
+                Validate ({String(ctx.isValid)})
               </Button>
             </Row>
           </>

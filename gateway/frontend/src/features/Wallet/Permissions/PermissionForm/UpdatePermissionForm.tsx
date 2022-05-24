@@ -4,9 +4,11 @@ import { PageWrapper } from '@union/components';
 import styled from 'styled-components';
 import { UpdatePermissionRequest } from 'union-ts';
 import { useUnion } from 'services';
+import { Controller, useWatch } from 'react-hook-form';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender } from '../../../IDLRenderer';
+import { FieldSettings, RenderContext, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
+import { CanisterMethods } from '../../IDLFields';
 
 const Container = styled(PageWrapper)``;
 
@@ -49,6 +51,46 @@ export const UpdatePermissionForm = styled(({ ...p }: UpdatePermissionFormProps)
     type: 'UpdatePermissionRequest',
   });
 
+  const settings: FieldSettings<UpdatePermissionRequest> = useMemo(
+    () => ({
+      id: { hide: true },
+      new_name: { order: 1 },
+      new_description: { order: 2 },
+      new_targets: { order: 3 },
+      'new_targets.-1.Endpoint.canister_id': {
+        label: 'Canister Id',
+      },
+      'new_targets.0.-1.Endpoint.method_name': {
+        label: 'Method name',
+        adornment: {
+          kind: 'replace',
+          render: (ctx: RenderContext<UpdatePermissionRequest>, path, name) => (
+            <Controller
+              name={path as 'new_targets.0.-1.Endpoint.method_name'}
+              control={ctx.control}
+              render={({ field, fieldState: { error } }) => (
+                <CanisterMethods
+                  label={name}
+                  canisterId={useWatch({
+                    name: path.replace(
+                      'method_name',
+                      'canister_id',
+                    ) as 'new_targets.0.0.Endpoint.canister_id',
+                    control: ctx.control,
+                  })}
+                  onChange={field.onChange}
+                  value={field.value}
+                  helperText={error?.message}
+                />
+              )}
+            />
+          ),
+        },
+      },
+    }),
+    [],
+  );
+
   if (!permissionId) {
     return <span>PermissionId is empty</span>;
   }
@@ -63,7 +105,11 @@ export const UpdatePermissionForm = styled(({ ...p }: UpdatePermissionFormProps)
 
   return (
     <Container title='Update permission' withBack {...p}>
-      <Form defaultValue={defaultValue}>
+      <Form
+        defaultValue={defaultValue}
+        settings={settings}
+        transformLabel={(v, tr) => tr(v?.replace('new_', ''))}
+      >
         {(ctx) => (
           <UnionSubmitButton
             unionId={principal}
@@ -71,7 +117,7 @@ export const UpdatePermissionForm = styled(({ ...p }: UpdatePermissionFormProps)
             methodName='update_permission'
             getPayload={() => [ctx.getValues() as UpdatePermissionRequest]}
             onExecuted={() => nav(-1)}
-            disabled={!ctx.formState.isValid}
+            disabled={!ctx.isValid}
           >
             Update permission
           </UnionSubmitButton>

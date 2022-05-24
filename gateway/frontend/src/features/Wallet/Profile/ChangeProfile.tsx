@@ -1,109 +1,85 @@
-import React, { useCallback, useMemo } from 'react';
-import styled from 'styled-components';
-import { PageWrapper, TextField as TF, SubmitButton as SB } from '@union/components';
-import { useForm, Controller } from 'react-hook-form';
-import { useUnion } from 'services';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PageWrapper, SubmitButton as SB } from '@union/components';
+import styled from 'styled-components';
+import { UpdateMyProfileRequest } from 'union-ts';
+import { useUnion } from 'services';
+import { FieldSettings, useRender } from '../../IDLRenderer';
 import { useCurrentUnion } from '../context';
 
-const TextField = styled(TF)``;
-const Button = styled(SB)``;
+const SubmitButton = styled(SB)``;
 
 const Container = styled(PageWrapper)`
-  & > ${TextField} {
-    margin-bottom: 24px;
-  }
-
-  ${Button} {
+  ${SubmitButton} {
+    margin-top: 16px;
     align-self: flex-start;
   }
 `;
-
-export interface ChangeProfileFormData {
-  name: string;
-  description: string;
-}
 
 export interface ChangeProfileProps {
   className?: string;
   style?: React.CSSProperties;
 }
 
-export const ChangeProfile = ({ ...p }: ChangeProfileProps) => {
-  const { profile } = useCurrentUnion();
-
-  const data: ChangeProfileFormData = useMemo(
-    () => ({
-      name: profile?.name || '',
-      description: profile?.description || '',
-    }),
-    [profile],
-  );
-
-  if (!profile) {
-    return null;
-  }
-
-  return <ChangeProfileComponent {...p} data={data} />;
-};
-
-export const ChangeProfileComponent = ({
-  data,
-  ...p
-}: ChangeProfileProps & {
-  data: ChangeProfileFormData;
-}) => {
-  const nav = useNavigate();
+export const ChangeProfile = styled(({ ...p }: ChangeProfileProps) => {
   const { principal } = useCurrentUnion();
-  const union = useUnion(principal);
-  const {
-    control,
-    getValues,
-    formState: { isValid },
-  } = useForm<ChangeProfileFormData>({
-    defaultValues: { ...data },
-    mode: 'onChange',
+  const nav = useNavigate();
+  const { canister, fetching, data } = useUnion(principal);
+
+  useEffect(() => {
+    canister.get_my_profile();
+  }, []);
+
+  const defaultValue: UpdateMyProfileRequest | null = useMemo(() => {
+    const profile = data.get_my_profile?.profile;
+
+    if (!profile) {
+      return null;
+    }
+    return {
+      new_name: [profile.name],
+      new_description: [profile.description],
+    };
+  }, [data.get_my_profile?.profile]);
+
+  const { Form } = useRender<UpdateMyProfileRequest>({
+    canisterId: principal,
+    type: 'UpdateMyProfileRequest',
   });
 
+  const settings: FieldSettings<UpdateMyProfileRequest> = useMemo(
+    () => ({
+      new_name: { order: 1, label: 'Name' },
+      new_description: { order: 2, label: 'Description' },
+    }),
+    [],
+  );
+
   const submit = useCallback(
-    async (payload: ChangeProfileFormData) => {
-      await union.canister.update_my_profile({
-        new_name: data.name !== payload.name ? [payload.name] : [],
-        new_description: data.description !== payload.description ? [payload.description] : [],
-      });
+    async (payload: UpdateMyProfileRequest) => {
+      await canister.update_my_profile(payload);
       nav(-1);
     },
-    [union, nav, data],
+    [canister, nav, data],
   );
 
-  const fetching = !!union.fetching.update_my_profile;
+  if (fetching.get_my_profile) {
+    return <span>fetching</span>;
+  }
+
+  if (!data.get_my_profile?.profile || !defaultValue) {
+    return <span>Profile does not found</span>;
+  }
 
   return (
-    <Container {...p} title='Form' withBack>
-      <Controller
-        name='name'
-        control={control}
-        rules={{ required: 'Required field' }}
-        render={({ field, fieldState: { error } }) => (
-          <TextField {...field} helperText={error?.message} disabled={fetching} label='Name' />
+    <Container title='Change my profile' withBack {...p}>
+      <Form defaultValue={defaultValue} settings={settings}>
+        {(ctx) => (
+          <SubmitButton disabled={!ctx.isValid} onClick={() => submit(ctx.getValues())}>
+            Submit
+          </SubmitButton>
         )}
-      />
-      <Controller
-        name='description'
-        control={control}
-        rules={{ required: 'Required field' }}
-        render={({ field, fieldState: { error } }) => (
-          <TextField
-            {...field}
-            helperText={error?.message}
-            disabled={fetching}
-            label='Description'
-          />
-        )}
-      />
-      <Button type='submit' disabled={!isValid || fetching} onClick={() => submit(getValues())}>
-        Submit
-      </Button>
+      </Form>
     </Container>
   );
-};
+})``;

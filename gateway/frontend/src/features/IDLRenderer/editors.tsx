@@ -3,7 +3,7 @@ import { IDL } from '@dfinity/candid';
 import { Checkbox, TextField, TextFieldProps } from '@union/components';
 import { Controller, ControllerProps } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
-import { RenderProps, context } from './utils';
+import { RenderProps, context, AdornmentWrapper, getSettings } from './utils';
 
 export interface TypeFormProps extends Omit<TextFieldProps, 'name'>, RenderProps {
   idl: IDL.Type<any>;
@@ -16,37 +16,47 @@ export interface TypeFormProps extends Omit<TextFieldProps, 'name'>, RenderProps
 export const TypeForm = ({
   idl,
   path,
-  name,
+  absolutePath,
   transformValue = (v) => v,
   parseValue = (v) => String(v),
   controlled = true,
   rules,
   ...p
 }: TypeFormProps) => {
-  const { getValues, control } = useContext(context);
+  const ctx = useContext(context);
+  const { getValues, control } = ctx;
+  const settings = getSettings(path, absolutePath);
 
   const defaultValue = parseValue(getValues(path));
+  const name = p.label || settings.label || p.name;
 
   return (
     <Controller
       name={path}
       control={control}
       rules={rules}
-      render={({ field: { value, ...field }, fieldState: { error } }) => (
-        <TextField
-          {...p}
-          {...field}
-          {...(controlled ? { value: parseValue(value) } : {})}
-          key={path}
-          label={p.label || name}
-          onChange={({ target: { value } }) => {
-            field.onChange(transformValue(value));
-          }}
-          placeholder={idl.display()}
-          defaultValue={defaultValue}
-          helperText={error?.message}
-        />
-      )}
+      render={({ field: { value, ...field }, fieldState: { error } }) =>
+        (!settings.hide ? (
+          <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+            <TextField
+              {...p}
+              {...field}
+              {...(controlled ? { value: parseValue(value) } : {})}
+              key={path}
+              label={name}
+              onChange={({ target: { value } }) => {
+                field.onChange(transformValue(value));
+              }}
+              onWheel={(e) => e.currentTarget.blur()}
+              placeholder={idl.display()}
+              defaultValue={defaultValue}
+              helperText={error?.message}
+            />
+          </AdornmentWrapper>
+        ) : (
+          <></>
+        ))
+      }
     />
   );
 };
@@ -77,23 +87,33 @@ export const PrincipalForm = (p: TypeFormProps) => (
     }}
   />
 );
-export const BoolForm = ({ path, ...p }: TypeFormProps) => {
-  const { control } = useContext(context);
+export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
+  const ctx = useContext(context);
+  const { control } = ctx;
+  const settings = getSettings(path, absolutePath);
+  const name = settings.label || p.name;
 
   return (
     <Controller
       name={path}
       control={control}
-      render={({ field, fieldState: { error } }) => (
-        <Checkbox
-          checked={field.value}
-          onChange={() => {
-            field.onChange(!field.value);
-          }}
-        >
-          {p.name}
-        </Checkbox>
-      )}
+      render={({ field, fieldState: { error } }) =>
+        (!settings.hide ? (
+          <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+            <Checkbox
+              checked={field.value}
+              onChange={() => {
+                field.onChange(!field.value);
+              }}
+              helperText={error?.message}
+            >
+              {name}
+            </Checkbox>
+          </AdornmentWrapper>
+        ) : (
+          <></>
+        ))
+      }
     />
   );
 };

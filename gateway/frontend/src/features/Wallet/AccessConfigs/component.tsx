@@ -72,15 +72,15 @@ export const AccessConfigs = styled(({ ...p }: AccessConfigsProps) => {
             !optimisticDeleted[id] && (
               <AccessConfigItem accessConfig={item} opened={accessConfigId == id}>
                 <ItemControls>
+                  <Button
+                    forwardedAs={NavLink}
+                    to={accessConfigId ? `../permissions/edit/${id}` : `edit/${id}`}
+                    variant='caption'
+                  >
+                    Edit
+                  </Button>
                   {!DEFAULT_ACCESS_CONFIG_IDS.includes(item.id[0]!) && (
                     <>
-                      <Button
-                        forwardedAs={NavLink}
-                        to={accessConfigId ? `../permissions/edit/${id}` : `edit/${id}`}
-                        variant='caption'
-                      >
-                        Edit
-                      </Button>
                       <UnionTooltipButtonComponent
                         {...deleteUnionButtonProps}
                         variant='caption'

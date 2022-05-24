@@ -97,6 +97,12 @@ const Container = styled.div<{ $disabled: boolean; $opened: boolean }>`
     opacity: ${({ $opened }) => ($opened ? '1' : '0')};
     pointer-events: ${({ $opened }) => ($opened ? 'all' : 'none')};
     transition: opacity 0.2s ease;
+
+    & > div {
+      max-height: 400px;
+      overflow: auto;
+      z-index: 100;
+    }
   }
 
   ${SelectContainer} ${Icon} {
@@ -131,6 +137,7 @@ export interface AdvancedSelectProps {
   children?: React.ReactNode;
   isDefaultOpened?: boolean;
   value: string[];
+  element?: React.ReactNode;
   onChange(value: string, obj: any): void;
 }
 
@@ -147,6 +154,7 @@ export const AdvancedSelect = React.forwardRef<HTMLDivElement, AdvancedSelectPro
       onChange,
       children,
       value,
+      element,
       multiselect = true,
     },
     ref,
@@ -174,11 +182,15 @@ export const AdvancedSelect = React.forwardRef<HTMLDivElement, AdvancedSelectPro
       >
         {label && <Label>{label}</Label>}
         <SelectContainer onClick={() => setOpened((opened) => !opened)}>
-          <Selected>{value.join(',\n') || <Placeholder>{placeholder}</Placeholder>}</Selected>
+          {element || (
+            <>
+              <Selected>{value.join(',\n') || <Placeholder>{placeholder}</Placeholder>}</Selected>
+            </>
+          )}
           <Icon />
         </SelectContainer>
         <ctx.Provider value={{ onChange: handleChange, value }}>
-          <Tooltip forwardedAs='ul'>{children}</Tooltip>
+          <Tooltip>{children}</Tooltip>
         </ctx.Provider>
         {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
       </Container>

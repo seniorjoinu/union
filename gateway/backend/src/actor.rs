@@ -217,7 +217,7 @@ fn get_controller() -> Principal {
 
 export_service!();
 
-#[query(name = "__get_candid_interface_tmp_hack")]
+#[query]
 fn export_candid() -> String {
     __export_service()
 }

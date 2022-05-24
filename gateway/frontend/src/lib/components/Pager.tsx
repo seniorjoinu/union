@@ -59,6 +59,7 @@ export interface PagerProps<T> {
   size?: number;
   renderItem(item: T): React.ReactNode | null | false;
   fetch(p: { index: number; size: number }): Promise<FetchResponse<T>>;
+  onEntitiesChanged?(data: T[]): void;
   verbose?: {
     loadMore?: string;
     zeroscreen?: string;
@@ -73,6 +74,7 @@ export const Pager = <T extends {}>({
   fetch,
   renderItem,
   verbose: verboseProps,
+  onEntitiesChanged = () => {},
   ...p
 }: PagerProps<T>) => {
   const [index, setIndex] = useState(0);
@@ -91,6 +93,9 @@ export const Pager = <T extends {}>({
   useEffect(() => {
     fetchPageData();
   }, []);
+  useEffect(() => {
+    onEntitiesChanged(data || []);
+  }, [data, onEntitiesChanged]);
 
   const fetchPageData = () => {
     setFetching(true);

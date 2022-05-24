@@ -1,11 +1,13 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageWrapper } from '@union/components';
 import styled from 'styled-components';
 import { CreatePermissionRequest } from 'union-ts';
+import { Controller, useWatch } from 'react-hook-form';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender, FormContext } from '../../../IDLRenderer';
+import { useRender, FormContext, FieldSettings, RenderContext } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
+import { CanisterMethods } from '../../IDLFields';
 
 const Container = styled(PageWrapper)``;
 
@@ -28,9 +30,48 @@ export const CreatePermissionForm = styled(({ ...p }: CreatePermissionFormProps)
     ctx.control.register('description', { required: 'Field is required' });
   }, []);
 
+  const settings: FieldSettings<CreatePermissionRequest> = useMemo(
+    () => ({
+      name: { order: 1 },
+      description: { order: 2 },
+      targets: { order: 3 },
+      'targets.-1.Endpoint.canister_id': {
+        label: 'Canister Id',
+      },
+      'targets.-1.Endpoint.method_name': {
+        label: 'Method name',
+        adornment: {
+          kind: 'replace',
+          render: (ctx: RenderContext<CreatePermissionRequest>, path, name) => (
+            <Controller
+              name={path as 'targets.-1.Endpoint.method_name'}
+              control={ctx.control}
+              render={({ field, fieldState: { error } }) => (
+                <CanisterMethods
+                  label={name}
+                  canisterId={useWatch({
+                      name: path.replace(
+                        'method_name',
+                        'canister_id',
+                      ) as 'targets.0.Endpoint.canister_id',
+                      control: ctx.control,
+                    })}
+                  onChange={field.onChange}
+                  value={field.value}
+                  helperText={error?.message}
+                />
+                )}
+            />
+          ),
+        },
+      },
+    }),
+    [],
+  );
+
   return (
     <Container title='Create new permission' withBack {...p}>
-      <Form useFormEffect={useFormEffect}>
+      <Form useFormEffect={useFormEffect} settings={settings}>
         {(ctx) => (
           <UnionSubmitButton
             unionId={principal}
@@ -38,7 +79,7 @@ export const CreatePermissionForm = styled(({ ...p }: CreatePermissionFormProps)
             methodName='create_permission'
             getPayload={() => [ctx.getValues() as CreatePermissionRequest]}
             onExecuted={() => nav(-1)}
-            disabled={!ctx.formState.isValid}
+            disabled={!ctx.isValid}
           >
             Create permission
           </UnionSubmitButton>

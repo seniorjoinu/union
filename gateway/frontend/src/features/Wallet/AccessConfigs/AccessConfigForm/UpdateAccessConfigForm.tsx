@@ -4,9 +4,12 @@ import { PageWrapper } from '@union/components';
 import styled from 'styled-components';
 import { UpdateAccessConfigRequest } from 'union-ts';
 import { useUnion } from 'services';
+import { Controller } from 'react-hook-form';
+import { Principal } from '@dfinity/principal';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender } from '../../../IDLRenderer';
+import { FieldSettings, RenderContext, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
+import { PermissionsListField, GroupListField, ProfileListField } from '../../IDLFields';
 
 const Container = styled(PageWrapper)``;
 
@@ -50,6 +53,74 @@ export const UpdateAccessConfigForm = styled(({ ...p }: UpdateAccessConfigFormPr
     type: 'UpdateAccessConfigRequest',
   });
 
+  const settings: FieldSettings<UpdateAccessConfigRequest> = useMemo(
+    () => ({
+      id: { hide: true },
+      new_name: { order: 1 },
+      new_description: { order: 2 },
+      new_permissions: {
+        order: 3,
+        adornment: {
+          kind: 'replace',
+          render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
+            <Controller
+              name='new_permissions.0'
+              control={ctx.control}
+              render={({ field, fieldState: { error } }) => (
+                <PermissionsListField
+                  label={name}
+                  onChange={field.onChange}
+                  value={field.value}
+                  helperText={error?.message}
+                />
+              )}
+            />
+          ),
+        },
+      },
+      new_allowees: { order: 4 },
+      'new_allowees.0.-1.Group.id': {
+        adornment: {
+          kind: 'replace',
+          render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
+            <Controller
+              name={path as 'new_allowees.0.-1.Group.id'}
+              control={ctx.control}
+              render={({ field, fieldState: { error } }) => (
+                <GroupListField
+                  label={name}
+                  onChange={field.onChange}
+                  value={field.value}
+                  helperText={error?.message}
+                />
+              )}
+            />
+          ),
+        },
+      },
+      'new_allowees.0.-1.Profile': {
+        adornment: {
+          kind: 'replace',
+          render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
+            <Controller
+              name={path as 'new_allowees.0.-1.Profile'}
+              control={ctx.control}
+              render={({ field, fieldState: { error } }) => (
+                <ProfileListField
+                  label={name}
+                  onChange={field.onChange}
+                  value={field.value as Principal | null | void}
+                  helperText={error?.message}
+                />
+              )}
+            />
+          ),
+        },
+      },
+    }),
+    [],
+  );
+
   if (!accessConfigId) {
     return <span>accessConfigId is empty</span>;
   }
@@ -64,7 +135,11 @@ export const UpdateAccessConfigForm = styled(({ ...p }: UpdateAccessConfigFormPr
 
   return (
     <Container title='Update access config' withBack {...p}>
-      <Form defaultValue={defaultValue}>
+      <Form
+        defaultValue={defaultValue}
+        settings={settings}
+        transformLabel={(v, tr) => tr(v?.replace('new_', ''))}
+      >
         {(ctx) => (
           <UnionSubmitButton
             unionId={principal}
@@ -72,7 +147,7 @@ export const UpdateAccessConfigForm = styled(({ ...p }: UpdateAccessConfigFormPr
             methodName='update_access_config'
             getPayload={() => [ctx.getValues() as UpdateAccessConfigRequest]}
             onExecuted={() => nav(-1)}
-            disabled={!ctx.formState.isValid}
+            disabled={!ctx.isValid}
           >
             Update access config
           </UnionSubmitButton>

@@ -14,42 +14,53 @@ import {
 import styled from 'styled-components';
 import { useWatch, useFieldArray } from 'react-hook-form';
 import { Editor } from './editors';
-import { Empty, RenderProps, context } from './utils';
+import { Empty, RenderProps, context, transformName, AdornmentWrapper, getSettings } from './utils';
 
 export interface OptFormProps extends RenderProps {
   type: IDL.Type;
   path: string;
 }
-export const OptForm = ({ type, name, path }: OptFormProps) => {
-  const { control, getValues, setValue, getFieldState } = useContext(context);
+export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
+  const ctx = useContext(context);
+  const settings = getSettings(path, absolutePath);
 
-  useWatch({ name: path, control });
-  const state = getFieldState(path);
-  const enabled = !!getValues(path)?.length;
+  useWatch({ name: path, control: ctx.control });
+  const state = ctx.getFieldState(path);
+  const enabled = !!ctx.getValues(path)?.length;
 
   const component = useMemo(
     () =>
       type.accept(
         new Render({
           path: `${path}${path ? '.' : ''}0`,
+          absolutePath: `${absolutePath}${absolutePath ? '.' : ''}0`,
         }),
         null,
       ),
-    [type, path],
+    [type, path, absolutePath],
   );
+  const name = settings.label || p.name;
+
+  if (settings.hide) {
+    return null;
+  }
 
   return (
     <Column>
-      <Checkbox
-        onChange={() =>
-          setValue(path, !enabled ? [type.accept(new Empty(), null)] : [], { shouldValidate: true })
-        }
-        checked={enabled}
-        helperText={state.error?.message}
-      >
-        {name}
-      </Checkbox>
-      {enabled && <ShiftedColumn>{component}</ShiftedColumn>}
+      <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+        <Checkbox
+          onChange={() =>
+            ctx.setValue(path, !enabled ? [type.accept(new Empty(), null)] : [], {
+              shouldValidate: true,
+            })
+          }
+          checked={enabled}
+          helperText={state.error?.message}
+        >
+          {name}
+        </Checkbox>
+        {enabled && <ShiftedColumn>{component}</ShiftedColumn>}
+      </AdornmentWrapper>
     </Column>
   );
 };
@@ -58,29 +69,55 @@ export interface RecordFormProps extends RenderProps {
   fields: Array<[string, IDL.Type]>;
   path: string;
 }
-export const RecordForm = ({ fields, path, name }: RecordFormProps) => {
-  const { control, getFieldState } = useContext(context);
+export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps) => {
+  const ctx = useContext(context);
+  const settings = getSettings(path, absolutePath);
 
-  useWatch({ name: path, control });
-  const state = getFieldState(path);
+  useWatch({ name: path, control: ctx.control });
+  const state = ctx.getFieldState(path);
 
+  const orderedFields = useMemo(
+    () =>
+      fields.sort((a, b) => {
+        const as = ctx.settings[`${path}${path ? '.' : ''}${a[0]}`] || {};
+        const bs = ctx.settings[`${path}${path ? '.' : ''}${b[0]}`] || {};
+
+        if (!('order' in as) && !('order' in bs)) {
+          return 0;
+        }
+        return (as.order || 100) - (bs.order || 100);
+      }),
+    [fields, ctx.settings],
+  );
+
+  if (settings.hide) {
+    return null;
+  }
+
+  const Wrapper = path ? ShiftedColumn : Column;
+  const name = settings.label || p.name;
+
+  // TODO upgrade order to indexed
   return (
-    <Field title={name} helperText={state.error?.message}>
-      <Column margin={16}>
-        {fields.map(([key, field]) => {
-          const currentPath = `${path}${path ? '.' : ''}${key}`;
+    <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+      <Field title={<Text weight='medium'>{name}</Text>} helperText={state.error?.message}>
+        <Wrapper margin={16}>
+          {orderedFields.map(([key, field]) => {
+            const currentPath = `${path}${path ? '.' : ''}${key}`;
 
-          return field.accept(
-            new Render({
-              path: currentPath,
-              key: currentPath,
-              name: key,
-            }),
-            null,
-          );
-        })}
-      </Column>
-    </Field>
+            return field.accept(
+              new Render({
+                path: currentPath,
+                absolutePath: `${absolutePath}${absolutePath ? '.' : ''}${key}`,
+                key: currentPath,
+                name: ctx.transformLabel(key, transformName),
+              }),
+              null,
+            );
+          })}
+        </Wrapper>
+      </Field>
+    </AdornmentWrapper>
   );
 };
 
@@ -88,12 +125,13 @@ export interface VariantFormProps extends RenderProps {
   fields: Array<[string, IDL.Type]>;
   path: string;
 }
-export const VariantForm = ({ fields, path, name }: VariantFormProps) => {
-  const { control, setValue, getValues, getFieldState } = useContext(context);
+export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormProps) => {
+  const ctx = useContext(context);
+  const settings = getSettings(path, absolutePath);
 
-  useWatch({ name: path, control });
-  const state = getFieldState(path);
-  const value = getValues(path) || {};
+  useWatch({ name: path, control: ctx.control });
+  const state = ctx.getFieldState(path);
+  const value = ctx.getValues(path) || {};
 
   const selected = useMemo(() => {
     const keys = Object.keys(value);
@@ -109,36 +147,48 @@ export const VariantForm = ({ fields, path, name }: VariantFormProps) => {
     return selected[1].accept(
       new Render({
         path: `${path}${path ? '.' : ''}${selected[0]}`,
-        name: selected[0],
+        absolutePath: `${absolutePath}${absolutePath ? '.' : ''}${selected[0]}`,
+        name: ctx.transformLabel(selected[0], transformName),
       }),
       null,
     );
-  }, [selected, fields]);
+  }, [selected, fields, ctx.transformLabel, path, absolutePath]);
 
   const handleChange = useCallback(
     (_: string, field: [string, IDL.Type]) => {
-      setValue(path, { [field[0]]: field[1].accept(new Empty(), null) }, { shouldValidate: true });
+      ctx.setValue(
+        path,
+        { [field[0]]: field[1].accept(new Empty(), null) },
+        { shouldValidate: true },
+      );
     },
-    [setValue],
+    [ctx.setValue],
   );
 
   const Wrapper = path ? ShiftedColumn : Column;
+  const name = settings.label || p.name;
+
+  if (settings.hide) {
+    return null;
+  }
 
   return (
     <Column>
-      <AdvancedSelect
-        label={name}
-        onChange={handleChange}
-        value={selected ? [selected[0]] : []}
-        multiselect={false}
-        placeholder='Select variant'
-        helperText={state.error?.message}
-      >
-        {fields.map((field) => (
-          <AdvancedOption key={field[0]} value={field[0]} obj={field} />
-        ))}
-      </AdvancedSelect>
-      <Wrapper>{selectedItem}</Wrapper>
+      <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+        <AdvancedSelect
+          label={name}
+          onChange={handleChange}
+          value={selected ? [selected[0]] : []}
+          multiselect={false}
+          placeholder='Select variant'
+          helperText={state.error?.message}
+        >
+          {fields.map((field) => (
+            <AdvancedOption key={field[0]} value={field[0]} obj={field} />
+          ))}
+        </AdvancedSelect>
+        <Wrapper>{selectedItem}</Wrapper>
+      </AdornmentWrapper>
     </Column>
   );
 };
@@ -146,7 +196,7 @@ export const VariantForm = ({ fields, path, name }: VariantFormProps) => {
 export const VecTitle = styled(Text)<{ $error?: string }>`
   position: relative;
   &&& {
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   &::before {
@@ -158,6 +208,10 @@ export const VecTitle = styled(Text)<{ $error?: string }>`
     transform: translateY(100%);
     color: ${({ theme }) => theme.colors.red};
     ${getFontStyles('caption', 'regular')}
+  }
+
+  &:empty {
+    display: none;
   }
 `;
 export const VecButton = styled(Button)``;
@@ -171,44 +225,55 @@ export interface VecFormProps extends RenderProps {
   type: IDL.Type;
   path: string;
 }
-export const VecForm = ({ path, type, name }: VecFormProps) => {
-  const { getValues, control, getFieldState } = useContext(context);
-  const { append, remove } = useFieldArray({ name: path, control: control || undefined });
+export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
+  const ctx = useContext(context);
+  const settings = getSettings(path, absolutePath);
+  const { append, remove } = useFieldArray({ name: path, control: ctx.control });
 
-  useWatch({ name: path, control });
-  const items = getValues(path) || [];
-  const state = getFieldState(path);
+  useWatch({ name: path, control: ctx.control });
+  const items = ctx.getValues(path) || [];
+  const state = ctx.getFieldState(path);
 
   const Wrapper = path ? ShiftedColumn : Column;
+  const name = settings.label || p.name;
+
+  if (settings.hide) {
+    return null;
+  }
 
   return (
-    <VecContainer>
-      <VecTitle variant='p2' $error={state.error?.message}>
-        {name}
-      </VecTitle>
-      <VecButton variant='caption' onClick={() => append(type.accept(new Empty(), null))}>
-        +
-      </VecButton>
-      <Column margin={16}>
-        {items.map((_: any, i: number) => {
-          const component = type.accept(
-            new Render({
-              path: `${path}${path ? '.' : ''}${i}`,
-            }),
-            null,
-          );
+    <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+      <VecContainer>
+        <VecTitle variant='p2' weight='medium' $error={state.error?.message}>
+          {name}
+        </VecTitle>
+        <VecButton variant='caption' onClick={() => append(type.accept(new Empty(), null))}>
+          +
+        </VecButton>
+        {!!items?.length && (
+          <Column margin={16}>
+            {items.map((_: any, i: number) => {
+              const component = type.accept(
+                new Render({
+                  path: `${path}${path ? '.' : ''}${i}`,
+                  absolutePath: `${absolutePath}${absolutePath ? '.' : ''}-1`,
+                }),
+                null,
+              );
 
-          return (
-            <Wrapper key={String(i)}>
-              {component}
-              <VecButton variant='caption' onClick={() => remove(i)}>
-                -
-              </VecButton>
-            </Wrapper>
-          );
-        })}
-      </Column>
-    </VecContainer>
+              return (
+                <Wrapper key={String(i)}>
+                  {component}
+                  <VecButton variant='caption' onClick={() => remove(i)}>
+                    -
+                  </VecButton>
+                </Wrapper>
+              );
+            })}
+          </Column>
+        )}
+      </VecContainer>
+    </AdornmentWrapper>
   );
 };
 
@@ -216,11 +281,12 @@ export interface TupleFormProps extends RenderProps {
   fields: IDL.Type[];
   path: string;
 }
-export const TupleForm = ({ fields, name, path }: TupleFormProps) => {
-  const { control, getFieldState } = useContext(context);
+export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) => {
+  const ctx = useContext(context);
+  const settings = getSettings(path, absolutePath);
 
-  useWatch({ name: path, control });
-  const state = getFieldState(path);
+  useWatch({ name: path, control: ctx.control });
+  const state = ctx.getFieldState(path);
 
   const children = useMemo(
     () =>
@@ -228,6 +294,7 @@ export const TupleForm = ({ fields, name, path }: TupleFormProps) => {
         type.accept(
           new Render({
             path: `${path}${path ? '.' : ''}${i}`,
+            absolutePath: `${absolutePath}${absolutePath ? '.' : ''}${i}`,
             key: String(i),
           }),
           null,
@@ -235,14 +302,21 @@ export const TupleForm = ({ fields, name, path }: TupleFormProps) => {
       ),
     [fields, path],
   );
+  const name = settings.label || p.name;
+
+  if (settings.hide) {
+    return null;
+  }
 
   return (
-    <VecContainer margin={16}>
-      <VecTitle variant='p2' $error={state.error?.message}>
-        {name}
-      </VecTitle>
-      {children}
-    </VecContainer>
+    <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+      <VecContainer margin={16}>
+        <VecTitle variant='p2' $error={state.error?.message}>
+          {name}
+        </VecTitle>
+        {children}
+      </VecContainer>
+    </AdornmentWrapper>
   );
 };
 

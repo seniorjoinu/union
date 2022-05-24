@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { UpdateVotingConfigRequest } from 'union-ts';
 import { useUnion } from 'services';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender } from '../../../IDLRenderer';
+import { FieldSettings, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 
 const Container = styled(PageWrapper)``;
@@ -57,6 +57,25 @@ export const UpdateVotingConfigForm = styled(({ ...p }: UpdateVotingConfigFormPr
     type: 'UpdateVotingConfigRequest',
   });
 
+  // @ts-ignore
+  const settings: FieldSettings<UpdateVotingConfigRequest> = useMemo(
+    () => ({
+      id: { hide: true },
+      name_opt: { order: 1 },
+      description_opt: { order: 2 },
+      round_opt: { order: 3 },
+      winners_count_opt: { order: 4 },
+      choices_count_opt: { order: 5 },
+      permissions_opt: { order: 6 },
+      win_opt: { order: 7 },
+      rejection_opt: { order: 8 },
+      approval_opt: { order: 9 },
+      quorum_opt: { order: 10 },
+      next_round_opt: { order: 11 },
+    }),
+    [],
+  );
+
   if (!votingConfigId) {
     return <span>votingConfigId is empty</span>;
   }
@@ -71,7 +90,11 @@ export const UpdateVotingConfigForm = styled(({ ...p }: UpdateVotingConfigFormPr
 
   return (
     <Container title='Update voting config' withBack {...p}>
-      <Form defaultValue={defaultValue}>
+      <Form
+        defaultValue={defaultValue}
+        settings={settings}
+        transformLabel={(v, tr) => tr(v?.replace('_opt', ''))}
+      >
         {(ctx) => (
           <UnionSubmitButton
             unionId={principal}
@@ -79,7 +102,7 @@ export const UpdateVotingConfigForm = styled(({ ...p }: UpdateVotingConfigFormPr
             methodName='update_voting_config'
             getPayload={() => [ctx.getValues() as UpdateVotingConfigRequest]}
             onExecuted={() => nav(-1)}
-            disabled={!ctx.formState.isValid}
+            disabled={!ctx.isValid}
           >
             Update voting config
           </UnionSubmitButton>

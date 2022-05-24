@@ -4,10 +4,10 @@ import { IDL } from '@dfinity/candid';
 import { Actor, ActorSubclass } from '@dfinity/agent';
 import { lexer, Parser, TProg } from '@union/candid-parser';
 import { useAuth } from 'services';
-import { sort } from 'toolkit';
+import { sort, useTrigger } from 'toolkit';
 
 export interface UseCandidProps {
-  canisterId: Principal;
+  canisterId: Principal | null | void;
   getCandidMethodName?: string;
 }
 
@@ -19,6 +19,10 @@ export const useCandid = ({
   const { authClient } = useAuth();
 
   useEffect(() => {
+    if (!canisterId) {
+      return;
+    }
+
     const common_interface: IDL.InterfaceFactory = ({ IDL }) =>
       IDL.Service({
         [getCandidMethodName]: IDL.Func([], [IDL.Text], ['query']),
@@ -28,15 +32,18 @@ export const useCandid = ({
       canisterId,
     });
 
-    actor[getCandidMethodName]().then(parseCandid).then(setProg);
-  }, []);
+    actor[getCandidMethodName]()
+      .then(parseCandid)
+      .then(setProg)
+      .catch(() => setProg(null));
+  }, [canisterId]);
 
   const methods = useMemo(
     () =>
       (prog?.getIdlActor()?._fields.map(([name]) => name) || []).sort((a, b) =>
         sort.string({ a, b, asc: true }),
       ),
-    [prog],
+    [prog, canisterId],
   );
 
   return { prog, methods };

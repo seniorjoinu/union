@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { UpdateGroupRequest } from 'union-ts';
 import { useUnion } from 'services';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender } from '../../../IDLRenderer';
+import { FieldSettings, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 
 const Container = styled(PageWrapper)``;
@@ -48,6 +48,15 @@ export const UpdateGroupForm = styled(({ ...p }: UpdateGroupFormProps) => {
     type: 'UpdateGroupRequest',
   });
 
+  const settings: FieldSettings<UpdateGroupRequest> = useMemo(
+    () => ({
+      new_name: { order: 1 },
+      new_description: { order: 2 },
+      group_id: { hide: true },
+    }),
+    [],
+  );
+
   if (!groupId) {
     return <span>GroupId is empty</span>;
   }
@@ -62,7 +71,11 @@ export const UpdateGroupForm = styled(({ ...p }: UpdateGroupFormProps) => {
 
   return (
     <Container title='Update group' withBack {...p}>
-      <Form defaultValue={defaultValue}>
+      <Form
+        defaultValue={defaultValue}
+        settings={settings}
+        transformLabel={(v, tr) => tr(v?.replace('new_', ''))}
+      >
         {(ctx) => (
           <UnionSubmitButton
             unionId={principal}
@@ -70,7 +83,7 @@ export const UpdateGroupForm = styled(({ ...p }: UpdateGroupFormProps) => {
             methodName='update_group'
             getPayload={() => [ctx.getValues() as UpdateGroupRequest]}
             onExecuted={() => nav(-1)}
-            disabled={!ctx.formState.isValid}
+            disabled={!ctx.isValid}
           >
             Update group
           </UnionSubmitButton>

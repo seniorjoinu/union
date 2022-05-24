@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageWrapper } from '@union/components';
 import styled from 'styled-components';
 import { CreateGroupRequest } from 'union-ts';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender, FormContext } from '../../../IDLRenderer';
+import { useRender, FormContext, FieldSettings } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 
 const Container = styled(PageWrapper)``;
@@ -28,9 +28,19 @@ export const CreateGroupForm = styled(({ ...p }: CreateGroupFormProps) => {
     ctx.control.register('description', { required: 'Field is required' });
   }, []);
 
+  const settings: FieldSettings<CreateGroupRequest> = useMemo(
+    () => ({
+      name: { order: 1 },
+      description: { order: 2 },
+      private: { order: 3, label: 'Is private?' },
+      transferable: { order: 4, label: 'Is transferable?' },
+    }),
+    [],
+  );
+
   return (
     <Container title='Create new group' withBack {...p}>
-      <Form useFormEffect={useFormEffect}>
+      <Form useFormEffect={useFormEffect} settings={settings}>
         {(ctx) => (
           <UnionSubmitButton
             unionId={principal}
@@ -38,7 +48,7 @@ export const CreateGroupForm = styled(({ ...p }: CreateGroupFormProps) => {
             methodName='create_group'
             getPayload={() => [ctx.getValues() as CreateGroupRequest]}
             onExecuted={() => nav(-1)}
-            disabled={!ctx.formState.isValid}
+            disabled={!ctx.isValid}
           >
             Create group
           </UnionSubmitButton>

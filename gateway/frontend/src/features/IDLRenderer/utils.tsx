@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { IDL } from '@dfinity/candid';
 import {
   FieldValues,
@@ -7,7 +7,70 @@ import {
   UseFormSetValue,
   Control,
   UseFormGetFieldState,
+  FieldPath,
 } from 'react-hook-form';
+import { checkPrincipal } from 'toolkit';
+
+const isObject = (value: any) =>
+  value !== null &&
+  value !== undefined &&
+  !Array.isArray(value) &&
+  typeof value === 'object' &&
+  !(value instanceof Date);
+
+// FIXME https://github.com/react-hook-form/react-hook-form/discussions/8030
+export const normalizeValues = (data: any): any => {
+  // while react-hook-from clones Principal, result principal become bad. Try to fix this
+  if (isObject(data) && '_isPrincipal' in data) {
+    return checkPrincipal(Object.values(data._arr || []));
+  }
+
+  if (
+    data instanceof Date ||
+    data instanceof Set ||
+    (globalThis.Blob && data instanceof Blob) ||
+    (globalThis.FileList && data instanceof FileList)
+  ) {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(normalizeValues);
+  }
+  if (isObject(data)) {
+    for (const key in data) {
+      data[key] = normalizeValues(data[key]);
+    }
+  }
+
+  return data;
+};
+
+export const transformName = (v: string | null | void) => {
+  if (!v) {
+    return '';
+  }
+  return `${v[0].toUpperCase()}${v.slice(1)}`;
+};
+
+export type FieldSetting<T> = {
+  order?: number;
+  hide?: boolean;
+  label?: React.ReactNode;
+  adornment?: {
+    kind?: 'start' | 'end' | 'replace';
+    render?: (
+      ctx: RenderContext<T>,
+      path: string,
+      name?: React.ReactNode,
+    ) => JSX.Element | null | void | false;
+  };
+};
+
+export type FieldSettings<
+  T extends FieldValues,
+  TFieldName extends FieldPath<T> = FieldPath<T>
+> = Partial<Record<TFieldName, FieldSetting<T>>>;
 
 export type RenderContext<V extends FieldValues = FieldValues> = {
   getValues: UseFormGetValues<V>;
@@ -16,6 +79,8 @@ export type RenderContext<V extends FieldValues = FieldValues> = {
   resetField: UseFormResetField<V>;
   setData(data: V): void;
   control: Control<V, any>;
+  settings: FieldSettings<V>;
+  transformLabel(value: string, defaultTransformator: (v: string) => string): React.ReactNode;
 };
 export const context = React.createContext<RenderContext>({
   getValues: () => [],
@@ -25,55 +90,31 @@ export const context = React.createContext<RenderContext>({
   resetField: () => {},
   // @ts-expect-error
   control: null,
+  settings: {},
+  transformLabel: transformName,
 });
 
 export const getProvider = <T extends FieldValues>() =>
   context.Provider as React.Provider<RenderContext<T>>;
 
-export type RenderProps = { path: string; key?: string; name?: React.ReactNode };
+export type RenderProps = {
+  path: string;
+  absolutePath: string;
+  key?: string;
+  name?: React.ReactNode;
+};
 
-export class Parse extends IDL.Visitor<string, null | string | number | boolean> {
-  public visitNull(t: IDL.NullClass, v: string): null {
-    return null;
-  }
-  public visitBool(t: IDL.BoolClass, v: string): boolean {
-    if (v === 'true') {
-      return true;
-    }
-    if (v === 'false') {
-      return false;
-    }
-    throw new Error(`Cannot parse ${v} as boolean`);
-  }
-  public visitText(t: IDL.TextClass, v: string): string {
-    return v;
-  }
-  public visitFloat(t: IDL.FloatClass, v: string): number {
-    return parseFloat(v);
-  }
-  public visitNumber(t: IDL.PrimitiveType, v: string): number {
-    return Number(BigInt(v));
-  }
-  public visitPrincipal(t: IDL.PrincipalClass, v: string): string {
-    return v;
-    // return Principal.fromText(v);
-  }
-  public visitService(t: IDL.ServiceClass, v: string): string {
-    return v;
-    // return Principal.fromText(v);
-  }
-  public visitFunc(t: IDL.FuncClass, v: string): string {
-    return v;
-    // const x = v.split('.', 2);
-    // return [Principal.fromText(x[0]), x[1]];
-  }
-}
+export const getSettings = <T extends FieldValues>(
+  path: FieldPath<T>,
+  absolutePath: FieldPath<T>,
+) => {
+  const { settings } = useContext(context);
+  const absConfig = settings[absolutePath] || {};
+  const config = settings[path] || {};
 
+  return { ...absConfig, ...config };
+};
 export class Empty extends IDL.Visitor<null, any> {
-  // visitNat = () => BigInt(0);
-  // visitFixedNat = () => BigInt(0);
-  // visitFloat = () => 0;
-  // visitNumber = () => 0;
   visitBool = () => false;
   visitText = () => '';
   visitService = () => '';
@@ -98,15 +139,35 @@ export class Empty extends IDL.Visitor<null, any> {
     );
   visitTuple = (_: IDL.Type, fields: IDL.Type[]): any =>
     fields.map((t) => t.accept(new Empty(), null));
-  visitVariant = (t: IDL.Type, fields: Array<[string, IDL.Type]>): any => {
-    if (!fields.length) {
-      return {};
-    }
-    const field = fields[0];
-
-    return { [field[0]]: field[1].accept(new Empty(), null) };
-  };
+  visitVariant = (t: IDL.Type, fields: Array<[string, IDL.Type]>): any => ({});
   visitOpt = (): any => [];
   visitVec = (): any => [];
   visitRec = (_: IDL.Type, ty: IDL.ConstructType): any => ty.accept(new Empty(), null);
 }
+
+export const AdornmentWrapper = <T extends FieldValues>({
+  adornment,
+  children,
+  ctx,
+  path,
+  name,
+}: {
+  children: React.ReactNode;
+  adornment: FieldSetting<T>['adornment'];
+  ctx: RenderContext<T>;
+  path: FieldPath<T>;
+  name?: React.ReactNode;
+}): JSX.Element => {
+  if (!adornment) {
+    return <>{children}</>;
+  }
+  return (
+    <>
+      {adornment.kind == 'start' && adornment.render && adornment.render(ctx, path, name)}
+      {adornment.kind == 'replace' && adornment.render
+        ? adornment.render(ctx, path, name)
+        : children}
+      {adornment.kind == 'end' && adornment.render && adornment.render(ctx, path, name)}
+    </>
+  );
+};
