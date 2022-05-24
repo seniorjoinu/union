@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { CreatePermissionRequest } from 'union-ts';
 import { Controller, useWatch } from 'react-hook-form';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender, FormContext, FieldSettings, RenderContext } from '../../../IDLRenderer';
+import { useRender, FormContext, Settings, RenderContext } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 import { CanisterMethods } from '../../IDLFields';
 
@@ -30,39 +30,42 @@ export const CreatePermissionForm = styled(({ ...p }: CreatePermissionFormProps)
     ctx.control.register('description', { required: 'Field is required' });
   }, []);
 
-  const settings: FieldSettings<CreatePermissionRequest> = useMemo(
+  const settings: Settings<CreatePermissionRequest> = useMemo(
     () => ({
-      name: { order: 1 },
-      description: { order: 2 },
-      targets: { order: 3 },
-      'targets.-1.Endpoint.canister_id': {
-        label: 'Canister Id',
-      },
-      'targets.-1.Endpoint.method_name': {
-        label: 'Method name',
-        adornment: {
-          kind: 'replace',
-          render: (ctx: RenderContext<CreatePermissionRequest>, path, name) => (
-            <Controller
-              name={path as 'targets.-1.Endpoint.method_name'}
-              control={ctx.control}
-              render={({ field, fieldState: { error } }) => (
-                <CanisterMethods
-                  label={name}
-                  canisterId={useWatch({
+      rules: {},
+      fields: {
+        name: { order: 1 },
+        description: { order: 2 },
+        targets: { order: 3 },
+        'targets.-1.Endpoint.canister_id': {
+          label: 'Canister Id',
+        },
+        'targets.-1.Endpoint.method_name': {
+          label: 'Method name',
+          adornment: {
+            kind: 'replace',
+            render: (ctx: RenderContext<CreatePermissionRequest>, path, name) => (
+              <Controller
+                name={path as 'targets.-1.Endpoint.method_name'}
+                control={ctx.control}
+                render={({ field, fieldState: { error } }) => (
+                  <CanisterMethods
+                    label={name}
+                    canisterId={useWatch({
                       name: path.replace(
                         'method_name',
                         'canister_id',
                       ) as 'targets.0.Endpoint.canister_id',
                       control: ctx.control,
                     })}
-                  onChange={field.onChange}
-                  value={field.value}
-                  helperText={error?.message}
-                />
+                    onChange={field.onChange}
+                    value={field.value}
+                    helperText={error?.message}
+                  />
                 )}
-            />
-          ),
+              />
+            ),
+          },
         },
       },
     }),

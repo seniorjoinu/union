@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { UpdateGroupRequest } from 'union-ts';
 import { useUnion } from 'services';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { FieldSettings, useRender } from '../../../IDLRenderer';
+import { Settings, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 
 const Container = styled(PageWrapper)``;
@@ -48,11 +48,14 @@ export const UpdateGroupForm = styled(({ ...p }: UpdateGroupFormProps) => {
     type: 'UpdateGroupRequest',
   });
 
-  const settings: FieldSettings<UpdateGroupRequest> = useMemo(
+  const settings: Settings<UpdateGroupRequest> = useMemo(
     () => ({
-      new_name: { order: 1 },
-      new_description: { order: 2 },
-      group_id: { hide: true },
+      rules: {},
+      fields: {
+        new_name: { order: 1 },
+        new_description: { order: 2 },
+        group_id: { hide: true },
+      },
     }),
     [],
   );

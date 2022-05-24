@@ -1,9 +1,9 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { IDL } from '@dfinity/candid';
 import { Checkbox, TextField, TextFieldProps } from '@union/components';
 import { Controller, ControllerProps } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
-import { RenderProps, context, AdornmentWrapper, getSettings } from './utils';
+import { RenderProps, context, SettingsWrapper, useSettings } from './utils';
 
 export interface TypeFormProps extends Omit<TextFieldProps, 'name'>, RenderProps {
   idl: IDL.Type<any>;
@@ -25,38 +25,40 @@ export const TypeForm = ({
 }: TypeFormProps) => {
   const ctx = useContext(context);
   const { getValues, control } = ctx;
-  const settings = getSettings(path, absolutePath);
+  const settings = useSettings(path, absolutePath);
 
   const defaultValue = parseValue(getValues(path));
   const name = p.label || settings.label || p.name;
+
+  useEffect(() => {
+    if (!settings.options) {
+      return;
+    }
+    ctx.control.register(path, settings.options);
+  }, [settings.options, ctx.control.register, path]);
 
   return (
     <Controller
       name={path}
       control={control}
       rules={rules}
-      render={({ field: { value, ...field }, fieldState: { error } }) =>
-        (!settings.hide ? (
-          <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
-            <TextField
-              {...p}
-              {...field}
-              {...(controlled ? { value: parseValue(value) } : {})}
-              key={path}
-              label={name}
-              onChange={({ target: { value } }) => {
-                field.onChange(transformValue(value));
-              }}
-              onWheel={(e) => e.currentTarget.blur()}
-              placeholder={idl.display()}
-              defaultValue={defaultValue}
-              helperText={error?.message}
-            />
-          </AdornmentWrapper>
-        ) : (
-          <></>
-        ))
-      }
+      render={({ field: { value, ...field }, fieldState: { error } }) => (
+        <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+          <TextField
+            {...p}
+            {...field}
+            {...(controlled ? { value: parseValue(value) } : { defaultValue })}
+            key={path}
+            label={name}
+            onChange={({ target: { value } }) => {
+              field.onChange(transformValue(value));
+            }}
+            onWheel={(e) => e.currentTarget.blur()}
+            placeholder={settings.placeholder || idl.display()}
+            helperText={error?.message}
+          />
+        </SettingsWrapper>
+      )}
     />
   );
 };
@@ -90,30 +92,26 @@ export const PrincipalForm = (p: TypeFormProps) => (
 export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
   const ctx = useContext(context);
   const { control } = ctx;
-  const settings = getSettings(path, absolutePath);
+  const settings = useSettings(path, absolutePath);
   const name = settings.label || p.name;
 
   return (
     <Controller
       name={path}
       control={control}
-      render={({ field, fieldState: { error } }) =>
-        (!settings.hide ? (
-          <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
-            <Checkbox
-              checked={field.value}
-              onChange={() => {
-                field.onChange(!field.value);
-              }}
-              helperText={error?.message}
-            >
-              {name}
-            </Checkbox>
-          </AdornmentWrapper>
-        ) : (
-          <></>
-        ))
-      }
+      render={({ field, fieldState: { error } }) => (
+        <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+          <Checkbox
+            checked={field.value}
+            onChange={() => {
+              field.onChange(!field.value);
+            }}
+            helperText={error?.message}
+          >
+            {name}
+          </Checkbox>
+        </SettingsWrapper>
+      )}
     />
   );
 };

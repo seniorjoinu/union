@@ -4,7 +4,7 @@ import { PageWrapper, SubmitButton as SB } from '@union/components';
 import styled from 'styled-components';
 import { UpdateMyProfileRequest } from 'union-ts';
 import { useUnion } from 'services';
-import { FieldSettings, useRender } from '../../IDLRenderer';
+import { Settings, useRender } from '../../IDLRenderer';
 import { useCurrentUnion } from '../context';
 
 const SubmitButton = styled(SB)``;
@@ -47,10 +47,13 @@ export const ChangeProfile = styled(({ ...p }: ChangeProfileProps) => {
     type: 'UpdateMyProfileRequest',
   });
 
-  const settings: FieldSettings<UpdateMyProfileRequest> = useMemo(
+  const settings: Settings<UpdateMyProfileRequest> = useMemo(
     () => ({
-      new_name: { order: 1, label: 'Name' },
-      new_description: { order: 2, label: 'Description' },
+      rules: {},
+      fields: {
+        new_name: { order: 1, label: 'Name' },
+        new_description: { order: 2, label: 'Description' },
+      },
     }),
     [],
   );

@@ -2,16 +2,16 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Principal } from '@dfinity/principal';
 import { TId } from '@union/candid-parser';
 import { Column } from '@union/components';
-import { useForm, UseFormGetValues, UseFormReturn } from 'react-hook-form';
+import { DefaultValues, useForm, UseFormGetValues, UseFormReturn } from 'react-hook-form';
 import { useCandid } from '../Wallet/useCandid';
 import { Render } from './visitor';
 import {
   RenderContext,
   getProvider,
   Empty,
-  FieldSettings,
   transformName,
   normalizeValues,
+  Settings,
 } from './utils';
 
 export interface UseRenderProps {
@@ -28,7 +28,7 @@ export type FormContext<T> = RenderContext<T> & UseFormReturn<T>;
 export interface FormProps<T> {
   defaultValue?: Partial<T>;
   useFormEffect?(ctx: FormContext<T>): void;
-  settings?: FieldSettings<T>;
+  settings?: Settings<T>;
   transformLabel?(value: string, defaultTransformator: (v: string) => string): React.ReactNode;
   children?(ctx: FormContext<T> & { isValid: boolean }): JSX.Element | null | false;
 }
@@ -41,6 +41,7 @@ export const useRender = <T extends {}>({ canisterId, type }: UseRenderProps) =>
   const { prog } = useCandid({ canisterId });
 
   const traversedIdlType = useMemo(() => prog?.traverseIdlType(new TId(type)), [prog, type]);
+  const defaultValues = traversedIdlType?.accept(new Empty(), null) as T;
 
   const Form = useMemo(() => {
     if (!traversedIdlType) {
@@ -48,13 +49,12 @@ export const useRender = <T extends {}>({ canisterId, type }: UseRenderProps) =>
     }
 
     const form = traversedIdlType.accept(new Render({ path: '', absolutePath: '' }), null);
-    const defaultValues = traversedIdlType.accept(new Empty(), null) as T;
 
     return ({
       defaultValue,
       children = () => null,
       useFormEffect = () => {},
-      settings = {},
+      settings = { rules: {}, fields: {} },
       transformLabel = transformName,
       ...p
     }: FormProps<T>) => {
@@ -67,11 +67,10 @@ export const useRender = <T extends {}>({ canisterId, type }: UseRenderProps) =>
         getFieldState,
         ...formReturn
       } = useForm<T>({
-        // @ts-expect-error
         defaultValues: {
           ...defaultValues,
           ...defaultValue,
-        },
+        } as DefaultValues<T>,
         mode: 'all',
       });
       const [isValid, setIsValid] = useState(false);
@@ -150,6 +149,7 @@ export const useRender = <T extends {}>({ canisterId, type }: UseRenderProps) =>
   return {
     prog,
     traversedIdlType,
+    defaultValues,
     Form,
   };
 };

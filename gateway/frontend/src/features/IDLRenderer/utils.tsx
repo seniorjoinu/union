@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { IDL } from '@dfinity/candid';
 import {
   FieldValues,
@@ -8,6 +8,8 @@ import {
   Control,
   UseFormGetFieldState,
   FieldPath,
+  DefaultValues,
+  RegisterOptions,
 } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
 
@@ -57,6 +59,8 @@ export type FieldSetting<T> = {
   order?: number;
   hide?: boolean;
   label?: React.ReactNode;
+  placeholder?: string;
+  options?: RegisterOptions<T, any>;
   adornment?: {
     kind?: 'start' | 'end' | 'replace';
     render?: (
@@ -72,6 +76,12 @@ export type FieldSettings<
   TFieldName extends FieldPath<T> = FieldPath<T>
 > = Partial<Record<TFieldName, FieldSetting<T>>>;
 
+export type Settings<T extends FieldValues> = {
+  defaultValue?: DefaultValues<T>;
+  fields?: FieldSettings<T>;
+  rules?: Record<string, FieldSetting<T>>;
+};
+
 export type RenderContext<V extends FieldValues = FieldValues> = {
   getValues: UseFormGetValues<V>;
   getFieldState: UseFormGetFieldState<V>;
@@ -79,7 +89,7 @@ export type RenderContext<V extends FieldValues = FieldValues> = {
   resetField: UseFormResetField<V>;
   setData(data: V): void;
   control: Control<V, any>;
-  settings: FieldSettings<V>;
+  settings: Settings<V>;
   transformLabel(value: string, defaultTransformator: (v: string) => string): React.ReactNode;
 };
 export const context = React.createContext<RenderContext>({
@@ -90,7 +100,7 @@ export const context = React.createContext<RenderContext>({
   resetField: () => {},
   // @ts-expect-error
   control: null,
-  settings: {},
+  settings: { defaultValue: {}, fields: {}, rules: {} },
   transformLabel: transformName,
 });
 
@@ -104,15 +114,36 @@ export type RenderProps = {
   name?: React.ReactNode;
 };
 
-export const getSettings = <T extends FieldValues>(
+export const useSettings = <T extends FieldValues>(
   path: FieldPath<T>,
   absolutePath: FieldPath<T>,
 ) => {
   const { settings } = useContext(context);
-  const absConfig = settings[absolutePath] || {};
-  const config = settings[path] || {};
 
-  return { ...absConfig, ...config };
+  return useMemo(() => getSettings(path, absolutePath, settings), [path, absolutePath, settings]);
+};
+
+export const getSettings = <T extends FieldValues>(
+  path: FieldPath<T>,
+  absolutePath: FieldPath<T>,
+  settings: Settings<T>,
+) => {
+  const fields = settings.fields || ({} as FieldSettings<T>);
+  const rules = settings.rules || ({} as Record<string, FieldSetting<T>>);
+  const recEntry = Object.entries(rules).find(([key, s]) => {
+    if (!s || !key) {
+      return false;
+    }
+
+    return absolutePath.endsWith(key) || path.endsWith(key);
+  }) || ['', {}];
+
+  const recConfig = recEntry ? recEntry[1] || {} : {};
+
+  const absConfig = fields[absolutePath] || {};
+  const config = fields[path] || {};
+
+  return { ...recConfig, ...absConfig, ...config } as FieldSetting<T>;
 };
 export class Empty extends IDL.Visitor<null, any> {
   visitBool = () => false;
@@ -145,19 +176,25 @@ export class Empty extends IDL.Visitor<null, any> {
   visitRec = (_: IDL.Type, ty: IDL.ConstructType): any => ty.accept(new Empty(), null);
 }
 
-export const AdornmentWrapper = <T extends FieldValues>({
-  adornment,
+export const SettingsWrapper = <T extends FieldValues>({
+  settings,
   children,
   ctx,
   path,
   name,
 }: {
   children: React.ReactNode;
-  adornment: FieldSetting<T>['adornment'];
   ctx: RenderContext<T>;
   path: FieldPath<T>;
+  settings: FieldSetting<T>;
   name?: React.ReactNode;
-}): JSX.Element => {
+}): JSX.Element | null => {
+  const { hide, adornment } = settings;
+
+  if (hide) {
+    return null;
+  }
+
   if (!adornment) {
     return <>{children}</>;
   }

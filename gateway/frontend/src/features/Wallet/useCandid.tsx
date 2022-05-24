@@ -4,16 +4,19 @@ import { IDL } from '@dfinity/candid';
 import { Actor, ActorSubclass } from '@dfinity/agent';
 import { lexer, Parser, TProg } from '@union/candid-parser';
 import { useAuth } from 'services';
-import { sort, useTrigger } from 'toolkit';
+import { sort } from 'toolkit';
 
 export interface UseCandidProps {
   canisterId: Principal | null | void;
   getCandidMethodName?: string;
 }
 
+const DEFAULT_GET_CANDID_METHOD_NAME = 'export_candid';
+const DEV_GET_CANDID_METHOD_NAME = '__get_candid_interface_tmp_hack';
+
 export const useCandid = ({
   canisterId,
-  getCandidMethodName = 'export_candid',
+  getCandidMethodName = DEFAULT_GET_CANDID_METHOD_NAME,
 }: UseCandidProps) => {
   const [prog, setProg] = useState<TProg | null>(null);
   const { authClient } = useAuth();
@@ -26,6 +29,7 @@ export const useCandid = ({
     const common_interface: IDL.InterfaceFactory = ({ IDL }) =>
       IDL.Service({
         [getCandidMethodName]: IDL.Func([], [IDL.Text], ['query']),
+        [DEV_GET_CANDID_METHOD_NAME]: IDL.Func([], [IDL.Text], ['query']),
       });
     const actor: ActorSubclass = Actor.createActor(common_interface, {
       agent: authClient.agent,
@@ -33,9 +37,13 @@ export const useCandid = ({
     });
 
     actor[getCandidMethodName]()
+      .catch(() => actor[DEV_GET_CANDID_METHOD_NAME]())
       .then(parseCandid)
       .then(setProg)
-      .catch(() => setProg(null));
+      .catch((e) => {
+        console.warn(e);
+        setProg(null);
+      });
   }, [canisterId]);
 
   const methods = useMemo(

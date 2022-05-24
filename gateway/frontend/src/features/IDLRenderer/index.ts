@@ -1,3 +1,3 @@
 export * from './hook';
 export { getProvider } from './utils';
-export type { FieldSettings, RenderContext } from './utils';
+export type { Settings, RenderContext } from './utils';

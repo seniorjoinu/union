@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { PageWrapper, Text, SubmitButton as SB, Field as F } from '@union/components';
-import { useUnion } from 'services';
+import { useGateway, useUnion } from 'services';
 import { NavLink } from 'react-router-dom';
 import moment from 'moment';
 import { useCurrentUnion } from '../context';
@@ -40,16 +40,41 @@ export interface InfoProps {
 export const Info = ({ ...p }: InfoProps) => {
   const { principal } = useCurrentUnion();
   const { canister, fetching, data } = useUnion(principal);
+  const gateway = useGateway(process.env.GATEWAY_CANISTER_ID);
 
   useEffect(() => {
     canister.get_settings({ query_delegation_proof_opt: [] });
+    gateway.canister.get_attached_union_wallets();
   }, []);
 
   const settings = data.get_settings?.settings || null;
+  const attached = useMemo(
+    () =>
+      gateway.data.get_attached_union_wallets?.wallet_ids.find(
+        (w) => w.toString() == principal.toString(),
+      ),
+    [principal, gateway.data.get_attached_union_wallets],
+  );
+
+  const toggleAttach = useCallback(async () => {
+    if (gateway.fetching.attach_to_union_wallet || gateway.fetching.detach_from_union_wallet) {
+      return;
+    }
+
+    if (attached) {
+      await gateway.canister.detach_from_union_wallet({ union_wallet_id: principal });
+    } else {
+      await gateway.canister.attach_to_union_wallet({ union_wallet_id: principal });
+    }
+    await gateway.canister.get_attached_union_wallets();
+  }, [principal, attached, gateway]);
 
   return (
     <Container {...p} title='Wallet info'>
       <Controls>
+        {!gateway.fetching.get_attached_union_wallets && (
+          <Button onClick={toggleAttach}>{attached ? 'Detach wallet' : 'Attach wallet'}</Button>
+        )}
         <Button forwardedAs={NavLink} to='edit-info'>
           Edit info
         </Button>

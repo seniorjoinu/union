@@ -7,7 +7,7 @@ import { useUnion } from 'services';
 import { Controller } from 'react-hook-form';
 import { Principal } from '@dfinity/principal';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { FieldSettings, RenderContext, useRender } from '../../../IDLRenderer';
+import { Settings, RenderContext, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 import { PermissionsListField, GroupListField, ProfileListField } from '../../IDLFields';
 
@@ -53,68 +53,71 @@ export const UpdateAccessConfigForm = styled(({ ...p }: UpdateAccessConfigFormPr
     type: 'UpdateAccessConfigRequest',
   });
 
-  const settings: FieldSettings<UpdateAccessConfigRequest> = useMemo(
+  const settings: Settings<UpdateAccessConfigRequest> = useMemo(
     () => ({
-      id: { hide: true },
-      new_name: { order: 1 },
-      new_description: { order: 2 },
-      new_permissions: {
-        order: 3,
-        adornment: {
-          kind: 'replace',
-          render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
-            <Controller
-              name='new_permissions.0'
-              control={ctx.control}
-              render={({ field, fieldState: { error } }) => (
-                <PermissionsListField
-                  label={name}
-                  onChange={field.onChange}
-                  value={field.value}
-                  helperText={error?.message}
-                />
-              )}
-            />
-          ),
+      rules: {},
+      fields: {
+        id: { hide: true },
+        new_name: { order: 1 },
+        new_description: { order: 2 },
+        new_permissions: {
+          order: 3,
+          adornment: {
+            kind: 'replace',
+            render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
+              <Controller
+                name='new_permissions.0'
+                control={ctx.control}
+                render={({ field, fieldState: { error } }) => (
+                  <PermissionsListField
+                    label={name}
+                    onChange={field.onChange}
+                    value={field.value}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+            ),
+          },
         },
-      },
-      new_allowees: { order: 4 },
-      'new_allowees.0.-1.Group.id': {
-        adornment: {
-          kind: 'replace',
-          render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
-            <Controller
-              name={path as 'new_allowees.0.-1.Group.id'}
-              control={ctx.control}
-              render={({ field, fieldState: { error } }) => (
-                <GroupListField
-                  label={name}
-                  onChange={field.onChange}
-                  value={field.value}
-                  helperText={error?.message}
-                />
-              )}
-            />
-          ),
+        new_allowees: { order: 4 },
+        'new_allowees.0.-1.Group.id': {
+          adornment: {
+            kind: 'replace',
+            render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
+              <Controller
+                name={path as 'new_allowees.0.-1.Group.id'}
+                control={ctx.control}
+                render={({ field, fieldState: { error } }) => (
+                  <GroupListField
+                    label={name}
+                    onChange={field.onChange}
+                    value={field.value}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+            ),
+          },
         },
-      },
-      'new_allowees.0.-1.Profile': {
-        adornment: {
-          kind: 'replace',
-          render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
-            <Controller
-              name={path as 'new_allowees.0.-1.Profile'}
-              control={ctx.control}
-              render={({ field, fieldState: { error } }) => (
-                <ProfileListField
-                  label={name}
-                  onChange={field.onChange}
-                  value={field.value as Principal | null | void}
-                  helperText={error?.message}
-                />
-              )}
-            />
-          ),
+        'new_allowees.0.-1.Profile': {
+          adornment: {
+            kind: 'replace',
+            render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
+              <Controller
+                name={path as 'new_allowees.0.-1.Profile'}
+                control={ctx.control}
+                render={({ field, fieldState: { error } }) => (
+                  <ProfileListField
+                    label={name}
+                    onChange={field.onChange}
+                    value={field.value as Principal | null | void}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+            ),
+          },
         },
       },
     }),

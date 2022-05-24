@@ -4,9 +4,11 @@ import { PageWrapper } from '@union/components';
 import styled from 'styled-components';
 import { UpdateVotingConfigRequest } from 'union-ts';
 import { useUnion } from 'services';
+import { Controller } from 'react-hook-form';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { FieldSettings, useRender } from '../../../IDLRenderer';
+import { RenderContext, Settings, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
+import { GroupListField } from '../../IDLFields';
 
 const Container = styled(PageWrapper)``;
 
@@ -20,6 +22,10 @@ export const UpdateVotingConfigForm = styled(({ ...p }: UpdateVotingConfigFormPr
   const nav = useNavigate();
   const { votingConfigId } = useParams();
   const { canister, fetching, data } = useUnion(principal);
+  const { Form } = useRender<UpdateVotingConfigRequest>({
+    canisterId: principal,
+    type: 'UpdateVotingConfigRequest',
+  });
 
   useEffect(() => {
     if (!votingConfigId) {
@@ -29,11 +35,11 @@ export const UpdateVotingConfigForm = styled(({ ...p }: UpdateVotingConfigFormPr
     canister.get_voting_config({ id: BigInt(votingConfigId), query_delegation_proof_opt: [] });
   }, [votingConfigId]);
 
-  const defaultValue: UpdateVotingConfigRequest | null = useMemo(() => {
+  const defaultValue: UpdateVotingConfigRequest | undefined = useMemo(() => {
     const votingConfig = data.get_voting_config?.voting_config;
 
     if (!votingConfigId || !votingConfig) {
-      return null;
+      return;
     }
 
     return {
@@ -52,28 +58,58 @@ export const UpdateVotingConfigForm = styled(({ ...p }: UpdateVotingConfigFormPr
     };
   }, [votingConfigId, data.get_voting_config?.voting_config]);
 
-  const { Form } = useRender<UpdateVotingConfigRequest>({
-    canisterId: principal,
-    type: 'UpdateVotingConfigRequest',
-  });
-
   // @ts-ignore
-  const settings: FieldSettings<UpdateVotingConfigRequest> = useMemo(
+  const settings: Settings<UpdateVotingConfigRequest> = useMemo(
     () => ({
-      id: { hide: true },
-      name_opt: { order: 1 },
-      description_opt: { order: 2 },
-      round_opt: { order: 3 },
-      winners_count_opt: { order: 4 },
-      choices_count_opt: { order: 5 },
-      permissions_opt: { order: 6 },
-      win_opt: { order: 7 },
-      rejection_opt: { order: 8 },
-      approval_opt: { order: 9 },
-      quorum_opt: { order: 10 },
-      next_round_opt: { order: 11 },
+      rules: {
+        'FractionOf.fraction': {
+          order: 1,
+          placeholder: 'Float from 0 to 1',
+          options: {
+            validate: {
+              lessOne: (v) => parseFloat(v) <= 1 || 'Must be less or equal 1',
+              biggerZero: (v) => parseFloat(v) >= 0 || 'Must be bigger or equal 0',
+            },
+          },
+        },
+        'QuantityOf.quantity': { order: 1 },
+        'target.Group': {
+          adornment: {
+            kind: 'replace',
+            render: (ctx: RenderContext<UpdateVotingConfigRequest>, path, name) => (
+              <Controller
+                name={path as 'win_opt.0.FractionOf.target.Group'}
+                control={ctx.control}
+                render={({ field, fieldState: { error } }) => (
+                  <GroupListField
+                    label={name}
+                    onChange={field.onChange}
+                    value={field.value}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+            ),
+          },
+        },
+      },
+      // @ts-ignore
+      fields: {
+        id: { hide: true },
+        name_opt: { order: 1 },
+        description_opt: { order: 2 },
+        round_opt: { order: 3 },
+        winners_count_opt: { order: 4 },
+        choices_count_opt: { order: 5 },
+        permissions_opt: { order: 6 },
+        win_opt: { order: 7 },
+        rejection_opt: { order: 8 },
+        approval_opt: { order: 9 },
+        quorum_opt: { order: 10 },
+        next_round_opt: { order: 11 },
+      },
     }),
-    [],
+    [defaultValue],
   );
 
   if (!votingConfigId) {

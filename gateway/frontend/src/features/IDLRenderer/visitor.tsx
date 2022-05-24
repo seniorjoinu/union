@@ -12,9 +12,17 @@ import {
   getFontStyles,
 } from '@union/components';
 import styled from 'styled-components';
-import { useWatch, useFieldArray } from 'react-hook-form';
+import { useWatch, useFieldArray, get } from 'react-hook-form';
 import { Editor } from './editors';
-import { Empty, RenderProps, context, transformName, AdornmentWrapper, getSettings } from './utils';
+import {
+  Empty,
+  RenderProps,
+  context,
+  transformName,
+  SettingsWrapper,
+  useSettings,
+  getSettings,
+} from './utils';
 
 export interface OptFormProps extends RenderProps {
   type: IDL.Type;
@@ -22,7 +30,7 @@ export interface OptFormProps extends RenderProps {
 }
 export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
   const ctx = useContext(context);
-  const settings = getSettings(path, absolutePath);
+  const settings = useSettings(path, absolutePath);
 
   useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
@@ -40,17 +48,17 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
     [type, path, absolutePath],
   );
   const name = settings.label || p.name;
-
-  if (settings.hide) {
-    return null;
-  }
+  const defaultValue = !ctx.settings.defaultValue
+    ? type.accept(new Empty(), null)
+    : get(ctx.settings.defaultValue, `${path}${path ? '.' : ''}0`);
 
   return (
     <Column>
-      <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+      <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
         <Checkbox
           onChange={() =>
-            ctx.setValue(path, !enabled ? [type.accept(new Empty(), null)] : [], {
+            ctx.setValue(path, !enabled ? [defaultValue] : [], {
+              // ctx.setValue(path, [], {
               shouldValidate: true,
             })
           }
@@ -60,7 +68,7 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
           {name}
         </Checkbox>
         {enabled && <ShiftedColumn>{component}</ShiftedColumn>}
-      </AdornmentWrapper>
+      </SettingsWrapper>
     </Column>
   );
 };
@@ -71,35 +79,40 @@ export interface RecordFormProps extends RenderProps {
 }
 export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps) => {
   const ctx = useContext(context);
-  const settings = getSettings(path, absolutePath);
+  const settings = useSettings(path, absolutePath);
 
   useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
 
+  const fieldOrders = useMemo(
+    () =>
+      fields.reduce((acc, f) => {
+        const fieldPath = `${path}${path ? '.' : ''}${f[0]}`;
+        const fieldAbsPath = `${absolutePath}${absolutePath ? '.' : ''}-1`;
+        const s = getSettings(fieldPath, fieldAbsPath, ctx.settings);
+
+        return { ...acc, [fieldPath]: s?.order || 100 };
+      }, {} as Record<string, number>),
+    [absolutePath, path, ctx.settings, fields],
+  );
+
   const orderedFields = useMemo(
     () =>
       fields.sort((a, b) => {
-        const as = ctx.settings[`${path}${path ? '.' : ''}${a[0]}`] || {};
-        const bs = ctx.settings[`${path}${path ? '.' : ''}${b[0]}`] || {};
+        const aOrder = fieldOrders[`${path}${path ? '.' : ''}${a[0]}`] || 100;
+        const bOrder = fieldOrders[`${path}${path ? '.' : ''}${b[0]}`] || 100;
 
-        if (!('order' in as) && !('order' in bs)) {
-          return 0;
-        }
-        return (as.order || 100) - (bs.order || 100);
+        return aOrder - bOrder;
       }),
-    [fields, ctx.settings],
+    [fields, fieldOrders],
   );
-
-  if (settings.hide) {
-    return null;
-  }
 
   const Wrapper = path ? ShiftedColumn : Column;
   const name = settings.label || p.name;
 
   // TODO upgrade order to indexed
   return (
-    <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
       <Field title={<Text weight='medium'>{name}</Text>} helperText={state.error?.message}>
         <Wrapper margin={16}>
           {orderedFields.map(([key, field]) => {
@@ -117,7 +130,7 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
           })}
         </Wrapper>
       </Field>
-    </AdornmentWrapper>
+    </SettingsWrapper>
   );
 };
 
@@ -127,7 +140,7 @@ export interface VariantFormProps extends RenderProps {
 }
 export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormProps) => {
   const ctx = useContext(context);
-  const settings = getSettings(path, absolutePath);
+  const settings = useSettings(path, absolutePath);
 
   useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
@@ -168,13 +181,9 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
   const Wrapper = path ? ShiftedColumn : Column;
   const name = settings.label || p.name;
 
-  if (settings.hide) {
-    return null;
-  }
-
   return (
     <Column>
-      <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+      <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
         <AdvancedSelect
           label={name}
           onChange={handleChange}
@@ -188,7 +197,7 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
           ))}
         </AdvancedSelect>
         <Wrapper>{selectedItem}</Wrapper>
-      </AdornmentWrapper>
+      </SettingsWrapper>
     </Column>
   );
 };
@@ -227,7 +236,7 @@ export interface VecFormProps extends RenderProps {
 }
 export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const ctx = useContext(context);
-  const settings = getSettings(path, absolutePath);
+  const settings = useSettings(path, absolutePath);
   const { append, remove } = useFieldArray({ name: path, control: ctx.control });
 
   useWatch({ name: path, control: ctx.control });
@@ -237,12 +246,8 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const Wrapper = path ? ShiftedColumn : Column;
   const name = settings.label || p.name;
 
-  if (settings.hide) {
-    return null;
-  }
-
   return (
-    <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
       <VecContainer>
         <VecTitle variant='p2' weight='medium' $error={state.error?.message}>
           {name}
@@ -273,7 +278,7 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
           </Column>
         )}
       </VecContainer>
-    </AdornmentWrapper>
+    </SettingsWrapper>
   );
 };
 
@@ -283,7 +288,7 @@ export interface TupleFormProps extends RenderProps {
 }
 export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) => {
   const ctx = useContext(context);
-  const settings = getSettings(path, absolutePath);
+  const settings = useSettings(path, absolutePath);
 
   useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
@@ -304,52 +309,47 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
   );
   const name = settings.label || p.name;
 
-  if (settings.hide) {
-    return null;
-  }
-
   return (
-    <AdornmentWrapper adornment={settings.adornment} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
       <VecContainer margin={16}>
         <VecTitle variant='p2' $error={state.error?.message}>
           {name}
         </VecTitle>
         {children}
       </VecContainer>
-    </AdornmentWrapper>
+    </SettingsWrapper>
   );
 };
 
-export interface NullProps extends RenderProps {}
-export const NullForm = (_: NullProps) => null;
+export const NullForm = (_: RenderProps) => null;
 
 export class Render extends IDL.Visitor<null, JSX.Element | null> {
   constructor(protected props: RenderProps) {
     super();
   }
 
-  public visitType<T>(t: IDL.Type<T>, d: null) {
+  public visitType<T>(t: IDL.Type<T>) {
     return t.accept(new Editor(this.props), null);
   }
-  public visitNull(t: IDL.NullClass, d: null) {
+  public visitNull(t: IDL.NullClass) {
     return <NullForm {...this.props} />;
   }
-  public visitRecord(t: IDL.RecordClass, fields: Array<[string, IDL.Type]>, d: null) {
+  public visitRecord(t: IDL.RecordClass, fields: Array<[string, IDL.Type]>) {
     return <RecordForm {...this.props} fields={fields} />;
   }
-  public visitTuple<T extends any[]>(t: IDL.TupleClass<T>, components: IDL.Type[], d: null) {
+  public visitTuple<T extends any[]>(t: IDL.TupleClass<T>, components: IDL.Type[]) {
     return <TupleForm {...this.props} fields={components} />;
   }
-  public visitVariant(t: IDL.VariantClass, fields: Array<[string, IDL.Type]>, d: null) {
+  public visitVariant(t: IDL.VariantClass, fields: Array<[string, IDL.Type]>) {
     return <VariantForm {...this.props} fields={fields} />;
   }
-  public visitOpt<T>(t: IDL.OptClass<T>, ty: IDL.Type<T>, d: null) {
+  public visitOpt<T>(t: IDL.OptClass<T>, ty: IDL.Type<T>) {
     return <OptForm {...this.props} type={ty} />;
   }
-  public visitVec<T>(t: IDL.VecClass<T>, ty: IDL.Type<T>, d: null) {
+  public visitVec<T>(t: IDL.VecClass<T>, ty: IDL.Type<T>) {
     return <VecForm type={ty} {...this.props} />;
   }
-  public visitRec<T>(t: IDL.RecClass<T>, ty: IDL.ConstructType<T>, d: null): JSX.Element | null {
+  public visitRec<T>(t: IDL.RecClass<T>, ty: IDL.ConstructType<T>): JSX.Element | null {
     return ty.accept<null, JSX.Element | null>(new Render(this.props), null);
   }
 }

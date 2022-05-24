@@ -4,7 +4,7 @@ import { PageWrapper } from '@union/components';
 import styled from 'styled-components';
 import { CreateGroupRequest } from 'union-ts';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender, FormContext, FieldSettings } from '../../../IDLRenderer';
+import { useRender, FormContext, Settings } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 
 const Container = styled(PageWrapper)``;
@@ -28,12 +28,15 @@ export const CreateGroupForm = styled(({ ...p }: CreateGroupFormProps) => {
     ctx.control.register('description', { required: 'Field is required' });
   }, []);
 
-  const settings: FieldSettings<CreateGroupRequest> = useMemo(
+  const settings: Settings<CreateGroupRequest> = useMemo(
     () => ({
-      name: { order: 1 },
-      description: { order: 2 },
-      private: { order: 3, label: 'Is private?' },
-      transferable: { order: 4, label: 'Is transferable?' },
+      rules: {},
+      fields: {
+        name: { order: 1 },
+        description: { order: 2 },
+        private: { order: 3, label: 'Is private?' },
+        transferable: { order: 4, label: 'Is transferable?' },
+      },
     }),
     [],
   );

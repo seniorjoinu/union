@@ -2,6 +2,9 @@ import { IDL } from '@dfinity/candid';
 import { Visitor } from '@dfinity/candid/lib/cjs/idl';
 
 export class TId extends IDL.ConstructType {
+  readonly name: string;
+  protected prog: TProg | null = null;
+
   constructor(public text: string) {
     super();
     this.name = `Knot(${text})`;
@@ -12,35 +15,39 @@ export class TId extends IDL.ConstructType {
   }
 
   accept<D, R>(v: Visitor<D, R>, d: D): R {
-    // @ts-ignore
     if (!this.prog) {
       throw new Error('Unreachable');
     }
 
-    // @ts-ignore
     return this.prog.traverseIdlType(this).accept(v, d);
   }
 
   covariant(x: any): x is any {
-    throw new Error('Unreachable');
+    if (!this.prog) {
+      throw new Error('Unreachable');
+    }
+    return this.prog.traverseIdlType(this).covariant(x);
   }
 
   decodeValue(x: any, t: any): any {
-    throw new Error('Unreachable');
+    if (!this.prog) {
+      throw new Error('Unreachable');
+    }
+    return this.prog.traverseIdlType(this).decodeValue(x, t);
   }
 
   encodeValue(x: any): ArrayBuffer {
-    throw new Error('Unreachable');
+    if (!this.prog) {
+      throw new Error('Unreachable');
+    }
+    return this.prog.traverseIdlType(this).encodeValue(x);
   }
 
   _setProg(prog: TProg) {
     Object.defineProperty(this, 'prog', { value: 'static', writable: true });
 
-    // @ts-ignore
     this.prog = prog;
   }
-
-  readonly name: string;
 }
 
 export enum TTypeKind {
