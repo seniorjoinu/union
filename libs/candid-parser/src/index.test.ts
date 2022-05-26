@@ -24,4 +24,5 @@ export function parseCandid(candid: string): TProg {
 let prog = parseCandid(candid);
 // let actor: IDL.ServiceClass | null = prog.getIdlActor();
 
-console.log(JSON.stringify(prog.traverseIdlType(new TId('CreateNestedVotingConfigRequest'))))
+// @ts-ignore
+console.log(/*JSON.stringify*/(prog.traverseIdlType(new TId('CreateNestedVotingConfigRequest')))._fields.find(it => it[0] == 'allowee_groups')[1]._type._fields)
