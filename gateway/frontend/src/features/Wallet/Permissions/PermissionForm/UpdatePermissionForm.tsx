@@ -6,7 +6,7 @@ import { UpdatePermissionRequest } from 'union-ts';
 import { useUnion } from 'services';
 import { Controller, useWatch } from 'react-hook-form';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { Settings, RenderContext, useRender } from '../../../IDLRenderer';
+import { EditorSettings, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 import { CanisterMethods } from '../../IDLFields';
 
@@ -51,7 +51,7 @@ export const UpdatePermissionForm = styled(({ ...p }: UpdatePermissionFormProps)
     type: 'UpdatePermissionRequest',
   });
 
-  const settings: Settings<UpdatePermissionRequest> = useMemo(
+  const settings: EditorSettings<UpdatePermissionRequest> = useMemo(
     () => ({
       rules: {},
       fields: {
@@ -66,7 +66,7 @@ export const UpdatePermissionForm = styled(({ ...p }: UpdatePermissionFormProps)
           label: 'Method name',
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<UpdatePermissionRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name={path as 'new_targets.0.-1.Endpoint.method_name'}
                 control={ctx.control}

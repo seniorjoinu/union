@@ -1,28 +1,11 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 import { IDL } from '@dfinity/candid';
-import {
-  Field,
-  Text,
-  Column,
-  Button,
-  AdvancedSelect,
-  AdvancedOption,
-  Checkbox,
-  ShiftedColumn,
-  getFontStyles,
-} from '@union/components';
+import { Field, Text, Column, Button, ShiftedColumn } from '@union/components';
 import styled from 'styled-components';
-import { useWatch, useFieldArray, get } from 'react-hook-form';
-import { Editor } from './editors';
-import {
-  Empty,
-  RenderProps,
-  context,
-  transformName,
-  SettingsWrapper,
-  useSettings,
-  getSettings,
-} from './utils';
+import { get } from 'react-hook-form';
+import { SettingsWrapper, getSettings } from '../utils';
+import { RenderProps, context, transformName, useSettings } from './utils';
+import { Viewer } from './viewers';
 
 export interface OptFormProps extends RenderProps {
   type: IDL.Type;
@@ -32,14 +15,12 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
 
-  useWatch({ name: path, control: ctx.control });
-  const state = ctx.getFieldState(path);
-  const enabled = !!ctx.getValues(path)?.length;
+  const enabled = !!get(ctx.value, path)?.length;
 
   const component = useMemo(
     () =>
       type.accept(
-        new Render({
+        new RenderViewer({
           path: `${path}${path ? '.' : ''}0`,
           absolutePath: `${absolutePath}${absolutePath ? '.' : ''}0`,
         }),
@@ -48,28 +29,13 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
     [type, path, absolutePath],
   );
   const name = settings.label || p.name;
-  const defaultValue = !ctx.settings.defaultValue
-    ? type.accept(new Empty(), null)
-    : get(ctx.settings.defaultValue, `${path}${path ? '.' : ''}0`);
 
   return (
-    <Column>
-      <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-        <Checkbox
-          onChange={() =>
-            ctx.setValue(path, !enabled ? [defaultValue] : [], {
-              // ctx.setValue(path, [], {
-              shouldValidate: true,
-            })
-          }
-          checked={enabled}
-          helperText={state.error?.message}
-        >
-          {name}
-        </Checkbox>
-        {enabled && <ShiftedColumn>{component}</ShiftedColumn>}
-      </SettingsWrapper>
-    </Column>
+    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+      <Field title={name} weight={{ title: 'medium' }} align={enabled ? 'column' : 'row'}>
+        {enabled ? <ShiftedColumn>{component}</ShiftedColumn> : 'null'}
+      </Field>
+    </SettingsWrapper>
   );
 };
 
@@ -80,9 +46,6 @@ export interface RecordFormProps extends RenderProps {
 export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps) => {
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
-
-  useWatch({ name: path, control: ctx.control });
-  const state = ctx.getFieldState(path);
 
   const fieldOrders = useMemo(
     () =>
@@ -107,19 +70,18 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
     [fields, fieldOrders],
   );
 
-  const Wrapper = path ? ShiftedColumn : Column;
   const name = settings.label || p.name;
+  const Wrapper = path ? ShiftedColumn : Column;
 
-  // TODO upgrade order to indexed
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <Field title={<Text weight='medium'>{name}</Text>} helperText={state.error?.message}>
+      <Field title={name} weight={{ title: 'medium' }}>
         <Wrapper margin={16}>
           {orderedFields.map(([key, field]) => {
             const currentPath = `${path}${path ? '.' : ''}${key}`;
 
             return field.accept(
-              new Render({
+              new RenderViewer({
                 path: currentPath,
                 absolutePath: `${absolutePath}${absolutePath ? '.' : ''}${key}`,
                 key: currentPath,
@@ -141,10 +103,7 @@ export interface VariantFormProps extends RenderProps {
 export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormProps) => {
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
-
-  useWatch({ name: path, control: ctx.control });
-  const state = ctx.getFieldState(path);
-  const value = ctx.getValues(path) || {};
+  const value = get(ctx.value, path) || {};
 
   const selected = useMemo(() => {
     const keys = Object.keys(value);
@@ -158,47 +117,29 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
     }
 
     return selected[1].accept(
-      new Render({
+      new RenderViewer({
         path: `${path}${path ? '.' : ''}${selected[0]}`,
         absolutePath: `${absolutePath}${absolutePath ? '.' : ''}${selected[0]}`,
-        name: ctx.transformLabel(selected[0], transformName),
+        // name: ctx.transformLabel(selected[0], transformName),
       }),
       null,
     );
   }, [selected, fields, ctx.transformLabel, path, absolutePath]);
 
-  const handleChange = useCallback(
-    (_: string, field: [string, IDL.Type]) => {
-      ctx.setValue(
-        path,
-        { [field[0]]: field[1].accept(new Empty(), null) },
-        { shouldValidate: true },
-      );
-    },
-    [ctx.setValue],
-  );
-
-  const Wrapper = path ? ShiftedColumn : Column;
   const name = settings.label || p.name;
 
   return (
-    <Column>
-      <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-        <AdvancedSelect
-          label={name}
-          onChange={handleChange}
-          value={selected ? [selected[0]] : []}
-          multiselect={false}
-          placeholder='Select variant'
-          helperText={state.error?.message}
-        >
-          {fields.map((field) => (
-            <AdvancedOption key={field[0]} value={field[0]} obj={field} />
-          ))}
-        </AdvancedSelect>
-        <Wrapper>{selectedItem}</Wrapper>
-      </SettingsWrapper>
-    </Column>
+    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+      <Field
+        title={`${name || ''}${name && selected ? ': ' : ''}${
+          selected ? ctx.transformLabel(selected[0], transformName) : ''
+        }`}
+        weight={{ title: 'medium' }}
+        align='column'
+      >
+        <Column>{selectedItem}</Column>
+      </Field>
+    </SettingsWrapper>
   );
 };
 
@@ -206,17 +147,6 @@ export const VecTitle = styled(Text)<{ $error?: string }>`
   position: relative;
   &&& {
     margin-bottom: 8px;
-  }
-
-  &::before {
-    content: ${({ $error }) => ($error ? `"${$error}"` : 'none')};
-    position: absolute;
-    bottom: 2px;
-    left: 0;
-    right: 0;
-    transform: translateY(100%);
-    color: ${({ theme }) => theme.colors.red};
-    ${getFontStyles('caption', 'regular')}
   }
 
   &:empty {
@@ -237,11 +167,8 @@ export interface VecFormProps extends RenderProps {
 export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
-  const { append, remove } = useFieldArray({ name: path, control: ctx.control });
 
-  useWatch({ name: path, control: ctx.control });
-  const items = ctx.getValues(path) || [];
-  const state = ctx.getFieldState(path);
+  const items = get(ctx.value, path) || [];
 
   const Wrapper = path ? ShiftedColumn : Column;
   const name = settings.label || p.name;
@@ -249,31 +176,21 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
       <VecContainer>
-        <VecTitle variant='p2' weight='medium' $error={state.error?.message}>
+        <VecTitle variant='p2' weight='medium'>
           {name}
         </VecTitle>
-        <VecButton variant='caption' onClick={() => append(type.accept(new Empty(), null))}>
-          +
-        </VecButton>
         {!!items?.length && (
           <Column margin={16}>
             {items.map((_: any, i: number) => {
               const component = type.accept(
-                new Render({
+                new RenderViewer({
                   path: `${path}${path ? '.' : ''}${i}`,
                   absolutePath: `${absolutePath}${absolutePath ? '.' : ''}-1`,
                 }),
                 null,
               );
 
-              return (
-                <Wrapper key={String(i)}>
-                  {component}
-                  <VecButton variant='caption' onClick={() => remove(i)}>
-                    -
-                  </VecButton>
-                </Wrapper>
-              );
+              return <Wrapper key={String(i)}>{component}</Wrapper>;
             })}
           </Column>
         )}
@@ -290,14 +207,11 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
 
-  useWatch({ name: path, control: ctx.control });
-  const state = ctx.getFieldState(path);
-
   const children = useMemo(
     () =>
       fields.map((type, i) =>
         type.accept(
-          new Render({
+          new RenderViewer({
             path: `${path}${path ? '.' : ''}${i}`,
             absolutePath: `${absolutePath}${absolutePath ? '.' : ''}${i}`,
             key: String(i),
@@ -312,9 +226,7 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
       <VecContainer margin={16}>
-        <VecTitle variant='p2' $error={state.error?.message}>
-          {name}
-        </VecTitle>
+        <VecTitle variant='p2'>{name}</VecTitle>
         {children}
       </VecContainer>
     </SettingsWrapper>
@@ -323,13 +235,13 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
 
 export const NullForm = (_: RenderProps) => null;
 
-export class Render extends IDL.Visitor<null, JSX.Element | null> {
+export class RenderViewer extends IDL.Visitor<null, JSX.Element | null> {
   constructor(protected props: RenderProps) {
     super();
   }
 
   public visitType<T>(t: IDL.Type<T>) {
-    return t.accept(new Editor(this.props), null);
+    return t.accept(new Viewer(this.props), null);
   }
   public visitNull(t: IDL.NullClass) {
     return <NullForm {...this.props} />;
@@ -350,6 +262,6 @@ export class Render extends IDL.Visitor<null, JSX.Element | null> {
     return <VecForm type={ty} {...this.props} />;
   }
   public visitRec<T>(t: IDL.RecClass<T>, ty: IDL.ConstructType<T>): JSX.Element | null {
-    return ty.accept<null, JSX.Element | null>(new Render(this.props), null);
+    return ty.accept<null, JSX.Element | null>(new RenderViewer(this.props), null);
   }
 }

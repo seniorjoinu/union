@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { PageWrapper, Pager, Button as B, Row as R } from '@union/components';
 import { useUnion } from 'services';
 import { VotingConfig } from 'union-ts';
 import { NavLink, useParams } from 'react-router-dom';
 import { DEFAULT_VOTING_CONFIG_IDS } from 'envs';
+import { useRender } from '../../IDLRenderer';
 import { UnionTooltipButtonComponent, useUnionSubmit } from '../../../components/UnionSubmit';
 import { useCurrentUnion } from '../context';
 import { VotingConfigItem } from './VotingConfigItem';
@@ -44,6 +45,10 @@ export const VotingConfigs = styled(({ ...p }: VotingConfigsProps) => {
     methodName: 'delete_voting_config',
     onExecuted: (p) => setOptimisticDeleted((v) => ({ ...v, [String(p[0]?.id)]: true })),
   });
+  const { View } = useRender<VotingConfig>({
+    canisterId: principal,
+    type: 'VotingConfig',
+  });
 
   return (
     <Container {...p} title='Voting configs'>
@@ -70,13 +75,24 @@ export const VotingConfigs = styled(({ ...p }: VotingConfigsProps) => {
 
           return (
             !optimisticDeleted[id] && (
-              <VotingConfigItem votingConfig={item} opened={votingConfigId == id}>
+              <VotingConfigItem votingConfig={item} opened={votingConfigId == id} View={View}>
                 <ItemControls>
+                  <Button
+                    forwardedAs={NavLink}
+                    to={
+                      votingConfigId
+                        ? `../voting-configs/create-nested/${id}`
+                        : `create-nested/${id}`
+                    }
+                    variant='caption'
+                  >
+                    Create nested
+                  </Button>
                   {!DEFAULT_VOTING_CONFIG_IDS.includes(item.id[0]!) && (
                     <>
                       <Button
                         forwardedAs={NavLink}
-                        to={votingConfigId ? `../permissions/edit/${id}` : `edit/${id}`}
+                        to={votingConfigId ? `../voting-configs/edit/${id}` : `edit/${id}`}
                         variant='caption'
                       >
                         Edit

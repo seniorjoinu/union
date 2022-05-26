@@ -7,7 +7,7 @@ import { useUnion } from 'services';
 import { Controller } from 'react-hook-form';
 import { Principal } from '@dfinity/principal';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { Settings, RenderContext, useRender } from '../../../IDLRenderer';
+import { EditorSettings, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 import { PermissionsListField, GroupListField, ProfileListField } from '../../IDLFields';
 
@@ -53,7 +53,7 @@ export const UpdateAccessConfigForm = styled(({ ...p }: UpdateAccessConfigFormPr
     type: 'UpdateAccessConfigRequest',
   });
 
-  const settings: Settings<UpdateAccessConfigRequest> = useMemo(
+  const settings: EditorSettings<UpdateAccessConfigRequest> = useMemo(
     () => ({
       rules: {},
       fields: {
@@ -64,7 +64,7 @@ export const UpdateAccessConfigForm = styled(({ ...p }: UpdateAccessConfigFormPr
           order: 3,
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name='new_permissions.0'
                 control={ctx.control}
@@ -84,7 +84,7 @@ export const UpdateAccessConfigForm = styled(({ ...p }: UpdateAccessConfigFormPr
         'new_allowees.0.-1.Group.id': {
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name={path as 'new_allowees.0.-1.Group.id'}
                 control={ctx.control}
@@ -103,7 +103,7 @@ export const UpdateAccessConfigForm = styled(({ ...p }: UpdateAccessConfigFormPr
         'new_allowees.0.-1.Profile': {
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<UpdateAccessConfigRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name={path as 'new_allowees.0.-1.Profile'}
                 control={ctx.control}

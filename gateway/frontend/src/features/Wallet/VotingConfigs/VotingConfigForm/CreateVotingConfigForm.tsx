@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { CreateVotingConfigRequest } from 'union-ts';
 import { Controller } from 'react-hook-form';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender, FormContext, Settings, RenderContext } from '../../../IDLRenderer';
+import { useRender, EditorSettings, RenderEditorContext } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 import { GroupListField } from '../../IDLFields';
 
@@ -25,12 +25,12 @@ export const CreateVotingConfigForm = styled(({ ...p }: CreateVotingConfigFormPr
     type: 'CreateVotingConfigRequest',
   });
 
-  const useFormEffect = useCallback((ctx: FormContext<CreateVotingConfigRequest>) => {
+  const useFormEffect = useCallback((ctx: RenderEditorContext<CreateVotingConfigRequest>) => {
     ctx.control.register('name', { required: 'Field is required' });
     ctx.control.register('description', { required: 'Field is required' });
   }, []);
 
-  const settings: Settings<CreateVotingConfigRequest> = useMemo(
+  const settings: EditorSettings<CreateVotingConfigRequest> = useMemo(
     () => ({
       rules: {
         'FractionOf.fraction': {
@@ -47,7 +47,7 @@ export const CreateVotingConfigForm = styled(({ ...p }: CreateVotingConfigFormPr
         'target.Group': {
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<CreateVotingConfigRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name={path as 'win.FractionOf.target.Group'}
                 control={ctx.control}

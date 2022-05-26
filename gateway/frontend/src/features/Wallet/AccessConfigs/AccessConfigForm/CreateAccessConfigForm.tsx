@@ -6,7 +6,7 @@ import { CreateAccessConfigRequest } from 'union-ts';
 import { Controller } from 'react-hook-form';
 import { Principal } from '@dfinity/principal';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender, FormContext, Settings, RenderContext } from '../../../IDLRenderer';
+import { useRender, EditorSettings, RenderEditorContext } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 import { PermissionsListField, GroupListField, ProfileListField } from '../../IDLFields';
 
@@ -26,12 +26,12 @@ export const CreateAccessConfigForm = styled(({ ...p }: CreateAccessConfigFormPr
     type: 'CreateAccessConfigRequest',
   });
 
-  const useFormEffect = useCallback((ctx: FormContext<CreateAccessConfigRequest>) => {
+  const useFormEffect = useCallback((ctx: RenderEditorContext<CreateAccessConfigRequest>) => {
     ctx.control.register('name', { required: 'Field is required' });
     ctx.control.register('description', { required: 'Field is required' });
   }, []);
 
-  const settings: Settings<CreateAccessConfigRequest> = useMemo(
+  const settings: EditorSettings<CreateAccessConfigRequest> = useMemo(
     () => ({
       rules: {},
       fields: {
@@ -41,7 +41,7 @@ export const CreateAccessConfigForm = styled(({ ...p }: CreateAccessConfigFormPr
           order: 3,
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<CreateAccessConfigRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name='permissions'
                 control={ctx.control}
@@ -61,7 +61,7 @@ export const CreateAccessConfigForm = styled(({ ...p }: CreateAccessConfigFormPr
         'allowees.-1.Group.id': {
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<CreateAccessConfigRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name={path as 'allowees.-1.Group.id'}
                 control={ctx.control}
@@ -80,7 +80,7 @@ export const CreateAccessConfigForm = styled(({ ...p }: CreateAccessConfigFormPr
         'allowees.-1.Profile': {
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<CreateAccessConfigRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name={path as 'allowees.-1.Profile'}
                 control={ctx.control}

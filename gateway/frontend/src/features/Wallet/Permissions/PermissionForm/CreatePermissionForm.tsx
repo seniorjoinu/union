@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { CreatePermissionRequest } from 'union-ts';
 import { Controller, useWatch } from 'react-hook-form';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { useRender, FormContext, Settings, RenderContext } from '../../../IDLRenderer';
+import { useRender, EditorSettings, RenderEditorContext } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 import { CanisterMethods } from '../../IDLFields';
 
@@ -25,12 +25,12 @@ export const CreatePermissionForm = styled(({ ...p }: CreatePermissionFormProps)
     type: 'CreatePermissionRequest',
   });
 
-  const useFormEffect = useCallback((ctx: FormContext<CreatePermissionRequest>) => {
+  const useFormEffect = useCallback((ctx: RenderEditorContext<CreatePermissionRequest>) => {
     ctx.control.register('name', { required: 'Field is required' });
     ctx.control.register('description', { required: 'Field is required' });
   }, []);
 
-  const settings: Settings<CreatePermissionRequest> = useMemo(
+  const settings: EditorSettings<CreatePermissionRequest> = useMemo(
     () => ({
       rules: {},
       fields: {
@@ -44,7 +44,7 @@ export const CreatePermissionForm = styled(({ ...p }: CreatePermissionFormProps)
           label: 'Method name',
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<CreatePermissionRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name={path as 'targets.-1.Endpoint.method_name'}
                 control={ctx.control}

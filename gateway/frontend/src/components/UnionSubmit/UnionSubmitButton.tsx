@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { SubmitButton, SubmitButtonProps, Row } from '@union/components';
 import { _SERVICE, DeployerService, GatewayService } from 'services';
-import { useUnionSubmit, UnionSubmitProps, AnyService } from './hook';
+import { useUnionSubmit, UnionSubmitProps, EncDec, AnyService } from './hook';
 
 const Container = styled(Row)``;
 
@@ -32,7 +32,7 @@ export const UnionExternalSubmitButton = <
   children,
   submitVotingVerbose = 'Create voting',
   ...p
-}: UnionExternalSubmitButtonProps<S, T>) => {
+}: UnionExternalSubmitButtonProps<S, T> & EncDec) => {
   const { isAllowed, submitting, submit, createVoting } = useUnionSubmit<S>({
     unionId,
     canisterId,
@@ -66,7 +66,8 @@ export const UnionExternalSubmitButton = <
 export type UnionSubmitButtonProps<T extends keyof _SERVICE> = UnionExternalSubmitButtonProps<
   SERVICE,
   T
->;
+> &
+  EncDec;
 
 export const UnionSubmitButton = <T extends keyof _SERVICE>(p: UnionSubmitButtonProps<T>) => (
   <UnionExternalSubmitButton {...p} />
@@ -74,7 +75,7 @@ export const UnionSubmitButton = <T extends keyof _SERVICE>(p: UnionSubmitButton
 
 export type DeployerSubmitButtonProps<
   T extends keyof DeployerService
-> = UnionExternalSubmitButtonProps<DeployerService & AnyService, T>;
+> = UnionExternalSubmitButtonProps<DeployerService & AnyService, T> & EncDec;
 
 export const DeployerSubmitButton = <T extends keyof DeployerService>(
   p: DeployerSubmitButtonProps<T>,
@@ -82,7 +83,7 @@ export const DeployerSubmitButton = <T extends keyof DeployerService>(
 
 export type GatewaySubmitButtonProps<
   T extends keyof GatewayService
-> = UnionExternalSubmitButtonProps<GatewayService & AnyService, T>;
+> = UnionExternalSubmitButtonProps<GatewayService & AnyService, T> & EncDec;
 
 export const GatewaySubmitButton = <T extends keyof GatewayService>(
   p: GatewaySubmitButtonProps<T>,

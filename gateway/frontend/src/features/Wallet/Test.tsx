@@ -2,7 +2,7 @@ import { Button, Column, Row } from '@union/components';
 import React, { useCallback } from 'react';
 import styled from 'styled-components';
 import { UpdateVotingConfigRequest } from 'union-ts';
-import { FormContext, useRender } from '../IDLRenderer';
+import { RenderEditorContext, useRender } from '../IDLRenderer';
 import { useCurrentUnion } from './context';
 
 const Container = styled(Column)`
@@ -27,7 +27,7 @@ export const Test = styled(({ ...p }: TestProps) => {
   });
   const value = {};
 
-  const useFormEffect = useCallback((ctx: FormContext<UpdateVotingConfigRequest>) => {
+  const useFormEffect = useCallback((ctx: RenderEditorContext<UpdateVotingConfigRequest>) => {
     // ctx.control.register('win_opt.0.QuantityOf.quantity', {
     //   required: 'Please, fill name',
     // });

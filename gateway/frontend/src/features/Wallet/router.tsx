@@ -7,7 +7,13 @@ import { Profile, ChangeProfile } from './Profile';
 import { Groups, CreateGroupForm, UpdateGroupForm } from './Groups';
 import { Permissions, CreatePermissionForm, UpdatePermissionForm } from './Permissions';
 import { AccessConfigs, CreateAccessConfigForm, UpdateAccessConfigForm } from './AccessConfigs';
-import { VotingConfigs, CreateVotingConfigForm, UpdateVotingConfigForm } from './VotingConfigs';
+import {
+  VotingConfigs,
+  CreateVotingConfigForm,
+  UpdateVotingConfigForm,
+  CreateNestedVotingConfigForm,
+  UpdateNestedVotingConfigForm,
+} from './VotingConfigs';
 import { Info, UpdateInfoForm, UpgradeForm } from './Info';
 import { Assets, AssetsCanisterUpdater, BatchesUploader } from './Assets';
 import { VersionForm } from './VersionForm';
@@ -51,6 +57,14 @@ export const Wallet = () => {
           <Route path='/voting-configs/:votingConfigId' element={<VotingConfigs />} />
           <Route path='/voting-configs/edit/:votingConfigId' element={<UpdateVotingConfigForm />} />
           <Route path='/voting-configs/create' element={<CreateVotingConfigForm />} />
+          <Route
+            path='/voting-configs/create-nested/:votingConfigId'
+            element={<CreateNestedVotingConfigForm />}
+          />
+          <Route
+            path='/voting-configs/edit-nested/:votingConfigId'
+            element={<UpdateNestedVotingConfigForm />}
+          />
 
           <Route path='/profile' element={<Profile />} />
           <Route path='/profile/change' element={<ChangeProfile />} />

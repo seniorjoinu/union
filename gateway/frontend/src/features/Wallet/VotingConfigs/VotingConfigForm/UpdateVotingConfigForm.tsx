@@ -6,7 +6,7 @@ import { UpdateVotingConfigRequest } from 'union-ts';
 import { useUnion } from 'services';
 import { Controller } from 'react-hook-form';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
-import { RenderContext, Settings, useRender } from '../../../IDLRenderer';
+import { EditorSettings, useRender } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
 import { GroupListField } from '../../IDLFields';
 
@@ -59,7 +59,7 @@ export const UpdateVotingConfigForm = styled(({ ...p }: UpdateVotingConfigFormPr
   }, [votingConfigId, data.get_voting_config?.voting_config]);
 
   // @ts-ignore
-  const settings: Settings<UpdateVotingConfigRequest> = useMemo(
+  const settings: EditorSettings<UpdateVotingConfigRequest> = useMemo(
     () => ({
       rules: {
         'FractionOf.fraction': {
@@ -76,7 +76,7 @@ export const UpdateVotingConfigForm = styled(({ ...p }: UpdateVotingConfigFormPr
         'target.Group': {
           adornment: {
             kind: 'replace',
-            render: (ctx: RenderContext<UpdateVotingConfigRequest>, path, name) => (
+            render: (ctx, path, name) => (
               <Controller
                 name={path as 'win_opt.0.FractionOf.target.Group'}
                 control={ctx.control}

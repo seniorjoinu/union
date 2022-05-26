@@ -1273,7 +1273,7 @@ type UpdateNestedVotingConfigRequest = record {
     name_opt : opt text;
     description_opt : opt text;
     vote_calculation_opt : opt NestedVoteCalculation;
-    allowee_groups_opt : opt record { 0 : GroupId; 1 : Fraction; };
+    allowee_groups_opt : opt vec record { 0 : GroupId; 1 : Fraction; };
 };
 
 type DeleteNestedVotingConfigRequest = record {

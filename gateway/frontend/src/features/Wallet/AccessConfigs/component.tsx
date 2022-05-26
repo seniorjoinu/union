@@ -74,7 +74,7 @@ export const AccessConfigs = styled(({ ...p }: AccessConfigsProps) => {
                 <ItemControls>
                   <Button
                     forwardedAs={NavLink}
-                    to={accessConfigId ? `../permissions/edit/${id}` : `edit/${id}`}
+                    to={accessConfigId ? `../access-configs/edit/${id}` : `edit/${id}`}
                     variant='caption'
                   >
                     Edit

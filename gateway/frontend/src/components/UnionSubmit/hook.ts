@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { Unpromise } from 'toolkit';
 import { Principal } from '@dfinity/principal';
 import { buildDecoder, buildEncoder } from '@union/serialize';
-import { IDL } from '@dfinity/candid';
 
 export interface AnyService {
   [key: string]: (...args: any[]) => any;
@@ -20,9 +19,18 @@ export interface UnionSubmitProps<
   unionId: Principal;
   canisterId: Principal;
   methodName: T;
-  canisterIdl?: IDL.InterfaceFactory;
   onExecuted?(payload: P, result: R): void;
 }
+
+export type EncDec =
+  | ({} & {
+      encode(x: any): ArrayBuffer;
+      decode(x: any): any;
+    })
+  | ({} & {
+      encode?: never;
+      decode?: never;
+    });
 
 export interface UnionSubmitResult<
   S extends AnyService,
@@ -43,10 +51,11 @@ export const useUnionSubmit = <
   canisterId,
   methodName: propMethodName,
   unionId,
-  canisterIdl = unionIdl,
   onClick = () => {},
   onExecuted = () => {},
-}: UnionSubmitProps<S, T, P>): UnionSubmitResult<S, T, P> => {
+  encode,
+  decode,
+}: UnionSubmitProps<S, T, P> & EncDec): UnionSubmitResult<S, T, P> => {
   const [submitting, setSubmitting] = useState(false);
   const nav = useNavigate();
   const { identity } = useAuth();
@@ -77,11 +86,11 @@ export const useUnionSubmit = <
           throw new Error('No access');
         }
 
-        const { encoder, decoder } = getEnDec({ idl: canisterIdl });
+        const encoder = buildEncoder(unionIdl) as Encoder;
 
         console.log(`\x1b[33mexecute [${methodName}]`, payload);
         // @ts-expect-error
-        const encoded = encoder[methodName](...(payload || []));
+        const encoded = encode ? encode(payload) : encoder[methodName](...(payload || []));
 
         const { result } = await canister.execute({
           access_config_id: accessConfig.id[0]!,
@@ -111,7 +120,10 @@ export const useUnionSubmit = <
 
         const { buffer } = new Uint8Array(response.Ok);
 
-        const decodedResult = (await decoder[methodName](buffer))[0] as Unpromise<ReturnType<S[T]>>;
+        const decoder = buildDecoder(unionIdl) as Decoder;
+        const decodedResult = (decode
+          ? decode(buffer)
+          : (await decoder[methodName](buffer))[0]) as Unpromise<ReturnType<S[T]>>;
 
         onExecuted(payload, decodedResult);
         setSubmitting(false);
@@ -122,7 +134,7 @@ export const useUnionSubmit = <
         throw e;
       }
     },
-    [methodName, methodAccess, onClick, onExecuted, setSubmitting, canisterIdl],
+    [methodName, methodAccess, onClick, onExecuted, setSubmitting],
   );
 
   const createVoting = useCallback(
@@ -149,7 +161,3 @@ export const useUnionSubmit = <
 
 type Encoder = { [key: string]: (...args: any[]) => ArrayBuffer };
 type Decoder = { [key: string]: (bytes: ArrayBuffer) => any };
-
-const getEnDec = ({ idl }: { idl: IDL.InterfaceFactory }) => {
-  return { encoder: buildEncoder(idl) as Encoder, decoder: buildDecoder(idl) as Decoder };
-};

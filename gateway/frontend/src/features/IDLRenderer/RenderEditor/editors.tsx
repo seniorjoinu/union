@@ -1,9 +1,10 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { IDL } from '@dfinity/candid';
 import { Checkbox, TextField, TextFieldProps } from '@union/components';
 import { Controller, ControllerProps } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
-import { RenderProps, context, SettingsWrapper, useSettings } from './utils';
+import { SettingsWrapper } from '../utils';
+import { RenderProps, context, useSettings } from './utils';
 
 export interface TypeFormProps extends Omit<TextFieldProps, 'name'>, RenderProps {
   idl: IDL.Type<any>;

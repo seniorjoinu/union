@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { SubmitButton as SB, SubmitButtonProps, Column, TooltipButton } from '@union/components';
 import { _SERVICE } from 'services';
-import { useUnionSubmit, UnionSubmitProps, UnionSubmitResult, AnyService } from './hook';
+import { useUnionSubmit, UnionSubmitProps, EncDec, UnionSubmitResult, AnyService } from './hook';
 
 const SubmitButton = styled(SB)`
   white-space: nowrap;
@@ -25,7 +25,7 @@ export const UnionTooltipButton = <T extends keyof _SERVICE = keyof _SERVICE>({
   canisterId,
   methodName,
   ...p
-}: UnionTooltipButtonProps<T>) => {
+}: UnionTooltipButtonProps<T> & EncDec) => {
   const submitProps = useUnionSubmit({
     canisterId,
     unionId: canisterId,
@@ -69,7 +69,7 @@ export const UnionTooltipButtonComponent = <
   submit,
   createVoting,
   ...p
-}: UnionTooltipButtonComponentProps<T, P>) => {
+}: UnionTooltipButtonComponentProps<T, P> & EncDec) => {
   if (!isAllowed) {
     return (
       <SubmitButton

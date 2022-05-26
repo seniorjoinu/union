@@ -1,3 +1,3 @@
 export * from './hook';
-export { getProvider } from './utils';
-export type { Settings, RenderContext } from './utils';
+export type { EditorSettings, RenderEditorContext, EditorProps } from './RenderEditor';
+export type { ViewerSettings, RenderViewerContext, ViewProps } from './RenderViewer';

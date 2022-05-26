@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { UpdateSettingsRequest } from 'union-ts';
 import { useUnion } from 'services';
 import { UnionSubmitButton } from '../../../components/UnionSubmit';
-import { Settings, useRender } from '../../IDLRenderer';
+import { EditorSettings, useRender } from '../../IDLRenderer';
 import { useCurrentUnion } from '../context';
 
 const Container = styled(PageWrapper)``;
@@ -41,7 +41,7 @@ export const UpdateInfoForm = styled(({ ...p }: UpdateInfoFormProps) => {
     type: 'UpdateSettingsRequest',
   });
 
-  const settings: Settings<UpdateSettingsRequest> = useMemo(
+  const settings: EditorSettings<UpdateSettingsRequest> = useMemo(
     () => ({
       rules: {},
       fields: {

@@ -11,7 +11,7 @@
 - [ ] create_chunk
 - [x] create_group
 - [ ] create_nested_voting
-- [ ] create_nested_voting_config
+- [x] create_nested_voting_config
 - [x] create_permission
 - [ ] create_profile
 - [ ] create_voting
@@ -22,7 +22,7 @@
 - [ ] delete_batches
 - [x] delete_group
 - [ ] delete_nested_voting
-- [ ] delete_nested_voting_config
+- [x] delete_nested_voting_config
 - [x] delete_permission
 - [ ] delete_profile
 - [ ] delete_unlocked_batches
@@ -45,7 +45,7 @@
 - [x] get_my_unaccepted_group_shares_balance
 - [ ] get_my_vote
 - [ ] get_nested_voting
-- [ ] get_nested_voting_config
+- [x] get_nested_voting_config
 - [x] get_permission
 - [ ] get_profile
 - [x] get_settings
@@ -63,7 +63,7 @@
 - [x] list_groups
 - [ ] list_group_shares
 - [ ] list_nested_votings
-- [ ] list_nested_voting_configs
+- [x] list_nested_voting_configs
 - [x] list_permissions
 - [ ] list_profiles
 - [ ] list_program_execution_entry_ids
@@ -79,7 +79,7 @@
 - [x] update_access_config
 - [x] update_group
 - [x] update_my_profile
-- [ ] update_nested_voting_config
+- [x] update_nested_voting_config
 - [x] update_permission
 - [ ] update_profile
 - [x] update_settings
