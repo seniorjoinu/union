@@ -6,7 +6,7 @@ export const transformName = (v: string | null | void) => {
   if (!v) {
     return '';
   }
-  return `${v[0].toUpperCase()}${v.slice(1)}`;
+  return `${v[0].toUpperCase()}${v.slice(1)}`.replaceAll('_', ' ');
 };
 
 export type RenderViewerContext<V extends FieldValues = FieldValues> = {

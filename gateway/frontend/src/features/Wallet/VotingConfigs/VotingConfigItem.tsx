@@ -4,7 +4,9 @@ import styled from 'styled-components';
 import { get } from 'react-hook-form';
 import { VotingConfig } from 'union-ts';
 import { ViewProps, ViewerSettings } from '../../IDLRenderer';
+import { PermissionInfo } from '../Permissions';
 import { GroupInfo } from '../Groups';
+import { NestedVotingConfigs } from './NestedVotingConfigs';
 
 const Column = styled(C)`
   border-left: 1px solid ${({ theme }) => theme.colors.grey};
@@ -79,6 +81,21 @@ export const VotingConfigItem = styled(
           approval: { order: 9 },
           quorum: { order: 10 },
           next_round: { order: 11 },
+          'permissions.-1': {
+            adornment: {
+              kind: 'replace',
+              render: (ctx, path) => {
+                const permissionId = get(ctx.value, path);
+
+                return (
+                  <PermissionInfo
+                    permissionId={permissionId}
+                    to={`../permissions/${String(permissionId)}`}
+                  />
+                );
+              },
+            },
+          },
         },
       }),
       [],
@@ -89,6 +106,13 @@ export const VotingConfigItem = styled(
         <Container>
           {children}
           <View value={votingConfig} settings={settings} />
+          <Field
+            title='Nested voting configs'
+            weight={{ title: 'medium' }}
+            variant={{ title: 'p3' }}
+          >
+            <NestedVotingConfigs parentVotingConfig={votingConfig.id[0]} />
+          </Field>
         </Container>
       </Accordeon>
     );

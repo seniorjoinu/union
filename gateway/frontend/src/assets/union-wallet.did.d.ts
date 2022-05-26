@@ -625,7 +625,7 @@ export interface UpdateNestedVotingConfigRequest {
   'description_opt' : [] | [string],
   'name_opt' : [] | [string],
   'vote_calculation_opt' : [] | [NestedVoteCalculation],
-  'allowee_groups_opt' : [] | [[GroupId, Fraction]],
+  'allowee_groups_opt' : [] | [Array<[GroupId, Fraction]>],
 }
 export interface UpdatePermissionRequest {
   'id' : PermissionId,

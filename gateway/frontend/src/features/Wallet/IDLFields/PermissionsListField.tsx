@@ -2,7 +2,7 @@ import { EntitySelect, EntitySelectProps } from '@union/components';
 import React from 'react';
 import { useUnion } from 'services';
 import styled from 'styled-components';
-import { Permission } from 'union-ts';
+import { Permission, PermissionFilter } from 'union-ts';
 import { useCurrentUnion } from '../context';
 
 export interface PermissionsListFieldProps
@@ -10,10 +10,11 @@ export interface PermissionsListFieldProps
   value: bigint[];
   onChange(v: bigint[]): void;
   helperText?: string;
+  filter?: PermissionFilter;
 }
 
 export const PermissionsListField = styled(
-  ({ value, onChange, ...p }: PermissionsListFieldProps) => {
+  ({ value, onChange, filter = { target: [] }, ...p }: PermissionsListFieldProps) => {
     const { principal } = useCurrentUnion();
     const { canister } = useUnion(principal);
 
@@ -41,7 +42,7 @@ export const PermissionsListField = styled(
               page_index: index,
               page_size: size,
               sort: null,
-              filter: { target: [] },
+              filter,
             },
             query_delegation_proof_opt: [],
           })

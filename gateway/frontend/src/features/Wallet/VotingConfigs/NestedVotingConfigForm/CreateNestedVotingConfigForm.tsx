@@ -7,7 +7,11 @@ import { Controller } from 'react-hook-form';
 import { UnionSubmitButton } from '../../../../components/UnionSubmit';
 import { useRender, EditorSettings, RenderEditorContext } from '../../../IDLRenderer';
 import { useCurrentUnion } from '../../context';
-import { GroupListField } from '../../IDLFields';
+import {
+  GroupListField,
+  NestedVotingConfigListField,
+  VotingConfigListField,
+} from '../../IDLFields';
 
 const Container = styled(PageWrapper)``;
 
@@ -19,7 +23,7 @@ export interface CreateNestedVotingConfigFormProps {
 export const CreateNestedVotingConfigForm = styled(
   ({ ...p }: CreateNestedVotingConfigFormProps) => {
     const { principal } = useCurrentUnion();
-    const { votingConfigId } = useParams();
+    const { votingConfigId, nestedVotingConfigId } = useParams();
     const nav = useNavigate();
 
     const { Form, defaultValues, traversedIdlType, prog } = useRender<
@@ -41,9 +45,13 @@ export const CreateNestedVotingConfigForm = styled(
       () => ({
         ...defaultValues,
         remote_union_id: principal,
-        remote_voting_config_id: { Common: BigInt(votingConfigId || -1) },
+        remote_voting_config_id: votingConfigId
+          ? { Common: BigInt(votingConfigId || -1) }
+          : nestedVotingConfigId
+          ? { Nested: BigInt(nestedVotingConfigId) }
+          : null,
       }),
-      [defaultValues, votingConfigId],
+      [defaultValues, votingConfigId, nestedVotingConfigId],
     );
 
     const settings: EditorSettings<CreateNestedVotingConfigRequest> = useMemo(
@@ -56,6 +64,44 @@ export const CreateNestedVotingConfigForm = styled(
           remote_union_id: { order: 4 },
           vote_calculation: { order: 5 },
           allowee_groups: { order: 6 },
+          'remote_voting_config_id.Common': {
+            adornment: {
+              kind: 'replace',
+              render: (ctx, path, name) => (
+                <Controller
+                  name={path as 'remote_voting_config_id.Common'}
+                  control={ctx.control}
+                  render={({ field, fieldState: { error } }) => (
+                    <VotingConfigListField
+                      label={name}
+                      onChange={field.onChange}
+                      value={field.value}
+                      helperText={error?.message}
+                    />
+                  )}
+                />
+              ),
+            },
+          },
+          'remote_voting_config_id.Nested': {
+            adornment: {
+              kind: 'replace',
+              render: (ctx, path, name) => (
+                <Controller
+                  name={path as 'remote_voting_config_id.Nested'}
+                  control={ctx.control}
+                  render={({ field, fieldState: { error } }) => (
+                    <NestedVotingConfigListField
+                      label={name}
+                      onChange={field.onChange}
+                      value={field.value}
+                      helperText={error?.message}
+                    />
+                  )}
+                />
+              ),
+            },
+          },
           'allowee_groups.-1.0': {
             label: 'Group id',
             adornment: {
@@ -90,10 +136,6 @@ export const CreateNestedVotingConfigForm = styled(
       }),
       [],
     );
-
-    if (!votingConfigId) {
-      return <span>votingConfigId is empty</span>;
-    }
 
     if (!traversedIdlType) {
       return <span>Wrong traversedIdlType</span>;

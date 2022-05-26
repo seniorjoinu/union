@@ -62,6 +62,10 @@ export const Wallet = () => {
             element={<CreateNestedVotingConfigForm />}
           />
           <Route
+            path='/voting-configs/create-nested-nested/:nestedVotingConfigId'
+            element={<CreateNestedVotingConfigForm />}
+          />
+          <Route
             path='/voting-configs/edit-nested/:votingConfigId'
             element={<UpdateNestedVotingConfigForm />}
           />

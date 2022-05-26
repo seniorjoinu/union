@@ -62,7 +62,7 @@ export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
         <Container ref={ref} className={className} style={style}>
           <HeaderHandler onClick={handleOpen} isStatic={isStatic}>
             <Header>
-              <Title variant='h5'>{title}</Title>
+              <Title>{title}</Title>
             </Header>
             {!isStatic && !disabled && <Mark $isOpened={!!isOpened} />}
           </HeaderHandler>
