@@ -1,4 +1,4 @@
-import { EmbeddedActionsParser } from 'chevrotain';
+import {EmbeddedActionsParser} from 'chevrotain';
 import {
   AllTokens,
   Arrow,
@@ -45,7 +45,7 @@ import {
   TTupType,
   TTypeKind,
 } from './cst';
-import { IDL } from '@dfinity/candid';
+import {IDL} from '@dfinity/candid';
 
 export class CandidParser extends EmbeddedActionsParser {
   constructor() {
@@ -474,7 +474,7 @@ export class CandidParser extends EmbeddedActionsParser {
           ]);
 
           const fields: TFieldType[] = [];
-          let i = 0;
+          const values: TDataType[] = [];
 
           this.CONSUME(LBrace);
           this.MANY(() => {
@@ -485,12 +485,15 @@ export class CandidParser extends EmbeddedActionsParser {
 
             const field = this.SUBRULE(this.fieldtype);
             this.ACTION(() => {
+              if (field.needsIndexing) {
+                _ty = TTypeKind.Tuple;
+                values.push(field.type);
+
+                return;
+              }
+
               if (comments.length > 0) {
                 field.comment = comments[comments.length - 1];
-              }
-              if (field.needsIndexing) {
-                field.name = i.toString();
-                i += 1;
               }
             });
             fields.push(field);
@@ -500,6 +503,15 @@ export class CandidParser extends EmbeddedActionsParser {
           this.CONSUME(RBrace);
 
           this.ACTION(() => {
+            if (_ty == TTypeKind.Tuple) {
+              constype = {
+                _ty,
+                values,
+              };
+
+              return;
+            }
+
             const fieldsRec: Record<string, TDataType | null> = {};
             const commentsRec: Record<string, string> = {};
 
