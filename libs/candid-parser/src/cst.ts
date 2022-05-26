@@ -57,6 +57,7 @@ export enum TTypeKind {
   Variant,
   Func,
   Actor,
+  Tuple,
 }
 
 export interface TType {
@@ -78,12 +79,16 @@ export interface TRecordType extends TType {
   fields: Record<string, TDataType | null>;
 }
 
+export interface TTupleType extends TType {
+  values: TDataType[],
+}
+
 export interface TVariantType extends TType {
   comments: Record<string, string>;
   fields: Record<string, TDataType | null>;
 }
 
-export type TConsType = TVecType | TOptType | TRecordType | TVariantType;
+export type TConsType = TVecType | TOptType | TRecordType | TVariantType | TTupleType;
 
 export type TCompType = TConsType | TRefType;
 
@@ -250,6 +255,16 @@ export class TProg {
           rec2[m] = this.traverseIdlType(actor.methods[m]) as IDL.FuncClass;
         }
         return IDL.Service(rec2);
+
+      case TTypeKind.Tuple:
+        const tuple = type as TTupleType;
+        const types: IDL.Type[] = [];
+
+        for (let v of tuple.values) {
+          types.push(this.traverseIdlType(v));
+        }
+
+        return IDL.Tuple(types)
 
       default:
         throw new Error('Unreachable');
