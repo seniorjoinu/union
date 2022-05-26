@@ -309,7 +309,7 @@ export class CandidParser extends EmbeddedActionsParser {
   public fieldtype = this.RULE('fieldtype', () => {
     let fieldtype: TFieldType = {
       comment: null,
-      needsIndexing: false,
+      index: null,
       name: null,
       type: null,
     };
@@ -317,11 +317,24 @@ export class CandidParser extends EmbeddedActionsParser {
     this.OR([
       {
         ALT: () => {
-          let name: string;
+          let index: number | null = null;
+          let name: string | null = null;
+
           this.OR1([
             {
               ALT: () => {
-                name = this.CONSUME(Nat).image;
+                let it = this.CONSUME(Nat).image;
+
+                this.ACTION(() => {
+                  it = it.replace('_', '');
+
+                  if (it.startsWith('0x')) {
+                    it = it.replace('0x', '');
+                    index = parseInt(it, 16);
+                  } else {
+                    index = parseInt(it)
+                  }
+                })
               },
             },
             {
@@ -338,6 +351,7 @@ export class CandidParser extends EmbeddedActionsParser {
           });
 
           this.ACTION(() => {
+            fieldtype.index = index;
             fieldtype.name = name;
             fieldtype.type = type;
           });
@@ -349,7 +363,6 @@ export class CandidParser extends EmbeddedActionsParser {
 
           this.ACTION(() => {
             fieldtype.type = type;
-            fieldtype.needsIndexing = true;
           });
         },
         IGNORE_AMBIGUITIES: true,
@@ -474,7 +487,8 @@ export class CandidParser extends EmbeddedActionsParser {
           ]);
 
           const fields: TFieldType[] = [];
-          const values: TDataType[] = [];
+          let values: [number, TDataType][] = [];
+          let i: number = 0;
 
           this.CONSUME(LBrace);
           this.MANY(() => {
@@ -484,10 +498,20 @@ export class CandidParser extends EmbeddedActionsParser {
             });
 
             const field = this.SUBRULE(this.fieldtype);
+
             this.ACTION(() => {
-              if (field.needsIndexing) {
+              // if already indexed
+              if (field.index !== null) {
                 _ty = TTypeKind.Tuple;
-                values.push(field.type);
+                values.push([field.index, field.type]);
+
+                return;
+              }
+
+              // if needs indexing
+              if (field.index == null && field.name == null) {
+                _ty = TTypeKind.Tuple;
+                values.push([i++, field.type]);
 
                 return;
               }
@@ -496,6 +520,7 @@ export class CandidParser extends EmbeddedActionsParser {
                 field.comment = comments[comments.length - 1];
               }
             });
+
             fields.push(field);
 
             this.CONSUME(Semi);
@@ -504,9 +529,11 @@ export class CandidParser extends EmbeddedActionsParser {
 
           this.ACTION(() => {
             if (_ty == TTypeKind.Tuple) {
+              values = values.sort((a, b) => a[0] - b[0]);
+
               constype = {
                 _ty,
-                values,
+                values: values.map(it => it[1]),
               };
 
               return;

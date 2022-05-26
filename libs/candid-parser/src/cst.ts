@@ -96,7 +96,7 @@ export type TDataType = TId | IDL.Type | TCompType;
 
 export interface TFieldType {
   comment: string | null;
-  needsIndexing: boolean;
+  index: number | null,
   name: string | null;
   type: TDataType | null;
 }
@@ -264,7 +264,7 @@ export class TProg {
           types.push(this.traverseIdlType(v));
         }
 
-        return IDL.Tuple(types)
+        return IDL.Tuple(...types)
 
       default:
         throw new Error('Unreachable');
