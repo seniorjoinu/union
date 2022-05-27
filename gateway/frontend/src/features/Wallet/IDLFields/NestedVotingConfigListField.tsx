@@ -3,10 +3,11 @@ import { EntitySelect, EntitySelectProps } from '@union/components';
 import { useUnion } from 'services';
 import styled from 'styled-components';
 import { NestedVotingConfig, NestedVotingConfigFilter } from 'union-ts';
-import { useCurrentUnion } from '../context';
+import { Principal } from '@dfinity/principal';
 
 export interface NestedVotingConfigListFieldProps
   extends Omit<Partial<EntitySelectProps<NestedVotingConfig>>, 'value' | 'onChange'> {
+  unionId: Principal;
   value: bigint | null | void;
   onChange(v: bigint): void;
   helperText?: string;
@@ -15,14 +16,14 @@ export interface NestedVotingConfigListFieldProps
 
 export const NestedVotingConfigListField = styled(
   ({
+    unionId,
     value,
     onChange,
     helperText,
     filter = { remote_nested_voting_config: [], remote_voting_config: [] },
     ...p
   }: NestedVotingConfigListFieldProps) => {
-    const { principal } = useCurrentUnion();
-    const { canister } = useUnion(principal);
+    const { canister } = useUnion(unionId);
 
     return (
       <EntitySelect

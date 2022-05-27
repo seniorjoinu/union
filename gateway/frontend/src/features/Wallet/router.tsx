@@ -1,12 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useParams, Routes, Route, Navigate } from 'react-router-dom';
+import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
+import { VotingRouter } from './Voting';
 import { Provider } from './context';
 import { Profile, ChangeProfile } from './Profile';
 import { Groups, CreateGroupForm, UpdateGroupForm } from './Groups';
 import { Permissions, CreatePermissionForm, UpdatePermissionForm } from './Permissions';
 import { AccessConfigs, CreateAccessConfigForm, UpdateAccessConfigForm } from './AccessConfigs';
+import { Votings, VotingPage } from './Votings';
 import {
   VotingConfigs,
   CreateVotingConfigForm,
@@ -26,6 +28,7 @@ const Container = styled.div`
 
 export const Wallet = () => {
   const params = useParams();
+  const nav = useNavigate();
 
   const principalStr = params.id || '';
   const principal = checkPrincipal(principalStr);
@@ -83,6 +86,11 @@ export const Wallet = () => {
           <Route path='/versions/create' element={<VersionForm />} />
 
           <Route path='/test' element={<Test />} />
+
+          <Route path='/votings' element={<Votings />} />
+          <Route path='/votings/voting/:votingId' element={<VotingPage unionId={principal} />} />
+          <Route path='/votings/:votingId' element={<Votings />} />
+          <Route path='/votings/crud/*' element={<VotingRouter unionId={principal} />} />
 
           {/* <Route path='/history' element={<History createLink='execute' />} />
           <Route

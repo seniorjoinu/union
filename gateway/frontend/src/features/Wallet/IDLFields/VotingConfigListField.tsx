@@ -3,10 +3,11 @@ import { EntitySelect, EntitySelectProps } from '@union/components';
 import { useUnion } from 'services';
 import styled from 'styled-components';
 import { VotingConfig, VotingConfigFilter } from 'union-ts';
-import { useCurrentUnion } from '../context';
+import { Principal } from '@dfinity/principal';
 
 export interface VotingConfigListFieldProps
   extends Omit<Partial<EntitySelectProps<VotingConfig>>, 'value' | 'onChange'> {
+  unionId: Principal;
   value: bigint | null | void;
   onChange(v: bigint): void;
   helperText?: string;
@@ -15,14 +16,14 @@ export interface VotingConfigListFieldProps
 
 export const VotingConfigListField = styled(
   ({
+    unionId,
     value,
     onChange,
     helperText,
     filter = { permission: [], group: [] },
     ...p
   }: VotingConfigListFieldProps) => {
-    const { principal } = useCurrentUnion();
-    const { canister } = useUnion(principal);
+    const { canister } = useUnion(unionId);
 
     return (
       <EntitySelect

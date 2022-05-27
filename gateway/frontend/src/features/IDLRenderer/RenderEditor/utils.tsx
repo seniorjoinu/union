@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import {
   FieldValues,
   UseFormGetValues,
@@ -84,19 +84,27 @@ export type RenderProps = {
   absolutePath: string;
   key?: string;
   name?: React.ReactNode;
+  disabled?: boolean;
 };
 
 export const useSettings = <T extends FieldValues>(
   path: FieldPath<T>,
   absolutePath: FieldPath<T>,
 ) => {
-  const { settings } = useContext(context as React.Context<RenderEditorContext<T>>);
+  const { settings, setValue } = useContext(context as React.Context<RenderEditorContext<T>>);
 
-  return useMemo(() => getSettings<T, RenderEditorContext<T>>(path, absolutePath, settings), [
-    path,
-    absolutePath,
-    settings,
-  ]);
+  const currentSettings = useMemo(
+    () => getSettings<T, RenderEditorContext<T>>(path, absolutePath, settings),
+    [path, absolutePath, settings],
+  );
+
+  useEffect(() => {
+    if (currentSettings.defaultValue) {
+      setValue(path, currentSettings.defaultValue);
+    }
+  }, []);
+
+  return currentSettings;
 };
 
 export type EditorSettings<T extends {}> = Settings<T, RenderEditorContext<T>>;

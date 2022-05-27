@@ -46,8 +46,13 @@ export const withBorder = <
     border-left: 1px solid var(--color);
     transition: border-color 0.2s ease;
     padding: 0 1px 1px 0;
-    pointer-events: ${({ $disabled }) => ($disabled ? 'none' : 'all')};
-    opacity: ${({ $disabled }) => ($disabled ? '0.5' : '1')};
+    ${({ $disabled }) =>
+      ($disabled
+        ? css`
+            pointer-events: none;
+            opacity: 0.5;
+          `
+        : '')}
 
     &:hover {
       border-color: ${options.hoverColor || options.color};

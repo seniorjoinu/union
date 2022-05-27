@@ -73,6 +73,7 @@ export const CreateNestedVotingConfigForm = styled(
                   control={ctx.control}
                   render={({ field, fieldState: { error } }) => (
                     <VotingConfigListField
+                      unionId={principal}
                       label={name}
                       onChange={field.onChange}
                       value={field.value}
@@ -92,6 +93,7 @@ export const CreateNestedVotingConfigForm = styled(
                   control={ctx.control}
                   render={({ field, fieldState: { error } }) => (
                     <NestedVotingConfigListField
+                      unionId={principal}
                       label={name}
                       onChange={field.onChange}
                       value={field.value}

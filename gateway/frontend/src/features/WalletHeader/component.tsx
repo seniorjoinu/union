@@ -101,8 +101,11 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/voting-configs`}>
               Voting
             </Item>
-            <Item variant='p2' as={NavLink} to={`wallet/${walletId}/assets`}>
+            {/* <Item variant='p2' as={NavLink} to={`wallet/${walletId}/assets`}>
               Assets
+            </Item> */}
+            <Item variant='p2' as={NavLink} to={`wallet/${walletId}/votings`}>
+              Votings
             </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/history`}>
               History

@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { Text, getFontStyles } from '../Text';
 import { Row, Column } from '../Layout';
 import { withBorder } from '../withBorder';
@@ -66,8 +66,13 @@ const Container = styled.div<{ $disabled: boolean; $opened: boolean }>`
   position: relative;
   display: flex;
   flex-direction: column;
-  pointer-events: ${({ $disabled }) => ($disabled ? 'none' : 'all')};
-  opacity: ${({ $disabled }) => ($disabled ? '0.5' : '1')};
+  ${({ $disabled }) =>
+    ($disabled
+      ? css`
+          pointer-events: none;
+          opacity: 0.5;
+        `
+      : '')}
 
   &:hover {
     ${Icon} {
@@ -96,7 +101,6 @@ const Container = styled.div<{ $disabled: boolean; $opened: boolean }>`
     transform: translateY(100%);
     opacity: ${({ $opened }) => ($opened ? '1' : '0')};
     pointer-events: ${({ $opened }) => ($opened ? 'all' : 'none')};
-    transition: opacity 0.2s ease;
 
     & > div {
       max-height: 400px;
@@ -107,6 +111,7 @@ const Container = styled.div<{ $disabled: boolean; $opened: boolean }>`
 
   ${SelectContainer} ${Icon} {
     transform: ${({ $opened }) => ($opened ? 'rotate(0)' : 'rotate(45deg)')};
+    cursor: ${({ $disabled }) => ($disabled ? 'default' : 'pointer')};
   }
 `;
 
@@ -181,7 +186,11 @@ export const AdvancedSelect = React.forwardRef<HTMLDivElement, AdvancedSelectPro
         $opened={opened}
       >
         {label && <Label>{label}</Label>}
-        <SelectContainer onClick={() => setOpened((opened) => !opened)}>
+        <SelectContainer
+          onClick={() => !disabled && setOpened((opened) => !opened)}
+          // @ts-expect-error
+          disabled={disabled}
+        >
           {element || (
             <>
               <Selected>{value.join(',\n') || <Placeholder>{placeholder}</Placeholder>}</Selected>
@@ -190,7 +199,7 @@ export const AdvancedSelect = React.forwardRef<HTMLDivElement, AdvancedSelectPro
           <Icon />
         </SelectContainer>
         <ctx.Provider value={{ onChange: handleChange, value }}>
-          <Tooltip>{children}</Tooltip>
+          <Tooltip $disabled={disabled}>{children}</Tooltip>
         </ctx.Provider>
         {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
       </Container>

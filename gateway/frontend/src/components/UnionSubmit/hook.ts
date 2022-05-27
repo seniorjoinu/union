@@ -10,6 +10,9 @@ export interface AnyService {
   [key: string]: (...args: any[]) => any;
 }
 
+export type Encoder = { [key: string]: (...args: any[]) => ArrayBuffer };
+export type Decoder = { [key: string]: (bytes: ArrayBuffer) => any };
+
 export interface UnionSubmitProps<
   S extends AnyService,
   T extends keyof S = keyof S,
@@ -158,6 +161,3 @@ export const useUnionSubmit = <
     createVoting,
   };
 };
-
-type Encoder = { [key: string]: (...args: any[]) => ArrayBuffer };
-type Decoder = { [key: string]: (bytes: ArrayBuffer) => any };

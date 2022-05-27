@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export const Row = styled.div<{ margin?: number }>`
   display: flex;
@@ -10,9 +10,16 @@ export const Row = styled.div<{ margin?: number }>`
   }
 `;
 
-export const Column = styled.div<{ margin?: number; marginLast?: boolean }>`
+export const Column = styled.div<{ margin?: number; marginLast?: boolean; $disabled?: boolean }>`
   display: flex;
   flex-direction: column;
+  ${({ $disabled }) =>
+    ($disabled
+      ? css`
+          pointer-events: none;
+          opacity: 0.5;
+        `
+      : '')};
 
   & > *:not(:last-child) {
     margin-bottom: ${({ margin = 8 }) => margin}px;

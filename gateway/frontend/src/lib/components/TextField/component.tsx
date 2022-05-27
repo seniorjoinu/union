@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import InputMask, { Props as InputMaskProps } from 'react-input-mask';
 import { Text, getFontStyles } from '../Text';
 import { Checkbox } from '../Checkbox';
@@ -30,11 +30,18 @@ const RowInputWrapper = styled(Row)`
   }
 `;
 
-const Container = styled.div`
+const Container = styled.div<{ $disabled?: boolean }>`
   position: relative;
   display: flex;
   flex-direction: column;
   min-height: 32px;
+  ${({ $disabled }) =>
+    ($disabled
+      ? css`
+          pointer-events: none;
+          opacity: 0.5;
+        `
+      : '')};
 
   ${Label} {
     margin-bottom: 4px;
@@ -56,13 +63,13 @@ export interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputEleme
 }
 
 export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(
-  ({ className, style, label, helperText, startAdornment, noBorder, ...p }, ref) => (
-    <Container className={className} style={style}>
+  ({ className, style, label, helperText, startAdornment, noBorder, disabled, ...p }, ref) => (
+    <Container className={className} style={style} $disabled={disabled}>
       {label && <Label>{label}</Label>}
       <RowInputWrapper>
         {startAdornment}
         {/* @ts-expect-error */}
-        <Input {...p} ref={ref} noBorder={noBorder} />
+        <Input {...p} disabled={disabled} ref={ref} noBorder={noBorder} />
       </RowInputWrapper>
       {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
     </Container>
@@ -75,10 +82,10 @@ export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 }
 
 export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  ({ className, style, label, helperText, ...p }, ref) => (
-    <Container className={className} style={style}>
+  ({ className, style, label, helperText, disabled, ...p }, ref) => (
+    <Container className={className} style={style} $disabled={disabled}>
       {label && <Label>{label}</Label>}
-      <Input {...p} as='textarea' ref={ref} />
+      <Input {...p} disabled={disabled} as='textarea' ref={ref} />
       {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
     </Container>
   ),
@@ -90,10 +97,10 @@ export interface MaskedTextFieldProps extends InputMaskProps {
 }
 
 export const MaskedTextField = React.forwardRef<HTMLInputElement, MaskedTextFieldProps>(
-  ({ className, style, label, helperText, ...p }, ref) => (
-    <Container className={className} style={style}>
+  ({ className, style, label, helperText, disabled, ...p }, ref) => (
+    <Container className={className} style={style} $disabled={disabled}>
       {label && <Label>{label}</Label>}
-      <Input {...p} as={InputMask} inputRef={ref} />
+      <Input {...p} disabled={disabled} as={InputMask} inputRef={ref} />
       {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
     </Container>
   ),

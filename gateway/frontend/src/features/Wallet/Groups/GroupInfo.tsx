@@ -34,13 +34,14 @@ export interface GroupInfoProps {
   className?: string;
   style?: React.CSSProperties;
   groupId: bigint;
-  minShares?: bigint;
+  shares?: bigint;
   to?: To;
   mode?: 'short' | 'long';
+  verbose?: { shares?: React.ReactNode };
 }
 
 export const GroupInfo = styled(
-  ({ groupId, to, minShares, mode = 'short', ...p }: GroupInfoProps) => {
+  ({ groupId, to, shares, mode = 'short', verbose, ...p }: GroupInfoProps) => {
     const { principal } = useCurrentUnion();
     const { canister, data, fetching } = useUnion(principal);
 
@@ -73,10 +74,11 @@ export const GroupInfo = styled(
               {group.private ? 'private' : 'public'}
             </Chips>
           )}
-          {typeof minShares !== 'undefined' && (
+          {typeof shares !== 'undefined' && (
             <Chips variant='caption' weight='medium'>
-              min {String(minShares)}{' '}
-              {caseByCount(parseInt(String(minShares)), ['share', 'shares', 'shares'])}
+              {verbose?.shares ? `${verbose.shares} ` : ''}
+              {String(shares)}{' '}
+              {caseByCount(parseInt(String(shares)), ['share', 'shares', 'shares'])}
             </Chips>
           )}
         </Params>
