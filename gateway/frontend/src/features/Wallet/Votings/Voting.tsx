@@ -49,7 +49,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
     unionId,
     canisterId: unionId,
     methodName: 'delete_voting_choice',
-    onExecuted: (p) => nav('', {}),
+    onExecuted: (p) => nav('', { replace: true }),
   });
 
   const id = BigInt(votingId || -1);

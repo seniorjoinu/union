@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { useUnion } from 'services';
-import { Spinner, Column, Text, Row, Chips } from '@union/components';
+import { Spinner, Column, Text, Row, Chips, TextVariant } from '@union/components';
 import { NavLink } from 'react-router-dom';
 import { To } from 'history';
 import { caseByCount } from 'toolkit';
@@ -37,41 +37,50 @@ export interface ProfileInfoProps {
   profileId: Principal;
   to?: To;
   mode?: 'short' | 'long';
+  variant?: TextVariant;
+  chips?: React.ReactNode[];
 }
 
-export const ProfileInfo = styled(({ profileId, to, mode = 'short', ...p }: ProfileInfoProps) => {
-  const { principal } = useCurrentUnion();
-  const { canister, data, fetching } = useUnion(principal);
+export const ProfileInfo = styled(
+  ({ profileId, to, variant = 'p2', mode = 'short', chips = [], ...p }: ProfileInfoProps) => {
+    const { principal } = useCurrentUnion();
+    const { canister, data, fetching } = useUnion(principal);
 
-  useEffect(() => {
-    canister.get_profile({ id: profileId, query_delegation_proof_opt: [] });
-  }, []);
+    useEffect(() => {
+      canister.get_profile({ id: profileId, query_delegation_proof_opt: [] });
+    }, []);
 
-  if (fetching.get_profile) {
-    return <Spinner size={20} {...p} />;
-  }
+    if (fetching.get_profile) {
+      return <Spinner size={20} {...p} />;
+    }
 
-  const profile = data.get_profile?.profile;
+    const profile = data.get_profile?.profile;
 
-  if (!profile) {
+    if (!profile) {
+      return (
+        <Container {...p}>
+          <Text variant={variant}>{profileId.toString()}</Text>
+        </Container>
+      );
+    }
+
     return (
       <Container {...p}>
-        <Text variant='p2'>{profileId.toString()}</Text>
+        <Params>
+          <Text variant={variant} as={to ? NavLink : undefined} to={to!}>
+            {profileId.toString()}
+          </Text>
+          <Chips variant='caption' weight='medium'>
+            {profile.name}
+          </Chips>
+          {chips.map((content, i) => (
+            <Chips variant='caption' weight='medium' key={String(i)}>
+              {content}
+            </Chips>
+          ))}
+        </Params>
+        {mode == 'long' && <Text variant='p3'>{profile.description}</Text>}
       </Container>
     );
-  }
-
-  return (
-    <Container {...p}>
-      <Params>
-        <Text variant='p2' as={to ? NavLink : undefined} to={to!}>
-          {profileId.toString()}
-        </Text>
-        <Chips variant='caption' weight='medium'>
-          {profile.name}
-        </Chips>
-      </Params>
-      {mode == 'long' && <Text variant='p3'>{profile.description}</Text>}
-    </Container>
-  );
-})``;
+  },
+)``;

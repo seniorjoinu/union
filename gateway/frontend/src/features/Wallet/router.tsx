@@ -4,8 +4,15 @@ import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-do
 import { checkPrincipal } from 'toolkit';
 import { VotingRouter } from './Voting';
 import { Provider } from './context';
-import { Profile, ChangeProfile } from './Profile';
-import { Groups, CreateGroupForm, UpdateGroupForm } from './Groups';
+import { Profile, ChangeProfile, BurnMySharesForm, TransferMySharesForm } from './Profile';
+import {
+  Groups,
+  CreateGroupForm,
+  UpdateGroupForm,
+  MintSharesForm,
+  BurnSharesForm,
+  TransferSharesForm,
+} from './Groups';
 import { Permissions, CreatePermissionForm, UpdatePermissionForm } from './Permissions';
 import { AccessConfigs, CreateAccessConfigForm, UpdateAccessConfigForm } from './AccessConfigs';
 import { Votings, VotingPage } from './Votings';
@@ -45,6 +52,10 @@ export const Wallet = () => {
           <Route path='/groups/:groupId' element={<Groups />} />
           <Route path='/groups/create' element={<CreateGroupForm />} />
           <Route path='/groups/edit/:groupId' element={<UpdateGroupForm />} />
+          <Route path='/groups/mint/:groupId' element={<MintSharesForm />} />
+          <Route path='/groups/burn/:groupId' element={<BurnSharesForm />} />
+          <Route path='/groups/burn-unaccepted/:groupId' element={<BurnSharesForm unaccepted />} />
+          <Route path='/groups/transfer/:groupId' element={<TransferSharesForm />} />
 
           <Route path='/permissions' element={<Permissions />} />
           <Route path='/permissions/:permissionId' element={<Permissions />} />
@@ -75,6 +86,8 @@ export const Wallet = () => {
 
           <Route path='/profile' element={<Profile />} />
           <Route path='/profile/change' element={<ChangeProfile />} />
+          <Route path='/profile/burn/:groupId' element={<BurnMySharesForm />} />
+          <Route path='/profile/transfer/:groupId' element={<TransferMySharesForm />} />
 
           <Route path='/wallet' element={<Info />} />
           <Route path='/wallet/edit-info' element={<UpdateInfoForm />} />

@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { Text } from './Text';
+import { Text, TextVariant } from './Text';
 import { Spinner as SP } from './Spinner';
 import { SubmitButton as SB } from './Button';
 
+const Title = styled(Text)``;
 const Zeroscreen = styled(Text)``;
 const Error = styled(Text)`
   color: red;
@@ -27,6 +28,10 @@ const Item = styled.div`
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+
+  ${Title} {
+    margin-bottom: 16px;
+  }
 
   & > ${Item}:not(:last-child) {
     margin-bottom: 16px;
@@ -57,14 +62,17 @@ export interface PagerProps<T> {
   className?: string;
   style?: React.CSSProperties;
   size?: number;
+  title?: React.ReactNode;
   renderItem(item: T): React.ReactNode | null | false;
   fetch(p: { index: number; size: number }): Promise<FetchResponse<T>>;
   onEntitiesChanged?(data: T[]): void;
+  buttonVariant?: TextVariant;
   verbose?: {
-    loadMore?: string;
-    zeroscreen?: string;
-    error?: string;
+    loadMore?: React.ReactNode;
+    zeroscreen?: React.ReactNode;
+    error?: React.ReactNode;
   };
+  renderIfEmpty?: boolean;
 }
 
 export const DEFAULT_PAGE_SIZE = 10;
@@ -73,8 +81,11 @@ export const Pager = <T extends {}>({
   size = DEFAULT_PAGE_SIZE,
   fetch,
   renderItem,
+  title,
   verbose: verboseProps,
   onEntitiesChanged = () => {},
+  buttonVariant,
+  renderIfEmpty = true,
   ...p
 }: PagerProps<T>) => {
   const [index, setIndex] = useState(0);
@@ -110,14 +121,26 @@ export const Pager = <T extends {}>({
       .finally(() => setFetching(false));
   };
 
+  const items = useMemo(
+    () => (data || []).map((item) => renderItem(item)).filter((item) => !!item),
+    [data],
+  );
+
+  if (!renderIfEmpty && !items.length) {
+    return null;
+  }
+
   return (
     <Container {...p}>
-      {data?.map((item, i) => (
-        <Item key={String(i)}>{renderItem(item)}</Item>
-      ))}
-      {!!data && !data.length && !fetching && !error && (
-        <Zeroscreen>{verbose.zeroscreen}</Zeroscreen>
+      {title && (
+        <Title variant='p1' weight='medium'>
+          {title}
+        </Title>
       )}
+      {items.map((item, i) => (
+        <Item key={String(i)}>{item}</Item>
+      ))}
+      {!items.length && !fetching && !error && <Zeroscreen>{verbose.zeroscreen}</Zeroscreen>}
       {!!error && (
         <Error>
           {verbose.error}: {error}
@@ -125,7 +148,7 @@ export const Pager = <T extends {}>({
       )}
       {!data && <Spinner size={20} $fetching={fetching} />}
       {!!data && !complete && (
-        <SubmitButton loading={fetching} onClick={fetchPageData}>
+        <SubmitButton loading={fetching} onClick={fetchPageData} variant={buttonVariant}>
           {verbose.loadMore}
         </SubmitButton>
       )}

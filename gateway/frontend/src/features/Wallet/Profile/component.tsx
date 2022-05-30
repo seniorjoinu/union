@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, SubmitButton as B, Field as F } from '@union/components';
+import { PageWrapper, SubmitButton as B, Field as F, Column, Text } from '@union/components';
 import { useGateway, useUnion } from 'services';
 import { useNavigate } from 'react-router-dom';
 import { HAS_PROFILE_GROUP_ID } from 'envs';
 import { useCurrentUnion } from '../context';
-import { Groups } from './Groups';
+import { ProfileGroupInfo } from './ProfileGroupInfo';
 
 const Field = styled(F)``;
 const Button = styled(B)``;
@@ -21,7 +21,7 @@ const Controls = styled.div`
 `;
 
 const Container = styled(PageWrapper)`
-  ${Controls}, ${Groups} {
+  ${Controls} {
     margin-bottom: 24px;
   }
 
@@ -37,12 +37,12 @@ export interface ProfileProps {
 
 export const Profile = ({ ...p }: ProfileProps) => {
   const nav = useNavigate();
-  const { principal, profile, groups, fetchMyData } = useCurrentUnion();
+  const { principal, ...current } = useCurrentUnion();
   const { canister, data } = useUnion(principal);
   const gateway = useGateway(process.env.GATEWAY_CANISTER_ID);
 
   useEffect(() => {
-    fetchMyData();
+    current.fetchMyData();
     canister.get_my_unaccepted_group_shares_balance({
       group_id: HAS_PROFILE_GROUP_ID,
     });
@@ -67,7 +67,7 @@ export const Profile = ({ ...p }: ProfileProps) => {
         group_id: HAS_PROFILE_GROUP_ID,
       });
     },
-    [gateway, groups, principal, data.get_my_unaccepted_group_shares_balance?.balance],
+    [gateway, current.groups, principal, data.get_my_unaccepted_group_shares_balance?.balance],
   );
 
   return (
@@ -84,12 +84,21 @@ export const Profile = ({ ...p }: ProfileProps) => {
         <Button onClick={() => nav('change')}>Change profile</Button>
       </Controls>
       <Field title='Profile name' align='row'>
-        {profile?.name}
+        {current.profile?.name}
       </Field>
       <Field title='Description' align='row'>
-        {profile?.description}
+        {current.profile?.description}
       </Field>
-      <Groups />
+      <Column {...p}>
+        <Text variant='h5'>Groups</Text>
+        {!!current.fetching.get_my_groups && <Text>fetching...</Text>}
+        {!current.fetching.get_my_groups && !current.groups.length && (
+          <Text>You are have no groups</Text>
+        )}
+        {current.groups.map((g) => (
+          <ProfileGroupInfo key={String(g.id[0])} group={g} />
+        ))}
+      </Column>
     </Container>
   );
 };

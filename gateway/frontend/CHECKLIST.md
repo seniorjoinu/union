@@ -44,48 +44,48 @@
 - [x] update_voting
 - [x] update_voting_choice
 - [x] update_voting_config
-- [ ] burn_group_shares
-- [ ] burn_my_group_shares
-- [ ] burn_unaccepted_group_shares
+- [x] get_total_group_shares
+- [x] list_group_shares
+- [x] mint_group_shares
+- [x] burn_group_shares
+- [x] burn_unaccepted_group_shares
+- [x] list_profiles
+- [x] burn_my_group_shares
+- [x] get_my_group_shares_balance
+- [x] transfer_group_shares
+- [x] transfer_my_group_shares
 - [ ] cast_my_nested_vote
 - [ ] cast_my_vote
+- [ ] create_nested_voting
+- [ ] delete_nested_voting
+- [ ] get_my_nested_vote
+- [ ] get_my_vote
+- [ ] get_nested_voting
+- [ ] get_voting_results
+- [ ] list_nested_votings
+- [ ] list_voting_choices
 - [ ] create_batch
 - [ ] create_chunk
-- [ ] create_nested_voting
 - [ ] create_profile
 - [ ] delete_batches
-- [ ] delete_nested_voting
 - [ ] delete_profile
 - [ ] delete_unlocked_batches
 - [ ] get_batch
 - [ ] get_chunk
 - [ ] get_groups_of
-- [ ] get_group_shares_balance_of
-- [ ] get_my_group_shares_balance
-- [ ] get_my_nested_vote
-- [ ] get_my_query_delegation_proof
-- [ ] get_my_shares_info_at
-- [ ] get_my_vote
-- [ ] get_nested_voting
 - [ ] get_profile
-- [ ] get_shares_info_of_at
-- [ ] get_total_group_shares
-- [ ] get_total_unaccepted_group_shares
-- [ ] get_unaccepted_group_shares_balance_of
-- [ ] get_voting_results
 - [ ] list_batches
 - [ ] list_chunks
-- [ ] list_group_shares
-- [ ] list_nested_votings
-- [ ] list_profiles
-- [ ] list_program_execution_entry_ids
-- [ ] list_voting_choices
 - [ ] lock_batches
-- [ ] mint_group_shares
 - [ ] send_batch
-- [ ] transfer_group_shares
-- [ ] transfer_my_group_shares
 - [ ] update_profile
+- [ ] list_program_execution_entry_ids
+- [ ] get_my_query_delegation_proof
+- [ ] get_group_shares_balance_of
+- [ ] get_my_shares_info_at
+- [ ] get_shares_info_of_at
+- [ ] get_total_unaccepted_group_shares
+- [ ] get_unaccepted_group_shares_balance_of
 
 ## History ledger methods using
 

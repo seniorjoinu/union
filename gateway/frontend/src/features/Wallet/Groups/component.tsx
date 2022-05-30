@@ -24,7 +24,7 @@ const Container = styled(PageWrapper)`
     margin-bottom: 16px;
   }
   ${ItemControls} {
-    margin-bottom: 4px;
+    margin-bottom: 0;
   }
 `;
 
@@ -70,10 +70,59 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
 
           return (
             !optimisticDeleted[id] && (
-              <GroupItem group={group} opened={groupId == id}>
+              <GroupItem
+                group={group}
+                opened={groupId == id}
+                acceptedAdornment={
+                  <ItemControls>
+                    {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && (
+                      <>
+                        <Button
+                          forwardedAs={NavLink}
+                          to={groupId ? `../groups/burn/${id}` : `burn/${id}`}
+                          variant='caption'
+                          color='red'
+                        >
+                          Burn shares
+                        </Button>
+                      </>
+                    )}
+                  </ItemControls>
+                }
+                unacceptedAdornment={
+                  <ItemControls>
+                    {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && (
+                      <>
+                        <Button
+                          forwardedAs={NavLink}
+                          to={groupId ? `../groups/burn-unaccepted/${id}` : `burn-unaccepted/${id}`}
+                          variant='caption'
+                          color='red'
+                        >
+                          Burn unaccepted shares
+                        </Button>
+                      </>
+                    )}
+                  </ItemControls>
+                }
+              >
                 <ItemControls>
                   {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && (
                     <>
+                      <Button
+                        forwardedAs={NavLink}
+                        to={groupId ? `../groups/mint/${id}` : `mint/${id}`}
+                        variant='caption'
+                      >
+                        Mint shares
+                      </Button>
+                      <Button
+                        forwardedAs={NavLink}
+                        to={groupId ? `../groups/transfer/${id}` : `transfer/${id}`}
+                        variant='caption'
+                      >
+                        Transfer shares
+                      </Button>
                       <Button
                         forwardedAs={NavLink}
                         to={groupId ? `../groups/edit/${id}` : `edit/${id}`}
@@ -81,6 +130,22 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
                       >
                         Edit
                       </Button>
+                      {/* <Button
+                        forwardedAs={NavLink}
+                        to={groupId ? `../groups/burn/${id}` : `burn/${id}`}
+                        variant='caption'
+                        color='red'
+                      >
+                        Burn shares
+                      </Button>
+                      <Button
+                        forwardedAs={NavLink}
+                        to={groupId ? `../groups/burn-unaccepted/${id}` : `burn-unaccepted/${id}`}
+                        variant='caption'
+                        color='red'
+                      >
+                        Burn unaccepted shares
+                      </Button> */}
                       <UnionTooltipButtonComponent
                         {...deleteUnionButtonProps}
                         variant='caption'

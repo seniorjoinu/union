@@ -11,21 +11,17 @@ const Name = styled(Chips)`
 `;
 
 const WalletInfo = styled(Row)``;
-const WalletId = styled(Text)`
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.grey};
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.dark};
-  }
-`;
 const Item = styled(Text)`
   text-decoration: none;
-  color: #${({ theme }) => theme.colors.grey};
+  color: ${({ theme }) => theme.colors.grey};
 
   &.active {
     color: ${({ theme }) => theme.colors.dark};
     font-weight: 500;
+  }
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.dark};
   }
 `;
 
@@ -83,9 +79,6 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
       {isInsideWallet && walletId && (
         <>
           <Items>
-            <Item variant='p2' as={NavLink} to={`wallet/${walletId}/profile`}>
-              Profile
-            </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/wallet`}>
               Wallet
             </Item>
@@ -99,7 +92,7 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
               Access
             </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/voting-configs`}>
-              Voting
+              Voting configs
             </Item>
             {/* <Item variant='p2' as={NavLink} to={`wallet/${walletId}/assets`}>
               Assets
@@ -112,7 +105,11 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
             </Item>
           </Items>
           <WalletInfo>
-            {profileName && <Name>{profileName}</Name>}
+            {profileName && (
+              <Name as={NavLink} to={`wallet/${walletId}/profile`}>
+                {profileName}
+              </Name>
+            )}
             <CopyableText variant='p2'>{walletId}</CopyableText>
           </WalletInfo>
         </>

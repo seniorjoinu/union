@@ -73,7 +73,7 @@ TODO
 ## Code assumptions
 
 - [Lib folder](./src/lib/README.md) contains potential separated npm packages
-- IMPORTANT!!! unionSerializer must use candid from `export_candid` method of current canister!!!!
+- IMPORTANT!!! unionSerializer must use candid from `export_candid` method of current canister
 
 ## Troubleshooting
 
