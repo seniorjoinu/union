@@ -1,12 +1,26 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useParams, Routes, Route, Navigate } from 'react-router-dom';
+import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
 import { Provider } from './context';
-import { Profile, ChangeProfile } from './Profile';
-import { Groups, CreateGroupForm, UpdateGroupForm } from './Groups';
+import {
+  Profile,
+  ChangeProfile,
+  BurnMySharesForm,
+  TransferMySharesForm,
+  InviteForm,
+} from './Profile';
+import {
+  Groups,
+  CreateGroupForm,
+  UpdateGroupForm,
+  MintSharesForm,
+  BurnSharesForm,
+  TransferSharesForm,
+} from './Groups';
 import { Permissions, CreatePermissionForm, UpdatePermissionForm } from './Permissions';
 import { AccessConfigs, CreateAccessConfigForm, UpdateAccessConfigForm } from './AccessConfigs';
+import { Votings, VotingPage, VotingRouter } from './Votings';
 import {
   VotingConfigs,
   CreateVotingConfigForm,
@@ -26,6 +40,7 @@ const Container = styled.div`
 
 export const Wallet = () => {
   const params = useParams();
+  const nav = useNavigate();
 
   const principalStr = params.id || '';
   const principal = checkPrincipal(principalStr);
@@ -42,6 +57,10 @@ export const Wallet = () => {
           <Route path='/groups/:groupId' element={<Groups />} />
           <Route path='/groups/create' element={<CreateGroupForm />} />
           <Route path='/groups/edit/:groupId' element={<UpdateGroupForm />} />
+          <Route path='/groups/mint/:groupId' element={<MintSharesForm />} />
+          <Route path='/groups/burn/:groupId' element={<BurnSharesForm />} />
+          <Route path='/groups/burn-unaccepted/:groupId' element={<BurnSharesForm unaccepted />} />
+          <Route path='/groups/transfer/:groupId' element={<TransferSharesForm />} />
 
           <Route path='/permissions' element={<Permissions />} />
           <Route path='/permissions/:permissionId' element={<Permissions />} />
@@ -62,12 +81,19 @@ export const Wallet = () => {
             element={<CreateNestedVotingConfigForm />}
           />
           <Route
+            path='/voting-configs/create-nested-nested/:nestedVotingConfigId'
+            element={<CreateNestedVotingConfigForm />}
+          />
+          <Route
             path='/voting-configs/edit-nested/:votingConfigId'
             element={<UpdateNestedVotingConfigForm />}
           />
 
           <Route path='/profile' element={<Profile />} />
+          <Route path='/profile/invite' element={<InviteForm />} />
           <Route path='/profile/change' element={<ChangeProfile />} />
+          <Route path='/profile/burn/:groupId' element={<BurnMySharesForm />} />
+          <Route path='/profile/transfer/:groupId' element={<TransferMySharesForm />} />
 
           <Route path='/wallet' element={<Info />} />
           <Route path='/wallet/edit-info' element={<UpdateInfoForm />} />
@@ -79,6 +105,11 @@ export const Wallet = () => {
           <Route path='/versions/create' element={<VersionForm />} />
 
           <Route path='/test' element={<Test />} />
+
+          <Route path='/votings' element={<Votings />} />
+          <Route path='/votings/voting/:votingId' element={<VotingPage unionId={principal} />} />
+          <Route path='/votings/:votingId' element={<Votings />} />
+          <Route path='/votings/crud/*' element={<VotingRouter unionId={principal} />} />
 
           {/* <Route path='/history' element={<History createLink='execute' />} />
           <Route

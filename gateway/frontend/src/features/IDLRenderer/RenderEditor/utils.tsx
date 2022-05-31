@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import {
   FieldValues,
   UseFormGetValues,
@@ -7,6 +7,7 @@ import {
   Control,
   UseFormGetFieldState,
   FieldPath,
+  UseFormSetError,
 } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
 import { getSettings, Settings } from '../utils';
@@ -50,13 +51,14 @@ export const transformName = (v: string | null | void) => {
   if (!v) {
     return '';
   }
-  return `${v[0].toUpperCase()}${v.slice(1)}`;
+  return `${v[0].toUpperCase()}${v.slice(1)}`.replaceAll('_', ' ');
 };
 
 export type RenderEditorContext<V extends FieldValues = FieldValues> = {
   getValues: UseFormGetValues<V>;
   getFieldState: UseFormGetFieldState<V>;
   setValue: UseFormSetValue<V>;
+  setError: UseFormSetError<V>;
   resetField: UseFormResetField<V>;
   setData(data: V): void;
   control: Control<V, any>;
@@ -68,6 +70,7 @@ export const context = React.createContext<RenderEditorContext>({
   getValues: () => [],
   getFieldState: () => ({ invalid: false, isDirty: false, isTouched: false }),
   setValue: () => {},
+  setError: () => {},
   setData: () => {},
   resetField: () => {},
   // @ts-expect-error
@@ -84,19 +87,27 @@ export type RenderProps = {
   absolutePath: string;
   key?: string;
   name?: React.ReactNode;
+  disabled?: boolean;
 };
 
 export const useSettings = <T extends FieldValues>(
   path: FieldPath<T>,
   absolutePath: FieldPath<T>,
 ) => {
-  const { settings } = useContext(context as React.Context<RenderEditorContext<T>>);
+  const { settings, setValue } = useContext(context as React.Context<RenderEditorContext<T>>);
 
-  return useMemo(() => getSettings<T, RenderEditorContext<T>>(path, absolutePath, settings), [
-    path,
-    absolutePath,
-    settings,
-  ]);
+  const currentSettings = useMemo(
+    () => getSettings<T, RenderEditorContext<T>>(path, absolutePath, settings),
+    [path, absolutePath, settings],
+  );
+
+  useEffect(() => {
+    if (typeof currentSettings.defaultValue !== 'undefined') {
+      setValue(path, currentSettings.defaultValue);
+    }
+  }, []);
+
+  return currentSettings;
 };
 
 export type EditorSettings<T extends {}> = Settings<T, RenderEditorContext<T>>;

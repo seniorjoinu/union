@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { getFontStyles, Text } from './Text';
 import { theme } from './theme';
 
@@ -31,7 +31,7 @@ const Mark = styled(Icon)<{ size: number }>`
   fill: ${({ theme }) => theme.colors.grey};
 `;
 
-const Container = styled.label<{ $text?: string }>`
+const Container = styled.label<{ $text?: string; $disabled?: boolean }>`
   position: relative;
   display: flex;
   flex-direction: row;
@@ -42,6 +42,13 @@ const Container = styled.label<{ $text?: string }>`
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  ${({ $disabled }) =>
+    ($disabled
+      ? css`
+          pointer-events: none;
+          opacity: 0.5;
+        `
+      : '')};
 
   & > *:not(:last-child) {
     margin-right: 8px;
@@ -80,15 +87,16 @@ export interface CheckboxProps {
   style?: React.CSSProperties;
   size?: number;
   checked: boolean;
+  disabled?: boolean;
   onChange: React.ChangeEventHandler<HTMLInputElement>;
   children?: React.ReactNode;
   helperText?: string;
 }
 
 export const Checkbox = styled(
-  ({ children, checked, onChange, size = 20, helperText, ...p }: CheckboxProps) => (
-    <Container {...p} $text={helperText}>
-      <input type='checkbox' checked={checked} onChange={onChange} />
+  ({ children, checked, onChange, size = 20, helperText, disabled, ...p }: CheckboxProps) => (
+    <Container {...p} $text={helperText} $disabled={disabled}>
+      <input type='checkbox' checked={checked} onChange={onChange} disabled={disabled} />
       <Mark size={size} />
       {children && (
         <Text variant='p3' weight='medium'>

@@ -48,32 +48,29 @@ export const UpdateNestedVotingConfigForm = styled(
 
       return {
         id: BigInt(votingConfigId),
-        description_opt: [votingConfig.description],
         name_opt: [votingConfig.name],
+        description_opt: [votingConfig.description],
         vote_calculation_opt: [votingConfig.vote_calculation],
-        // allowee_groups_opt: [votingConfig.allowee_groups],
-        allowee_groups_opt: [],
+        allowee_groups_opt: [votingConfig.allowee_groups],
       };
     }, [votingConfigId, data.get_nested_voting_config?.nested_voting_config]);
 
-    // @ts-ignore
-    const settings: EditorSettings<UpdateVotingConfigRequest> = useMemo(
+    const settings: EditorSettings<UpdateNestedVotingConfigRequest> = useMemo(
       () => ({
         rules: {},
         fields: {
-          name: { order: 1 },
-          description: { order: 2 },
-          remote_voting_config_id: { order: 3 },
-          remote_union_id: { order: 4 },
-          vote_calculation: { order: 5 },
-          allowee_groups: { order: 6 },
-          'allowee_groups.-1.0': {
+          id: { hide: true },
+          name_opt: { order: 1 },
+          description_opt: { order: 2 },
+          vote_calculation_opt: { order: 5 },
+          allowee_groups_opt: { order: 6 },
+          'allowee_groups_opt.0.-1.0': {
             label: 'Group id',
             adornment: {
               kind: 'replace',
               render: (ctx, path, name) => (
                 <Controller
-                  name={path as 'allowee_groups.-1.0'}
+                  name={path as 'allowee_groups_opt.0.-1.0'}
                   control={ctx.control}
                   render={({ field, fieldState: { error } }) => (
                     <GroupListField
@@ -87,7 +84,7 @@ export const UpdateNestedVotingConfigForm = styled(
               ),
             },
           },
-          'allowee_groups.-1.1': {
+          'allowee_groups_opt.0.-1.1': {
             label: 'Fraction',
             placeholder: 'Float from 0 to 1',
             options: {

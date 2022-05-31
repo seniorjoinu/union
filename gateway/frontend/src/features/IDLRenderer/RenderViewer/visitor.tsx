@@ -1,7 +1,6 @@
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { IDL } from '@dfinity/candid';
-import { Field, Text, Column, Button, ShiftedColumn } from '@union/components';
-import styled from 'styled-components';
+import { Field, Column, ShiftedColumn } from '@union/components';
 import { get } from 'react-hook-form';
 import { SettingsWrapper, getSettings } from '../utils';
 import { RenderProps, context, transformName, useSettings } from './utils';
@@ -32,7 +31,12 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <Field title={name} weight={{ title: 'medium' }} align={enabled ? 'column' : 'row'}>
+      <Field
+        title={name}
+        weight={{ title: 'medium' }}
+        variant={{ title: 'p3', value: 'p3' }}
+        align={enabled ? 'column' : 'row'}
+      >
         {enabled ? <ShiftedColumn>{component}</ShiftedColumn> : 'null'}
       </Field>
     </SettingsWrapper>
@@ -75,7 +79,7 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <Field title={name} weight={{ title: 'medium' }}>
+      <Field title={name} weight={{ title: 'medium' }} variant={{ title: 'p3', value: 'p3' }}>
         <Wrapper margin={16}>
           {orderedFields.map(([key, field]) => {
             const currentPath = `${path}${path ? '.' : ''}${key}`;
@@ -134,6 +138,7 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
         title={`${name || ''}${name && selected ? ': ' : ''}${
           selected ? ctx.transformLabel(selected[0], transformName) : ''
         }`}
+        variant={{ title: 'p3', value: 'p3' }}
         weight={{ title: 'medium' }}
         align='column'
       >
@@ -142,23 +147,6 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
     </SettingsWrapper>
   );
 };
-
-export const VecTitle = styled(Text)<{ $error?: string }>`
-  position: relative;
-  &&& {
-    margin-bottom: 8px;
-  }
-
-  &:empty {
-    display: none;
-  }
-`;
-export const VecButton = styled(Button)``;
-export const VecContainer = styled(Column)`
-  ${VecButton} {
-    align-self: flex-start;
-  }
-`;
 
 export interface VecFormProps extends RenderProps {
   type: IDL.Type;
@@ -175,11 +163,13 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <VecContainer>
-        <VecTitle variant='p2' weight='medium'>
-          {name}
-        </VecTitle>
-        {!!items?.length && (
+      <Field
+        title={name}
+        weight={{ title: 'medium' }}
+        variant={{ title: 'p3', value: 'p3' }}
+        align={items?.length ? 'column' : 'row'}
+      >
+        {items?.length ? (
           <Column margin={16}>
             {items.map((_: any, i: number) => {
               const component = type.accept(
@@ -193,8 +183,10 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
               return <Wrapper key={String(i)}>{component}</Wrapper>;
             })}
           </Column>
+        ) : (
+          'empty'
         )}
-      </VecContainer>
+      </Field>
     </SettingsWrapper>
   );
 };
@@ -225,10 +217,14 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <VecContainer margin={16}>
-        <VecTitle variant='p2'>{name}</VecTitle>
+      <Field
+        title={name}
+        weight={{ title: 'medium' }}
+        variant={{ title: 'p3', value: 'p3' }}
+        align='column'
+      >
         {children}
-      </VecContainer>
+      </Field>
     </SettingsWrapper>
   );
 };

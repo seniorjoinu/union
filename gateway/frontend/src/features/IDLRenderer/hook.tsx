@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Principal } from '@dfinity/principal';
-import { TId } from '@union/candid-parser';
+import { IDL } from '@dfinity/candid';
+import { TId, TProg } from '@union/candid-parser';
 import { DefaultValues } from 'react-hook-form';
 import { useCandid } from '../Wallet/useCandid';
 import { getEditor } from './RenderEditor';
@@ -9,13 +10,18 @@ import { Empty } from './utils';
 
 export interface UseRenderProps {
   canisterId: Principal;
-  type: string;
+  type: string | ((prog: TProg) => TId | IDL.Type<any> | undefined);
 }
 
 export const useRender = <T extends {}>({ canisterId, type }: UseRenderProps) => {
   const { prog } = useCandid({ canisterId });
 
-  const traversedIdlType = useMemo(() => prog?.traverseIdlType(new TId(type)), [prog, type]);
+  const traversedIdlType = useMemo(() => {
+    if (!prog) {
+      return null;
+    }
+    return typeof type == 'string' ? prog?.traverseIdlType(new TId(type)) : type(prog);
+  }, [prog, type]);
   const defaultValues = traversedIdlType?.accept(new Empty(), null) as DefaultValues<T>;
 
   const Form = useMemo(() => {

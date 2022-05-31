@@ -29,16 +29,19 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
   const state = ctx.getFieldState(path);
   const enabled = !!ctx.getValues(path)?.length;
 
+  const disabled = p.disabled || settings.disabled;
+
   const component = useMemo(
     () =>
       type.accept(
         new RenderEditor({
           path: `${path}${path ? '.' : ''}0`,
           absolutePath: `${absolutePath}${absolutePath ? '.' : ''}0`,
+          disabled,
         }),
         null,
       ),
-    [type, path, absolutePath],
+    [type, path, absolutePath, settings, disabled],
   );
   const name = settings.label || p.name;
   const defaultValue = !ctx.settings.defaultValue
@@ -55,11 +58,12 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
             })
           }
           checked={enabled}
+          disabled={disabled}
           helperText={state.error?.message}
         >
           {name}
         </Checkbox>
-        {enabled && <ShiftedColumn>{component}</ShiftedColumn>}
+        {enabled && <ShiftedColumn $disabled={disabled}>{component}</ShiftedColumn>}
       </SettingsWrapper>
     </Column>
   );
@@ -101,11 +105,17 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
 
   const Wrapper = path ? ShiftedColumn : Column;
   const name = settings.label || p.name;
+  const disabled = p.disabled || settings.disabled;
 
   // TODO upgrade order to indexed
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <Field title={name} weight={{ title: 'medium' }} helperText={state.error?.message}>
+      <Field
+        title={name}
+        weight={{ title: 'medium' }}
+        helperText={state.error?.message}
+        disabled={disabled}
+      >
         <Wrapper margin={16}>
           {orderedFields.map(([key, field]) => {
             const currentPath = `${path}${path ? '.' : ''}${key}`;
@@ -116,6 +126,7 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
                 absolutePath: `${absolutePath}${absolutePath ? '.' : ''}${key}`,
                 key: currentPath,
                 name: ctx.transformLabel(key, transformName),
+                disabled,
               }),
               null,
             );
@@ -144,6 +155,8 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
     return fields.find(([key]) => key == keys[0]) || null;
   }, [value, fields]);
 
+  const disabled = p.disabled || settings.disabled;
+
   const selectedItem = useMemo(() => {
     if (!selected) {
       return null;
@@ -154,10 +167,11 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
         path: `${path}${path ? '.' : ''}${selected[0]}`,
         absolutePath: `${absolutePath}${absolutePath ? '.' : ''}${selected[0]}`,
         name: ctx.transformLabel(selected[0], transformName),
+        disabled,
       }),
       null,
     );
-  }, [selected, fields, ctx.transformLabel, path, absolutePath]);
+  }, [selected, fields, ctx.transformLabel, path, absolutePath, disabled]);
 
   const handleChange = useCallback(
     (_: string, field: [string, IDL.Type]) => {
@@ -180,6 +194,7 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
           label={name}
           onChange={handleChange}
           value={selected ? [selected[0]] : []}
+          disabled={disabled}
           multiselect={false}
           placeholder='Select variant'
           helperText={state.error?.message}
@@ -238,22 +253,31 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const Wrapper = path ? ShiftedColumn : Column;
   const name = settings.label || p.name;
 
+  const handleAppend = useCallback(() => {
+    const item = type.accept(new Empty(), null);
+
+    append(Array.isArray(item) ? [item] : item);
+  }, [append, type]);
+
+  const disabled = p.disabled || settings.disabled;
+
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
       <VecContainer>
         <VecTitle variant='p2' weight='medium' $error={state.error?.message}>
           {name}
         </VecTitle>
-        <VecButton variant='caption' onClick={() => append(type.accept(new Empty(), null))}>
+        <VecButton variant='caption' onClick={handleAppend} disabled={disabled}>
           +
         </VecButton>
         {!!items?.length && (
-          <Column margin={16}>
+          <Column margin={16} $disabled={disabled}>
             {items.map((_: any, i: number) => {
               const component = type.accept(
                 new RenderEditor({
                   path: `${path}${path ? '.' : ''}${i}`,
                   absolutePath: `${absolutePath}${absolutePath ? '.' : ''}-1`,
+                  disabled,
                 }),
                 null,
               );
@@ -261,7 +285,7 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
               return (
                 <Wrapper key={String(i)}>
                   {component}
-                  <VecButton variant='caption' onClick={() => remove(i)}>
+                  <VecButton variant='caption' onClick={() => remove(i)} disabled={disabled}>
                     -
                   </VecButton>
                 </Wrapper>
@@ -285,6 +309,8 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
   useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
 
+  const disabled = p.disabled || settings.disabled;
+
   const children = useMemo(
     () =>
       fields.map((type, i) =>
@@ -293,17 +319,18 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
             path: `${path}${path ? '.' : ''}${i}`,
             absolutePath: `${absolutePath}${absolutePath ? '.' : ''}${i}`,
             key: String(i),
+            disabled,
           }),
           null,
         ),
       ),
-    [fields, path],
+    [fields, path, settings],
   );
   const name = settings.label || p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <VecContainer margin={16}>
+      <VecContainer margin={16} $disabled={disabled}>
         <VecTitle variant='p2' $error={state.error?.message}>
           {name}
         </VecTitle>

@@ -738,7 +738,7 @@ export const idlFactory = ({ IDL }) => {
     'description_opt' : IDL.Opt(IDL.Text),
     'name_opt' : IDL.Opt(IDL.Text),
     'vote_calculation_opt' : IDL.Opt(NestedVoteCalculation),
-    'allowee_groups_opt' : IDL.Opt(IDL.Tuple(GroupId, Fraction)),
+    'allowee_groups_opt' : IDL.Opt(IDL.Vec(IDL.Tuple(GroupId, Fraction))),
   });
   const UpdatePermissionRequest = IDL.Record({
     'id' : PermissionId,

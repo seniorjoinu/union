@@ -1,12 +1,24 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { getFontStyles, Text as T, TextVariant, TextWeight } from './Text';
 
 const Text = styled(T)``;
 
-const Container = styled.div<{ $align: FieldProps['align']; $margin?: number; $text?: string }>`
+const Container = styled.div<{
+  $align: FieldProps['align'];
+  $margin?: number;
+  $text?: string;
+  $disabled?: boolean;
+}>`
 	display: flex;
 	flex-direction: ${({ $align }) => $align};
+  ${({ $disabled }) =>
+    ($disabled
+      ? css`
+          pointer-events: none;
+          opacity: 0.5;
+        `
+      : '')};
 
 	& > *:not(:last-child) {
 		margin-${({ $align }) => ($align == 'row' ? 'right' : 'bottom')}: ${({ $margin = 4 }) => $margin}px;
@@ -41,6 +53,7 @@ export interface FieldProps {
   style?: React.CSSProperties;
   margin?: number;
   align?: 'row' | 'column';
+  disabled?: boolean;
   title?: React.ReactNode;
   children?: React.ReactNode;
   helperText?: string;
@@ -60,6 +73,7 @@ export const Field = styled(
     title,
     margin,
     helperText,
+    disabled,
     align = 'column',
     variant: propVariant,
     weight: propWeight,
@@ -77,7 +91,7 @@ export const Field = styled(
     };
 
     return (
-      <Container {...p} $align={align} $margin={margin} $text={helperText}>
+      <Container {...p} $align={align} $margin={margin} $text={helperText} $disabled={disabled}>
         <Text variant={variant.title} weight={weight.title} color='dark'>
           {title}
           {!!title && align == 'row' ? ':' : ''}

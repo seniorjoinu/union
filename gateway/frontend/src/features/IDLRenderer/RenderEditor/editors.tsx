@@ -30,6 +30,7 @@ export const TypeForm = ({
 
   const defaultValue = parseValue(getValues(path));
   const name = p.label || settings.label || p.name;
+  const disabled = p.disabled || settings.disabled;
 
   useEffect(() => {
     if (!settings.options) {
@@ -49,6 +50,7 @@ export const TypeForm = ({
             {...p}
             {...field}
             {...(controlled ? { value: parseValue(value) } : { defaultValue })}
+            disabled={disabled}
             key={path}
             label={name}
             onChange={({ target: { value } }) => {
@@ -95,6 +97,7 @@ export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
   const { control } = ctx;
   const settings = useSettings(path, absolutePath);
   const name = settings.label || p.name;
+  const disabled = p.disabled || settings.disabled;
 
   return (
     <Controller
@@ -107,6 +110,7 @@ export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
             onChange={() => {
               field.onChange(!field.value);
             }}
+            disabled={disabled}
             helperText={error?.message}
           >
             {name}

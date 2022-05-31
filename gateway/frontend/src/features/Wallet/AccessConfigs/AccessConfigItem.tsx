@@ -86,7 +86,8 @@ export const AccessConfigItem = styled(
                     <GroupInfo
                       key={String(g.id)}
                       groupId={g.id}
-                      minShares={g.min_shares}
+                      shares={g.min_shares}
+                      verbose={{ shares: 'min' }}
                       to={`../groups/${String(g.id)}`}
                     />
                   ))}

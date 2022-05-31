@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Text } from '../Text';
+import { getFontStyles, Text } from '../Text';
 import { Mark as M } from '../Select/Mark';
 
 export const Title = styled(Text)`
@@ -13,6 +13,8 @@ export const Title = styled(Text)`
   text-overflow: ellipsis;
   white-space: nowrap;
   color: ${({ theme }) => theme.colors.dark};
+
+  ${getFontStyles('h5', 'medium')}
 `;
 
 export const Mark = styled(M)<{ $isOpened: boolean }>`
@@ -82,22 +84,11 @@ export const Container = styled.section`
   transition: border-color 200ms ease;
 
   & & {
-    border-left-width: 0;
-    border-right-width: 0;
+    padding: 4px 8px;
+    border: 1px solid ${({ theme }) => theme.colors.dark};
 
     ${Title} {
-      color: ${({ theme }) => theme.colors.dark};
-    }
-
-    ${Header}::after {
-      background-color: ${({ theme }) => theme.colors.grey};
-    }
-  }
-  & & + & {
-    border-top-width: 0;
-
-    &:last-of-type {
-      border-bottom-width: 0;
+      ${getFontStyles('p2', 'medium')}
     }
   }
 `;

@@ -36,8 +36,10 @@ export class Empty extends IDL.Visitor<null, any> {
 export type FieldSetting<T, CTX> = {
   order?: number;
   hide?: boolean;
+  disabled?: boolean;
   label?: React.ReactNode;
   placeholder?: string;
+  defaultValue?: any;
   options?: RegisterOptions<T, any>;
   adornment?: {
     kind?: 'start' | 'end' | 'replace';

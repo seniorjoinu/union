@@ -6,7 +6,7 @@ import { VotingConfig } from 'union-ts';
 import { NavLink, useParams } from 'react-router-dom';
 import { DEFAULT_VOTING_CONFIG_IDS } from 'envs';
 import { useRender } from '../../IDLRenderer';
-import { UnionTooltipButtonComponent, useUnionSubmit } from '../../../components/UnionSubmit';
+import { UnionTooltipButton } from '../../../components/UnionSubmit';
 import { useCurrentUnion } from '../context';
 import { VotingConfigItem } from './VotingConfigItem';
 
@@ -39,12 +39,6 @@ export const VotingConfigs = styled(({ ...p }: VotingConfigsProps) => {
   const { principal } = useCurrentUnion();
   const { canister } = useUnion(principal);
   const [optimisticDeleted, setOptimisticDeleted] = useState<Record<string, true>>({});
-  const deleteUnionButtonProps = useUnionSubmit({
-    unionId: principal,
-    canisterId: principal,
-    methodName: 'delete_voting_config',
-    onExecuted: (p) => setOptimisticDeleted((v) => ({ ...v, [String(p[0]?.id)]: true })),
-  });
   const { View } = useRender<VotingConfig>({
     canisterId: principal,
     type: 'VotingConfig',
@@ -97,16 +91,21 @@ export const VotingConfigs = styled(({ ...p }: VotingConfigsProps) => {
                       >
                         Edit
                       </Button>
-                      <UnionTooltipButtonComponent
-                        {...deleteUnionButtonProps}
+                      <UnionTooltipButton
                         variant='caption'
                         color='red'
                         buttonContent='Delete'
                         submitVotingVerbose='Create voting'
-                        getPayload={() => [{ id: item.id[0] }]}
+                        getPayload={() => [{ id: item.id[0]! }]}
+                        unionId={principal}
+                        canisterId={principal}
+                        methodName='delete_voting_config'
+                        onExecuted={(p) =>
+                          setOptimisticDeleted((v) => ({ ...v, [String(p[0]?.id)]: true }))
+                        }
                       >
                         Delete
-                      </UnionTooltipButtonComponent>
+                      </UnionTooltipButton>
                     </>
                   )}
                 </ItemControls>

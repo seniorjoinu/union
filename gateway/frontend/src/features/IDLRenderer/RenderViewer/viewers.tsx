@@ -26,7 +26,12 @@ export const TypeForm = ({
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <Field title={name} weight={{ title: 'medium' }} align='row'>
+      <Field
+        title={name}
+        weight={{ title: 'medium' }}
+        variant={{ title: 'p3', value: 'p3' }}
+        align='row'
+      >
         {transformValue(value)}
       </Field>
     </SettingsWrapper>
