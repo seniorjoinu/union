@@ -3,7 +3,7 @@ use crate::repository::voting::model::Voting;
 use crate::repository::voting_config::model::VotingConfig;
 use crate::service::choice::types::ChoiceService;
 use crate::service::voting::types::{VotingError, VotingService};
-use crate::CronService;
+use crate::{cron_dequeue, CronService};
 use candid::Principal;
 use shared::mvc::{HasRepository, Model, Repository};
 use shared::pageable::{Page, PageRequest};
@@ -74,6 +74,10 @@ impl VotingService {
 
     pub fn delete_voting(id: &VotingId) -> Result<(), VotingError> {
         let voting = Voting::repo().delete(id).unwrap();
+
+        if let Some(task_id) = voting.get_cron_task() {
+            cron_dequeue(task_id);
+        }
 
         Choice::repo()
             .delete(&voting.get_rejection_choice())

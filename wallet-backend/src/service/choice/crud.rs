@@ -105,6 +105,7 @@ impl ChoiceService {
     pub fn delete_choice(
         choice_id: &ChoiceId,
         voting_id: &RemoteVotingId,
+        timestamp: u64,
     ) -> Result<(), ChoiceError> {
         let choice = ChoiceService::get_choice(choice_id)?;
 
@@ -114,11 +115,14 @@ impl ChoiceService {
                     return Err(ChoiceError::ChoiceNotFound(*choice_id));
                 }
 
-                let voting = VotingService::get_voting(id).unwrap();
+                let mut voting = VotingService::get_voting(id).unwrap();
 
                 if !VotingService::is_editable(&voting) {
                     return Err(ChoiceError::UnableToEditVoting(*id));
                 }
+
+                voting.remove_choice(choice_id, timestamp);
+                Voting::repo().save(voting);
             }
             _ => {
                 // FIXME: should check if nested voting is deletable
