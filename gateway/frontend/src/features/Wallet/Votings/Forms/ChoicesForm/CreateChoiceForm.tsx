@@ -4,8 +4,8 @@ import { Principal } from '@dfinity/principal';
 import { PageWrapper, SubmitButton as SB } from '@union/components';
 import { CreateVotingChoiceRequest, _SERVICE } from 'union-ts';
 import { useParams } from 'react-router-dom';
-import { EditorSettings, useRender } from '../../../IDLRenderer';
-import { useUnionSubmit } from '../../../../components/UnionSubmit';
+import { EditorSettings, useRender } from '../../../../IDLRenderer';
+import { useUnionSubmit } from '../../../../../components/UnionSubmit';
 import { MessageData } from '../types';
 
 const SubmitButton = styled(SB)``;

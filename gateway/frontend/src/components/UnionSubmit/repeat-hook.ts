@@ -1,34 +1,34 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { SubmitButtonProps } from '@union/components';
 import { useAuth, useUnion, _SERVICE, unionIdl } from 'services';
 import { useNavigate } from 'react-router-dom';
 import { Principal } from '@dfinity/principal';
 import { buildDecoder, buildEncoder } from '@union/serialize';
 import { AnyService, EncDec, Encoder, Decoder } from './hook';
-import { RemoteCallPayload } from 'union-ts';
+import { AccessConfig } from 'union-ts';
 
-export interface UnionMultipleSubmitProps extends Pick<SubmitButtonProps, 'onClick'> {
+export interface UnionRepeatSubmitProps extends Pick<SubmitButtonProps, 'onClick'> {
   unionId: Principal;
-  program: ({
+  program: {
     canisterId: Principal;
     methodName: string;
-  } & EncDec)[];
+  } & EncDec;
   onExecuted?(payload: any, result: any): void;
 }
 
-export interface UnionMultipleSubmitResult {
+export interface UnionRepeatSubmitResult {
   isAllowed: boolean;
   submitting: boolean;
   submit(e: React.MouseEvent<HTMLButtonElement>, payloads: any[]): Promise<any[]>;
   createVoting(payloads: any[]): void;
 }
 
-export const useUnionMultipleSubmit = ({
+export const useUnionRepeatSubmit = ({
   unionId,
   program,
   onClick = () => {},
   onExecuted = () => {},
-}: UnionMultipleSubmitProps): UnionMultipleSubmitResult => {
+}: UnionRepeatSubmitProps): UnionRepeatSubmitResult => {
   const [submitting, setSubmitting] = useState(false);
   const nav = useNavigate();
   const { identity } = useAuth();
@@ -39,65 +39,47 @@ export const useUnionMultipleSubmit = ({
       return;
     }
 
-    (async () => {
-      for (const { canisterId, methodName } of program) {
-        await getMethodAccess({
-          canisterId,
-          methodName,
-          profile: identity.getPrincipal(),
-        });
-      }
-    })();
-  }, []);
-
-  const accessConfigId = useMemo(() => {
-    if (!program.length) {
-      return undefined;
-    }
-
-    let configs = methodAccess[program[0].methodName] || [];
-
-    program.forEach(({ methodName }) => {
-      const progConfigs = (methodAccess[methodName] || []).map((c) => c.id[0]);
-      configs = configs.filter((c) => progConfigs.includes(c.id[0]));
+    getMethodAccess({
+      ...program,
+      profile: identity.getPrincipal(),
     });
-
-    return configs.length ? configs[0].id[0] : undefined;
-  }, [methodAccess, program]);
+  }, []);
 
   const submit = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>, payloads: any[]): Promise<any> => {
       setSubmitting(true);
-
       try {
         onClick(e);
 
-        if (payloads.length !== program.length) {
-          throw 'Wrong payload length';
-        }
-        if (typeof accessConfigId == 'undefined') {
-          throw 'No access';
-        }
+        const { canisterId, methodName, encode, decode } = program;
+        const encoder = buildEncoder(unionIdl) as Encoder;
+        console.log(`\x1b[33mexecute repeat`, { program, payloads });
 
-        console.log(`\x1b[33mexecute multiple`, { program, payloads });
+        let accessConfig: AccessConfig | null = null; // FIXME bad practice
+        const datas = payloads.map((payload, i) => {
+          accessConfig = methodAccess[methodName][0];
 
-        const programPayload: RemoteCallPayload[] = program.map(
-          ({ canisterId, methodName, encode, decode }, i) => {
-            const encoder = buildEncoder(unionIdl) as Encoder;
-            const payload = payloads[i];
-            const encoded = encode ? encode(payload) : encoder[methodName](...(payload || []));
-            return {
-              endpoint: { canister_id: canisterId, method_name: methodName },
-              cycles: BigInt(0),
-              args: { Encoded: [...new Uint8Array(encoded)] },
-            };
-          },
-        );
+          if (!accessConfig) {
+            throw new Error('No access');
+          }
+
+          const encoded = encode ? encode(payload) : encoder[methodName](...(payload || []));
+
+          return { canisterId, methodName, Encoded: [...new Uint8Array(encoded)], decode };
+        });
+
+        if (!accessConfig) {
+          throw new Error('No access');
+        }
 
         const { result } = await canister.execute({
-          access_config_id: accessConfigId,
+          access_config_id: (accessConfig as AccessConfig).id[0]!,
           program: {
-            RemoteCallSequence: programPayload,
+            RemoteCallSequence: datas.map((d) => ({
+              endpoint: { canister_id: d.canisterId, method_name: d.methodName },
+              cycles: BigInt(0),
+              args: { Encoded: d.Encoded },
+            })),
           },
         });
 
@@ -117,7 +99,8 @@ export const useUnionMultipleSubmit = ({
 
             const { buffer } = new Uint8Array(response.Ok);
 
-            const { methodName, decode } = program[i];
+            const decode = datas[i] ? datas[i].decode : null;
+            const methodName = datas[i] ? datas[i].methodName : '';
 
             const decoded = decode ? decode(buffer) : (await decoder[methodName](buffer))[0];
 
@@ -134,7 +117,7 @@ export const useUnionMultipleSubmit = ({
         throw e;
       }
     },
-    [program, onClick, onExecuted, setSubmitting, accessConfigId],
+    [program, methodAccess, onClick, onExecuted, setSubmitting],
   );
 
   const createVoting = useCallback(
@@ -149,8 +132,10 @@ export const useUnionMultipleSubmit = ({
     [program, unionId],
   );
 
+  const isAllowed = !!methodAccess[program.methodName]?.length;
+
   return {
-    isAllowed: typeof accessConfigId !== 'undefined',
+    isAllowed,
     submitting,
     submit,
     createVoting,

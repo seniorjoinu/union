@@ -7,6 +7,7 @@ import {
   Control,
   UseFormGetFieldState,
   FieldPath,
+  UseFormSetError,
 } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
 import { getSettings, Settings } from '../utils';
@@ -57,6 +58,7 @@ export type RenderEditorContext<V extends FieldValues = FieldValues> = {
   getValues: UseFormGetValues<V>;
   getFieldState: UseFormGetFieldState<V>;
   setValue: UseFormSetValue<V>;
+  setError: UseFormSetError<V>;
   resetField: UseFormResetField<V>;
   setData(data: V): void;
   control: Control<V, any>;
@@ -68,6 +70,7 @@ export const context = React.createContext<RenderEditorContext>({
   getValues: () => [],
   getFieldState: () => ({ invalid: false, isDirty: false, isTouched: false }),
   setValue: () => {},
+  setError: () => {},
   setData: () => {},
   resetField: () => {},
   // @ts-expect-error

@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { MessageData as ClientMessageData, useClient } from '../../useClient';
+import { MessageData as ClientMessageData, useClient } from '../../../useClient';
 import { parseMessage } from './utils';
 import { CreateVotingFormProps } from './VotingForm';
 import { MessageData } from './types';

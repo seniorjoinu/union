@@ -3,3 +3,4 @@ export * from './ChangeProfile';
 export * from './ProfileInfo';
 export * from './BurnMySharesForm';
 export * from './TransferMySharesForm';
+export * from './InviteForm';

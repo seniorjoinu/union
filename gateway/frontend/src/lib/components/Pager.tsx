@@ -123,7 +123,7 @@ export const Pager = <T extends {}>({
 
   const items = useMemo(
     () => (data || []).map((item) => renderItem(item)).filter((item) => !!item),
-    [data],
+    [data, renderItem],
   );
 
   if (!renderIfEmpty && !items.length) {

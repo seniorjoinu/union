@@ -81,6 +81,7 @@ export const Profile = ({ ...p }: ProfileProps) => {
             </Button>
           </>
         )}
+        <Button onClick={() => nav('invite')}>+ Invite</Button>
         <Button onClick={() => nav('change')}>Change profile</Button>
       </Controls>
       <Field title='Profile name' align='row'>

@@ -6,8 +6,8 @@ import { PageWrapper, SubmitButton as SB } from '@union/components';
 import { CreateVotingChoiceRequest, _SERVICE } from 'union-ts';
 import { useParams } from 'react-router-dom';
 import { TId, TProg } from '@union/candid-parser';
-import { EditorSettings, useRender } from '../../../IDLRenderer';
-import { useUnionMultipleSubmit } from '../../../../components/UnionSubmit';
+import { EditorSettings, useRender } from '../../../../IDLRenderer';
+import { useUnionRepeatSubmit } from '../../../../../components/UnionSubmit';
 import { MessageData } from '../types';
 
 const SubmitButton = styled(SB)``;
@@ -36,7 +36,7 @@ export function MultipleChoicesForm({
   ...p
 }: MultipleChoicesFormProps) {
   const { votingId } = useParams();
-  const submitProps = useUnionMultipleSubmit({
+  const submitProps = useUnionRepeatSubmit({
     unionId,
     program: {
       canisterId: unionId,

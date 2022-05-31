@@ -5,11 +5,11 @@ import { Spinner, Column, Text, Row } from '@union/components';
 import { NavLink } from 'react-router-dom';
 import { To } from 'history';
 import { Principal } from '@dfinity/principal';
+import { Choice } from 'union-ts';
 
 const Children = styled(Row)``;
 const Container = styled(Column)`
   & > ${Text} {
-    margin-left: 8px;
     margin-bottom: 2px;
 
     &:first-child {
@@ -33,9 +33,20 @@ export type ChoiceInfoProps = {
   style?: React.CSSProperties;
   to?: To;
   unionId: Principal;
-  choiceId: bigint;
   children?: React.ReactNode;
-} & Ids;
+} & Choices;
+
+export type Choices =
+  | (Ids & {
+      choiceId: bigint;
+      choice?: never;
+    })
+  | {
+      choiceId?: never;
+      choice: Choice;
+      votingId?: never;
+      nestedVotingId?: never;
+    };
 
 export type Ids =
   | ({} & {
@@ -48,25 +59,36 @@ export type Ids =
     });
 
 export const ChoiceInfo = styled(
-  ({ unionId, choiceId, votingId, nestedVotingId, to, children, ...p }: ChoiceInfoProps) => {
+  ({
+    unionId,
+    choiceId,
+    choice: propChoice,
+    votingId,
+    nestedVotingId,
+    to,
+    children,
+    ...p
+  }: ChoiceInfoProps) => {
     const { canister, data, fetching } = useUnion(unionId);
 
     useEffect(() => {
-      canister.get_voting_choice({
-        choice_id: choiceId,
-        voting_id:
-          typeof votingId !== 'undefined'
-            ? { Common: votingId }
-            : { Nested: nestedVotingId || BigInt(-1) },
-        query_delegation_proof_opt: [],
-      });
+      if (typeof choiceId == 'bigint') {
+        canister.get_voting_choice({
+          choice_id: choiceId,
+          voting_id:
+            typeof votingId !== 'undefined'
+              ? { Common: votingId }
+              : { Nested: nestedVotingId || BigInt(-1) },
+          query_delegation_proof_opt: [],
+        });
+      }
     }, [choiceId]);
 
     if (fetching.get_voting_choice) {
       return <Spinner size={20} {...p} />;
     }
 
-    const choice = data.get_voting_choice?.choice;
+    const choice = propChoice || data.get_voting_choice?.choice;
 
     if (!choice) {
       return null;

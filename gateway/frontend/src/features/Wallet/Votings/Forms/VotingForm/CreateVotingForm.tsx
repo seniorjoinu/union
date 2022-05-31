@@ -5,9 +5,9 @@ import { PageWrapper, SubmitButton as SB } from '@union/components';
 import { CreateVotingRequest, _SERVICE } from 'union-ts';
 import { Controller } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { EditorSettings, useRender } from '../../../IDLRenderer';
-import { useUnionSubmit, AnyService } from '../../../../components/UnionSubmit';
-import { VotingConfigListField } from '../../IDLFields';
+import { EditorSettings, useRender } from '../../../../IDLRenderer';
+import { useUnionSubmit, AnyService } from '../../../../../components/UnionSubmit';
+import { VotingConfigListField } from '../../../IDLFields';
 import { MessageData } from '../types';
 
 const SubmitButton = styled(SB)``;

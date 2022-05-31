@@ -1,7 +1,7 @@
 import { Principal } from '@dfinity/principal';
-import { Button as B, Field, PageWrapper } from '@union/components';
+import { Accordeon, Button as B, Field, PageWrapper, Text } from '@union/components';
 import moment from 'moment';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { get } from 'react-hook-form';
 import styled from 'styled-components';
 import { Voting } from 'union-ts';
@@ -13,6 +13,7 @@ import { ProfileInfo } from '../Profile';
 import { VotingConfigInfo } from '../VotingConfigs';
 import { UnionTooltipButtonComponent, useUnionSubmit } from '../../../components/UnionSubmit';
 import { ChoiceInfo } from './ChoiceInfo';
+import { CastVote } from './CastVote';
 import { VotingControls as VC } from './VotingControls';
 
 const Button = styled(B)`
@@ -22,6 +23,13 @@ const VotingControls = styled(VC)``;
 const Container = styled(PageWrapper)`
   ${VotingControls} {
     align-self: flex-end;
+  }
+
+  & > ${Field} {
+    margin-bottom: 16px;
+  }
+  & > ${CastVote} {
+    margin-top: 16px;
   }
 `;
 
@@ -66,7 +74,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
         name: { hide: true },
         id: { hide: true },
         task_id: { hide: true },
-        description: { order: 9 },
+        description: { hide: true, order: 9 },
         proposer: {
           order: 10,
           adornment: {
@@ -289,7 +297,11 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
         navPrefix='../votings/'
         deleteUnionButtonProps={deleteUnionButtonProps}
       />
-      <View value={voting} settings={settings} />
+      <Field>{voting.description}</Field>
+      <Accordeon title='Details'>
+        <View value={voting} settings={settings} />
+      </Accordeon>
+      <CastVote unionId={unionId} voting={voting} onVoted={() => nav('', { replace: true })} />
       {/* <Field title='Nested votings' weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
         <NestedVotingConfigs parentVotingConfig={votingConfig.id[0]} />
       </Field> */}

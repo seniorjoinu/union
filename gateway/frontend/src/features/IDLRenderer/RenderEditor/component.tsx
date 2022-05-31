@@ -44,6 +44,7 @@ export const getEditor = <T extends {}>({
       reset,
       resetField,
       getFieldState,
+      setError,
       ...formReturn
     } = useForm<T>({
       defaultValues: {
@@ -108,6 +109,7 @@ export const getEditor = <T extends {}>({
       getValues,
       settings,
       transformLabel,
+      setError,
     };
     const ctx = {
       ...value,

@@ -1,7 +1,6 @@
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { IDL } from '@dfinity/candid';
-import { Field, Text, Column, Button, ShiftedColumn } from '@union/components';
-import styled from 'styled-components';
+import { Field, Column, ShiftedColumn } from '@union/components';
 import { get } from 'react-hook-form';
 import { SettingsWrapper, getSettings } from '../utils';
 import { RenderProps, context, transformName, useSettings } from './utils';

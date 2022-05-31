@@ -5,7 +5,7 @@ import { useUnion } from 'services';
 import { Permission } from 'union-ts';
 import { NavLink, useParams } from 'react-router-dom';
 import { DEFAULT_PERMISSION_IDS } from 'envs';
-import { UnionTooltipButtonComponent, useUnionSubmit } from '../../../components/UnionSubmit';
+import { UnionTooltipButton } from '../../../components/UnionSubmit';
 import { useCurrentUnion } from '../context';
 import { PermissionItem } from './PermissionItem';
 
@@ -39,12 +39,6 @@ export const Permissions = styled(({ ...p }: PermissionsProps) => {
   const { principal } = useCurrentUnion();
   const { canister } = useUnion(principal);
   const [optimisticDeleted, setOptimisticDeleted] = useState<Record<string, true>>({});
-  const deleteUnionButtonProps = useUnionSubmit({
-    unionId: principal,
-    canisterId: principal,
-    methodName: 'delete_permission',
-    onExecuted: (p) => setOptimisticDeleted((v) => ({ ...v, [String(p[0]?.id)]: true })),
-  });
 
   return (
     <Container {...p} title='Permissions'>
@@ -82,16 +76,21 @@ export const Permissions = styled(({ ...p }: PermissionsProps) => {
                       >
                         Edit
                       </Button>
-                      <UnionTooltipButtonComponent
-                        {...deleteUnionButtonProps}
+                      <UnionTooltipButton
                         buttonContent='Delete'
                         variant='caption'
                         color='red'
                         submitVotingVerbose='Create voting'
-                        getPayload={() => [{ id: item.id[0] }]}
+                        getPayload={() => [{ id: item.id[0]! }]}
+                        unionId={principal}
+                        canisterId={principal}
+                        methodName='delete_permission'
+                        onExecuted={(p) =>
+                          setOptimisticDeleted((v) => ({ ...v, [String(p[0]?.id)]: true }))
+                        }
                       >
                         Delete
-                      </UnionTooltipButtonComponent>
+                      </UnionTooltipButton>
                     </>
                   )}
                 </ItemControls>

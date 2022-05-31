@@ -5,8 +5,8 @@ import { PageWrapper, SubmitButton as SB } from '@union/components';
 import { UpdateVotingChoiceRequest, _SERVICE } from 'union-ts';
 import { useParams } from 'react-router-dom';
 import { useUnion } from 'services';
-import { EditorSettings, useRender } from '../../../IDLRenderer';
-import { useUnionSubmit } from '../../../../components/UnionSubmit';
+import { EditorSettings, useRender } from '../../../../IDLRenderer';
+import { useUnionSubmit } from '../../../../../components/UnionSubmit';
 
 const SubmitButton = styled(SB)``;
 const Container = styled(PageWrapper)`

@@ -6,6 +6,7 @@ import { VotingConfig } from 'union-ts';
 import { ViewProps, ViewerSettings } from '../../IDLRenderer';
 import { PermissionInfo } from '../Permissions';
 import { GroupInfo } from '../Groups';
+import { computeTime } from '../IDLFields';
 import { NestedVotingConfigs } from './NestedVotingConfigs';
 
 const Column = styled(C)`
@@ -92,6 +93,44 @@ export const VotingConfigItem = styled(
                     permissionId={permissionId}
                     to={`../permissions/${String(permissionId)}`}
                   />
+                );
+              },
+            },
+          },
+          'round.round_delay': {
+            adornment: {
+              kind: 'replace',
+              render: (ctx, path, name) => {
+                const value = get(ctx.value, path);
+
+                return (
+                  <Field
+                    title={name}
+                    weight={{ title: 'medium' }}
+                    variant={{ title: 'p3', value: 'p3' }}
+                    align='row'
+                  >
+                    {computeTime(value)}
+                  </Field>
+                );
+              },
+            },
+          },
+          'round.round_duration': {
+            adornment: {
+              kind: 'replace',
+              render: (ctx, path, name) => {
+                const value = get(ctx.value, path);
+
+                return (
+                  <Field
+                    title={name}
+                    weight={{ title: 'medium' }}
+                    variant={{ title: 'p3', value: 'p3' }}
+                    align='row'
+                  >
+                    {computeTime(value)}
+                  </Field>
                 );
               },
             },

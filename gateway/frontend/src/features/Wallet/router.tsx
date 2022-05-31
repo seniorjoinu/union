@@ -2,9 +2,14 @@ import React from 'react';
 import styled from 'styled-components';
 import { useParams, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { checkPrincipal } from 'toolkit';
-import { VotingRouter } from './Voting';
 import { Provider } from './context';
-import { Profile, ChangeProfile, BurnMySharesForm, TransferMySharesForm } from './Profile';
+import {
+  Profile,
+  ChangeProfile,
+  BurnMySharesForm,
+  TransferMySharesForm,
+  InviteForm,
+} from './Profile';
 import {
   Groups,
   CreateGroupForm,
@@ -15,7 +20,7 @@ import {
 } from './Groups';
 import { Permissions, CreatePermissionForm, UpdatePermissionForm } from './Permissions';
 import { AccessConfigs, CreateAccessConfigForm, UpdateAccessConfigForm } from './AccessConfigs';
-import { Votings, VotingPage } from './Votings';
+import { Votings, VotingPage, VotingRouter } from './Votings';
 import {
   VotingConfigs,
   CreateVotingConfigForm,
@@ -85,6 +90,7 @@ export const Wallet = () => {
           />
 
           <Route path='/profile' element={<Profile />} />
+          <Route path='/profile/invite' element={<InviteForm />} />
           <Route path='/profile/change' element={<ChangeProfile />} />
           <Route path='/profile/burn/:groupId' element={<BurnMySharesForm />} />
           <Route path='/profile/transfer/:groupId' element={<TransferMySharesForm />} />

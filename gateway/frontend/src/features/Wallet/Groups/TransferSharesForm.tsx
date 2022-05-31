@@ -28,6 +28,7 @@ export const TransferSharesForm = styled(({ ...p }: TransferSharesFormProps) => 
     type: 'TransferGroupSharesRequest',
   });
 
+  console.warn('TODO check transferability');
   const settings: EditorSettings<TransferGroupSharesRequest> = useMemo(
     () => ({
       rules: {},

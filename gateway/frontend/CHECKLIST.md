@@ -54,8 +54,9 @@
 - [x] get_my_group_shares_balance
 - [x] transfer_group_shares
 - [x] transfer_my_group_shares
+- [x] get_my_shares_info_at
+- [x] cast_my_vote
 - [ ] cast_my_nested_vote
-- [ ] cast_my_vote
 - [ ] create_nested_voting
 - [ ] delete_nested_voting
 - [ ] get_my_nested_vote
@@ -82,7 +83,6 @@
 - [ ] list_program_execution_entry_ids
 - [ ] get_my_query_delegation_proof
 - [ ] get_group_shares_balance_of
-- [ ] get_my_shares_info_at
 - [ ] get_shares_info_of_at
 - [ ] get_total_unaccepted_group_shares
 - [ ] get_unaccepted_group_shares_balance_of
