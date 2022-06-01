@@ -9,11 +9,12 @@ import { getViewer } from './RenderViewer';
 import { Empty } from './utils';
 
 export interface UseRenderProps {
+  path?: string;
   canisterId: Principal;
   type: string | ((prog: TProg) => TId | IDL.Type<any> | undefined);
 }
 
-export const useRender = <T extends {}>({ canisterId, type }: UseRenderProps) => {
+export const useRender = <T extends {}>({ canisterId, type, path }: UseRenderProps) => {
   const { prog } = useCandid({ canisterId });
 
   const traversedIdlType = useMemo(() => {
@@ -29,7 +30,7 @@ export const useRender = <T extends {}>({ canisterId, type }: UseRenderProps) =>
       return () => <span>Type is null</span>;
     }
 
-    return getEditor<T>({ defaultValues, traversedIdlType });
+    return getEditor<T>({ defaultValues, traversedIdlType, path });
   }, [traversedIdlType]);
 
   const View = useMemo(() => {
@@ -37,7 +38,7 @@ export const useRender = <T extends {}>({ canisterId, type }: UseRenderProps) =>
       return () => <span>Type is null</span>;
     }
 
-    return getViewer<T>({ traversedIdlType });
+    return getViewer<T>({ traversedIdlType, path });
   }, [traversedIdlType]);
 
   return {

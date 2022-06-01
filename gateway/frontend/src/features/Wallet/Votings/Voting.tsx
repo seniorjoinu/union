@@ -145,15 +145,18 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
           order: 20,
           adornment: {
             kind: 'end',
-            render: (ctx, path, name) => (
-              <Button
-                forwardedAs={NavLink}
-                to={`../votings/crud/choice/create/${String(ctx.value.id[0])}`}
-                variant='caption'
-              >
-                Add choice
-              </Button>
-            ),
+            render: (ctx, path, name) =>
+              ('Round' in ctx.value.status && ctx.value.status.Round == 0 ? (
+                <Button
+                  forwardedAs={NavLink}
+                  to={`../votings/crud/choice/create/${String(ctx.value.id[0])}`}
+                  variant='caption'
+                >
+                  Add choice
+                </Button>
+              ) : (
+                <></>
+              )),
           },
         },
         total_voting_power_by_group: {
@@ -206,28 +209,32 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
                 choiceId={get(ctx.value, path)}
                 votingId={ctx.value.id[0]!}
               >
-                <Button
-                  forwardedAs={NavLink}
-                  to={`../votings/crud/choice/edit/${String(ctx.value.id[0])}/${get(
-                    ctx.value,
-                    path,
-                  )}`}
-                  variant='caption'
-                >
-                  Edit
-                </Button>
-                <UnionTooltipButtonComponent
-                  {...deleteChoiceUnionButtonProps}
-                  variant='caption'
-                  color='red'
-                  buttonContent='Delete'
-                  submitVotingVerbose='Delete with voting'
-                  getPayload={() => [
-                    { choice_id: get(ctx.value, path), voting_id: { Common: ctx.value.id[0] } },
-                  ]}
-                >
-                  Delete
-                </UnionTooltipButtonComponent>
+                {'Round' in ctx.value.status && ctx.value.status.Round == 0 && (
+                  <>
+                    <Button
+                      forwardedAs={NavLink}
+                      to={`../votings/crud/choice/edit/${String(ctx.value.id[0])}/${get(
+                        ctx.value,
+                        path,
+                      )}`}
+                      variant='caption'
+                    >
+                      Edit
+                    </Button>
+                    <UnionTooltipButtonComponent
+                      {...deleteChoiceUnionButtonProps}
+                      variant='caption'
+                      color='red'
+                      buttonContent='Delete'
+                      submitVotingVerbose='Delete with voting'
+                      getPayload={() => [
+                        { choice_id: get(ctx.value, path), voting_id: { Common: ctx.value.id[0] } },
+                      ]}
+                    >
+                      Delete
+                    </UnionTooltipButtonComponent>
+                  </>
+                )}
               </ChoiceInfo>
             ),
           },
@@ -292,11 +299,13 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
 
   return (
     <Container title={voting.name} withBack>
-      <VotingControls
-        voting={voting}
-        navPrefix='../votings/'
-        deleteUnionButtonProps={deleteUnionButtonProps}
-      />
+      {'Round' in voting.status && voting.status.Round == 0 && (
+        <VotingControls
+          voting={voting}
+          navPrefix='../votings/'
+          deleteUnionButtonProps={deleteUnionButtonProps}
+        />
+      )}
       <Field>{voting.description}</Field>
       <Accordeon title='Details'>
         <View value={voting} settings={settings} />

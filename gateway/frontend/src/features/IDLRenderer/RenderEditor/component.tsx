@@ -8,6 +8,7 @@ import { transformName, RenderEditorContext, normalizeValues, getProvider } from
 import { RenderEditor } from './visitor';
 
 export interface GetComponentProps<T> {
+  path?: string;
   defaultValues?: DefaultValues<T>;
   traversedIdlType: TId | IDL.Type<any>;
 }
@@ -23,11 +24,12 @@ export interface EditorProps<T> {
 }
 
 export const getEditor = <T extends {}>({
+  path = '',
   defaultValues,
   traversedIdlType,
 }: GetComponentProps<T>) => {
   const Provider = getProvider<T>();
-  const form = traversedIdlType.accept(new RenderEditor({ path: '', absolutePath: '' }), null);
+  const form = traversedIdlType.accept(new RenderEditor({ path, absolutePath: path }), null);
 
   return ({
     defaultValue,

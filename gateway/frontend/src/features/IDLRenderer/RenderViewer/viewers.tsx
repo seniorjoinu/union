@@ -22,7 +22,7 @@ export const TypeForm = ({
   const settings = useSettings(path, absolutePath);
 
   const value = get(ctx.value, path);
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>

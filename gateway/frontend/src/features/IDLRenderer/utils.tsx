@@ -40,10 +40,15 @@ export type FieldSetting<T, CTX> = {
   label?: React.ReactNode;
   placeholder?: string;
   defaultValue?: any;
-  options?: RegisterOptions<T, any>;
+  options?: RegisterOptions<T, any> | ((ctx: CTX, path: string) => RegisterOptions<T, any>);
   adornment?: {
     kind?: 'start' | 'end' | 'replace';
-    render?: (ctx: CTX, path: string, name?: React.ReactNode) => JSX.Element | null | void | false;
+    render?: (
+      ctx: CTX,
+      path: string,
+      name: React.ReactNode,
+      origin: React.ReactNode,
+    ) => JSX.Element | null | void | false;
   };
 };
 
@@ -106,11 +111,11 @@ export const SettingsWrapper = <T extends FieldValues, CTX>({
   }
   return (
     <>
-      {adornment.kind == 'start' && adornment.render && adornment.render(ctx, path, name)}
+      {adornment.kind == 'start' && adornment.render && adornment.render(ctx, path, name, children)}
       {adornment.kind == 'replace' && adornment.render
-        ? adornment.render(ctx, path, name)
+        ? adornment.render(ctx, path, name || '', children)
         : children}
-      {adornment.kind == 'end' && adornment.render && adornment.render(ctx, path, name)}
+      {adornment.kind == 'end' && adornment.render && adornment.render(ctx, path, name, children)}
     </>
   );
 };

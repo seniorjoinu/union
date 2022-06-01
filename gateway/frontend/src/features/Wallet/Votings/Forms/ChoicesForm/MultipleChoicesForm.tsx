@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { IDL } from '@dfinity/candid';
-import { PageWrapper, SubmitButton as SB } from '@union/components';
+import { PageWrapper, Row, SubmitButton as SB } from '@union/components';
 import { CreateVotingChoiceRequest, _SERVICE } from 'union-ts';
 import { useParams } from 'react-router-dom';
 import { TId, TProg } from '@union/candid-parser';
@@ -78,16 +78,19 @@ export function MultipleChoicesForm({
     <Container title='Add choices to voting' withBack {...p}>
       <Form settings={settings} defaultValue={defaultValue}>
         {(ctx) => (
-          <SubmitButton
-            disabled={!ctx.isValid || !submitProps.isAllowed}
-            onClick={(e) => {
-              const value = ctx.getValues('choices').map((v) => [{ ...v }]);
+          <Row>
+            <SubmitButton
+              disabled={!ctx.isValid || !submitProps.isAllowed}
+              onClick={(e) => {
+                const value = ctx.getValues('choices').map((v) => [{ ...v }]);
 
-              return submitProps.submit(e, value);
-            }}
-          >
-            Submit choices
-          </SubmitButton>
+                return submitProps.submit(e, value);
+              }}
+            >
+              Submit choices
+            </SubmitButton>
+            <SubmitButton onClick={onSuccess}>Skip</SubmitButton>
+          </Row>
         )}
       </Form>
     </Container>

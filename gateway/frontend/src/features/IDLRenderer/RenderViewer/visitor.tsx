@@ -27,7 +27,7 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
       ),
     [type, path, absolutePath],
   );
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
@@ -74,7 +74,7 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
     [fields, fieldOrders],
   );
 
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
   const Wrapper = path ? ShiftedColumn : Column;
 
   return (
@@ -130,7 +130,7 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
     );
   }, [selected, fields, ctx.transformLabel, path, absolutePath]);
 
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
@@ -159,7 +159,7 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const items = get(ctx.value, path) || [];
 
   const Wrapper = path ? ShiftedColumn : Column;
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
@@ -213,7 +213,7 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
       ),
     [fields, path],
   );
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
