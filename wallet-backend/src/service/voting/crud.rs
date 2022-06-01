@@ -24,7 +24,7 @@ impl VotingService {
 
         VotingService::assert_winners_need_is_fine(&vc, winners_need)?;
 
-        let mut voting = Voting::new(
+        let voting = Voting::new(
             voting_config_id,
             name,
             description,
