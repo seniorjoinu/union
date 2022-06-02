@@ -78,7 +78,7 @@ fn update_voting_choice(req: UpdateVotingChoiceRequest) {
 fn delete_voting_choice(req: DeleteVotingChoiceRequest) {
     only_self();
 
-    ChoiceService::delete_choice(&req.choice_id, &req.voting_id)
+    ChoiceService::delete_choice(&req.choice_id, &req.voting_id, time())
         .expect("Unable to delete voting choice");
 }
 

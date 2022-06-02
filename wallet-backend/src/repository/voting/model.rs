@@ -45,6 +45,12 @@ impl Voting {
         proposer: Principal,
         timestamp: u64,
     ) -> Result<Self, ValidationError> {
+        if winners_need < 1 {
+            return Err(ValidationError(
+                "There should be at least 1 winner in any voting".to_string(),
+            ));
+        }
+
         let voting = Self {
             id: None,
             voting_config_id,
@@ -86,16 +92,13 @@ impl Voting {
         new_winners_need: Option<u32>,
         timestamp: u64,
     ) -> Result<(), ValidationError> {
-        match &self.status {
-            VotingStatus::Round(r) => {
-                if *r != 0 {
-                    return Err(ValidationError(format!(
-                        "Invalid voting status {:?}",
-                        self.status
-                    )));
-                }
+        if let VotingStatus::Round(r) = &self.status {
+            if *r != 0 {
+                return Err(ValidationError(format!(
+                    "Invalid voting status {:?}",
+                    self.status
+                )));
             }
-            _ => {}
         }
 
         if let Some(name) = new_name {
@@ -107,6 +110,12 @@ impl Voting {
         }
 
         if let Some(winners_need) = new_winners_need {
+            if winners_need < 1 {
+                return Err(ValidationError(
+                    "There should be at least 1 winner in any voting".to_string(),
+                ));
+            }
+
             self.winners_need = winners_need;
         }
 
