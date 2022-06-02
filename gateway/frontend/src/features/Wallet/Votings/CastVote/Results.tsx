@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Accordeon } from '@union/components';
+import { Accordeon, Text } from '@union/components';
 import styled from 'styled-components';
 import { GetVotingResultsResponse, Group, Voting } from 'union-ts';
 import { Principal } from '@dfinity/principal';
@@ -31,13 +31,27 @@ export const Results = styled(({ results, unionId, voting, ...p }: ResultsProps)
         'results.-1.0': {
           adornment: {
             kind: 'replace',
-            render: (ctx, path) => (
-              <ChoiceInfo
-                unionId={unionId}
-                choiceId={get(ctx.value, path)}
-                votingId={voting.id[0]!}
-              />
-            ),
+            render: (ctx, path) => {
+              const choiceId = get(ctx.value, path);
+              const winner = voting.winners.find((w) => w.choices.includes(choiceId));
+
+              return (
+                <ChoiceInfo
+                  unionId={unionId}
+                  choiceId={choiceId}
+                  votingId={voting.id[0]!}
+                  chips={
+                    winner
+                      ? [
+                        <Text variant='caption' color='green'>
+                          {`winner of round ${winner.round}`}
+                        </Text>,
+                        ]
+                      : []
+                  }
+                />
+              );
+            },
           },
         },
         'results.-1.1.-1': {
@@ -64,9 +78,11 @@ export const Results = styled(({ results, unionId, voting, ...p }: ResultsProps)
     [voting],
   );
 
+  const completed = ['Fail', 'Rejected', 'Success'].includes(Object.keys(voting.status)[0]);
+
   return (
-    <Accordeon title='Results'>
-      <View value={{ results }} settings={settings} />
+    <Accordeon title='Stats' {...p} isDefaultOpened={completed}>
+      <View style={{ padding: '8px 0' }} value={{ results }} settings={settings} />
     </Accordeon>
   );
 })``;

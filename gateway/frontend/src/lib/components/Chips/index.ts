@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { Text, TextProps } from '../Text';
 
 const getPadding = (variant: TextProps['variant']) => {
@@ -14,11 +14,16 @@ const getPadding = (variant: TextProps['variant']) => {
 export const Chips = styled(Text)`
   cursor: default;
   transition: color 0.2s ease;
-  color: ${({ theme }) => theme.colors.grey};
   border: 1px solid ${({ theme }) => theme.colors.grey};
   padding: ${({ variant }) => getPadding(variant)};
 
-  &:hover {
-    color: ${({ theme }) => theme.colors.dark};
-  }
+  ${({ theme, color }) =>
+    !color
+      ? css`
+          color: ${theme.colors.grey};
+          &:hover {
+            color: ${({ theme }) => theme.colors.dark};
+          }
+        `
+      : ''};
 `;

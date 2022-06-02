@@ -8,6 +8,7 @@ import { Voting } from 'union-ts';
 import { ViewProps, ViewerSettings } from '../../IDLRenderer';
 import { ProfileInfo } from '../Profile';
 import { VotingConfigInfo } from '../VotingConfigs';
+import { StatusChips } from './atoms';
 
 const Title = styled(Row)`
   align-items: center;
@@ -112,19 +113,6 @@ export const VotingItem = styled(
       [voting, unionId],
     );
 
-    const status = useMemo(() => {
-      let postfix = '';
-
-      if ('Round' in voting.status) {
-        postfix = String(voting.status.Round);
-      }
-      if ('PreRound' in voting.status) {
-        postfix = String(voting.status.PreRound);
-      }
-
-      return `${Object.keys(voting.status)[0]}${postfix ? ` ${postfix}` : ''}`;
-    }, [voting.status]);
-
     return (
       <Accordeon
         title={
@@ -132,9 +120,7 @@ export const VotingItem = styled(
             <Text variant='h5' weight='medium'>
               {voting.name}
             </Text>{' '}
-            <Chips variant='caption' weight='medium'>
-              {status}
-            </Chips>
+            <StatusChips variant='caption' weight='medium' status={voting.status} />
           </Title>
         }
         ref={ref}

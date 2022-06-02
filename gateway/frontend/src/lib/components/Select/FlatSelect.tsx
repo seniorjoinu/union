@@ -25,7 +25,7 @@ const Item = styled(
   ),
 )<{ $checked: boolean }>`
   transition: opacity 0.3s ease;
-  opacity: ${({ $checked }) => ($checked ? '1' : '0.5')};
+  opacity: ${({ $checked }) => ($checked ? '1' : '0.6')};
 
   &:hover {
     opacity: 1;

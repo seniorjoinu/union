@@ -1,26 +1,20 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { useUnion } from 'services';
-import { Spinner, Column, Text, Row } from '@union/components';
+import { Spinner, Column, Text, Row, TextProps, Chips } from '@union/components';
 import { NavLink } from 'react-router-dom';
 import { To } from 'history';
 import { Principal } from '@dfinity/principal';
 import { Choice } from 'union-ts';
 
+const Params = styled(Row)`
+  align-items: center;
+`;
+
 const Children = styled(Row)``;
 const Container = styled(Column)`
   & > ${Text} {
     margin-bottom: 2px;
-
-    &:first-child {
-      cursor: pointer;
-      transition: color 0.2s ease;
-      color: ${({ theme }) => theme.colors.dark};
-
-      &:hover {
-        color: ${({ theme }) => theme.colors.grey};
-      }
-    }
 
     &:last-child {
       color: ${({ theme }) => theme.colors.grey};
@@ -34,6 +28,8 @@ export type ChoiceInfoProps = {
   to?: To;
   unionId: Principal;
   children?: React.ReactNode;
+  color?: TextProps['color'];
+  chips?: React.ReactNode[];
 } & Choices;
 
 export type Choices =
@@ -67,6 +63,8 @@ export const ChoiceInfo = styled(
     nestedVotingId,
     to,
     children,
+    color = 'dark',
+    chips = [],
     ...p
   }: ChoiceInfoProps) => {
     const { canister, data, fetching } = useUnion(unionId);
@@ -96,13 +94,22 @@ export const ChoiceInfo = styled(
 
     return (
       <Container {...p}>
-        {to ? (
-          <Text variant='p2' as={NavLink} to={to}>
-            {choice.name}
-          </Text>
-        ) : (
-          <Text variant='p2'>{choice.name}</Text>
-        )}
+        <Params>
+          {to ? (
+            <Text variant='p2' color={color} as={NavLink} to={to}>
+              {choice.name}
+            </Text>
+          ) : (
+            <Text variant='p2' color={color}>
+              {choice.name}
+            </Text>
+          )}
+          {chips.map((content, i) => (
+            <Chips variant='caption' weight='medium' key={String(i)}>
+              {content}
+            </Chips>
+          ))}
+        </Params>
         <Text variant='p3' color='grey'>
           {choice.description}
         </Text>

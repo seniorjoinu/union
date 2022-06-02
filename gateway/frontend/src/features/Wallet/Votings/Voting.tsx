@@ -1,5 +1,5 @@
 import { Principal } from '@dfinity/principal';
-import { Accordeon, Button as B, Field, PageWrapper, Text } from '@union/components';
+import { Accordeon, Button as B, Chips, Field, PageWrapper, Row, Text } from '@union/components';
 import moment from 'moment';
 import React, { useEffect, useMemo } from 'react';
 import { get } from 'react-hook-form';
@@ -15,9 +15,13 @@ import { UnionTooltipButtonComponent, useUnionSubmit } from '../../../components
 import { ChoiceInfo } from './ChoiceInfo';
 import { CastVote } from './CastVote';
 import { VotingControls as VC } from './VotingControls';
+import { StatusChips } from './atoms';
 
 const Button = styled(B)`
   align-self: flex-start;
+`;
+const Chipses = styled(Row)`
+  margin-bottom: 16px;
 `;
 const VotingControls = styled(VC)``;
 const Container = styled(PageWrapper)`
@@ -75,8 +79,9 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
         id: { hide: true },
         task_id: { hide: true },
         description: { hide: true, order: 9 },
+        status: { order: 11 },
         proposer: {
-          order: 10,
+          order: 12,
           adornment: {
             kind: 'replace',
             render: (ctx, path, name) => (
@@ -86,7 +91,6 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
             ),
           },
         },
-        status: { order: 11 },
         created_at: {
           order: 14,
           adornment: {
@@ -104,20 +108,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
           },
         },
         updated_at: {
-          order: 15,
-          adornment: {
-            kind: 'replace',
-            render: (ctx, path, name) => (
-              <Field
-                title={name}
-                weight={{ title: 'medium' }}
-                variant={{ title: 'p3', value: 'p3' }}
-                align='row'
-              >
-                {moment(Number(ctx.value.updated_at) / 10 ** 6).format('DD-MM-YY HH:mm:SS')}
-              </Field>
-            ),
-          },
+          hide: true,
         },
         winners_need: { order: 16 },
         voting_config_id: {
@@ -166,10 +157,14 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
           order: 22,
         },
         losers: {
+          hide: true,
           order: 23,
         },
         'winners.-1.round': {
           order: 1,
+        },
+        'winners.-1.choices': {
+          order: 2,
         },
         'losers.-1.round': {
           order: 1,
@@ -306,9 +301,12 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
           deleteUnionButtonProps={deleteUnionButtonProps}
         />
       )}
+      <Chipses>
+        <StatusChips variant='caption' weight='medium' status={voting.status} />
+      </Chipses>
       <Field>{voting.description}</Field>
       <Accordeon title='Details'>
-        <View value={voting} settings={settings} />
+        <View style={{ padding: '8px 0' }} value={voting} settings={settings} />
       </Accordeon>
       <CastVote unionId={unionId} voting={voting} onVoted={() => nav('', { replace: true })} />
       {/* <Field title='Nested votings' weight={{ title: 'medium' }} variant={{ title: 'p3' }}>

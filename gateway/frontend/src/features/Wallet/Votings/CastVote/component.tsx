@@ -97,7 +97,13 @@ export const CastVote = styled(({ voting, onVoted, ...p }: CastVoteProps) => {
         />
       )}
       {'Round' in voting.status && voting.status.Round !== 0 && (
-        <Round {...p} onVoted={handleVoted} votingConfig={votingConfig} voting={voting} />
+        <Round
+          {...p}
+          onVoted={handleVoted}
+          votes={votes}
+          votingConfig={votingConfig}
+          voting={voting}
+        />
       )}
     </Container>
   );

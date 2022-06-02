@@ -8,7 +8,6 @@ import {
   Text,
   AdvancedSelect,
   AdvancedOption,
-  TextField,
 } from '@union/components';
 import { useUnion } from 'services';
 import styled from 'styled-components';
@@ -50,6 +49,7 @@ export const Round0 = styled(
       control,
       setValue,
       resetField,
+      reset,
       getValues,
       formState: { isValid },
     } = useForm<FormData>({
@@ -180,23 +180,16 @@ export const Round0 = styled(
           },
         });
       } else {
-        await canister.cast_my_vote({
-          id: voting.id[0]!,
-          vote: {
-            Common: {
-              shares_info: values.info.shares_info,
-              vote: [[values.choice.id[0]!, '1']],
-            },
-          },
-        });
+        throw new Error('Wrong choice');
       }
       const { vote } = await canister.get_my_vote({
         voting_id: voting.id[0]!,
         group_id: values.info.group_id,
       });
 
+      reset();
       onVoted(vote);
-    }, [canister, voting, getValues, onVoted]);
+    }, [reset, canister, voting, getValues, onVoted]);
 
     if (!shareInfos || !choices) {
       return (
@@ -240,7 +233,7 @@ export const Round0 = styled(
                 <Column key={String(choice.id[0])}>
                   <View value={choice} settings={settings} />
                   {votes.find(([choiceId, shares]) => choice.id[0] == choiceId && !!shares) && (
-                    <Text color='red'>Chosen</Text>
+                    <Text color='green'>Chosen</Text>
                   )}
                 </Column>
               ))}
@@ -263,7 +256,7 @@ export const Round0 = styled(
               groupIds.includes(s.group_id),
             );
 
-            if (!choiceShareInfos.length || choiceShareInfos.length == 1) {
+            if (!choiceShareInfos.length) {
               return <></>;
             }
 
@@ -284,19 +277,6 @@ export const Round0 = styled(
                     />
                   ))}
                 </AdvancedSelect>
-                {/* <Controller
-                name='info.shares_info.balance'
-                control={control}
-                rules={{ required: 'This field is required' }}
-                render={(p) => (
-                  <TextField
-                    label='With shares'
-                    value={String(p.field.value)}
-                    onChange={(e) => p.field.onChange(BigInt(e.target.value))}
-                    type='number'
-                  />
-                )}
-              /> */}
               </ShareBlock>
             );
           }}

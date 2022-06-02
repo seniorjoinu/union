@@ -51,7 +51,7 @@ export function CreateChoiceForm({
       fields: {
         name: { order: 1, options: { required: 'Field is required' } },
         description: { order: 2, options: { required: 'Field is required' } },
-        voting_id: { disabled: true, defaultValue: defaultVotingId },
+        voting_id: { hide: true, disabled: true, defaultValue: defaultVotingId },
       },
     };
   }, [votingId, nested]);

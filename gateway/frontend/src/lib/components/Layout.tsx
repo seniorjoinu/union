@@ -29,12 +29,13 @@ export const Column = styled.div<{ margin?: number; marginLast?: boolean; $disab
   }
 `;
 
-export const ShiftedColumn = styled(Column)`
+export const ShiftedColumn = styled(Column)<{ withSeparator?: boolean }>`
   position: relative;
-  margin-left: 16px;
-  padding-left: 16px;
+  margin-left: 8px;
+  padding-left: ${({ withSeparator = true }) => (withSeparator ? '8px' : '0')};
 
   &::before {
+    display: ${({ withSeparator = true }) => (withSeparator ? 'block' : 'none')};
     content: '';
     position: absolute;
     top: 0;

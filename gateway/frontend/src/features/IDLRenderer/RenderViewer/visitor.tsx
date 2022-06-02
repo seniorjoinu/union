@@ -55,7 +55,7 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
     () =>
       fields.reduce((acc, f) => {
         const fieldPath = `${path}${path ? '.' : ''}${f[0]}`;
-        const fieldAbsPath = `${absolutePath}${absolutePath ? '.' : ''}-1`;
+        const fieldAbsPath = `${absolutePath}${absolutePath ? '.' : ''}${f[0]}`;
         const s = getSettings(fieldPath, fieldAbsPath, ctx.settings);
 
         return { ...acc, [fieldPath]: s?.order || 100 };
@@ -158,7 +158,8 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
 
   const items = get(ctx.value, path) || [];
 
-  const Wrapper = path ? ShiftedColumn : Column;
+  // const Wrapper = path ? ShiftedColumn : Column;
+  const Wrapper = ShiftedColumn;
   const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
@@ -180,7 +181,11 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
                 null,
               );
 
-              return <Wrapper key={String(i)}>{component}</Wrapper>;
+              return (
+                <Wrapper withSeparator={false} key={String(i)}>
+                  {component}
+                </Wrapper>
+              );
             })}
           </Column>
         ) : (

@@ -12,6 +12,8 @@ export interface GetComponentProps {
 }
 
 export interface ViewProps<T> {
+  className?: string;
+  style?: React.CSSProperties;
   value: T;
   useViewEffect?(ctx: RenderViewerContext<T>): void;
   settings?: Settings<T, RenderViewerContext<T>>;

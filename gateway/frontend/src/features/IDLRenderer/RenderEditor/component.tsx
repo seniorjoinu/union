@@ -16,6 +16,8 @@ export interface GetComponentProps<T> {
 export type FormContext<T> = RenderEditorContext<T> & UseFormReturn<T>;
 
 export interface EditorProps<T> {
+  className?: string;
+  style?: React.CSSProperties;
   defaultValue?: Partial<T>;
   useFormEffect?(ctx: FormContext<T>): void;
   settings?: Settings<T, RenderEditorContext<T>>;

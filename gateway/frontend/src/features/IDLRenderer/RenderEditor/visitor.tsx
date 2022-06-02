@@ -250,7 +250,8 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const items = ctx.getValues(path) || [];
   const state = ctx.getFieldState(path);
 
-  const Wrapper = path ? ShiftedColumn : Column;
+  // const Wrapper = path ? ShiftedColumn : Column;
+  const Wrapper = ShiftedColumn;
   const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   const handleAppend = useCallback(() => {
@@ -283,7 +284,7 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
               );
 
               return (
-                <Wrapper key={String(i)}>
+                <Wrapper key={String(i)} withSeparator={false}>
                   {component}
                   <VecButton variant='caption' onClick={() => remove(i)} disabled={disabled}>
                     -

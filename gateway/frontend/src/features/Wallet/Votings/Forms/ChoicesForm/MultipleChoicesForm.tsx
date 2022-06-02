@@ -66,7 +66,7 @@ export function MultipleChoicesForm({
       fields: {
         'choices.-1.name': { order: 1, options: { required: 'Field is required' } },
         'choices.-1.description': { order: 2, options: { required: 'Field is required' } },
-        'choices.-1.voting_id': { disabled: true, defaultValue: defaultVotingId },
+        'choices.-1.voting_id': { hide: true, disabled: true, defaultValue: defaultVotingId },
       },
     };
   }, [votingId, nested]);
