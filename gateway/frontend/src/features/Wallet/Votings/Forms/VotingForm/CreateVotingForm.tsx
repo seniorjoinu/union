@@ -36,7 +36,7 @@ export function CreateVotingForm({
     unionId,
     canisterId: unionId,
     methodName: 'create_voting',
-    onExecuted: (p, res) => nav(`../choices/${res.id.toString()}`, { state: data }),
+    onExecuted: (p, res) => nav(`../choices/${res.id.toString()}`, { state: data, replace: true }),
   });
 
   const { Form } = useRender<CreateVotingRequest>({

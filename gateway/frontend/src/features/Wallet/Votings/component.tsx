@@ -95,11 +95,13 @@ export const Votings = styled(({ ...p }: VotingsProps) => {
                       More info
                     </Button>
                   </StartItemControls>
-                  <VotingControls
-                    voting={item}
-                    navPrefix={votingId ? '../votings/' : ''}
-                    deleteUnionButtonProps={deleteUnionButtonProps}
-                  />
+                  {'Round' in item.status && item.status.Round == 0 && (
+                    <VotingControls
+                      voting={item}
+                      navPrefix={votingId ? '../votings/' : ''}
+                      deleteUnionButtonProps={deleteUnionButtonProps}
+                    />
+                  )}
                 </ItemControls>
               </VotingItem>
             )

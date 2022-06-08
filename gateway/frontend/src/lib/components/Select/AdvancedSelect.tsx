@@ -244,15 +244,16 @@ export interface AdvancedOptionProps {
   disabled?: boolean;
   value: string;
   obj: any;
+  children?: React.ReactNode;
 }
 
-export const AdvancedOption = ({ value, obj, ...p }: AdvancedOptionProps) => {
+export const AdvancedOption = ({ value, obj, children, ...p }: AdvancedOptionProps) => {
   const { onChange, value: selected } = useContext(ctx);
 
   return (
     <Option {...p} onClick={() => onChange(value, obj)}>
       {selected.includes(value) && <SelectedIcon />}
-      <Text variant='p3'>{value}</Text>
+      <Text variant='p3'>{children || value}</Text>
     </Option>
   );
 };

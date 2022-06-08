@@ -29,15 +29,18 @@ export const TypeForm = ({
   const settings = useSettings(path, absolutePath);
 
   const defaultValue = parseValue(getValues(path));
-  const name = p.label || settings.label || p.name;
+  const name = p.label || typeof settings.label == 'string' ? settings.label : p.name;
   const disabled = p.disabled || settings.disabled;
 
   useEffect(() => {
     if (!settings.options) {
       return;
     }
-    ctx.control.register(path, settings.options);
-  }, [settings.options, ctx.control.register, path]);
+    ctx.control.register(
+      path,
+      typeof settings.options == 'function' ? settings.options(ctx, path) : settings.options,
+    );
+  }, [settings.options, ctx.control.register, path, ctx, path]);
 
   return (
     <Controller
@@ -96,7 +99,7 @@ export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
   const ctx = useContext(context);
   const { control } = ctx;
   const settings = useSettings(path, absolutePath);
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
   const disabled = p.disabled || settings.disabled;
 
   return (

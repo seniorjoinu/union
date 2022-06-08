@@ -14,7 +14,11 @@ export const VotingRouter = ({ unionId }: { unionId: Principal }) => {
       <Route
         path='/execute'
         element={
-          <InternalVotingForm required unionId={unionId} onSuccess={() => nav('../votings')}>
+          <InternalVotingForm
+            required
+            unionId={unionId}
+            onSuccess={() => nav('../votings', { replace: true })}
+          >
             {(props, data) => <CreateVotingForm {...props} unionId={unionId} data={data} />}
           </InternalVotingForm>
         }
@@ -22,7 +26,10 @@ export const VotingRouter = ({ unionId }: { unionId: Principal }) => {
       <Route
         path='/external-execute'
         element={
-          <ExternalVotingForm unionId={unionId} redirectToHistory={() => nav('../votings')}>
+          <ExternalVotingForm
+            unionId={unionId}
+            redirectToHistory={() => nav('../votings', { replace: true })}
+          >
             {(props, data, onSuccess) => (
               <CreateVotingForm {...props} data={data} onSuccess={onSuccess} />
             )}
@@ -40,7 +47,7 @@ export const VotingRouter = ({ unionId }: { unionId: Principal }) => {
                 <MultipleChoicesForm
                   unionId={unionId}
                   data={data}
-                  onSuccess={() => nav(`../votings/voting/${votingId}`)}
+                  onSuccess={() => nav(`../votings/voting/${votingId}`, { replace: true })}
                 />
               );
             }}
@@ -58,7 +65,7 @@ export const VotingRouter = ({ unionId }: { unionId: Principal }) => {
                 <MultipleChoicesForm
                   unionId={unionId}
                   data={data}
-                  onSuccess={() => nav(`../votings/voting/${votingId}`)}
+                  onSuccess={() => nav(`../votings/voting/${votingId}`, { replace: true })}
                 />
               );
             }}

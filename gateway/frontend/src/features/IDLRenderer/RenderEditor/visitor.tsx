@@ -43,7 +43,7 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
       ),
     [type, path, absolutePath, settings, disabled],
   );
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
   const defaultValue = !ctx.settings.defaultValue
     ? type.accept(new Empty(), null)
     : get(ctx.settings.defaultValue, `${path}${path ? '.' : ''}0`);
@@ -104,7 +104,7 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
   );
 
   const Wrapper = path ? ShiftedColumn : Column;
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
   const disabled = p.disabled || settings.disabled;
 
   // TODO upgrade order to indexed
@@ -185,7 +185,7 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
   );
 
   const Wrapper = path ? ShiftedColumn : Column;
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <Column>
@@ -250,8 +250,9 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const items = ctx.getValues(path) || [];
   const state = ctx.getFieldState(path);
 
-  const Wrapper = path ? ShiftedColumn : Column;
-  const name = settings.label || p.name;
+  // const Wrapper = path ? ShiftedColumn : Column;
+  const Wrapper = ShiftedColumn;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   const handleAppend = useCallback(() => {
     const item = type.accept(new Empty(), null);
@@ -283,7 +284,7 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
               );
 
               return (
-                <Wrapper key={String(i)}>
+                <Wrapper key={String(i)} withSeparator={false}>
                   {component}
                   <VecButton variant='caption' onClick={() => remove(i)} disabled={disabled}>
                     -
@@ -326,7 +327,7 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
       ),
     [fields, path, settings],
   );
-  const name = settings.label || p.name;
+  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>

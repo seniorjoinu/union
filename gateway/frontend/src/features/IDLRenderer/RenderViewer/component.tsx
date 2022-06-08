@@ -7,10 +7,13 @@ import { transformName, RenderViewerContext, getProvider } from './utils';
 import { RenderViewer } from './visitor';
 
 export interface GetComponentProps {
+  path?: string;
   traversedIdlType: TId | IDL.Type<any>;
 }
 
 export interface ViewProps<T> {
+  className?: string;
+  style?: React.CSSProperties;
   value: T;
   useViewEffect?(ctx: RenderViewerContext<T>): void;
   settings?: Settings<T, RenderViewerContext<T>>;
@@ -18,9 +21,9 @@ export interface ViewProps<T> {
   children?(ctx: RenderViewerContext<T>): JSX.Element | null | false;
 }
 
-export const getViewer = <T extends {}>({ traversedIdlType }: GetComponentProps) => {
+export const getViewer = <T extends {}>({ traversedIdlType, path = '' }: GetComponentProps) => {
   const Provider = getProvider<T>();
-  const view = traversedIdlType.accept(new RenderViewer({ path: '', absolutePath: '' }), null);
+  const view = traversedIdlType.accept(new RenderViewer({ path, absolutePath: path }), null);
 
   return ({
     value,

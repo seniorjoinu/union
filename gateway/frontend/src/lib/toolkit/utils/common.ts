@@ -35,3 +35,9 @@ export const caseByCount = (number: number, titles: Array<string>) => {
     number % 100 > 4 && number % 100 < 20 ? 2 : cases[number % 10 < 5 ? number % 10 : 5]
   ];
 };
+
+export const round = (amount: number | string, power = 2) => {
+  const number = Number(amount) || 0;
+
+  return Math.round(number * 10 ** power) / 10 ** power;
+};

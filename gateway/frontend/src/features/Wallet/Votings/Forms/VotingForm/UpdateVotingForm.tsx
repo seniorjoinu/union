@@ -34,7 +34,7 @@ export function UpdateVotingForm({
     unionId,
     canisterId: unionId,
     methodName: 'update_voting',
-    onExecuted: (p, res) => nav(`../../votings/voting/${votingId}`),
+    onExecuted: (p, res) => nav(`../../votings/voting/${votingId}`, { replace: true }),
   });
 
   const { Form } = useRender<UpdateVotingRequest>({

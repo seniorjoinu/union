@@ -1,12 +1,23 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Principal } from '@dfinity/principal';
-import { SubmitButton } from '@union/components';
-import { HAS_PROFILE_GROUP_ID } from 'envs';
-import React, { useCallback, useEffect } from 'react';
-import { useUnion } from 'services';
 import styled from 'styled-components';
-import { Choice, Voting } from 'union-ts';
+import { Voting } from 'union-ts';
+import { useUnion } from 'services';
+import { Column, Spinner } from '@union/components';
+import { Round0 } from './Round0';
+import { Round } from './Round';
+import { getGroupsFromThresholds } from './utils';
+import { Results } from './Results';
 
-const Button = styled(SubmitButton)``;
+const Container = styled(Column)`
+  & > ${Spinner} {
+    align-self: center;
+  }
+
+  ${Results} {
+    margin-bottom: 16px;
+  }
+`;
 
 export interface CastVoteProps {
   className?: string;
@@ -16,58 +27,84 @@ export interface CastVoteProps {
   onVoted(): void;
 }
 
-export const CastVote = styled(({ unionId, onVoted, voting, ...p }: CastVoteProps) => {
-  const { canister, data, fetching } = useUnion(unionId);
+export const CastVote = styled(({ voting, onVoted, ...p }: CastVoteProps) => {
+  const { canister, data } = useUnion(p.unionId);
+  const [votes, setVotes] = useState<[bigint, bigint][]>([]);
 
   useEffect(() => {
-    // canister.get_my_vote({})
+    refresh();
   }, []);
 
-  // onVoted
-  const submit = useCallback(
-    async (choice: Choice) => {
-      // choice.
+  const refresh = useCallback(async () => {
+    const { voting_config } = await canister.get_voting_config({
+      id: voting.voting_config_id,
+      query_delegation_proof_opt: [],
+    });
+    const groups = new Set([
+      ...getGroupsFromThresholds(voting_config.approval),
+      ...getGroupsFromThresholds(voting_config.rejection),
+      ...getGroupsFromThresholds(voting_config.quorum),
+      ...getGroupsFromThresholds(voting_config.win),
+      ...getGroupsFromThresholds(voting_config.next_round),
+    ]);
+    const votes = await Promise.all(
+      Array.from(groups).map(async (group_id) => {
+        const { vote } = await canister.get_my_vote({ voting_id: voting.id[0]!, group_id });
 
-      const approval = voting.approval_choice[0];
-      const rejection = voting.rejection_choice[0];
-      const { shares_info } = await canister.get_my_shares_info_at({
-        group_id: HAS_PROFILE_GROUP_ID,
-        at: voting.created_at,
-      });
+        return vote;
+      }),
+    ).then((votes) => votes.flat());
 
-      if (!shares_info.length) {
-        throw 'Shares not found';
-      }
+    await canister.get_voting_results({
+      voting_id: voting.id[0]!,
+      query_delegation_proof_opt: [],
+    });
 
-      if (approval == choice.id[0]) {
-        await canister.cast_my_vote({
-          id: voting.id[0]!,
-          vote: {
-            Approval: {
-              shares_info: shares_info[0],
-            },
-          },
-        });
-      } else if (rejection == choice.id[0]) {
-        await canister.cast_my_vote({
-          id: voting.id[0]!,
-          vote: {
-            Rejection: {
-              shares_info: shares_info[0],
-            },
-          },
-        });
-      } else {
-        throw 'Unknown vote';
-      }
-      // choice.
-      //   export type Vote = { 'Rejection' : SingleChoiceVote } |
-      // { 'Approval' : SingleChoiceVote } |
-      // { 'Common' : MultiChoiceVote };
-      onVoted();
-    },
-    [onVoted, canister, voting],
+    setVotes(votes);
+  }, [voting, setVotes]);
+
+  const votingConfig = useMemo(() => data.get_voting_config?.voting_config, [
+    data.get_voting_config,
+  ]);
+
+  const handleVoted = useCallback(async () => {
+    await refresh();
+    onVoted();
+  }, [onVoted, refresh]);
+
+  if (!votingConfig) {
+    return (
+      <Container {...p}>
+        <Spinner size={15} />
+      </Container>
+    );
+  }
+
+  return (
+    <Container {...p}>
+      <Results
+        unionId={p.unionId}
+        results={data.get_voting_results?.results || []}
+        voting={voting}
+      />
+      {'Round' in voting.status && voting.status.Round == 0 && (
+        <Round0
+          {...p}
+          onVoted={handleVoted}
+          votes={votes}
+          votingConfig={votingConfig}
+          voting={voting}
+        />
+      )}
+      {'Round' in voting.status && voting.status.Round !== 0 && (
+        <Round
+          {...p}
+          onVoted={handleVoted}
+          votes={votes}
+          votingConfig={votingConfig}
+          voting={voting}
+        />
+      )}
+    </Container>
   );
-
-  return <span>cast</span>;
 })``;
