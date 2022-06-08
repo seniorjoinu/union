@@ -2,6 +2,8 @@ type BatchId = nat;
 type ChunkId = nat;
 type Key = text;
 type Time = int;
+type GroupId = nat64;
+type AccessConfigId = nat64;
 
 type CreateAssetArguments = record {
   key: Key;
@@ -87,7 +89,9 @@ type Post = record {
 
 type Profile = record {
   id: principal;
-  name: text;
+  name: opt text;
+  union_group_id: opt GroupId;
+  union_access_config_id: opt AccessConfigId;
 };
 
 service: {
@@ -108,11 +112,14 @@ service: {
 
   get_profile: (principal) -> (Profile) query;
   edit_profile: (record {
-    name: text;
+    name: opt text;
+    union_group_id: opt GroupId;
+    union_access_config_id: opt AccessConfigId;
   }) -> ();
   set_activity: (record {
     post_id: PostId;
     heart: opt bool;
+    alias_principal: opt principal;
   }) -> ();
   get_activity: (PostId) -> (record {
     hearts: vec Profile;

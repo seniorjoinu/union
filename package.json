@@ -4,7 +4,10 @@
   "main": "gateway/frontend/index.tsx",
   "private": true,
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "start": "dfx start --clean",
+    "deploy": "./deploy.sh"
+  },
   "workspaces": [
     "demo",
     "gateway/frontend",

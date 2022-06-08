@@ -34,7 +34,11 @@ export const UserProfileModal = ({ visible, onClose, onSubmit, ...p }: UserProfi
         return;
       }
 
-      await canister.edit_profile({ name: data.name });
+      await canister.edit_profile({
+        name: data.name,
+        union_group_id: data.unionGroupId,
+        union_access_config_id: data.unionAccessConfigId
+      });
       refresh();
       onSubmit();
     },

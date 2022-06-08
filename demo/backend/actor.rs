@@ -1,8 +1,12 @@
-use std::collections::{HashMap};
-use ic_cdk::export::candid::{export_service, CandidType, Deserialize, Principal};
-use ic_cdk::{caller, trap};
+use crate::utils::{create_execute_request, AccessConfigId, GroupId, Shares};
+use ic_cdk::api::call::call_raw;
 use ic_cdk::api::time;
-use ic_cdk_macros::{query, update, init, post_upgrade, pre_upgrade};
+use ic_cdk::export::candid::{export_service, CandidType, Deserialize, Principal};
+use ic_cdk::{caller, spawn, trap};
+use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
+use std::collections::HashMap;
+
+mod utils;
 
 pub type PostId = u64;
 
@@ -19,7 +23,25 @@ pub struct State {
 #[derive(CandidType, Deserialize, Clone)]
 pub struct Profile {
     pub id: Principal,
-    pub name: String,
+    pub name: Option<String>,
+    pub union_group_id: Option<GroupId>,
+    pub union_access_config_id: Option<AccessConfigId>,
+}
+
+impl Profile {
+    pub fn new(
+        id: Principal,
+        name: Option<String>,
+        union_group_id: Option<GroupId>,
+        union_access_config_id: Option<AccessConfigId>,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            union_group_id,
+            union_access_config_id,
+        }
+    }
 }
 
 #[derive(CandidType, Deserialize, Clone)]
@@ -37,7 +59,9 @@ pub struct Post {
 
 #[derive(CandidType, Deserialize)]
 pub struct EditProfileRequest {
-    name: String,
+    name: Option<String>,
+    union_group_id: Option<GroupId>,
+    union_access_config_id: Option<AccessConfigId>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -51,6 +75,7 @@ pub struct GetPostsRequest {
 pub struct SetActivityRequest {
     post_id: PostId,
     heart: Option<bool>,
+    alias_principal: Option<Principal>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -73,7 +98,7 @@ pub struct AddPostRequest {
 fn get_posts(req: GetPostsRequest) -> GetPostsResponse {
     let default = vec![];
     let target_ids = match req.owner {
-        Some(owner) => &get_state().by_owner.get(&owner).unwrap_or(&default),
+        Some(owner) => get_state().by_owner.get(&owner).unwrap_or(&default),
         None => &get_state().order,
     };
 
@@ -81,13 +106,17 @@ fn get_posts(req: GetPostsRequest) -> GetPostsResponse {
     let take = usize::from(req.take.unwrap_or(5));
     let end = std::cmp::min(target_ids.len(), from + take);
 
-    let ids = target_ids
-        .get(from..end)
-        .unwrap_or_default();
+    let ids = target_ids.get(from..end).unwrap_or_default();
 
-    let posts = ids.iter().map(|id| { get_state().posts.get(id).unwrap().clone() }).collect();
+    let posts = ids
+        .iter()
+        .map(|id| get_state().posts.get(id).unwrap().clone())
+        .collect();
 
-    GetPostsResponse { posts, total_len: target_ids.len() }
+    GetPostsResponse {
+        posts,
+        total_len: target_ids.len(),
+    }
 }
 
 #[query]
@@ -122,36 +151,78 @@ fn add_post(req: AddPostRequest) -> PostId {
 
 #[query]
 fn get_profile(id: Principal) -> Profile {
-    let default_profile = Profile { id, name: "".to_string() };
-    get_state().profiles.get(&id).unwrap_or(&default_profile).clone()
+    if let Some(profile) = get_state().profiles.get(&id) {
+        profile.clone()
+    } else {
+        Profile::new(id, None, None, None)
+    }
 }
 
 #[update(guard = "not_anonymous")]
 fn edit_profile(req: EditProfileRequest) {
-    let mut profile = get_state().profiles.entry(caller()).or_insert(Profile {
-        id: caller(),
-        name: req.name.clone(),
-    });
+    let caller = caller();
 
+    let profile = get_state()
+        .profiles
+        .entry(caller)
+        .or_insert_with(|| Profile::new(caller, None, None, None));
+
+    profile.union_group_id = req.union_group_id;
+    profile.union_access_config_id = req.union_access_config_id;
     profile.name = req.name;
 }
 
 #[update(guard = "not_anonymous")]
 fn set_activity(req: SetActivityRequest) {
-    if get_state().posts.get(&req.post_id).is_none() {
-        trap("Post does not exist");
-    }
-    
+    let caller = caller();
+    get_state()
+        .posts
+        .get(&req.post_id)
+        .unwrap_or_else(|| trap("Post does not exist"));
+
     match req.heart {
         Some(heart) => {
-            let activity = get_state().activities.entry(req.post_id).or_insert(HashMap::new());
-            let mut record = activity.entry(caller()).or_insert(Activity {
-                heart,
-            });
+            let activity = get_state()
+                .activities
+                .entry(req.post_id)
+                .or_insert_with(HashMap::new);
+            let mut record = activity.entry(caller).or_insert(Activity { heart });
 
             record.heart = heart;
-        },
-        None => {},
+
+            // this block makes a remote call to a union (post's author) and automatically mints 10 shares at the group
+            spawn(async move {
+                let post = get_state()
+                    .posts
+                    .get(&req.post_id)
+                    .unwrap_or_else(|| trap("Post does not exist"));
+                let union_profile = get_profile(post.author);
+
+                if union_profile.union_group_id.is_none()
+                    || union_profile.union_access_config_id.is_none()
+                    || req.alias_principal.is_none()
+                {
+                    trap("Unable to mint shares on like - some info is missing");
+                }
+
+                // WARNING: this canister doesn't memorize if you already received your reward liking this post
+                call_raw(
+                    post.author,
+                    "mint_group_shares",
+                    &create_execute_request(
+                        post.author,
+                        union_profile.union_group_id.unwrap(),
+                        union_profile.union_access_config_id.unwrap(),
+                        req.alias_principal.unwrap(),
+                        Shares::from(10),
+                    ),
+                    0,
+                )
+                .await
+                .expect("Unable to mint shares on like - remote call failed");
+            })
+        }
+        None => {}
     };
 }
 
@@ -162,15 +233,17 @@ fn get_activity(post_id: PostId) -> GetActivityResponse {
     }
 
     let hearts = match get_state().activities.get(&post_id) {
-        Some(activity) => {
-            activity.keys()
-                .filter(|k| activity.get(k).unwrap().heart)
-                .map(|k| {
-                    let default_profile = Profile { id: k.clone(), name: "".to_string() };
-                    get_state().profiles.get(k).unwrap_or(&default_profile).clone()
-                })
-                .collect::<Vec<_>>()
-        },
+        Some(activity) => activity
+            .keys()
+            .filter(|k| activity.get(k).unwrap().heart)
+            .map(|k| {
+                get_state()
+                    .profiles
+                    .get(k)
+                    .cloned()
+                    .unwrap_or_else(|| Profile::new(*k, None, None, None))
+            })
+            .collect::<Vec<_>>(),
         _ => vec![],
     };
 
