@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { IDL } from '@dfinity/candid';
-import { DefaultValues, useForm, UseFormGetValues, UseFormReturn } from 'react-hook-form';
+import {
+  DefaultValues,
+  PathValue,
+  useForm,
+  UseFormGetValues,
+  UseFormReturn,
+} from 'react-hook-form';
 import { TId } from '@union/candid-parser';
 import { Column } from '@union/components';
 import { Settings } from '../utils';
@@ -23,6 +29,7 @@ export interface EditorProps<T> {
   settings?: Settings<T, RenderEditorContext<T>>;
   transformLabel?(value: string, defaultTransformator: (v: string) => string): React.ReactNode;
   children?(ctx: FormContext<T> & { isValid: boolean }): JSX.Element | null | false;
+  onChange?(value: T, isValid: boolean): void;
 }
 
 export const getEditor = <T extends {}>({
@@ -39,6 +46,7 @@ export const getEditor = <T extends {}>({
     useFormEffect = () => {},
     settings = { rules: {}, fields: {} },
     transformLabel = transformName,
+    onChange,
     ...p
   }: EditorProps<T>) => {
     const {
@@ -59,13 +67,14 @@ export const getEditor = <T extends {}>({
     });
     const [isValid, setIsValid] = useState(false);
 
+    // @ts-expect-error
     const getValues: UseFormGetValues<T> = useCallback(
       (...args: any[]) => {
         // FIXME check TODO for normalizeValues
         // @ts-expect-error
         const values = originalGetValues(...args);
 
-        const normalizedValues = normalizeValues(values);
+        const normalizedValues = normalizeValues<T>(values);
 
         return normalizedValues;
       },
@@ -87,10 +96,21 @@ export const getEditor = <T extends {}>({
         formReturn.clearErrors(name);
 
         setIsValid(isValid && isFormValid);
+
+        if (onChange) {
+          onChange(getValues() as T, isValid && isFormValid);
+        }
       });
 
       return () => unsubscribe();
-    }, [formReturn.watch, setIsValid, formReturn, getValues]);
+    }, [
+      formReturn.watch,
+      setIsValid,
+      formReturn.trigger,
+      formReturn.clearErrors,
+      getValues,
+      onChange,
+    ]);
 
     useEffect(() => {
       useFormEffect(ctx);

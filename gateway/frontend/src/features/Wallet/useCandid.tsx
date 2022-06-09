@@ -4,7 +4,7 @@ import { IDL } from '@dfinity/candid';
 import { Actor, ActorSubclass } from '@dfinity/agent';
 import { lexer, Parser, TProg } from '@union/candid-parser';
 import { useAuth } from 'services';
-import { sort } from 'toolkit';
+import { checkPrincipal, sort } from 'toolkit';
 
 export interface UseCandidProps {
   canisterId: Principal | null | void;
@@ -15,11 +15,13 @@ const DEFAULT_GET_CANDID_METHOD_NAME = 'export_candid';
 const DEV_GET_CANDID_METHOD_NAME = '__get_candid_interface_tmp_hack';
 
 export const useCandid = ({
-  canisterId,
+  canisterId: cId,
   getCandidMethodName = DEFAULT_GET_CANDID_METHOD_NAME,
 }: UseCandidProps) => {
   const [prog, setProg] = useState<TProg | null>(null);
   const { authClient } = useAuth();
+
+  const canisterId = cId ? checkPrincipal(cId) : null;
 
   useEffect(() => {
     if (!canisterId) {
@@ -44,7 +46,7 @@ export const useCandid = ({
         console.warn(e);
         setProg(null);
       });
-  }, [canisterId]);
+  }, [canisterId?.toString()]);
 
   const methods = useMemo(
     () =>

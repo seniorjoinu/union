@@ -14,7 +14,7 @@ import styled from 'styled-components';
 import { Choice, ChoiceId, Group, Shares, SharesInfo, Voting, VotingConfig } from 'union-ts';
 import { Controller, useForm } from 'react-hook-form';
 import { normalizeValues, useRender, ViewerSettings } from '../../../IDLRenderer';
-import { getGroupsFromThresholds } from './utils';
+import { useChoices } from './hook';
 
 const Button = styled(SubmitButton)``;
 const ShareBlock = styled(Column)`
@@ -33,6 +33,7 @@ const Container = styled(Column)`
 export interface Round0Props {
   className?: string;
   style?: React.CSSProperties;
+  readonly?: boolean;
   unionId: Principal;
   votes: [ChoiceId, Shares][];
   voting: Voting;
@@ -44,7 +45,7 @@ type Info = { group: Group; group_id: bigint; shares_info: SharesInfo };
 type FormData = { choice: Choice; info: Info };
 
 export const Round0 = styled(
-  ({ unionId, onVoted, voting, votingConfig, votes, ...p }: Round0Props) => {
+  ({ unionId, onVoted, voting, votingConfig, votes, readonly, ...p }: Round0Props) => {
     const {
       control,
       setValue,
@@ -55,67 +56,28 @@ export const Round0 = styled(
     } = useForm<FormData>({
       mode: 'all',
     });
-    const [shareInfos, setShareInfos] = useState<Info[] | null>(null);
-    const [choices, setChoices] = useState<Choice[] | null>(null);
     const { canister } = useUnion(unionId);
     const { View } = useRender<Choice>({
       canisterId: unionId,
       type: 'Choice',
     });
-
-    const ids = useMemo(
-      () =>
-        [voting.approval_choice[0], voting.rejection_choice[0]].filter(
-          (id): id is bigint => typeof id !== 'undefined',
-        ),
-      [],
+    const choiceInfos = useMemo(
+      () => [
+        ...(typeof voting.approval_choice[0] !== 'undefined'
+          ? [{ choice_id: voting.approval_choice[0], thresholds: [votingConfig.approval] }]
+          : []),
+        ...(typeof voting.rejection_choice[0] !== 'undefined'
+          ? [{ choice_id: voting.rejection_choice[0], thresholds: [votingConfig.rejection] }]
+          : []),
+      ],
+      [voting, votingConfig],
     );
-
-    useEffect(() => {
-      Promise.all(
-        ids.map(async (choice_id) => {
-          const { choice } = await canister.get_voting_choice({
-            choice_id,
-            voting_id: { Common: voting.id[0]! },
-            query_delegation_proof_opt: [],
-          });
-
-          return choice;
-        }),
-      ).then(setChoices);
-    }, []);
-
-    const groups = useMemo(() => {
-      const res: Record<number, bigint[]> = {};
-
-      if (typeof voting.approval_choice[0] !== 'undefined') {
-        res[Number(voting.approval_choice[0])] = getGroupsFromThresholds(votingConfig.approval);
-      }
-      if (typeof voting.rejection_choice[0] !== 'undefined') {
-        res[Number(voting.rejection_choice[0])] = getGroupsFromThresholds(votingConfig.rejection);
-      }
-
-      return res;
-    }, []);
-
-    useEffect(() => {
-      const groupsByIds = ids.map((id) => groups[Number(id)] || []).flat();
-      const allGroups = new Set(groupsByIds);
-
-      Promise.all(
-        Array.from(allGroups).map(async (group_id) => {
-          const { group } = await canister.get_group({ group_id, query_delegation_proof_opt: [] });
-          const { shares_info } = await canister.get_my_shares_info_at({
-            group_id,
-            at: voting.created_at,
-          });
-
-          return { group, group_id, shares_info: shares_info[0] };
-        }),
-      )
-        .then((shareInfos) => shareInfos.filter((s): s is Info => !!s.shares_info))
-        .then(setShareInfos);
-    }, [groups, setShareInfos, ids]);
+    const { choices, shareInfos, getShareInfo } = useChoices({
+      unionId,
+      votingId: voting.id[0]!,
+      at: voting.created_at,
+      choiceInfos,
+    });
 
     const settings: ViewerSettings<Choice> = useMemo(
       () => ({
@@ -201,6 +163,11 @@ export const Round0 = styled(
 
     return (
       <Container {...p}>
+        {!readonly && (
+          <Text variant='h5' weight='medium'>
+            Cast your vote
+          </Text>
+        )}
         <Controller
           name='choice'
           control={control}
@@ -208,6 +175,7 @@ export const Round0 = styled(
           render={({ field, fieldState: { error } }) => (
             <FlatSelect
               multiple={false}
+              readonly={readonly}
               onChange={(indexes) => {
                 const choice = indexes.length ? choices[indexes[0]] : null;
 
@@ -218,13 +186,10 @@ export const Round0 = styled(
                   return;
                 }
 
-                const groupIds = groups[Number(choice.id[0])] || [];
-                const choiceShareInfos = (shareInfos || []).find((s) =>
-                  groupIds.includes(s.group_id),
-                );
+                const choiceShareInfos = getShareInfo(choice.id[0]!);
 
-                if (groupIds.length == 1 && choiceShareInfos) {
-                  setValue('info', choiceShareInfos);
+                if (choiceShareInfos.length) {
+                  setValue('info', choiceShareInfos[0]);
                 }
               }}
               value={[choices.findIndex((c) => c.id[0] == field.value?.id[0])]}
@@ -251,10 +216,7 @@ export const Round0 = styled(
               return <></>;
             }
 
-            const groupIds = groups[Number(choice.id[0])] || [];
-            const choiceShareInfos = (shareInfos || []).filter((s) =>
-              groupIds.includes(s.group_id),
-            );
+            const choiceShareInfos = getShareInfo(choice.id[0]!);
 
             if (!choiceShareInfos.length) {
               return <></>;
@@ -281,9 +243,11 @@ export const Round0 = styled(
             );
           }}
         />
-        <Button disabled={!isValid} onClick={submit}>
-          Cast vote
-        </Button>
+        {!readonly && (
+          <Button disabled={!isValid} onClick={submit}>
+            Cast vote
+          </Button>
+        )}
       </Container>
     );
   },

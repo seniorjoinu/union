@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { Checkbox } from '../Checkbox';
 import { Column, Row } from '../Layout';
 import { withBorder } from '../withBorder';
@@ -31,7 +31,7 @@ const Item = styled(
     opacity: 1;
   }
 `;
-const Container = styled.div<{ $align: 'column' | 'row' }>`
+const Container = styled.div<{ $align: 'column' | 'row'; $readonly: boolean }>`
   display: flex;
   flex-wrap: wrap;
 
@@ -40,11 +40,21 @@ const Container = styled.div<{ $align: 'column' | 'row' }>`
     margin-right: 0;
     margin-bottom: 0;
   }
+
+  ${Item} {
+    ${({ $readonly }) =>
+      ($readonly
+        ? css`
+            opacity: 1;
+          `
+        : '')}
+  }
 `;
 
 export interface FlatSelectProps {
   className?: string;
   style?: React.CSSProperties;
+  readonly?: boolean;
   multiple?: boolean;
   align?: 'column' | 'row';
   value: number[];
@@ -53,9 +63,20 @@ export interface FlatSelectProps {
 }
 
 export const FlatSelect = styled(
-  ({ value, onChange, children, multiple = true, align = 'row', ...p }: FlatSelectProps) => {
+  ({
+    value,
+    onChange,
+    children,
+    multiple = true,
+    align = 'row',
+    readonly,
+    ...p
+  }: FlatSelectProps) => {
     const handleChange = useCallback(
       (index: number) => {
+        if (readonly) {
+          return;
+        }
         const selected = value.includes(index);
 
         if (!multiple) {
@@ -64,20 +85,20 @@ export const FlatSelect = styled(
 
         return onChange(selected ? value.filter((v) => v !== index) : [...value, index]);
       },
-      [multiple, onChange, value],
+      [multiple, onChange, value, readonly],
     );
 
     const Wrapper = align == 'row' ? Row : Column;
 
     return (
-      <Container {...p} margin={16} as={Wrapper} $align={align}>
+      <Container {...p} margin={16} as={Wrapper} $align={align} $readonly={!!readonly}>
         {children.map((c, i) => {
           const checked = value.includes(i);
 
           return (
             <ItemWrapper key={String(i)} onClick={() => handleChange(i)}>
               <Item $checked={checked}>
-                <Checkbox onChange={() => {}} checked={checked} />
+                {!readonly && <Checkbox onChange={() => {}} checked={checked} />}
                 <Children>{c}</Children>
               </Item>
             </ItemWrapper>

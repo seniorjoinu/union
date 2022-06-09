@@ -5,6 +5,8 @@ import { PageWrapper, SubmitButton as SB } from '@union/components';
 import { UpdateVotingChoiceRequest, _SERVICE } from 'union-ts';
 import { useParams } from 'react-router-dom';
 import { useUnion } from 'services';
+import { Controller, useWatch } from 'react-hook-form';
+import { CandidPayload, CanisterMethods } from '../../../IDLFields';
 import { EditorSettings, useRender } from '../../../../IDLRenderer';
 import { useUnionSubmit } from '../../../../../components/UnionSubmit';
 
@@ -77,6 +79,85 @@ export function UpdateChoiceForm({
         new_name: { order: 1 },
         new_description: { order: 2 },
         new_program: { order: 3 },
+        'new_program.0.RemoteCallSequence.-1.endpoint.canister_id': {
+          label: 'Canister Id',
+        },
+        'new_program.0.RemoteCallSequence.-1.endpoint.method_name': {
+          label: 'Method name',
+          adornment: {
+            kind: 'replace',
+            render: (ctx, path, name) => (
+              <Controller
+                name={path as 'new_program.0.RemoteCallSequence.-1.endpoint.method_name'}
+                control={ctx.control}
+                render={({ field, fieldState: { error } }) => (
+                  <CanisterMethods
+                    label={name}
+                    canisterId={useWatch({
+                      name: path.replace(
+                        'method_name',
+                        'canister_id',
+                      ) as 'new_program.0.RemoteCallSequence.-1.endpoint.canister_id',
+                      control: ctx.control,
+                    })}
+                    onChange={field.onChange}
+                    value={field.value}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+            ),
+          },
+        },
+        'new_program.0.RemoteCallSequence.-1.args': {
+          label: 'Candid',
+          adornment: {
+            kind: 'replace',
+            render: (ctx, path, name) => (
+              <Controller
+                name={path as 'new_program.0.RemoteCallSequence.-1.args'}
+                control={ctx.control}
+                rules={{ required: 'Arguments is required' }}
+                render={({ field, fieldState: { error } }) => {
+                  const canisterId = useWatch({
+                    name: path.replace(
+                      'args',
+                      'endpoint.canister_id',
+                    ) as 'new_program.0.RemoteCallSequence.-1.endpoint.canister_id',
+                    control: ctx.control,
+                  });
+                  const methodName = useWatch({
+                    name: path.replace(
+                      'args',
+                      'endpoint.method_name',
+                    ) as 'new_program.0.RemoteCallSequence.-1.endpoint.method_name',
+                    control: ctx.control,
+                  });
+
+                  if (!canisterId || !methodName) {
+                    return <></>;
+                  }
+                  return (
+                    <CandidPayload
+                      canisterId={canisterId}
+                      methodName={methodName}
+                      value={
+                        field.value && 'Encoded' in field.value
+                          ? Buffer.from(field.value.Encoded)
+                          : null
+                      }
+                      onChange={(buffer) =>
+                        field.onChange(
+                          buffer ? { Encoded: [...new Uint8Array(buffer)] } : undefined,
+                        )
+                      }
+                    />
+                  );
+                }}
+              />
+            ),
+          },
+        },
       },
     }),
     [choiceId, nested],

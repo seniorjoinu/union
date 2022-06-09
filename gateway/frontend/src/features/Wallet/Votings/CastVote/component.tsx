@@ -87,17 +87,16 @@ export const CastVote = styled(({ voting, onVoted, ...p }: CastVoteProps) => {
         results={data.get_voting_results?.results || []}
         voting={voting}
       />
+      <Round
+        {...p}
+        readonly={!('Round' in voting.status) || voting.status.Round == 0}
+        onVoted={handleVoted}
+        votes={votes}
+        votingConfig={votingConfig}
+        voting={voting}
+      />
       {'Round' in voting.status && voting.status.Round == 0 && (
         <Round0
-          {...p}
-          onVoted={handleVoted}
-          votes={votes}
-          votingConfig={votingConfig}
-          voting={voting}
-        />
-      )}
-      {'Round' in voting.status && voting.status.Round !== 0 && (
-        <Round
           {...p}
           onVoted={handleVoted}
           votes={votes}

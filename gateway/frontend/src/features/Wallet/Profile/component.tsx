@@ -66,8 +66,16 @@ export const Profile = ({ ...p }: ProfileProps) => {
       await canister.get_my_unaccepted_group_shares_balance({
         group_id: HAS_PROFILE_GROUP_ID,
       });
+
+      await current.fetchMyData();
     },
-    [gateway, current.groups, principal, data.get_my_unaccepted_group_shares_balance?.balance],
+    [
+      gateway,
+      current.groups,
+      current,
+      principal,
+      data.get_my_unaccepted_group_shares_balance?.balance,
+    ],
   );
 
   return (

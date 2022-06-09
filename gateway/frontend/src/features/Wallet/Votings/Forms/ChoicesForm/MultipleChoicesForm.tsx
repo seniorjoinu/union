@@ -6,9 +6,11 @@ import { PageWrapper, Row, SubmitButton as SB } from '@union/components';
 import { CreateVotingChoiceRequest, _SERVICE } from 'union-ts';
 import { useParams } from 'react-router-dom';
 import { TId, TProg } from '@union/candid-parser';
+import { Controller, useWatch } from 'react-hook-form';
 import { EditorSettings, useRender } from '../../../../IDLRenderer';
 import { useUnionRepeatSubmit } from '../../../../../components/UnionSubmit';
 import { MessageData } from '../types';
+import { CandidPayload, CanisterMethods } from '../../../IDLFields';
 
 const SubmitButton = styled(SB)``;
 const Container = styled(PageWrapper)`
@@ -67,12 +69,88 @@ export function MultipleChoicesForm({
         'choices.-1.name': { order: 1, options: { required: 'Field is required' } },
         'choices.-1.description': { order: 2, options: { required: 'Field is required' } },
         'choices.-1.voting_id': { hide: true, disabled: true, defaultValue: defaultVotingId },
+        'choices.-1.program.RemoteCallSequence.-1.endpoint.canister_id': {
+          label: 'Canister Id',
+        },
+        'choices.-1.program.RemoteCallSequence.-1.endpoint.method_name': {
+          label: 'Method name',
+          adornment: {
+            kind: 'replace',
+            render: (ctx, path, name) => (
+              <Controller
+                name={path as 'choices.-1.program.RemoteCallSequence.-1.endpoint.method_name'}
+                control={ctx.control}
+                render={({ field, fieldState: { error } }) => (
+                  <CanisterMethods
+                    label={name}
+                    canisterId={useWatch({
+                      name: path.replace(
+                        'method_name',
+                        'canister_id',
+                      ) as 'choices.-1.program.RemoteCallSequence.-1.endpoint.canister_id',
+                      control: ctx.control,
+                    })}
+                    onChange={field.onChange}
+                    value={field.value}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+            ),
+          },
+        },
+        'choices.-1.program.RemoteCallSequence.-1.args': {
+          label: 'Candid',
+          adornment: {
+            kind: 'replace',
+            render: (ctx, path, name) => (
+              <Controller
+                name={path as 'choices.-1.program.RemoteCallSequence.-1.args'}
+                control={ctx.control}
+                rules={{ required: 'Arguments is required' }}
+                render={({ field, fieldState: { error } }) => {
+                  const canisterId = useWatch({
+                    name: path.replace(
+                      'args',
+                      'endpoint.canister_id',
+                    ) as 'choices.-1.program.RemoteCallSequence.-1.endpoint.canister_id',
+                    control: ctx.control,
+                  });
+                  const methodName = useWatch({
+                    name: path.replace(
+                      'args',
+                      'endpoint.method_name',
+                    ) as 'choices.-1.program.RemoteCallSequence.-1.endpoint.method_name',
+                    control: ctx.control,
+                  });
+
+                  if (!canisterId || !methodName) {
+                    return <></>;
+                  }
+                  return (
+                    <CandidPayload
+                      canisterId={canisterId}
+                      methodName={methodName}
+                      onChange={(buffer) =>
+                        field.onChange(
+                          buffer ? { Encoded: [...new Uint8Array(buffer)] } : undefined,
+                        )
+                      }
+                    />
+                  );
+                }}
+              />
+            ),
+          },
+        },
       },
     };
   }, [votingId, nested]);
 
-  const defaultValue: MultipleChoicesFormType = { choices: [] };
-  // ...data?.choices[0],
+  const defaultValue: MultipleChoicesFormType = {
+    // @ts-expect-error
+    choices: [{ name: '', description: '', program: { Empty: null } }],
+  };
 
   return (
     <Container title='Add choices to voting' withBack {...p}>

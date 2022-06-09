@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Principal } from '@dfinity/principal';
 import { IDL } from '@dfinity/candid';
 import { TId, TProg } from '@union/candid-parser';
@@ -23,6 +23,7 @@ export const useRender = <T extends {}>({ canisterId, type, path }: UseRenderPro
     }
     return typeof type == 'string' ? prog?.traverseIdlType(new TId(type)) : type(prog);
   }, [prog, type]);
+
   const defaultValues = traversedIdlType?.accept(new Empty(), null) as DefaultValues<T>;
 
   const Form = useMemo(() => {

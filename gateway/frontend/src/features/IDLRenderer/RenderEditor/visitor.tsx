@@ -1,14 +1,14 @@
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 import { IDL } from '@dfinity/candid';
 import {
   Field,
   Text,
-  Column,
+  Column as C,
+  ShiftedColumn as SC,
   Button,
   AdvancedSelect,
   AdvancedOption,
   Checkbox,
-  ShiftedColumn,
   getFontStyles,
 } from '@union/components';
 import styled from 'styled-components';
@@ -16,6 +16,17 @@ import { useWatch, useFieldArray, get } from 'react-hook-form';
 import { Empty, SettingsWrapper, getSettings } from '../utils';
 import { RenderProps, context, transformName, useSettings } from './utils';
 import { Editor } from './editors';
+
+const Column = styled(C)`
+  &:empty {
+    display: none;
+  }
+`;
+const ShiftedColumn = styled(SC)`
+  &:empty {
+    display: none;
+  }
+`;
 
 export interface OptFormProps extends RenderProps {
   type: IDL.Type;
@@ -47,6 +58,13 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
   const defaultValue = !ctx.settings.defaultValue
     ? type.accept(new Empty(), null)
     : get(ctx.settings.defaultValue, `${path}${path ? '.' : ''}0`);
+
+  useEffect(() => {
+    if (enabled) {
+      return;
+    }
+    ctx.setValue(path, []);
+  }, []);
 
   return (
     <Column>

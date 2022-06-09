@@ -9,13 +9,14 @@ import {
   AdvancedSelect,
   AdvancedOption,
   TextField,
+  Row,
 } from '@union/components';
 import { useUnion } from 'services';
 import styled from 'styled-components';
 import { Choice, ChoiceId, Group, Shares, SharesInfo, Voting, VotingConfig } from 'union-ts';
 import { Controller, useForm } from 'react-hook-form';
 import { normalizeValues, useRender, ViewerSettings } from '../../../IDLRenderer';
-import { getGroupsFromThresholds } from './utils';
+import { useChoices } from './hook';
 
 const ChoiceItem = styled(Column)`
   padding-bottom: 8px;
@@ -37,6 +38,7 @@ const Container = styled(Column)`
 export interface RoundProps {
   className?: string;
   style?: React.CSSProperties;
+  readonly?: boolean;
   unionId: Principal;
   votes: [ChoiceId, Shares][];
   voting: Voting;
@@ -48,7 +50,7 @@ type Info = { group: Group; group_id: bigint; shares_info: SharesInfo };
 type FormData = { choices: Choice[]; info: Info; fractions: Record<number, number> };
 
 export const Round = styled(
-  ({ unionId, onVoted, voting, votingConfig, votes, ...p }: RoundProps) => {
+  ({ unionId, onVoted, voting, votingConfig, votes, readonly, ...p }: RoundProps) => {
     const {
       control,
       setValue,
@@ -62,11 +64,38 @@ export const Round = styled(
       },
       mode: 'all',
     });
-    const [shareInfos, setShareInfos] = useState<Info[] | null>(null);
     const { canister, data } = useUnion(unionId);
     const { View } = useRender<Choice>({
       canisterId: unionId,
       type: 'Choice',
+    });
+
+    const choiceInfos = useMemo(() => {
+      const regular = (data.list_voting_choices?.page.data || [])
+        .filter((c) => voting.choices.includes(c.id[0]!))
+        .map((choice) => ({
+          choice_id: choice.id[0]!,
+          choice,
+          thresholds: [votingConfig.win, votingConfig.quorum, votingConfig.next_round],
+        }));
+
+      if (readonly) {
+        return regular;
+      }
+
+      return [
+        ...regular,
+        ...(typeof voting.rejection_choice[0] !== 'undefined'
+          ? [{ choice_id: voting.rejection_choice[0], thresholds: [votingConfig.rejection] }]
+          : []),
+      ];
+    }, [voting.choices, data.list_voting_choices, votingConfig, readonly]);
+
+    const { choices, shareInfos, getShareInfo } = useChoices({
+      unionId,
+      votingId: voting.id[0]!,
+      at: voting.created_at,
+      choiceInfos,
     });
 
     useEffect(() => {
@@ -80,42 +109,6 @@ export const Round = styled(
         query_delegation_proof_opt: [],
       });
     }, []);
-
-    const choices = useMemo(
-      () =>
-        (data.list_voting_choices?.page.data || []).filter((c) =>
-          voting.choices.includes(c.id[0]!),
-        ),
-      [voting.choices, data.list_voting_choices],
-    );
-
-    const groups = useMemo(
-      () =>
-        Array.from(
-          new Set([
-            ...getGroupsFromThresholds(votingConfig.win),
-            ...getGroupsFromThresholds(votingConfig.quorum),
-            ...getGroupsFromThresholds(votingConfig.next_round),
-          ]),
-        ),
-      [voting.choices],
-    );
-
-    useEffect(() => {
-      Promise.all(
-        groups.map(async (group_id) => {
-          const { group } = await canister.get_group({ group_id, query_delegation_proof_opt: [] });
-          const { shares_info } = await canister.get_my_shares_info_at({
-            group_id,
-            at: voting.created_at,
-          });
-
-          return { group, group_id, shares_info: shares_info[0] };
-        }),
-      )
-        .then((shareInfos) => shareInfos.filter((s): s is Info => !!s.shares_info))
-        .then(setShareInfos);
-    }, [groups, setShareInfos, voting.choices]);
 
     const settings: ViewerSettings<Choice> = useMemo(
       () => ({
@@ -161,19 +154,31 @@ export const Round = styled(
     const submit = useCallback(async () => {
       const values: FormData = normalizeValues(getValues());
 
-      await canister.cast_my_vote({
-        id: voting.id[0]!,
-        vote: {
-          Common: {
-            shares_info: values.info.shares_info,
-            vote: values.choices.map((c) => {
-              const fraction = values.fractions[Number(c.id[0])] || 0;
-
-              return [c.id[0]!, String(fraction / 100)];
-            }),
+      if (values.choices.length == 1 && values.choices[0].id[0] == voting.rejection_choice[0]) {
+        await canister.cast_my_vote({
+          id: voting.id[0]!,
+          vote: {
+            Rejection: {
+              shares_info: values.info.shares_info,
+            },
           },
-        },
-      });
+        });
+      } else {
+        await canister.cast_my_vote({
+          id: voting.id[0]!,
+          vote: {
+            Common: {
+              shares_info: values.info.shares_info,
+              vote: values.choices.map((c) => {
+                const fraction = values.fractions[Number(c.id[0])] || 0;
+
+                return [c.id[0]!, String(fraction / 100)];
+              }),
+            },
+          },
+        });
+      }
+
       const { vote } = await canister.get_my_vote({
         voting_id: voting.id[0]!,
         group_id: values.info.group_id,
@@ -193,6 +198,15 @@ export const Round = styled(
 
     return (
       <Container {...p}>
+        {readonly ? (
+          <Text variant='h5' weight='medium'>
+            Voting choices
+          </Text>
+        ) : (
+          <Text variant='h5' weight='medium'>
+            Cast your vote
+          </Text>
+        )}
         <Controller
           name='choices'
           control={control}
@@ -202,8 +216,21 @@ export const Round = styled(
           render={({ field, fieldState: { error } }) => (
             <FlatSelect
               align='column'
+              readonly={readonly}
               onChange={(indexes) => {
                 const selected = choices.filter((c, i) => indexes.includes(i));
+
+                const reject = selected.find((s) => s.id[0] == voting.rejection_choice[0]);
+
+                if (reject) {
+                  field.onChange([reject]);
+                  const shares = getShareInfo(voting.rejection_choice[0]);
+
+                  setValue('info', shares[0]);
+                  // @ts-expect-error
+                  setValue(`fractions.${Number(reject.id[0])}`, 100);
+                  return;
+                }
 
                 field.onChange(selected);
 
@@ -254,20 +281,24 @@ export const Round = styled(
                             },
                           },
                         }}
-                        render={(p) => (
-                          <TextField
-                            label='Share %'
-                            value={p.field.value == null ? '' : Number(p.field.value)}
-                            onChange={(e) =>
-                              p.field.onChange(
-                                e.target.value ? Number(e.target.value.replace(',', '.')) : null,
-                              )
-                            }
-                            helperText={p.fieldState.error?.message}
-                            onClick={(e) => e.stopPropagation()}
-                            type='number'
-                          />
-                        )}
+                        render={(p) =>
+                          (choice.id[0] !== voting.rejection_choice[0] ? (
+                            <TextField
+                              label='Share %'
+                              value={p.field.value == null ? '' : Number(p.field.value)}
+                              onChange={(e) =>
+                                p.field.onChange(
+                                  e.target.value ? Number(e.target.value.replace(',', '.')) : null,
+                                )
+                              }
+                              helperText={p.fieldState.error?.message}
+                              onClick={(e) => e.stopPropagation()}
+                              type='number'
+                            />
+                          ) : (
+                            <></>
+                          ))
+                        }
                       />
                     )}
                   </ChoiceItem>
@@ -279,7 +310,18 @@ export const Round = styled(
         <Controller
           name='info'
           control={control}
-          rules={{ required: 'This field is required' }}
+          rules={{
+            validate: {
+              required: (value) => {
+                const { choices } = getValues();
+
+                if (choices.length == 1 && choices[0].id[0] == voting.rejection_choice[0]) {
+                  return true;
+                }
+                return !!value || 'This field is required';
+              },
+            },
+          }}
           render={({ field, fieldState: { error }, formState }) => {
             const { choices } = getValues();
 
@@ -287,7 +329,9 @@ export const Round = styled(
               return <></>;
             }
 
-            if (!shareInfos?.length) {
+            const shares = getShareInfo(choices[0].id[0]);
+
+            if (!shares.length) {
               return <></>;
             }
 
@@ -300,7 +344,7 @@ export const Round = styled(
                   multiselect={false}
                   helperText={error?.message}
                 >
-                  {shareInfos.map((info) => (
+                  {shares.map((info) => (
                     <AdvancedOption
                       key={Number(info.group_id)}
                       value={info.group.name}
@@ -312,9 +356,11 @@ export const Round = styled(
             );
           }}
         />
-        <Button disabled={!isValid} onClick={submit}>
-          Cast vote
-        </Button>
+        {!readonly && (
+          <Button disabled={!isValid} onClick={submit}>
+            Cast vote
+          </Button>
+        )}
       </Container>
     );
   },

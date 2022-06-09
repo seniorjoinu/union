@@ -20,10 +20,10 @@ const isObject = (value: any) =>
   !(value instanceof Date);
 
 // FIXME https://github.com/react-hook-form/react-hook-form/discussions/8030
-export const normalizeValues = (data: any): any => {
+export const normalizeValues = <T extends any>(data: any): T => {
   // while react-hook-from clones Principal, result principal become bad. Try to fix this
   if (isObject(data) && '_isPrincipal' in data) {
-    return checkPrincipal(Object.values(data._arr || []));
+    return checkPrincipal(Object.values(data._arr || [])) as T;
   }
 
   if (
@@ -32,11 +32,11 @@ export const normalizeValues = (data: any): any => {
     (globalThis.Blob && data instanceof Blob) ||
     (globalThis.FileList && data instanceof FileList)
   ) {
-    return data;
+    return data as T;
   }
 
   if (Array.isArray(data)) {
-    return data.map(normalizeValues);
+    return data.map(normalizeValues) as T;
   }
   if (isObject(data)) {
     for (const key in data) {
