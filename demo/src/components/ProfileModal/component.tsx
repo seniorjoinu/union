@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import { useBackend } from '../../backend';
 import { TextField, SubmitButton, Button } from '../atoms';
+import {string} from "union-frontend/src/lib/toolkit/utils/sorters";
 
 const Cross = styled.span`
   cursor: pointer;
@@ -80,7 +81,9 @@ const Container = styled.div`
 `;
 
 export interface ProfileModalData {
-  name: string;
+  name: [string] | [];
+  unionGroupId: [bigint] | [];
+  unionAccessConfigId: [bigint] | [];
 }
 
 export interface ProfileModalProps {
@@ -103,7 +106,9 @@ export const ProfileModal = ({
 }: ProfileModalProps) => {
   const { canister, data, fetching } = useBackend();
   const [submitting, setSubmitting] = useState(false);
-  const [name, setName] = useState('');
+  const [name, setName] = useState<[] | [string]>(data.get_profile?.name === undefined ? [] : data.get_profile!.name);
+  const [groupId, setGroupId] = useState<[] | [bigint]>(data.get_profile?.union_group_id === undefined ? [] : data.get_profile!.union_group_id);
+  const [accessConfigId, setAccessConfigId] = useState<[] | [bigint]>(data.get_profile?.union_access_config_id === undefined ? [] : data.get_profile!.union_access_config_id);
 
   const refresh = useCallback(() => {
     if (!principal || principal.isAnonymous()) {
@@ -122,7 +127,7 @@ export const ProfileModal = ({
     }
     setSubmitting(true);
 
-    onSubmit({ name }).finally(() => {
+    onSubmit({ name, unionGroupId: groupId, unionAccessConfigId: accessConfigId }).finally(() => {
       setSubmitting(false);
     });
   }, [name, setSubmitting]);
@@ -131,7 +136,7 @@ export const ProfileModal = ({
     return null;
   }
 
-  const loading = !!submitting || !!fetching.get_profile;
+  const loading = submitting || !!fetching.get_profile;
 
   return ReactDOM.createPortal(
     <Container {...p}>
@@ -139,10 +144,48 @@ export const ProfileModal = ({
         <Cross onClick={onClose} />
         <TextField
           placeholder='Set your name'
-          onChange={(e) => setName(e.target.value)}
-          value={name}
+          onChange={(e) => {
+            const nameStr = e.target.value.trim();
+            if (nameStr.length == 0) {
+              setName([]);
+              return;
+            }
+
+            setName([nameStr]);
+          }}
+          value={name[0] ? name[0] : ""}
           onKeyDown={(e) => e.key == 'Enter' && handleSubmit()}
           disabled={loading}
+        />
+        <TextField
+            placeholder='(for unions) Set group id'
+            onChange={(e) => {
+              const groupIdStr = e.target.value.trim();
+              if (groupIdStr.length == 0) {
+                setGroupId([]);
+                return;
+              }
+
+              setGroupId([BigInt(groupIdStr)])
+            }}
+            value={groupId[0] ? groupId[0].toString() : ""}
+            onKeyDown={(e) => e.key == 'Enter' && handleSubmit()}
+            disabled={loading}
+        />
+        <TextField
+            placeholder='(for unions) Set access config id'
+            onChange={(e) => {
+              const accessConfigIdStr = e.target.value.trim();
+              if (accessConfigIdStr.length == 0) {
+                setAccessConfigId([]);
+                return;
+              }
+
+              setAccessConfigId([BigInt(accessConfigIdStr)])
+            }}
+            value={accessConfigId[0] ? accessConfigId[0].toString() : ""}
+            onKeyDown={(e) => e.key == 'Enter' && handleSubmit()}
+            disabled={loading}
         />
         <Controls>
           <SubmitButton disabled={!name || loading} $loading={submitting} onClick={handleSubmit}>

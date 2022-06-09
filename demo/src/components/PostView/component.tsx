@@ -120,7 +120,16 @@ export const PostView = ({ post, ...p }: PostViewProps) => {
     }
 
     setOptimisticHeart(!liked);
-    canister.set_activity({ post_id: post.id, heart: [!liked] }).then(refreshActivity);
+
+    canister.set_activity({
+      post_id: post.id,
+      heart: [!liked],
+
+      // FIXME: login to union and put here your principal from there OR create a field, where the user can prompt this principal by themself;
+      //  only required when you want to receive shares by liking posts
+      alias_principal: [],
+    }).then(refreshActivity);
+
   }, [heartDisabled, liked, canister, post, refreshActivity, setOptimisticHeart]);
 
   const createdAt = useMemo(
