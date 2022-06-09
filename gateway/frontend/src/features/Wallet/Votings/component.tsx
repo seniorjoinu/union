@@ -12,7 +12,7 @@ import { VotingItem } from './VotingItem';
 
 const Button = styled(B)``;
 const StartItemControls = styled(R)`
-  justify-content: flex-start;
+  justify-content: flex-end;
 `;
 const Controls = styled(R)`
   justify-content: flex-end;

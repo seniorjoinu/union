@@ -37,6 +37,7 @@ export type FieldSetting<T, CTX> = {
   order?: number;
   hide?: boolean;
   disabled?: boolean;
+  multiline?: boolean;
   label?: React.ReactNode;
   placeholder?: string;
   defaultValue?: any;

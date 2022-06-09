@@ -67,7 +67,7 @@ export const CreateVotingConfigForm = styled(({ ...p }: CreateVotingConfigFormPr
       // @ts-ignore
       fields: {
         name: { order: 1 },
-        description: { order: 2 },
+        description: { order: 2, multiline: true },
         round: { order: 3 },
         winners_count: { order: 4, label: 'Winners limit' },
         choices_count: { order: 5, label: 'Choices limit' },

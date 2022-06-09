@@ -45,6 +45,10 @@ const Container = styled.div<{
 		&:empty {
 			display: none;
 		}
+
+    &, * {
+      white-space: pre-line;
+    }
 	}
 `;
 

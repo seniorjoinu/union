@@ -78,6 +78,7 @@ export function UpdateChoiceForm({
         choice_id: { hide: true },
         new_name: { order: 1 },
         new_description: { order: 2 },
+        'new_description.0': { multiline: true },
         new_program: { order: 3 },
         'new_program.0.RemoteCallSequence.-1.endpoint.canister_id': {
           label: 'Canister Id',

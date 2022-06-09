@@ -48,7 +48,7 @@ export function CreateVotingForm({
     () => ({
       fields: {
         name: { order: 1, options: { required: 'Field is required' } },
-        description: { order: 2, options: { required: 'Field is required' } },
+        description: { order: 2, options: { required: 'Field is required' }, multiline: true },
         winners_need: { order: 3 },
         voting_config_id: {
           order: 4,

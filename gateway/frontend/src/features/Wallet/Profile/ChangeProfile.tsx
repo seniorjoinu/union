@@ -53,6 +53,7 @@ export const ChangeProfile = styled(({ ...p }: ChangeProfileProps) => {
       fields: {
         new_name: { order: 1, label: 'Name' },
         new_description: { order: 2, label: 'Description' },
+        'new_description.0': { multiline: true },
       },
     }),
     [],

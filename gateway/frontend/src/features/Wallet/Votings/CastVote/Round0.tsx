@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Principal } from '@dfinity/principal';
 import {
   Column,
@@ -11,10 +11,20 @@ import {
 } from '@union/components';
 import { useUnion } from 'services';
 import styled from 'styled-components';
-import { Choice, ChoiceId, Group, Shares, SharesInfo, Voting, VotingConfig } from 'union-ts';
+import {
+  Choice,
+  ChoiceId,
+  GetVotingResultsResponse,
+  Group,
+  Shares,
+  SharesInfo,
+  Voting,
+  VotingConfig,
+} from 'union-ts';
 import { Controller, useForm } from 'react-hook-form';
-import { normalizeValues, useRender, ViewerSettings } from '../../../IDLRenderer';
+import { normalizeValues } from '../../../IDLRenderer';
 import { useChoices } from './hook';
+import { ChoiceItem } from './ChoiceItem';
 
 const Button = styled(SubmitButton)``;
 const ShareBlock = styled(Column)`
@@ -38,6 +48,7 @@ export interface Round0Props {
   votes: [ChoiceId, Shares][];
   voting: Voting;
   votingConfig: VotingConfig;
+  results: GetVotingResultsResponse['results'];
   onVoted(vote: [ChoiceId, Shares][]): void;
 }
 
@@ -45,7 +56,7 @@ type Info = { group: Group; group_id: bigint; shares_info: SharesInfo };
 type FormData = { choice: Choice; info: Info };
 
 export const Round0 = styled(
-  ({ unionId, onVoted, voting, votingConfig, votes, readonly, ...p }: Round0Props) => {
+  ({ unionId, onVoted, voting, votingConfig, votes, readonly, results, ...p }: Round0Props) => {
     const {
       control,
       setValue,
@@ -57,10 +68,6 @@ export const Round0 = styled(
       mode: 'all',
     });
     const { canister } = useUnion(unionId);
-    const { View } = useRender<Choice>({
-      canisterId: unionId,
-      type: 'Choice',
-    });
     const choiceInfos = useMemo(
       () => [
         ...(typeof voting.approval_choice[0] !== 'undefined'
@@ -78,47 +85,6 @@ export const Round0 = styled(
       at: voting.created_at,
       choiceInfos,
     });
-
-    const settings: ViewerSettings<Choice> = useMemo(
-      () => ({
-        fields: {
-          id: { hide: true },
-          voting_id: { hide: true },
-          voting_power_by_group: { hide: true },
-          name: {
-            order: 1,
-            adornment: {
-              kind: 'replace',
-              render: (ctx) => (
-                <Text variant='p2' weight='medium'>
-                  {ctx.value.name}
-                </Text>
-              ),
-            },
-          },
-          description: {
-            order: 2,
-            adornment: {
-              kind: 'replace',
-              render: (ctx) => (
-                <Text variant='p3' color='grey'>
-                  {ctx.value.description}
-                </Text>
-              ),
-            },
-          },
-          program: {
-            order: 3,
-            adornment: {
-              kind: 'replace',
-              render: (ctx, path, name, origin) =>
-                ('Empty' in ctx.value.program ? null : <>{origin}</>),
-            },
-          },
-        },
-      }),
-      [voting, unionId],
-    );
 
     const submit = useCallback(async () => {
       const values: FormData = normalizeValues(getValues());
@@ -172,38 +138,50 @@ export const Round0 = styled(
           name='choice'
           control={control}
           rules={{ required: 'This field is required' }}
-          render={({ field, fieldState: { error } }) => (
-            <FlatSelect
-              multiple={false}
-              readonly={readonly}
-              onChange={(indexes) => {
-                const choice = indexes.length ? choices[indexes[0]] : null;
+          render={({ field, fieldState: { error } }) => {
+            const value = [choices.findIndex((c) => c.id[0] == field.value?.id[0])];
+            const highlighted = choices
+              .map((c, i) =>
+                (votes.find(([choiceId, shares]) => c.id[0] == choiceId && !!shares) ? i : null),
+              )
+              .filter((i): i is number => i !== null);
 
-                field.onChange(choice);
-                resetField('info');
+            return (
+              <FlatSelect
+                multiple={false}
+                readonly={readonly}
+                onChange={(indexes) => {
+                  const choice = indexes.length ? choices[indexes[0]] : null;
 
-                if (!choice) {
-                  return;
-                }
+                  field.onChange(choice);
+                  resetField('info');
 
-                const choiceShareInfos = getShareInfo(choice.id[0]!);
+                  if (!choice) {
+                    return;
+                  }
 
-                if (choiceShareInfos.length) {
-                  setValue('info', choiceShareInfos[0]);
-                }
-              }}
-              value={[choices.findIndex((c) => c.id[0] == field.value?.id[0])]}
-            >
-              {choices.map((choice) => (
-                <Column key={String(choice.id[0])}>
-                  <View value={choice} settings={settings} />
-                  {votes.find(([choiceId, shares]) => choice.id[0] == choiceId && !!shares) && (
-                    <Text color='green'>Chosen</Text>
-                  )}
-                </Column>
-              ))}
-            </FlatSelect>
-          )}
+                  const choiceShareInfos = getShareInfo(choice.id[0]!);
+
+                  if (choiceShareInfos.length) {
+                    setValue('info', choiceShareInfos[0]);
+                  }
+                }}
+                value={value}
+                highlighted={highlighted}
+              >
+                {choices.map((choice) => (
+                  <ChoiceItem
+                    key={String(choice.id[0])}
+                    vote={votes.find(([choiceId, shares]) => choice.id[0] == choiceId && !!shares)}
+                    unionId={unionId}
+                    choice={choice}
+                    results={results.find((r) => r[0] == choice.id[0])?.[1]}
+                    voting={voting}
+                  />
+                ))}
+              </FlatSelect>
+            );
+          }}
         />
         <Controller
           name='info'

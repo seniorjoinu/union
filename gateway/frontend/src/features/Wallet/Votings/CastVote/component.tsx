@@ -7,15 +7,10 @@ import { Column, Spinner } from '@union/components';
 import { Round0 } from './Round0';
 import { Round } from './Round';
 import { getGroupsFromThresholds } from './utils';
-import { Results } from './Results';
 
 const Container = styled(Column)`
   & > ${Spinner} {
     align-self: center;
-  }
-
-  ${Results} {
-    margin-bottom: 16px;
   }
 `;
 
@@ -82,13 +77,9 @@ export const CastVote = styled(({ voting, onVoted, ...p }: CastVoteProps) => {
 
   return (
     <Container {...p}>
-      <Results
-        unionId={p.unionId}
-        results={data.get_voting_results?.results || []}
-        voting={voting}
-      />
       <Round
         {...p}
+        results={data.get_voting_results?.results || []}
         readonly={!('Round' in voting.status) || voting.status.Round == 0}
         onVoted={handleVoted}
         votes={votes}
@@ -98,6 +89,7 @@ export const CastVote = styled(({ voting, onVoted, ...p }: CastVoteProps) => {
       {'Round' in voting.status && voting.status.Round == 0 && (
         <Round0
           {...p}
+          results={data.get_voting_results?.results || []}
           onVoted={handleVoted}
           votes={votes}
           votingConfig={votingConfig}

@@ -105,7 +105,7 @@ export const Info = ({ ...p }: InfoProps) => {
           </Field>
           {settings.history_ledgers.map((ledger, i) => {
             const timestamp = moment(Number(ledger.timestamp) / 10 ** 6).format(
-              'DD-MM-YY HH:mm:SS',
+              "DD MMM'YY HH:mm:SS",
             );
 
             return (

@@ -60,6 +60,7 @@ export const UpdateAccessConfigForm = styled(({ ...p }: UpdateAccessConfigFormPr
         id: { hide: true },
         new_name: { order: 1 },
         new_description: { order: 2 },
+        'new_description.0': { multiline: true },
         new_permissions: {
           order: 3,
           adornment: {

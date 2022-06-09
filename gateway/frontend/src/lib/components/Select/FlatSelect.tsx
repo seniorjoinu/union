@@ -4,7 +4,9 @@ import { Checkbox } from '../Checkbox';
 import { Column, Row } from '../Layout';
 import { withBorder } from '../withBorder';
 
-const Children = styled(Column)``;
+const Children = styled(Column)`
+  flex-grow: 1;
+`;
 const ItemWrapper = styled.div`
   display: flex;
   flex-direction: row;
@@ -23,7 +25,7 @@ const Item = styled(
     `,
     { quadFillColor: 'rgba(0, 0, 0, 0)' },
   ),
-)<{ $checked: boolean }>`
+)<{ $checked: boolean; borderColor?: string }>`
   transition: opacity 0.3s ease;
   opacity: ${({ $checked }) => ($checked ? '1' : '0.6')};
 
@@ -58,6 +60,7 @@ export interface FlatSelectProps {
   multiple?: boolean;
   align?: 'column' | 'row';
   value: number[];
+  highlighted?: number[];
   onChange(indexes: number[]): void;
   children: React.ReactNode[];
 }
@@ -65,6 +68,7 @@ export interface FlatSelectProps {
 export const FlatSelect = styled(
   ({
     value,
+    highlighted = [],
     onChange,
     children,
     multiple = true,
@@ -94,10 +98,11 @@ export const FlatSelect = styled(
       <Container {...p} margin={16} as={Wrapper} $align={align} $readonly={!!readonly}>
         {children.map((c, i) => {
           const checked = value.includes(i);
+          const lighted = highlighted.includes(i);
 
           return (
             <ItemWrapper key={String(i)} onClick={() => handleChange(i)}>
-              <Item $checked={checked}>
+              <Item $checked={checked} borderColor={checked || lighted ? 'green' : undefined}>
                 {!readonly && <Checkbox onChange={() => {}} checked={checked} />}
                 <Children>{c}</Children>
               </Item>

@@ -7,7 +7,6 @@ import { ViewProps, ViewerSettings } from '../../IDLRenderer';
 import { PermissionInfo } from '../Permissions';
 import { GroupInfo } from '../Groups';
 import { computeTime } from '../IDLFields';
-import { NestedVotingConfigs } from './NestedVotingConfigs';
 
 const Column = styled(C)`
   border-left: 1px solid ${({ theme }) => theme.colors.grey};
@@ -72,7 +71,7 @@ export const VotingConfigItem = styled(
         fields: {
           id: { hide: true },
           name: { order: 1 },
-          description: { order: 2 },
+          description: { order: 2, multiline: true },
           round: { order: 3 },
           winners_count: { order: 4, label: 'Winners limit' },
           choices_count: { order: 5, label: 'Choices limit' },
@@ -145,13 +144,13 @@ export const VotingConfigItem = styled(
         <Container>
           {children}
           <View value={votingConfig} settings={settings} />
-          <Field
+          {/* <Field
             title='Nested voting configs'
             weight={{ title: 'medium' }}
             variant={{ title: 'p3' }}
           >
             <NestedVotingConfigs parentVotingConfig={votingConfig.id[0]} />
-          </Field>
+          </Field> */}
         </Container>
       </Accordeon>
     );

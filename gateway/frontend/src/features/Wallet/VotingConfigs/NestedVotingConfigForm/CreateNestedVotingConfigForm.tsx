@@ -59,7 +59,7 @@ export const CreateNestedVotingConfigForm = styled(
         rules: {},
         fields: {
           name: { order: 1 },
-          description: { order: 2 },
+          description: { order: 2, multiline: true },
           remote_voting_config_id: { order: 3 },
           remote_union_id: { order: 4 },
           vote_calculation: { order: 5 },
