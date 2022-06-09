@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { Principal } from '@dfinity/principal';
 import {
   Column,
@@ -15,12 +15,10 @@ import { useUnion } from 'services';
 import styled from 'styled-components';
 import { Choice, ChoiceId, Group, Shares, SharesInfo, Voting, VotingConfig } from 'union-ts';
 import { Controller, useForm } from 'react-hook-form';
-import { normalizeValues, useRender, ViewerSettings } from '../../../IDLRenderer';
+import { normalizeValues } from '../../../IDLRenderer';
 import { useChoices } from './hook';
+import { ChoiceItem } from './ChoiceItem';
 
-const ChoiceItem = styled(Column)`
-  padding-bottom: 8px;
-`;
 const Button = styled(SubmitButton)``;
 const ShareBlock = styled(Column)`
   padding: 8px;
@@ -65,10 +63,6 @@ export const Round = styled(
       mode: 'all',
     });
     const { canister, data } = useUnion(unionId);
-    const { View } = useRender<Choice>({
-      canisterId: unionId,
-      type: 'Choice',
-    });
 
     const choiceInfos = useMemo(() => {
       const regular = (data.list_voting_choices?.page.data || [])
@@ -109,47 +103,6 @@ export const Round = styled(
         query_delegation_proof_opt: [],
       });
     }, []);
-
-    const settings: ViewerSettings<Choice> = useMemo(
-      () => ({
-        fields: {
-          id: { hide: true },
-          voting_id: { hide: true },
-          voting_power_by_group: { hide: true },
-          name: {
-            order: 1,
-            adornment: {
-              kind: 'replace',
-              render: (ctx) => (
-                <Text variant='p2' weight='medium'>
-                  {ctx.value.name}
-                </Text>
-              ),
-            },
-          },
-          description: {
-            order: 2,
-            adornment: {
-              kind: 'replace',
-              render: (ctx) => (
-                <Text variant='p3' color='grey'>
-                  {ctx.value.description}
-                </Text>
-              ),
-            },
-          },
-          program: {
-            order: 3,
-            adornment: {
-              kind: 'replace',
-              render: (ctx, path, name, origin) =>
-                ('Empty' in ctx.value.program ? null : <>{origin}</>),
-            },
-          },
-        },
-      }),
-      [voting, unionId],
-    );
 
     const submit = useCallback(async () => {
       const values: FormData = normalizeValues(getValues());
@@ -249,9 +202,12 @@ export const Round = styled(
                 const selected = !!field.value.find((c) => c.id[0] == choice.id[0]);
 
                 return (
-                  <ChoiceItem key={String(choice.id[0])}>
-                    <View value={choice} settings={settings} />
-                    {vote && <Text color='green'>Chosen with {String(vote[1])} shares</Text>}
+                  <ChoiceItem
+                    key={String(choice.id[0])}
+                    vote={vote}
+                    unionId={unionId}
+                    choice={choice}
+                  >
                     {selected && (
                       <Controller
                         // @ts-expect-error

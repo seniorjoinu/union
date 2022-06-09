@@ -48,9 +48,7 @@ export const useUnion = () => {
     <M extends keyof _SERVICE>(
       methodName: M,
       args: Parameters<_SERVICE[M]>,
-      extra?: Partial<
-        Pick<ExecuteRequestData, 'title' | 'description' | 'authorization_delay_nano' | 'rnp'>
-      >,
+      extra?: Partial<ExecuteRequestData & { title: string; description: string }>,
     ) => {
       if (!authorized) {
         throw new Error('Union is not authorized');
@@ -58,11 +56,12 @@ export const useUnion = () => {
 
       const candidArgs = backendSerializer[methodName](...args);
 
+      // TODO send choices
       return unionClient.execute(
         {
-          title: 'Demo canister operation',
-          description: `Call "${methodName}" in "${canisterId.toString()}" canister`,
-          authorization_delay_nano: BigInt(60 * 60 * 10 ** 9), // 1 hour
+          // title: 'Demo canister operation',
+          // description: `Call "${methodName}" in "${canisterId.toString()}" canister`,
+          // authorization_delay_nano: BigInt(60 * 60 * 10 ** 9), // 1 hour
           ...extra,
           program: {
             RemoteCallSequence: [

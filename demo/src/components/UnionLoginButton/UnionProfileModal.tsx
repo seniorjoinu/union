@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback } from 'react';
 import { useUnion } from '../../union';
 import { ProfileModal, ProfileModalData } from '../ProfileModal';
 
@@ -18,10 +18,14 @@ export const UnionProfileModal = ({ visible, onClose, ...p }: UnionProfileModalP
         return;
       }
 
-      execute('edit_profile', [{ name: data.name }], {
-        title: 'Change profile name on Thoughter',
-        description: 'Change profile name',
-      });
+      execute(
+        'edit_profile',
+        [{ name: data.name, union_access_config_id: [], union_group_id: [] }],
+        {
+          title: 'Change profile name on Thoughter',
+          description: 'Change profile name',
+        },
+      );
       onClose();
     },
     [onClose, execute],
