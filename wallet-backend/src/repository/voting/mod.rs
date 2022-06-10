@@ -57,8 +57,8 @@ impl Repository<Voting, VotingId, (), VotingSort> for VotingRepository {
 
                 Page::new(data, has_next)
             }
-            VotingSort::CreatedAt(ascending) => {
-                let (has_next, data) = if ascending {
+            VotingSort::CreatedAt(descending) => {
+                let (has_next, data) = if !descending {
                     let (has_next, iter) = self
                         .votings_sorted_by_created_at_index
                         .iter()
@@ -79,8 +79,8 @@ impl Repository<Voting, VotingId, (), VotingSort> for VotingRepository {
 
                 Page::new(data, has_next)
             }
-            VotingSort::UpdatedAt(ascending) => {
-                let (has_next, data) = if ascending {
+            VotingSort::UpdatedAt(descending) => {
+                let (has_next, data) = if !descending {
                     let (has_next, iter) = self
                         .votings_sorted_by_updated_at_index
                         .iter()
