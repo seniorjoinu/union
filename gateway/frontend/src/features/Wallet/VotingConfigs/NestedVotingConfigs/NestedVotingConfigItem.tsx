@@ -54,7 +54,7 @@ export const NestedVotingConfigItem = styled(
         fields: {
           id: { hide: true },
           name: { order: 1 },
-          description: { order: 2 },
+          description: { order: 2, multiline: true },
           remote_union_id: { order: 3 },
           vote_calculation: { order: 4 },
           allowee_groups: { order: 5 },

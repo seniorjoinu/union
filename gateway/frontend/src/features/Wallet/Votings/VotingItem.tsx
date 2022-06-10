@@ -9,6 +9,7 @@ import { ViewProps, ViewerSettings } from '../../IDLRenderer';
 import { ProfileInfo } from '../Profile';
 import { VotingConfigInfo } from '../VotingConfigs';
 import { StatusChips } from './atoms';
+import { ChoicesInfo } from './ChoicesInfo';
 
 const Title = styled(Row)`
   align-items: center;
@@ -45,7 +46,7 @@ export const VotingItem = styled(
           name: { hide: true },
           id: { hide: true },
           task_id: { hide: true },
-          description: { order: 9 },
+          description: { order: 9, multiline: true },
           proposer: {
             order: 10,
             adornment: {
@@ -57,7 +58,7 @@ export const VotingItem = styled(
               ),
             },
           },
-          status: { order: 11 },
+
           winners_need: { order: 12 },
           created_at: {
             order: 14,
@@ -70,7 +71,7 @@ export const VotingItem = styled(
                   variant={{ title: 'p3', value: 'p3' }}
                   align='row'
                 >
-                  {moment(Number(ctx.value.created_at) / 10 ** 6).format('DD-MM-YY HH:mm:SS')}
+                  {moment(Number(ctx.value.created_at) / 10 ** 6).format("DD MMM'YY HH:mm:SS")}
                 </Field>
               ),
             },
@@ -90,6 +91,7 @@ export const VotingItem = styled(
               ),
             },
           },
+          status: { hide: true },
           approval_choice: {
             hide: true,
           },
@@ -130,6 +132,7 @@ export const VotingItem = styled(
         <Container>
           {children}
           <View value={voting} settings={settings} />
+          <ChoicesInfo voting={voting} unionId={unionId} />
         </Container>
       </Accordeon>
     );

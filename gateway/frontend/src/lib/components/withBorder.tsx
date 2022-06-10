@@ -1,10 +1,14 @@
 import * as React from 'react';
 import styled, { css } from 'styled-components';
-import { theme } from './theme';
+import { Color } from './Text';
+import { ComponentsTheme, theme } from './theme';
 
 interface WithBorderProps {
   className?: string;
   style?: React.CSSProperties;
+  as?: any;
+  noBorder?: boolean;
+  borderColor?: Color;
 }
 export interface WithBorderOptions {
   color?: string;
@@ -36,8 +40,15 @@ export const withBorder = <
 
   const BorderSlice = styled.i``;
 
-  const BorderWrapper = styled.div<{ $disabled: boolean; $noBorder: boolean }>`
-    --color: ${options.color};
+  const BorderWrapper = styled.div<{
+    $disabled: boolean;
+    $noBorder: boolean;
+    $borderColor?: Color;
+  }>`
+    --color: ${({ theme, $borderColor }) =>
+      theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
+      $borderColor ||
+      options.color};
     --slice: ${options.size}px;
 
     position: relative;
@@ -55,19 +66,35 @@ export const withBorder = <
         : '')}
 
     &:hover {
-      border-color: ${options.hoverColor || options.color};
+      border-color: ${({ theme, $borderColor }) =>
+        options.hoverColor ||
+        theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
+        $borderColor ||
+        options.color};
 
       &::before,
       &::after {
-        border-color: ${options.hoverColor || options.color};
+        border-color: ${({ $borderColor }) =>
+          options.hoverColor ||
+          theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
+          $borderColor ||
+          options.color};
       }
     }
     &:hover ${BorderSlice} {
       &::before {
-        border-color: ${options.hoverColor || options.color};
+        border-color: ${({ $borderColor }) =>
+          options.hoverColor ||
+          theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
+          $borderColor ||
+          options.color};
       }
       &::after {
-        border-color: ${options.hoverColor || options.color};
+        border-color: ${({ $borderColor }) =>
+          options.hoverColor ||
+          theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
+          $borderColor ||
+          options.color};
         background-color: ${options.hoverQuadFillColor || options.quadFillColor};
       }
     }
@@ -145,21 +172,21 @@ export const withBorder = <
         : '')}
   `;
 
-  const WrappedComponent = (React.forwardRef<
-    HTMLElement,
-    P & WithBorderProps & { as?: any; noBorder?: boolean }
-  >(({ className, style, as, noBorder, ...props }, ref) => (
-    <BorderWrapper
-      className={className}
-      style={style}
-      $disabled={!!(props as any).disabled}
-      $noBorder={!!noBorder}
-    >
-      <BorderSlice />
-      {/* @ts-expect-error */}
-      <StyledComponent {...(props as P)} forwardedAs={as} ref={ref} />
-    </BorderWrapper>
-  )) as unknown) as R;
+  const WrappedComponent = (React.forwardRef<HTMLElement, P & WithBorderProps>(
+    ({ className, style, as, noBorder, borderColor, ...props }, ref) => (
+      <BorderWrapper
+        className={className}
+        style={style}
+        $disabled={!!(props as any).disabled}
+        $noBorder={!!noBorder}
+        $borderColor={borderColor}
+      >
+        <BorderSlice />
+        {/* @ts-expect-error */}
+        <StyledComponent {...(props as P)} forwardedAs={as} ref={ref} />
+      </BorderWrapper>
+    ),
+  ) as unknown) as R;
 
   // @ts-expect-error
   return styled(WrappedComponent)``;

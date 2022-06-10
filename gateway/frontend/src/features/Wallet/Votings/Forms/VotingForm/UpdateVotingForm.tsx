@@ -71,6 +71,7 @@ export function UpdateVotingForm({
         id: { hide: true },
         new_name: { order: 1 },
         new_description: { order: 2 },
+        'new_description.0': { multiline: true },
         new_winners_need: { order: 3 },
       },
     }),

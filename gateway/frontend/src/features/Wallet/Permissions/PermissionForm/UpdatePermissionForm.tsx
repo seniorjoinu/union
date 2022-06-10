@@ -58,6 +58,7 @@ export const UpdatePermissionForm = styled(({ ...p }: UpdatePermissionFormProps)
         id: { hide: true },
         new_name: { order: 1 },
         new_description: { order: 2 },
+        'new_description.0': { multiline: true },
         new_targets: { order: 3 },
         'new_targets.-1.Endpoint.canister_id': {
           label: 'Canister Id',

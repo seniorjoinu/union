@@ -71,7 +71,7 @@ export const VotingConfigs = styled(({ ...p }: VotingConfigsProps) => {
             !optimisticDeleted[id] && (
               <VotingConfigItem votingConfig={item} opened={votingConfigId == id} View={View}>
                 <ItemControls>
-                  <Button
+                  {/* <Button
                     forwardedAs={NavLink}
                     to={
                       votingConfigId
@@ -81,7 +81,7 @@ export const VotingConfigs = styled(({ ...p }: VotingConfigsProps) => {
                     variant='caption'
                   >
                     Create nested
-                  </Button>
+                  </Button> */}
                   {!DEFAULT_VOTING_CONFIG_IDS.includes(item.id[0]!) && (
                     <>
                       <Button

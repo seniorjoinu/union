@@ -33,7 +33,7 @@ export const CreateGroupForm = styled(({ ...p }: CreateGroupFormProps) => {
       rules: {},
       fields: {
         name: { order: 1 },
-        description: { order: 2 },
+        description: { order: 2, multiline: true },
         private: { order: 3, label: 'Is private?' },
         transferable: { order: 4, label: 'Is transferable?' },
       },

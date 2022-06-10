@@ -23,6 +23,24 @@ const Input = withBorder(
   `,
   { quadFillColor: 'rgba(0, 0,0,0)' },
 );
+const Area = withBorder(
+  styled.textarea`
+    min-height: 32px;
+    outline: none;
+    background-color: ${({ theme }) => theme.colors.light};
+    color: ${({ theme }) => theme.colors.dark};
+
+    ${getFontStyles('p3', 'regular')}
+
+    outline: none;
+    resize: vertical;
+
+    &::-webkit-resizer {
+      display: none;
+    }
+  `,
+  { quadFillColor: 'rgba(0, 0,0,0)' },
+);
 
 const RowInputWrapper = styled(Row)`
   & > ${Input} {
@@ -85,7 +103,7 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
   ({ className, style, label, helperText, disabled, ...p }, ref) => (
     <Container className={className} style={style} $disabled={disabled}>
       {label && <Label>{label}</Label>}
-      <Input {...p} disabled={disabled} as='textarea' ref={ref} />
+      <Area {...p} disabled={disabled} ref={ref} />
       {helperText && <HelperText variant='caption'>{helperText}</HelperText>}
     </Container>
   ),

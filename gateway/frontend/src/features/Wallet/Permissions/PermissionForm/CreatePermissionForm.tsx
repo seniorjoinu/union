@@ -35,7 +35,7 @@ export const CreatePermissionForm = styled(({ ...p }: CreatePermissionFormProps)
       rules: {},
       fields: {
         name: { order: 1 },
-        description: { order: 2 },
+        description: { order: 2, multiline: true },
         targets: { order: 3 },
         'targets.-1.Endpoint.canister_id': {
           label: 'Canister Id',

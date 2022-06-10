@@ -14,6 +14,7 @@ export interface AccordeonProps {
   isStatic?: boolean;
   disabled?: boolean;
   isDefaultOpened?: boolean;
+  border?: 'none';
   timeout?: number;
   children: React.ReactNode;
   onToggle?(opened: boolean): void;
@@ -27,6 +28,7 @@ export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
       title,
       timeout = DEFAULT_TIMEOUT,
       children,
+      border,
       isStatic = false,
       disabled = false,
       isDefaultOpened = false,
@@ -59,7 +61,7 @@ export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
           isStatic,
         }}
       >
-        <Container ref={ref} className={className} style={style}>
+        <Container ref={ref} className={className} style={style} $border={border}>
           <HeaderHandler onClick={handleOpen} isStatic={isStatic}>
             <Header>
               <Title>{title}</Title>
@@ -77,4 +79,4 @@ export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
   },
 );
 
-export const AccourdeonBordered = withBorder<AccordeonProps>(Accordeon, { withQuad: false });
+export const AccordeonBordered = withBorder<AccordeonProps>(Accordeon, { withQuad: false });

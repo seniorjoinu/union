@@ -1,12 +1,12 @@
 import React, { useContext, useEffect } from 'react';
 import { IDL } from '@dfinity/candid';
-import { Checkbox, TextField, TextFieldProps } from '@union/components';
+import { Checkbox, TextArea, TextAreaProps, TextField, TextFieldProps } from '@union/components';
 import { Controller, ControllerProps } from 'react-hook-form';
 import { checkPrincipal } from 'toolkit';
 import { SettingsWrapper } from '../utils';
 import { RenderProps, context, useSettings } from './utils';
 
-export interface TypeFormProps extends Omit<TextFieldProps, 'name'>, RenderProps {
+export interface TypeFormProps extends Omit<TextFieldProps & TextAreaProps, 'name'>, RenderProps {
   idl: IDL.Type<any>;
   path: string;
   transformValue?(value: string): any;
@@ -42,6 +42,8 @@ export const TypeForm = ({
     );
   }, [settings.options, ctx.control.register, path, ctx, path]);
 
+  const Component = settings.multiline ? TextArea : TextField;
+
   return (
     <Controller
       name={path}
@@ -49,7 +51,7 @@ export const TypeForm = ({
       rules={rules}
       render={({ field: { value, ...field }, fieldState: { error } }) => (
         <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-          <TextField
+          <Component
             {...p}
             {...field}
             {...(controlled ? { value: parseValue(value) } : { defaultValue })}

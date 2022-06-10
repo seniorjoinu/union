@@ -126,11 +126,11 @@ export const Versions = ({ ...p }: VersionsProps) => {
           <Text>Status: {Object.keys(v.status)[0]}</Text>
           <Text>
             Created at:{' '}
-            {moment(Math.ceil(Number(v.created_at) / 10 ** 6)).format('DD-MM-YY HH:mm:ss')}
+            {moment(Math.ceil(Number(v.created_at) / 10 ** 6)).format("DD MMM'YY HH:mm:SS")}
           </Text>
           <Text>
             Updated at:{' '}
-            {moment(Math.ceil(Number(v.updated_at) / 10 ** 6)).format('DD-MM-YY HH:mm:ss')}
+            {moment(Math.ceil(Number(v.updated_at) / 10 ** 6)).format("DD MMM'YY HH:mm:SS")}
           </Text>
           <Controls>
             {!!v.binary[0] && <Button onClick={() => handleDownload(v.version)}>Download</Button>}

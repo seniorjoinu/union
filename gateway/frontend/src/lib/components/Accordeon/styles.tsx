@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { getFontStyles, Text } from '../Text';
 import { Mark as M } from '../Select/Mark';
 
@@ -78,7 +78,7 @@ export const Children = styled.div`
   flex-direction: column;
 `;
 
-export const Container = styled.section`
+export const Container = styled.section<{ $border?: 'none' }>`
   display: flex;
   flex-direction: column;
   transition: border-color 200ms ease;
@@ -91,4 +91,13 @@ export const Container = styled.section`
       ${getFontStyles('p2', 'medium')}
     }
   }
+
+  ${({ $border }) =>
+    $border == 'none' &&
+    css`
+      &&& {
+        padding: 0;
+        border: none;
+      }
+    `}
 `;

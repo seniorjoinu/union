@@ -54,6 +54,7 @@ export const UpdateGroupForm = styled(({ ...p }: UpdateGroupFormProps) => {
       fields: {
         new_name: { order: 1 },
         new_description: { order: 2 },
+        'new_description.0': { multiline: true },
         group_id: { hide: true },
       },
     }),

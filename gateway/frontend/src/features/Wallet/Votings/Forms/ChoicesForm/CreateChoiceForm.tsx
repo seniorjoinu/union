@@ -52,7 +52,7 @@ export function CreateChoiceForm({
     return {
       fields: {
         name: { order: 1, options: { required: 'Field is required' } },
-        description: { order: 2, options: { required: 'Field is required' } },
+        description: { order: 2, options: { required: 'Field is required' }, multiline: true },
         voting_id: { hide: true, disabled: true, defaultValue: defaultVotingId },
         'program.RemoteCallSequence.-1.endpoint.canister_id': {
           label: 'Canister Id',

@@ -14,6 +14,8 @@ export interface UseCandidProps {
 const DEFAULT_GET_CANDID_METHOD_NAME = 'export_candid';
 const DEV_GET_CANDID_METHOD_NAME = '__get_candid_interface_tmp_hack';
 
+const cache: Record<string, string> = {};
+
 export const useCandid = ({
   canisterId: cId,
   getCandidMethodName = DEFAULT_GET_CANDID_METHOD_NAME,
@@ -38,9 +40,15 @@ export const useCandid = ({
       canisterId,
     });
 
-    actor[getCandidMethodName]()
-      .catch(() => actor[DEV_GET_CANDID_METHOD_NAME]())
-      .then(parseCandid)
+    const call = cache[canisterId.toString()]
+      ? Promise.resolve(cache[canisterId.toString()])
+      : actor[getCandidMethodName]().catch(() => actor[DEV_GET_CANDID_METHOD_NAME]());
+
+    call
+      .then((candid) => {
+        cache[canisterId.toString()] = String(candid);
+        return parseCandid(candid);
+      })
       .then(setProg)
       .catch((e) => {
         console.warn(e);

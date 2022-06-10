@@ -8,11 +8,9 @@ import { Voting } from 'union-ts';
 import { useUnion } from 'services';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { ViewerSettings, useRender } from '../../IDLRenderer';
-import { GroupInfo } from '../Groups';
 import { ProfileInfo } from '../Profile';
 import { VotingConfigInfo } from '../VotingConfigs';
-import { UnionTooltipButtonComponent, useUnionSubmit } from '../../../components/UnionSubmit';
-import { ChoiceInfo } from './ChoiceInfo';
+import { useUnionSubmit } from '../../../components/UnionSubmit';
 import { CastVote } from './CastVote';
 import { VotingControls as VC } from './VotingControls';
 import { StatusChips } from './atoms';
@@ -57,12 +55,6 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
     methodName: 'delete_voting',
     onExecuted: (p) => nav('../votings'),
   });
-  const deleteChoiceUnionButtonProps = useUnionSubmit({
-    unionId,
-    canisterId: unionId,
-    methodName: 'delete_voting_choice',
-    onExecuted: (p) => nav('', { replace: true }),
-  });
 
   const id = BigInt(votingId || -1);
 
@@ -78,7 +70,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
         name: { hide: true },
         id: { hide: true },
         task_id: { hide: true },
-        description: { hide: true, order: 9 },
+        description: { hide: true, order: 9, multiline: true },
         status: { order: 11 },
         proposer: {
           order: 12,
@@ -102,7 +94,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
                 variant={{ title: 'p3', value: 'p3' }}
                 align='row'
               >
-                {moment(Number(ctx.value.created_at) / 10 ** 6).format('DD-MM-YY HH:mm:SS')}
+                {moment(Number(ctx.value.created_at) / 10 ** 6).format("DD MMM'YY HH:mm:SS")}
               </Field>
             ),
           },
@@ -126,32 +118,8 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
             ),
           },
         },
-        approval_choice: {
-          order: 18,
-        },
-        rejection_choice: {
-          order: 19,
-        },
         choices: {
-          order: 20,
-          adornment: {
-            kind: 'end',
-            render: (ctx, path, name) =>
-              ('Round' in ctx.value.status && ctx.value.status.Round == 0 ? (
-                <Button
-                  forwardedAs={NavLink}
-                  to={`../votings/crud/choice/create/${String(ctx.value.id[0])}`}
-                  variant='caption'
-                >
-                  Add choice
-                </Button>
-              ) : (
-                <></>
-              )),
-          },
-        },
-        total_voting_power_by_group: {
-          order: 21,
+          hide: true,
         },
         winners: {
           order: 22,
@@ -169,115 +137,18 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
         'losers.-1.round': {
           order: 1,
         },
-        'approval_choice.0': {
-          adornment: {
-            kind: 'replace',
-            render: (ctx, path, name) =>
-              (ctx.value.approval_choice[0] ? (
-                <ChoiceInfo
-                  unionId={unionId}
-                  choiceId={ctx.value.approval_choice[0]}
-                  votingId={ctx.value.id[0]!}
-                />
-              ) : null),
-          },
+        approval_choice: {
+          hide: true,
         },
-        'rejection_choice.0': {
-          adornment: {
-            kind: 'replace',
-            render: (ctx, path, name) =>
-              (ctx.value.rejection_choice[0] ? (
-                <ChoiceInfo
-                  unionId={unionId}
-                  choiceId={ctx.value.rejection_choice[0]}
-                  votingId={ctx.value.id[0]!}
-                />
-              ) : null),
-          },
+        rejection_choice: {
+          hide: true,
         },
-        'choices.-1': {
-          adornment: {
-            kind: 'replace',
-            render: (ctx, path, name) => (
-              <ChoiceInfo
-                unionId={unionId}
-                choiceId={get(ctx.value, path)}
-                votingId={ctx.value.id[0]!}
-              >
-                {'Round' in ctx.value.status && ctx.value.status.Round == 0 && (
-                  <>
-                    <Button
-                      forwardedAs={NavLink}
-                      to={`../votings/crud/choice/edit/${String(ctx.value.id[0])}/${get(
-                        ctx.value,
-                        path,
-                      )}`}
-                      variant='caption'
-                    >
-                      Edit
-                    </Button>
-                    <UnionTooltipButtonComponent
-                      {...deleteChoiceUnionButtonProps}
-                      variant='caption'
-                      color='red'
-                      buttonContent='Delete'
-                      submitVotingVerbose='Delete with voting'
-                      getPayload={() => [
-                        { choice_id: get(ctx.value, path), voting_id: { Common: ctx.value.id[0] } },
-                      ]}
-                    >
-                      Delete
-                    </UnionTooltipButtonComponent>
-                  </>
-                )}
-              </ChoiceInfo>
-            ),
-          },
-        },
-        'total_voting_power_by_group.-1': {
-          adornment: {
-            kind: 'replace',
-            render: (ctx, path) => {
-              const power = get(ctx.value, path);
-
-              return (
-                <GroupInfo
-                  groupId={power[0]}
-                  shares={power[1]}
-                  mode='long'
-                  to={`../groups/${String(power[0])}`}
-                />
-              );
-            },
-          },
-        },
-        'winners.-1.choices.-1': {
-          adornment: {
-            kind: 'replace',
-            render: (ctx, path, name) => (
-              <ChoiceInfo
-                unionId={unionId}
-                choiceId={get(ctx.value, path)}
-                votingId={ctx.value.id[0]!}
-              />
-            ),
-          },
-        },
-        'losers.-1.choices.-1': {
-          adornment: {
-            kind: 'replace',
-            render: (ctx, path, name) => (
-              <ChoiceInfo
-                unionId={unionId}
-                choiceId={get(ctx.value, path)}
-                votingId={ctx.value.id[0]!}
-              />
-            ),
-          },
+        total_voting_power_by_group: {
+          hide: true,
         },
       },
     }),
-    [voting, unionId, deleteChoiceUnionButtonProps],
+    [voting, unionId],
   );
 
   if (!votingId) {
