@@ -2,7 +2,7 @@ use crate::repository::{set_repositories, take_repositories};
 use crate::service::cron::CronService;
 use candid::Principal;
 use ic_cdk::storage::{stable_restore, stable_save};
-use ic_cdk_macros::{heartbeat, init, post_upgrade, pre_upgrade};
+use ic_cdk_macros::{heartbeat, init, query, post_upgrade, pre_upgrade};
 use ic_cron::implement_cron;
 
 mod controller;
@@ -32,4 +32,9 @@ fn post_upgrade_hook() {
 #[pre_upgrade]
 fn pre_upgrade_hook() {
     stable_save((take_repositories(), _take_cron_state())).expect("Unable to stable save");
+}
+
+#[query]
+fn export_candid() -> String {
+    include_str!("../can.did").to_string()
 }

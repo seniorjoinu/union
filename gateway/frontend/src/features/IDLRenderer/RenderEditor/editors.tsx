@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 import { IDL } from '@dfinity/candid';
 import { Checkbox, TextArea, TextAreaProps, TextField, TextFieldProps } from '@union/components';
 import { Controller, ControllerProps } from 'react-hook-form';
@@ -29,8 +29,11 @@ export const TypeForm = ({
   const settings = useSettings(path, absolutePath);
 
   const defaultValue = parseValue(getValues(path));
-  const name = p.label || typeof settings.label == 'string' ? settings.label : p.name;
-  const disabled = p.disabled || settings.disabled;
+  const name = useMemo(
+    () => (p.label || typeof settings.label == 'string' ? settings.label : p.name),
+    [p.label, settings.label, p.name],
+  );
+  const disabled = useMemo(() => p.disabled || settings.disabled, [p.disabled, settings.disabled]);
 
   useEffect(() => {
     if (!settings.options) {
@@ -42,15 +45,17 @@ export const TypeForm = ({
     );
   }, [settings.options, ctx.control.register, path, ctx, path]);
 
-  const Component = settings.multiline ? TextArea : TextField;
+  const Component = useMemo(() => (settings.multiline ? TextArea : TextField), [
+    settings.multiline,
+  ]);
 
   return (
-    <Controller
-      name={path}
-      control={control}
-      rules={rules}
-      render={({ field: { value, ...field }, fieldState: { error } }) => (
-        <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+      <Controller
+        name={path}
+        control={control}
+        rules={rules}
+        render={({ field: { value, ...field }, fieldState: { error } }) => (
           <Component
             {...p}
             {...field}
@@ -65,9 +70,9 @@ export const TypeForm = ({
             placeholder={settings.placeholder || idl.display()}
             helperText={error?.message}
           />
-        </SettingsWrapper>
-      )}
-    />
+        )}
+      />
+    </SettingsWrapper>
   );
 };
 
@@ -105,11 +110,11 @@ export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
   const disabled = p.disabled || settings.disabled;
 
   return (
-    <Controller
-      name={path}
-      control={control}
-      render={({ field, fieldState: { error } }) => (
-        <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+      <Controller
+        name={path}
+        control={control}
+        render={({ field, fieldState: { error } }) => (
           <Checkbox
             checked={field.value}
             onChange={() => {
@@ -120,9 +125,9 @@ export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
           >
             {name}
           </Checkbox>
-        </SettingsWrapper>
-      )}
-    />
+        )}
+      />
+    </SettingsWrapper>
   );
 };
 

@@ -455,8 +455,14 @@ export interface ListVotingsPage {
   'data' : Array<Voting>,
   'has_next' : boolean,
 }
+export interface ListVotingsPageRequest {
+  'page_size' : number,
+  'page_index' : number,
+  'sort' : VotingSort,
+  'filter' : null,
+}
 export interface ListVotingsRequest {
-  'page_req' : PageRequest,
+  'page_req' : ListVotingsPageRequest,
   'query_delegation_proof_opt' : [] | [QueryDelegationProof],
 }
 export interface ListVotingsResponse { 'page' : ListVotingsPage }
@@ -709,6 +715,9 @@ export interface VotingConfigFilter {
 }
 export type VotingConfigId = Id;
 export type VotingId = Id;
+export type VotingSort = { 'UpdatedAt' : boolean } |
+  { 'None' : null } |
+  { 'CreatedAt' : boolean };
 export type VotingStatus = { 'Fail' : string } |
   { 'PreRound' : RoundId } |
   { 'Round' : RoundId } |

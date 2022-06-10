@@ -14,10 +14,8 @@ import { useUnionSubmit } from '../../../components/UnionSubmit';
 import { CastVote } from './CastVote';
 import { VotingControls as VC } from './VotingControls';
 import { StatusChips } from './atoms';
+import { WinnersChoicesInfo } from './WinnersChoicesInfo';
 
-const Button = styled(B)`
-  align-self: flex-start;
-`;
 const Chipses = styled(Row)`
   margin-bottom: 16px;
 `;
@@ -29,6 +27,9 @@ const Container = styled(PageWrapper)`
 
   & > ${Field} {
     margin-bottom: 16px;
+  }
+  & > ${WinnersChoicesInfo} {
+    margin-top: 16px;
   }
   & > ${CastVote} {
     margin-top: 16px;
@@ -71,7 +72,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
         id: { hide: true },
         task_id: { hide: true },
         description: { hide: true, order: 9, multiline: true },
-        status: { order: 11 },
+        status: { hide: true },
         proposer: {
           order: 12,
           adornment: {
@@ -122,6 +123,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
           hide: true,
         },
         winners: {
+          hide: true,
           order: 22,
         },
         losers: {
@@ -179,6 +181,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
       <Accordeon title='Details'>
         <View style={{ padding: '8px 0' }} value={voting} settings={settings} />
       </Accordeon>
+      <WinnersChoicesInfo voting={voting} unionId={unionId} variant='h5' />
       <CastVote unionId={unionId} voting={voting} onVoted={() => nav('', { replace: true })} />
       {/* <Field title='Nested votings' weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
         <NestedVotingConfigs parentVotingConfig={votingConfig.id[0]} />

@@ -687,8 +687,19 @@ export const idlFactory = ({ IDL }) => {
   const ListVotingConfigsResponse = IDL.Record({
     'page' : ListVotingConfigsPage,
   });
+  const VotingSort = IDL.Variant({
+    'UpdatedAt' : IDL.Bool,
+    'None' : IDL.Null,
+    'CreatedAt' : IDL.Bool,
+  });
+  const ListVotingsPageRequest = IDL.Record({
+    'page_size' : IDL.Nat32,
+    'page_index' : IDL.Nat32,
+    'sort' : VotingSort,
+    'filter' : IDL.Null,
+  });
   const ListVotingsRequest = IDL.Record({
-    'page_req' : PageRequest,
+    'page_req' : ListVotingsPageRequest,
     'query_delegation_proof_opt' : IDL.Opt(QueryDelegationProof),
   });
   const ListVotingsPage = IDL.Record({

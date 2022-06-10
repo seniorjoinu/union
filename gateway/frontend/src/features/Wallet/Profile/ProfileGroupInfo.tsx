@@ -73,28 +73,33 @@ export const ProfileGroupInfo = styled(({ group, ...p }: ProfileGroupInfoProps) 
               shares
             </Text>
             <Button variant='caption' onClick={() => handleAccept(true)}>
-              Accept shares
+              Accept
             </Button>
             <Button variant='caption' onClick={() => handleAccept(false)} color='red'>
-              Decline shares
+              Decline
             </Button>
           </>
         )}
-        {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && (
-          <>
-            <Button variant='caption' forwardedAs={NavLink} to={`transfer/${String(group.id[0!])}`}>
-              Transfer shares
-            </Button>
-            <Button
-              variant='caption'
-              color='red'
-              forwardedAs={NavLink}
-              to={`burn/${String(group.id[0!])}`}
-            >
-              Burn shares
-            </Button>
-          </>
-        )}
+        {!DEFAULT_GROUP_IDS.includes(group.id[0]!) &&
+          typeof data.get_my_group_shares_balance?.balance !== 'undefined' && (
+            <>
+              <Button
+                variant='caption'
+                forwardedAs={NavLink}
+                to={`transfer/${String(group.id[0!])}`}
+              >
+                Transfer shares
+              </Button>
+              <Button
+                variant='caption'
+                color='red'
+                forwardedAs={NavLink}
+                to={`burn/${String(group.id[0!])}`}
+              >
+                Burn shares
+              </Button>
+            </>
+          )}
       </Controls>
     </GroupInfo>
   );

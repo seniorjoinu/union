@@ -14,7 +14,8 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
 
-  const enabled = !!get(ctx.value, path)?.length;
+  const value = path ? get(ctx.value, path) : ctx.value;
+  const enabled = !!value?.length;
 
   const component = useMemo(
     () =>
@@ -36,6 +37,7 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
         weight={{ title: 'medium' }}
         variant={{ title: 'p3', value: 'p3' }}
         align={enabled ? 'column' : 'row'}
+        color={enabled ? 'dark' : 'grey'}
       >
         {enabled ? <ShiftedColumn>{component}</ShiftedColumn> : 'null'}
       </Field>
@@ -107,7 +109,7 @@ export interface VariantFormProps extends RenderProps {
 export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormProps) => {
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
-  const value = get(ctx.value, path) || {};
+  const value = (path ? get(ctx.value, path) : ctx.value) || {};
 
   const selected = useMemo(() => {
     const keys = Object.keys(value);
@@ -156,7 +158,8 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
 
-  const items = get(ctx.value, path) || [];
+  const value = path ? get(ctx.value, path) : ctx.value;
+  const items = value || [];
 
   // const Wrapper = path ? ShiftedColumn : Column;
   const Wrapper = ShiftedColumn;

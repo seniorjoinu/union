@@ -6,6 +6,7 @@ export type Unpromise<T extends Promise<any>> = T extends Promise<infer U> ? U :
 export const useCanister = <T extends {}>(
   canisterId: string,
   initCanister: (canisterId: string, handlers?: CanisterProps['handlers']) => Canister<T>,
+  options?: { poll: { methods: (keyof T)[]; timeout?: number } },
 ) => {
   const [data, setData] = useState<
     {
@@ -15,11 +16,15 @@ export const useCanister = <T extends {}>(
   >({});
   const [fetching, setFetching] = useState<{ [key in keyof T]?: boolean }>({});
   const [errors, setErrors] = useState<{ [key in keyof T]?: Error | null }>({});
+  // const [args, setArgs] = useState<{ [key in keyof T]?: any[] }>({});
 
   const canister = useMemo(
     () =>
       initCanister(canisterId, {
-        onBeforeRequest: (methodName) => {
+        onBeforeRequest: (methodName, a) => {
+          // if (options?.poll.methods.includes(methodName as keyof T) && !args[methodName as keyof T]) {
+          //   setArgs(({...args, [methodName as keyof T]: a}));
+          // }
           setFetching((v) => ({ ...v, [methodName]: true }));
           setErrors((v) => ({ ...v, [methodName]: null }));
         },
@@ -32,8 +37,38 @@ export const useCanister = <T extends {}>(
           setErrors((v) => ({ ...v, [methodName]: e }));
         },
       }),
-    [setFetching, setErrors, canisterId],
+    [
+      setFetching,
+      setErrors,
+      canisterId,
+      options,
+      // setArgs, args
+    ],
   );
+
+  // useEffect(() => {
+  //   if (!options || !options.poll.methods.length) {
+  //     return;
+  //   }
+
+  //   const fired = options.poll.methods.filter(m => !!data[m]);
+  //   if (!fired.length) {
+  //     return;
+  //   }
+
+  //   const interval = window.setInterval(() => {
+  //     fired.map(m => {
+  //       const methodArgs = args[m];
+  //       if (!methodArgs) {
+  //         return;
+  //       }
+  //       // @ts-expect-error
+  //       canister.canister[m](...methodArgs);
+  //     });
+  //   }, options.poll.timeout || 3000);
+
+  //   return () => window.clearInterval(interval)
+  // }, [canister, data, args]);
 
   return {
     fetching,

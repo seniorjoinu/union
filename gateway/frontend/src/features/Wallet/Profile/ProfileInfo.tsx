@@ -68,10 +68,10 @@ export const ProfileInfo = styled(
       <Container {...p}>
         <Params>
           <Text variant={variant} as={to ? NavLink : undefined} to={to!}>
-            {profileId.toString()}
+            {profile.name}
           </Text>
           <Chips variant='caption' weight='medium'>
-            {profile.name}
+            {profileId.toString()}
           </Chips>
           {chips.map((content, i) => (
             <Chips variant='caption' weight='medium' key={String(i)}>

@@ -12,7 +12,7 @@ import {
   UnionTooltipButtonComponent as UTB,
   useUnionSubmit,
 } from '../../../../components/UnionSubmit';
-import { CandidEncodedArgs } from '../../IDLFields/CandidEncodedArgs';
+import { CandidEncodedArgs } from '../../IDLFields';
 
 const UnionTooltipButtonComponent = styled(UTB)``;
 const Button = styled(B)``;
@@ -183,6 +183,7 @@ export const ChoiceItem = styled(
                       </Text>
                     }
                     border='none'
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {origin}
                   </Accordeon>
@@ -204,19 +205,14 @@ export const ChoiceItem = styled(
                 ) as string;
 
                 return (
-                  <CandidEncodedArgs
-                    args={args}
-                    canisterId={canisterId}
-                    methodName={methodName}
-                    unionId={unionId}
-                  />
+                  <CandidEncodedArgs args={args} canisterId={canisterId} methodName={methodName} />
                 );
               },
             },
           },
         },
       };
-    }, [unionId, vote, win, deleteChoiceUnionButtonProps, voting, choice]);
+    }, [vote, win, deleteChoiceUnionButtonProps, voting, choice]);
 
     if (!choice) {
       return (
@@ -237,6 +233,7 @@ export const ChoiceItem = styled(
               </Text>
             }
             border='none'
+            onClick={(e) => e.stopPropagation()}
           >
             <Column>
               {results.map((power) => {

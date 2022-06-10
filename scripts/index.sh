@@ -12,28 +12,28 @@ cd ../
 
 echo "" > $ROOT_FOLDER/.env
 
-source ./identity-setup.sh
+. ./identity-setup.sh
 echo "export identity=${identity}" >> $ROOT_FOLDER/.env
 
-source ./infra-deploy.sh
+. ./infra-deploy.sh
 echo "export deployer=${deployer}" >> $ROOT_FOLDER/.env
 echo "export gateway_backend=${gateway_backend}" >> $ROOT_FOLDER/.env
 
 ./version-deploy.sh
 
 ./infra-presetup.sh
-source ./root-union-deploy.sh
+. ./root-union-deploy.sh
 echo "export root_union=${root_union}" >> $ROOT_FOLDER/.env
 echo "export history_ledger=${history_ledger}" >> $ROOT_FOLDER/.env
-source ./infra-setup.sh
+. ./infra-setup.sh
 
-source ./frontend-create.sh
+. ./frontend-create.sh
 echo "export frontend_canister_id_did='${frontend_canister_id_did}'" >> $ROOT_FOLDER/.env
 echo "export gateway_frontend=$(parse_principal $frontend_canister_id_did)" >> $ROOT_FOLDER/.env
 
-# source ./frontend-install-wasm.sh
+# . ./frontend-install-wasm.sh
 
-# source ./batches-create.sh
+# . ./batches-create.sh
 # echo "export batch_ids=${exportable_batch_ids}" >> $ROOT_FOLDER/.env
 
 # ./batches-send.sh

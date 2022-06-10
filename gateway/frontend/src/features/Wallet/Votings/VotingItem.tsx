@@ -9,7 +9,7 @@ import { ViewProps, ViewerSettings } from '../../IDLRenderer';
 import { ProfileInfo } from '../Profile';
 import { VotingConfigInfo } from '../VotingConfigs';
 import { StatusChips } from './atoms';
-import { ChoicesInfo } from './ChoicesInfo';
+import { WinnersChoicesInfo } from './WinnersChoicesInfo';
 
 const Title = styled(Row)`
   align-items: center;
@@ -86,7 +86,10 @@ export const VotingItem = styled(
               kind: 'replace',
               render: (ctx, path, name) => (
                 <Field title={name} weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
-                  <VotingConfigInfo votingConfigId={get(ctx.value, path)} />
+                  <VotingConfigInfo
+                    votingConfigId={get(ctx.value, path)}
+                    to={`../voting-configs/${get(ctx.value, path)}`}
+                  />
                 </Field>
               ),
             },
@@ -132,7 +135,7 @@ export const VotingItem = styled(
         <Container>
           {children}
           <View value={voting} settings={settings} />
-          <ChoicesInfo voting={voting} unionId={unionId} />
+          <WinnersChoicesInfo voting={voting} unionId={unionId} />
         </Container>
       </Accordeon>
     );
