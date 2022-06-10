@@ -36,9 +36,12 @@ impl EventsService {
             timestamp,
             initiator,
             with,
-        });
-        emit(ProgramExecutedEvent_1 { timestamp, program });
+        })
+        .expect("Unable to emit program executed event part 1: ");
+        emit(ProgramExecutedEvent_1 { timestamp, program })
+            .expect("Unable to emit program executed event part 2: ");
         emit(ProgramExecutedEvent_2 { timestamp, result })
+            .expect("Unable to emit program executed event part 3: ");
     }
 
     pub fn emit_shares_mint_event(
@@ -58,12 +61,14 @@ impl EventsService {
                 new_balance: to_new_balance,
             }),
             from: Shareholder::Void,
-        });
+        })
+        .expect("Unable to emit shares move event: ");
         emit(TotalSupplyUpdatedEvent {
             group_id,
             timestamp,
             total_supply,
-        });
+        })
+        .expect("Unable to emit total supply updated event: ");
     }
 
     pub fn emit_shares_burn_event(
@@ -83,12 +88,14 @@ impl EventsService {
                 new_balance: from_new_balance,
             }),
             to: Shareholder::Void,
-        });
+        })
+        .expect("Unable to emit shares move event: ");
         emit(TotalSupplyUpdatedEvent {
             group_id,
             timestamp,
             total_supply,
-        });
+        })
+        .expect("Unable to emit total supply updated event: ");
     }
 
     pub fn emit_shares_transfer_event(
@@ -113,6 +120,7 @@ impl EventsService {
                 new_balance: from_new_balance,
             }),
         })
+        .expect("Unable to emit shares move event: ");
     }
 
     pub async fn subscribe_to_voting_updates(
@@ -172,7 +180,8 @@ fn process_events(events: Vec<Event>) {
 
                     emit(VotingRoundStartEvent {
                         voting_id: RemoteVotingId::Nested(voting.get_id().unwrap()),
-                    });
+                    })
+                    .expect("Unable to emit voting round start event: ");
 
                     NestedVoting::repo().save(voting);
                 }
@@ -201,7 +210,8 @@ fn process_events(events: Vec<Event>) {
                             voting_id: RemoteVotingId::Nested(voting.get_id().unwrap()),
                             winners: Some(round_result.clone()),
                             losers: None,
-                        });
+                        })
+                        .expect("Unable to emit voting round end event: ");
 
                         voting.add_winner(round_result);
                     }
@@ -222,7 +232,8 @@ fn process_events(events: Vec<Event>) {
                             voting_id: RemoteVotingId::Nested(voting.get_id().unwrap()),
                             winners: None,
                             losers: Some(round_result.clone()),
-                        });
+                        })
+                        .expect("Unable to emit voting round end event: ");
 
                         voting.add_loser(round_result);
                     }

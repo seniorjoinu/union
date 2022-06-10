@@ -9,6 +9,7 @@ use ic_cdk::api::time;
 use ic_cdk::spawn;
 use ic_cron::types::{Iterations, SchedulingOptions};
 use shared::mvc::{HasRepository, Model, Repository};
+use shared::remote_call::ProgramExecutionResult;
 use shared::types::wallet::{ProgramExecutedWith, VotingId};
 
 #[derive(CandidType, Deserialize)]
