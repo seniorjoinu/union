@@ -2,40 +2,20 @@ import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { Text } from '../Text';
-import { Button } from '../Button';
 
 const Icon = (p: React.SVGAttributes<SVGElement>) => (
   <svg
-    width='25'
-    height='25'
-    viewBox='0 0 128 128'
+    width='16'
+    height='32'
+    viewBox='0 0 16 32'
     fill='none'
     xmlns='http://www.w3.org/2000/svg'
     {...p}
   >
     <path
-      d='M21.5736 42.7868L0.360352 64L21.5736 85.2132L42.7868 64L21.5736 42.7868Z'
+      d='M1.35446 16.6708L13.7313 30.7514C14.0227 31.0829 14.49 31.0829 14.7814 30.7514C15.0729 30.4198 15.0729 29.8881 14.7814 29.5566L2.93249 16.0765L14.7814 2.59643C15.0729 2.2649 15.0729 1.73321 14.7814 1.40168C14.6385 1.23904 14.446 1.15147 14.2591 1.15147C14.0722 1.15147 13.8797 1.23279 13.7368 1.40168L1.35996 15.4823C1.06855 15.8075 1.06855 16.3455 1.35446 16.6708Z'
       fill='currentColor'
-    />
-    <path
-      d='M42.7867 21.5736L21.5735 42.7868L42.7867 64L63.9999 42.7868L42.7867 21.5736Z'
-      fill='currentColor'
-    />
-    <path
-      d='M42.7867 64L21.5735 85.2132L42.7867 106.426L63.9999 85.2132L42.7867 64Z'
-      fill='currentColor'
-    />
-    <path
-      d='M64.0001 85.2132L42.7869 106.426L64.0001 127.64L85.2133 106.426L64.0001 85.2132Z'
-      fill='currentColor'
-    />
-    <path
-      d='M64.0001 0.36039L42.7869 21.5736L64.0001 42.7868L85.2133 21.5736L64.0001 0.36039Z'
-      fill='currentColor'
-    />
-    <path
-      d='M64.0001 42.7868L42.7869 64L64.0001 85.2132L85.2133 64L64.0001 42.7868Z'
-      fill='currentColor'
+      stroke='currentColor'
     />
   </svg>
 );
