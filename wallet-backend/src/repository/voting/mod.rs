@@ -57,21 +57,47 @@ impl Repository<Voting, VotingId, (), VotingSort> for VotingRepository {
 
                 Page::new(data, has_next)
             }
-            VotingSort::CreatedAt => {
-                let (has_next, iter) = self
-                    .votings_sorted_by_created_at_index
-                    .iter()
-                    .get_page(page_req);
-                let data = iter.map(|(_, id)| self.get(id).unwrap()).collect();
+            VotingSort::CreatedAt(ascending) => {
+                let (has_next, data) = if ascending {
+                    let (has_next, iter) = self
+                        .votings_sorted_by_created_at_index
+                        .iter()
+                        .rev()
+                        .get_page(page_req);
+                    let data = iter.map(|(_, id)| self.get(id).unwrap()).collect();
+
+                    (has_next, data)
+                } else {
+                    let (has_next, iter) = self
+                        .votings_sorted_by_created_at_index
+                        .iter()
+                        .get_page(page_req);
+                    let data = iter.map(|(_, id)| self.get(id).unwrap()).collect();
+
+                    (has_next, data)
+                };
 
                 Page::new(data, has_next)
             }
-            VotingSort::UpdatedAt => {
-                let (has_next, iter) = self
-                    .votings_sorted_by_updated_at_index
-                    .iter()
-                    .get_page(page_req);
-                let data = iter.map(|(_, id)| self.get(id).unwrap()).collect();
+            VotingSort::UpdatedAt(ascending) => {
+                let (has_next, data) = if ascending {
+                    let (has_next, iter) = self
+                        .votings_sorted_by_updated_at_index
+                        .iter()
+                        .rev()
+                        .get_page(page_req);
+                    let data = iter.map(|(_, id)| self.get(id).unwrap()).collect();
+
+                    (has_next, data)
+                } else {
+                    let (has_next, iter) = self
+                        .votings_sorted_by_updated_at_index
+                        .iter()
+                        .get_page(page_req);
+                    let data = iter.map(|(_, id)| self.get(id).unwrap()).collect();
+
+                    (has_next, data)
+                };
 
                 Page::new(data, has_next)
             }

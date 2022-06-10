@@ -1133,8 +1133,8 @@ type GetVotingResponse = record {
 
 type VotingSort = variant {
     None;
-    CreatedAt;
-    UpdatedAt;
+    CreatedAt : bool;
+    UpdatedAt : bool;
 };
 
 type ListVotingsPageRequest = record {

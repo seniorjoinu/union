@@ -54,6 +54,6 @@ impl RoundResult {
 #[derive(CandidType, Deserialize)]
 pub enum VotingSort {
     None,
-    CreatedAt,
-    UpdatedAt,
+    CreatedAt(bool),
+    UpdatedAt(bool),
 }
