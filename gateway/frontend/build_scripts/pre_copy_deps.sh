@@ -17,6 +17,9 @@ cp ../../deployer-backend/canister/.dfx/local/canisters/union-deployer/union-dep
 cp ../../wallet-backend/.dfx/local/canisters/union-wallet/union-wallet.did.d.ts ./src/assets/union-wallet.did.d.ts
 cp ../../wallet-backend/.dfx/local/canisters/union-wallet/union-wallet.did.js ./src/assets/union-wallet.did.js
 
+cp ../../history-ledger/canister/.dfx/local/canisters/history-ledger/history-ledger.did.d.ts ./src/assets/history-ledger.did.d.ts
+cp ../../history-ledger/canister/.dfx/local/canisters/history-ledger/history-ledger.did.js ./src/assets/history-ledger.did.js
+
 cp ../backend/.dfx/local/canisters/gateway/gateway.did.d.ts ./src/assets/gateway.did.d.ts
 cp ../backend/.dfx/local/canisters/gateway/gateway.did.js ./src/assets/gateway.did.js
 

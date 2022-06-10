@@ -81,16 +81,19 @@ export const Profile = ({ ...p }: ProfileProps) => {
   return (
     <Container {...p} title='My profile'>
       <Controls>
-        {!!data.get_my_unaccepted_group_shares_balance?.balance && (
+        {data.get_my_unaccepted_group_shares_balance?.balance ? (
           <>
             <Button onClick={() => handleInvite(true)}>Accept invite</Button>
             <Button onClick={() => handleInvite(false)} color='red'>
               Decline invite
             </Button>
           </>
+        ) : (
+          <>
+            <Button onClick={() => nav('invite')}>+ Invite</Button>
+            <Button onClick={() => nav('change')}>Change profile</Button>
+          </>
         )}
-        <Button onClick={() => nav('invite')}>+ Invite</Button>
-        <Button onClick={() => nav('change')}>Change profile</Button>
       </Controls>
       <Field title='Profile name' align='row'>
         {current.profile?.name}

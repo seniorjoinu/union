@@ -58,13 +58,13 @@ export interface FetchResponse<T> {
   };
 }
 
-export interface PagerProps<T> {
+export interface PagerProps<T, R extends FetchResponse<T> = FetchResponse<T>> {
   className?: string;
   style?: React.CSSProperties;
   size?: number;
   title?: React.ReactNode;
-  renderItem(item: T): React.ReactNode | null | false;
-  fetch(p: { index: number; size: number }): Promise<FetchResponse<T>>;
+  renderItem(item: T, extra: Omit<R, 'page'> | undefined): React.ReactNode | null | false;
+  fetch(p: { index: number; size: number }): Promise<R>;
   onEntitiesChanged?(data: T[]): void;
   buttonVariant?: TextVariant;
   verbose?: {
@@ -77,7 +77,7 @@ export interface PagerProps<T> {
 
 export const DEFAULT_PAGE_SIZE = 10;
 
-export const Pager = <T extends {}>({
+export const Pager = <T extends {}, R extends FetchResponse<T> = FetchResponse<T>>({
   size = DEFAULT_PAGE_SIZE,
   fetch,
   renderItem,
@@ -87,10 +87,11 @@ export const Pager = <T extends {}>({
   buttonVariant,
   renderIfEmpty = true,
   ...p
-}: PagerProps<T>) => {
+}: PagerProps<T, R>) => {
   const [index, setIndex] = useState(0);
   const [complete, setComplete] = useState(false);
   const [data, setData] = useState<T[] | null>(null);
+  const [extra, setExtra] = useState<Record<number, Omit<R, 'page'>>>({});
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string>('');
 
@@ -112,7 +113,8 @@ export const Pager = <T extends {}>({
     setFetching(true);
     setError('');
     fetch({ index, size })
-      .then(({ page }) => {
+      .then(({ page, ...extra }) => {
+        setExtra((e) => ({ ...e, [index]: extra }));
         setData((data) => [...(data || []), ...page.data]);
         setIndex((index) => index + 1);
         setComplete(!page.has_next);
@@ -122,8 +124,15 @@ export const Pager = <T extends {}>({
   };
 
   const items = useMemo(
-    () => (data || []).map((item) => renderItem(item)).filter((item) => !!item),
-    [data, renderItem],
+    () =>
+      (data || [])
+        .map((item, i) => {
+          const page = Math.ceil((i + 1) / 5) - 1;
+
+          return renderItem(item, extra[page]);
+        })
+        .filter((item) => !!item),
+    [data, renderItem, size, extra],
   );
 
   if (!renderIfEmpty && !items.length) {

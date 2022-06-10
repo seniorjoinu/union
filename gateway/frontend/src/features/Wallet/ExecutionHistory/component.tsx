@@ -1,8 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Pager, Button as B, Row as R } from '@union/components';
+import { PageWrapper, Pager, Button as B, Row as R, Text } from '@union/components';
 import { useUnion } from 'services';
 import { NavLink, useParams } from 'react-router-dom';
+import { Principal } from '@dfinity/principal';
 import { useCurrentUnion } from '../context';
 import { ExecutionItem } from './ExecutionItem';
 
@@ -27,18 +28,13 @@ export interface ExecutionHistoryProps {
 }
 
 export const ExecutionHistory = styled(({ ...p }: ExecutionHistoryProps) => {
-  const { executionId } = useParams();
   const { principal } = useCurrentUnion();
   const { canister } = useUnion(principal);
-  // const { View } = useRender<VotingConfig>({
-  //   canisterId: principal,
-  //   type: 'VotingConfig',
-  // });
 
   return (
     <Container {...p} title='Execution history'>
       <Controls>
-        <Button forwardedAs={NavLink} to={executionId ? '../execution-history/create' : 'create'}>
+        <Button forwardedAs={NavLink} to='create'>
           +
         </Button>
       </Controls>
@@ -50,14 +46,24 @@ export const ExecutionHistory = styled(({ ...p }: ExecutionHistoryProps) => {
               page_index: index,
               page_size: size,
               sort: null,
-              filter: { from_timestamp: [], to_timestamp: [], endpoint: [] },
+              filter: {
+                from_timestamp: [],
+                to_timestamp: [],
+                endpoint: [],
+              },
             },
             query_delegation_proof_opt: [],
           })
         }
-        renderItem={(item: bigint) => (
-          <ExecutionItem id={item} opened={executionId == String(item)} />
-        )}
+        renderItem={(item: bigint, extra: { history_ledger_canister_id: Principal } | undefined) =>
+          (extra?.history_ledger_canister_id ? (
+            <ExecutionItem id={item} ledger={extra?.history_ledger_canister_id} />
+          ) : (
+            <Text color='red' variant='p3'>
+              Unknown ledger
+            </Text>
+          ))
+        }
       />
     </Container>
   );

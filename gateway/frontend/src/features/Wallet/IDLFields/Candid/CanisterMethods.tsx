@@ -8,7 +8,7 @@ import {
   TextField as TF,
 } from '@union/components';
 import { Principal } from '@dfinity/principal';
-import { useCandid } from '../useCandid';
+import { useCandid } from '../../useCandid';
 
 const TextField = styled(TF)`
   width: 100%;

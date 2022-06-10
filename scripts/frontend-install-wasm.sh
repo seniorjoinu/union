@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 . ./utils.sh
-source $ROOT_FOLDER/.env
+. $ROOT_FOLDER/.env
 
 log TODO
 # frontend_wasm_path="${ROOT_FOLDER}/gateway/frontend/.dfx/local/canisters/union-frontend/union-frontend.wasm"

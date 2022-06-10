@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 . ./utils.sh
-source $ROOT_FOLDER/.env
+. $ROOT_FOLDER/.env
 
 # Target control schema
 #

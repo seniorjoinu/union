@@ -86,7 +86,10 @@ export const VotingItem = styled(
               kind: 'replace',
               render: (ctx, path, name) => (
                 <Field title={name} weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
-                  <VotingConfigInfo votingConfigId={get(ctx.value, path)} />
+                  <VotingConfigInfo
+                    votingConfigId={get(ctx.value, path)}
+                    to={`../voting-configs/${get(ctx.value, path)}`}
+                  />
                 </Field>
               ),
             },

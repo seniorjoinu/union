@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 . ./utils.sh
-source $ROOT_FOLDER/.env
+. $ROOT_FOLDER/.env
 
 identity=
 profile_name="Agent"
@@ -43,54 +43,61 @@ log "[add-profile]" root_union=$root_union
 
 log "[add-profile] Add internet-identity principal to root union"
 create_profile_program_args='(record {
-	id = principal \"'$identity'\";
-	name = \"'$profile_name'\";
-	description = \"'$profile_name' profile created by add-profile.sh\";
+	id = principal "'$identity'";
+	name = "'$profile_name'";
+	description = "'$profile_name' profile created by add-profile.sh";
 })'
 
 response=$(dfx canister call --query $root_union get_access_config "(record { id = ${UNLIMITED_ACCESS_CONFIG_ID} : nat64 })")
 existing_allowees=$(./uc did get "${response}" "0.access_config.allowees.#items")
-escaped_existing_allowees="${existing_allowees//\"/\\\"}"
 update_access_config_program_args='(record {
 	id = '$UNLIMITED_ACCESS_CONFIG_ID' : nat64;
 	new_allowees = vec {
-		'${existing_allowees//\"/\\\"}'
+		'$existing_allowees'
 		variant {
-			Profile = principal \"'$identity'\"
+			Profile = principal "'$identity'"
 		};
 	};
 })'
-create_profile_args="(record {
-	access_config_id = ${UNLIMITED_ACCESS_CONFIG_ID} : nat64;
+
+rm ./create_profile_program_args.txt 2> /dev/null || echo ""
+rm ./update_access_config_program_args.txt 2> /dev/null || echo ""
+
+echo "$create_profile_program_args" > ./create_profile_program_args.txt
+create_profile_program_args_bytes=$(./uc did encode --mode content ./create_profile_program_args.txt)
+echo "$update_access_config_program_args" > ./update_access_config_program_args.txt
+update_access_config_program_args_bytes=$(./uc did encode --mode content ./update_access_config_program_args.txt)
+
+rm ./create_profile_program_args.txt 2> /dev/null || echo ""
+rm ./update_access_config_program_args.txt 2> /dev/null || echo ""
+
+create_profile_args='(record {
+	access_config_id = '$UNLIMITED_ACCESS_CONFIG_ID' : nat64;
 	program = variant {
 		RemoteCallSequence = vec {
 			record {
 				endpoint = record {
-					canister_id = principal \"${root_union}\";
-					method_name = \"create_profile\";
+					canister_id = principal "'$root_union'";
+					method_name = "create_profile";
 				};
 				cycles = 0 : nat64;
 				args = variant {
-					CandidString = vec {
-						\"${create_profile_program_args}\"
-					}	: vec text
+					Encoded = blob "'$create_profile_program_args_bytes'"
 				};
 			};
 			record {
 				endpoint = record {
-					canister_id = principal \"${root_union}\";
-					method_name = \"update_access_config\";
+					canister_id = principal "'$root_union'";
+					method_name = "update_access_config";
 				};
 				cycles = 0 : nat64;
 				args = variant {
-					CandidString = vec {
-						\"${update_access_config_program_args}\"
-					}	: vec text
+					Encoded = blob "'$update_access_config_program_args_bytes'"
 				};
 			};
 		}
 	}
-})"
+})'
 log "[add-profile]" payload=$create_profile_args
 dfx canister $args call $root_union "execute" "$create_profile_args"
 

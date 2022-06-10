@@ -27,7 +27,9 @@
       "deployer-ts": ["src/assets/union-deployer.did.d.ts"],
       "deployer-idl": ["src/assets/union-deployer.did.js"],
       "union-ts": ["src/assets/union-wallet.did.d.ts"],
-      "union-idl": ["src/assets/union-wallet.did.js"]
+      "union-idl": ["src/assets/union-wallet.did.js"],
+      "ledger-ts": ["src/assets/history-ledger.did.d.ts"],
+      "ledger-idl": ["src/assets/history-ledger.did.js"]
     }
   },
   "include": ["global.d.ts", "."]

@@ -100,7 +100,7 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/votings`}>
               Votings
             </Item>
-            <Item variant='p2' as={NavLink} to={`wallet/${walletId}/history`}>
+            <Item variant='p2' as={NavLink} to={`wallet/${walletId}/execution-history`}>
               History
             </Item>
           </Items>

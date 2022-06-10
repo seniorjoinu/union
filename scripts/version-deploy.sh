@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 . ./utils.sh
-source $ROOT_FOLDER/.env
+. $ROOT_FOLDER/.env
 
 # TODO get version and wasm_path args 
 version="0.0.0"

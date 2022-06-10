@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
-import { getFontStyles, Text as T, TextVariant, TextWeight } from './Text';
+import { getFontStyles, Text as T, TextProps, TextVariant, TextWeight } from './Text';
 
 const Text = styled(T)``;
 
@@ -69,6 +69,7 @@ export interface FieldProps {
     title?: TextWeight;
     value?: TextWeight;
   };
+  color?: TextProps['color'];
 }
 
 export const Field = styled(
@@ -77,6 +78,7 @@ export const Field = styled(
     title,
     margin,
     helperText,
+    color,
     disabled,
     align = 'column',
     variant: propVariant,
@@ -96,7 +98,7 @@ export const Field = styled(
 
     return (
       <Container {...p} $align={align} $margin={margin} $text={helperText} $disabled={disabled}>
-        <Text variant={variant.title} weight={weight.title} color='dark'>
+        <Text variant={variant.title} weight={weight.title} color={color || 'dark'}>
           {title}
           {!!title && align == 'row' ? ':' : ''}
         </Text>

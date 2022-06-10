@@ -21,7 +21,7 @@ export const TypeForm = ({
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
 
-  const value = get(ctx.value, path);
+  const value = path ? get(ctx.value, path) : ctx.value;
   const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (

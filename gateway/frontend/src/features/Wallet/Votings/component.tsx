@@ -74,7 +74,7 @@ export const Votings = styled(({ ...p }: VotingsProps) => {
               page_index: index,
               page_size: size,
               filter: null,
-              sort: null,
+              sort: { CreatedAt: false },
             },
             query_delegation_proof_opt: [],
           })
