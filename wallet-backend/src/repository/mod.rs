@@ -29,6 +29,7 @@ use crate::repository::token::model::Token;
 use crate::repository::token::types::{TokenFilter, TokenId};
 use crate::repository::token::TokenRepository;
 use crate::repository::voting::model::Voting;
+use crate::repository::voting::types::VotingSort;
 use crate::repository::voting::VotingRepository;
 use crate::repository::voting_config::model::VotingConfig;
 use crate::repository::voting_config::types::VotingConfigFilter;
@@ -150,7 +151,7 @@ impl HasRepository<VotingConfig, VotingConfigId, VotingConfigFilter, (), VotingC
     }
 }
 
-impl HasRepository<Voting, VotingId, (), (), VotingRepository> for Voting {
+impl HasRepository<Voting, VotingId, (), VotingSort, VotingRepository> for Voting {
     fn repo() -> &'static mut VotingRepository {
         &mut get_repositories().voting
     }

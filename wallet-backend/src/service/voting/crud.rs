@@ -1,5 +1,6 @@
 use crate::repository::choice::model::Choice;
 use crate::repository::voting::model::Voting;
+use crate::repository::voting::types::VotingSort;
 use crate::repository::voting_config::model::VotingConfig;
 use crate::service::choice::types::ChoiceService;
 use crate::service::voting::types::{VotingError, VotingService};
@@ -114,7 +115,7 @@ impl VotingService {
     }
 
     #[inline(always)]
-    pub fn list_votings(page_req: &PageRequest<(), ()>) -> Page<Voting> {
+    pub fn list_votings(page_req: &PageRequest<(), VotingSort>) -> Page<Voting> {
         Voting::repo().list(page_req)
     }
 }

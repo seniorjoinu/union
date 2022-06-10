@@ -50,3 +50,10 @@ impl RoundResult {
         self.choices.is_empty()
     }
 }
+
+#[derive(CandidType, Deserialize)]
+pub enum VotingSort {
+    None,
+    CreatedAt,
+    UpdatedAt,
+}

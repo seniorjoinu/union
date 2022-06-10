@@ -208,6 +208,10 @@ impl Voting {
     pub fn get_created_at(&self) -> u64 {
         self.created_at
     }
+    
+    pub fn get_updated_at(&self) -> u64 {
+        self.updated_at
+    }
 
     pub fn get_winners(&self) -> &Vec<RoundResult> {
         &self.winners
