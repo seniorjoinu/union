@@ -2,6 +2,7 @@ use crate::repository::choice::model::Choice;
 use crate::repository::choice::types::ChoiceFilter;
 use crate::repository::nested_voting::types::RemoteVotingId;
 use crate::repository::voting::model::Voting;
+use crate::repository::voting::types::VotingSort;
 use crate::service::access_config::types::QueryDelegationProof;
 use crate::service::voting::types::Vote;
 use candid::{CandidType, Deserialize};
@@ -55,7 +56,7 @@ pub struct GetVotingResponse {
 
 #[derive(CandidType, Deserialize)]
 pub struct ListVotingsRequest {
-    pub page_req: PageRequest<(), ()>,
+    pub page_req: PageRequest<(), VotingSort>,
     pub query_delegation_proof_opt: Option<QueryDelegationProof>,
 }
 

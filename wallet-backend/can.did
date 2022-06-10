@@ -1131,8 +1131,21 @@ type GetVotingResponse = record {
     voting : Voting;
 };
 
+type VotingSort = variant {
+    None;
+    CreatedAt;
+    UpdatedAt;
+};
+
+type ListVotingsPageRequest = record {
+    page_index : nat32;
+    page_size : nat32;
+    filter : null;
+    sort : VotingSort;
+};
+
 type ListVotingsRequest = record {
-    page_req : PageRequest;
+    page_req : ListVotingsPageRequest;
     query_delegation_proof_opt : opt QueryDelegationProof;
 };
 
