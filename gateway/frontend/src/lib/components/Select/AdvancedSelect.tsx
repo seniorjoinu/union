@@ -142,6 +142,7 @@ export interface AdvancedSelectProps {
   children?: React.ReactNode;
   isDefaultOpened?: boolean;
   value: string[];
+  renderSelectedValue?(value: string[]): React.ReactNode | null | void;
   element?: React.ReactNode;
   onChange(value: string, obj: any): void;
 }
@@ -161,6 +162,7 @@ export const AdvancedSelect = React.forwardRef<HTMLDivElement, AdvancedSelectPro
       value,
       element,
       multiselect = true,
+      renderSelectedValue = (value) => value.join(',\n'),
     },
     ref,
   ) => {
@@ -193,7 +195,9 @@ export const AdvancedSelect = React.forwardRef<HTMLDivElement, AdvancedSelectPro
         >
           {element || (
             <>
-              <Selected>{value.join(',\n') || <Placeholder>{placeholder}</Placeholder>}</Selected>
+              <Selected>
+                {renderSelectedValue(value) || <Placeholder>{placeholder}</Placeholder>}
+              </Selected>
             </>
           )}
           <Icon />
@@ -210,6 +214,9 @@ export const AdvancedSelect = React.forwardRef<HTMLDivElement, AdvancedSelectPro
 const SelectedIcon = styled(Mark)``;
 
 const Option = styled.li`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
   position: relative;
   cursor: pointer;
   margin: 0;
@@ -224,6 +231,7 @@ const Option = styled.li`
     height: 9px;
     width: 9px;
     margin-right: 4px;
+    margin-top: 7px;
     transform: rotate(45deg);
   }
 

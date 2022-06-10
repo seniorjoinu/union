@@ -18,6 +18,7 @@ export interface AccordeonProps {
   timeout?: number;
   children: React.ReactNode;
   onToggle?(opened: boolean): void;
+  onClick?(e: React.MouseEvent<HTMLDivElement>): void;
 }
 
 export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
@@ -33,6 +34,7 @@ export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
       disabled = false,
       isDefaultOpened = false,
       onToggle = () => {},
+      onClick,
     },
     ref,
   ) => {
@@ -61,7 +63,7 @@ export const Accordeon = React.forwardRef<HTMLElement, AccordeonProps>(
           isStatic,
         }}
       >
-        <Container ref={ref} className={className} style={style} $border={border}>
+        <Container ref={ref} className={className} style={style} $border={border} onClick={onClick}>
           <HeaderHandler onClick={handleOpen} isStatic={isStatic}>
             <Header>
               <Title>{title}</Title>

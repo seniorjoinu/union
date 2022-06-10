@@ -10,6 +10,7 @@ import {
   AdvancedOption,
   TextField,
   Row,
+  Chips,
 } from '@union/components';
 import { useUnion } from 'services';
 import styled from 'styled-components';
@@ -28,6 +29,9 @@ import { normalizeValues } from '../../../IDLRenderer';
 import { useChoices } from './hook';
 import { ChoiceItem } from './ChoiceItem';
 
+const OptionContent = styled(Row)`
+  align-items: center;
+`;
 const Button = styled(SubmitButton)``;
 const ShareBlock = styled(Column)`
   padding: 8px;
@@ -320,16 +324,31 @@ export const Round = styled(
                 <AdvancedSelect
                   label='Voting on behalf of the group'
                   onChange={(_, info: Info) => field.onChange(info)}
-                  value={field.value?.group.name ? [field.value?.group.name] : []}
                   multiselect={false}
                   helperText={error?.message}
+                  value={field.value?.group.name ? [field.value?.group.name] : []}
+                  renderSelectedValue={() =>
+                    (field.value ? (
+                      <OptionContent>
+                        <span>{field.value.group.name}</span>
+                        <Chips variant='caption'>
+                          {String(field.value.shares_info.balance)} shares of{' '}
+                          {String(field.value.shares_info.total_supply)}
+                        </Chips>
+                      </OptionContent>
+                    ) : null)
+                  }
                 >
                   {shares.map((info) => (
-                    <AdvancedOption
-                      key={Number(info.group_id)}
-                      value={info.group.name}
-                      obj={info}
-                    />
+                    <AdvancedOption key={Number(info.group_id)} value={info.group.name} obj={info}>
+                      <OptionContent>
+                        <span>{info.group.name}</span>
+                        <Chips variant='caption'>
+                          {String(info.shares_info.balance)} shares of{' '}
+                          {String(info.shares_info.total_supply)}
+                        </Chips>
+                      </OptionContent>
+                    </AdvancedOption>
                   ))}
                 </AdvancedSelect>
               </ShareBlock>

@@ -9,7 +9,7 @@ import { ViewProps, ViewerSettings } from '../../IDLRenderer';
 import { ProfileInfo } from '../Profile';
 import { VotingConfigInfo } from '../VotingConfigs';
 import { StatusChips } from './atoms';
-import { ChoicesInfo } from './ChoicesInfo';
+import { WinnersChoicesInfo } from './WinnersChoicesInfo';
 
 const Title = styled(Row)`
   align-items: center;
@@ -132,7 +132,7 @@ export const VotingItem = styled(
         <Container>
           {children}
           <View value={voting} settings={settings} />
-          <ChoicesInfo voting={voting} unionId={unionId} />
+          <WinnersChoicesInfo voting={voting} unionId={unionId} />
         </Container>
       </Accordeon>
     );

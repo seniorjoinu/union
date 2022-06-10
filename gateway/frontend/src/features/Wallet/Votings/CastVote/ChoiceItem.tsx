@@ -183,6 +183,7 @@ export const ChoiceItem = styled(
                       </Text>
                     }
                     border='none'
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {origin}
                   </Accordeon>
@@ -237,6 +238,7 @@ export const ChoiceItem = styled(
               </Text>
             }
             border='none'
+            onClick={(e) => e.stopPropagation()}
           >
             <Column>
               {results.map((power) => {
