@@ -146,7 +146,7 @@ impl VotingService {
 
                 let choices: Vec<_> = voting
                     .get_choices()
-                    .into_iter()
+                    .iter()
                     .map(|id| Choice::repo().get(id).unwrap())
                     .collect();
 

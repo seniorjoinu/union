@@ -80,7 +80,7 @@ fn pre_upgrade_hook() {
 implement_cron!();
 // forms batches each 10 seconds, sized up to 2MB - this sets max program payload size for votings
 //implement_event_emitter!(secs(10), 2 * 1024 * 1024);
-implement_event_emitter!(0, 2 * 1024 * 1024);
+implement_event_emitter!(secs(3), 2 * 1024 * 1024);
 
 // TODO: only allow for gateway and history ledgers
 implement_subscribe!();
