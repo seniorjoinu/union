@@ -32,6 +32,8 @@ impl EventsService {
         result: ProgramExecutionResult,
         timestamp: u64,
     ) {
+        print("emit_program_executed_event()");
+
         emit(ProgramExecutedEvent_0 {
             timestamp,
             initiator,
@@ -52,6 +54,8 @@ impl EventsService {
         total_supply: Shares,
         timestamp: u64,
     ) {
+        print("emit_shares_mint_event()");
+
         emit(SharesMoveEvent {
             group_id,
             qty,
@@ -79,6 +83,8 @@ impl EventsService {
         total_supply: Shares,
         timestamp: u64,
     ) {
+        print("emit_shares_burn_event()");
+
         emit(SharesMoveEvent {
             group_id,
             qty,
@@ -107,6 +113,8 @@ impl EventsService {
         to_new_balance: Shares,
         timestamp: u64,
     ) {
+        print("emit_shares_transfer_event()");
+
         emit(SharesMoveEvent {
             group_id,
             qty,
@@ -168,6 +176,8 @@ impl EventsService {
 
 #[update]
 fn process_events(events: Vec<Event>) {
+    print("process_events() called");
+
     for event in events {
         match event.get_name().as_str() {
             "VotingRoundStartEvent" => {
@@ -214,6 +224,7 @@ fn process_events(events: Vec<Event>) {
                         .expect("Unable to emit voting round end event: ");
 
                         voting.add_winner(round_result);
+                        return;
                     }
 
                     if let Some(loser) = ev.losers {
