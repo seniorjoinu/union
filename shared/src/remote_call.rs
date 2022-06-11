@@ -6,7 +6,7 @@ use candid::ser::IDLBuilder;
 use candid::utils::{ArgumentDecoder, ArgumentEncoder};
 use candid::{decode_args, encode_args, CandidType, Deserialize, Principal};
 use ic_cdk::api::call::call_raw;
-use ic_cdk::id;
+use ic_cdk::{id, print};
 
 const WILDCARD: &str = "*";
 
@@ -23,22 +23,22 @@ impl RemoteCallEndpoint {
             method_name: String::from(method_name),
         }
     }
-    
+
     pub fn wildcard(canister_id: Principal) -> Self {
         Self {
             canister_id,
-            method_name: String::from(WILDCARD)
+            method_name: String::from(WILDCARD),
         }
     }
-    
+
     pub fn is_wildcard(&self) -> bool {
         self.method_name == WILDCARD
     }
-    
+
     pub fn to_wildcard(&self) -> Self {
         Self {
             canister_id: self.canister_id,
-            method_name: String::from(WILDCARD)
+            method_name: String::from(WILDCARD),
         }
     }
 }
@@ -187,6 +187,11 @@ impl Program {
                     let result = call.do_call_raw().await;
 
                     if result.is_err() {
+                        print(format!(
+                            "An error occured during a remote call to {:?}: {:?}",
+                            call.endpoint, result
+                        ));
+
                         results.push(result);
                         break;
                     } else {
