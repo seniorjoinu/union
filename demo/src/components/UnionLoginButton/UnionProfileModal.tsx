@@ -10,25 +10,44 @@ export interface UnionProfileModalProps {
 }
 
 export const UnionProfileModal = ({ visible, onClose, ...p }: UnionProfileModalProps) => {
-  const { execute, client, refresh } = useUnion();
+  const { getProgram, client, refresh } = useUnion();
 
   const handleSubmit = useCallback(
     async (data: ProfileModalData) => {
-      if (!data.name) {
+      if (!data.name.length) {
         return;
       }
 
-      execute(
-        'edit_profile',
-        [{ name: data.name, union_access_config_id: [], union_group_id: [] }],
-        {
-          title: 'Change profile name on Thoughter',
-          description: 'Change profile name',
+      const program = getProgram([
+        [
+          'edit_profile',
+          [
+            {
+              name: data.name,
+              union_access_config_id: data.unionAccessConfigId,
+              union_group_id: data.unionGroupId,
+            },
+          ],
+        ],
+      ]);
+
+      client.createVoting({
+        voting: {
+          name: 'Changing our name on Thoughter',
+          description: 'We want to change our public name',
+          winners_need: 1,
         },
-      );
+        choices: [
+          {
+            name: data.name[0],
+            description: 'I agree with that name',
+            program,
+          },
+        ],
+      });
       onClose();
     },
-    [onClose, execute],
+    [onClose, getProgram, client],
   );
 
   if (!client.union) {

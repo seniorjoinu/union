@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { get } from 'react-hook-form';
 import styled from 'styled-components';
 import { Voting } from 'union-ts';
-import { ViewProps, ViewerSettings } from '../../IDLRenderer';
+import { ViewProps, ViewerSettings, defaultFieldProps } from '../../IDLRenderer';
 import { ProfileInfo } from '../Profile';
 import { VotingConfigInfo } from '../VotingConfigs';
 import { StatusChips } from './atoms';
@@ -46,13 +46,13 @@ export const VotingItem = styled(
           name: { hide: true },
           id: { hide: true },
           task_id: { hide: true },
-          description: { order: 9, multiline: true },
+          description: { hide: true },
           proposer: {
             order: 10,
             adornment: {
               kind: 'replace',
               render: (ctx, path, name) => (
-                <Field title={name} weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
+                <Field title={name} {...defaultFieldProps}>
                   <ProfileInfo profileId={ctx.value.proposer} />
                 </Field>
               ),
@@ -65,12 +65,7 @@ export const VotingItem = styled(
             adornment: {
               kind: 'replace',
               render: (ctx, path, name) => (
-                <Field
-                  title={name}
-                  weight={{ title: 'medium' }}
-                  variant={{ title: 'p3', value: 'p3' }}
-                  align='row'
-                >
+                <Field title={name} {...defaultFieldProps} align='row'>
                   {moment(Number(ctx.value.created_at) / 10 ** 6).format("DD MMM'YY HH:mm:SS")}
                 </Field>
               ),
@@ -85,7 +80,7 @@ export const VotingItem = styled(
             adornment: {
               kind: 'replace',
               render: (ctx, path, name) => (
-                <Field title={name} weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
+                <Field title={name} {...defaultFieldProps}>
                   <VotingConfigInfo
                     votingConfigId={get(ctx.value, path)}
                     to={`../voting-configs/${get(ctx.value, path)}`}
@@ -94,7 +89,7 @@ export const VotingItem = styled(
               ),
             },
           },
-          status: { hide: true },
+          status: { order: 11 },
           approval_choice: {
             hide: true,
           },
@@ -134,6 +129,9 @@ export const VotingItem = styled(
       >
         <Container>
           {children}
+          <Text variant='p3' color='grey'>
+            {voting.description}
+          </Text>
           <View value={voting} settings={settings} />
           <WinnersChoicesInfo voting={voting} unionId={unionId} />
         </Container>

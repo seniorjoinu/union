@@ -1,14 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { PageWrapper, SubmitButton as SB } from '@union/components';
 import { CreateVotingRequest, _SERVICE } from 'union-ts';
 import { Controller } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { getMethodAccessVotingConfig, useUnion } from 'services';
 import { EditorSettings, useRender } from '../../../../IDLRenderer';
 import { useUnionSubmit, AnyService } from '../../../../../components/UnionSubmit';
 import { VotingConfigListField } from '../../../IDLFields';
-import { MessageData } from '../types';
+import { MessageData } from '../../../../useClient';
 
 const SubmitButton = styled(SB)``;
 const Container = styled(PageWrapper)`
@@ -38,11 +39,50 @@ export function CreateVotingForm({
     methodName: 'create_voting',
     onExecuted: (p, res) => nav(`../choices/${res.id.toString()}`, { state: data, replace: true }),
   });
+  const { canister } = useUnion(unionId);
+  const [filterConfigs, setFilterConfigs] = useState<bigint[] | undefined>(undefined);
 
   const { Form } = useRender<CreateVotingRequest>({
     canisterId: unionId,
     type: 'CreateVotingRequest',
   });
+
+  useEffect(() => {
+    if (!data || !data.choices) {
+      return;
+    }
+    const endpoints = data.choices
+      .map((c) =>
+        (c.program && 'RemoteCallSequence' in c.program
+          ? c.program.RemoteCallSequence.map((p) => p.endpoint)
+          : []),
+      )
+      .flat();
+
+    if (!endpoints.length) {
+      return;
+    }
+
+    Promise.all(
+      endpoints.map(async (e) =>
+        getMethodAccessVotingConfig({
+          canisterId: e.canister_id,
+          methodName: e.method_name,
+          canister,
+        }),
+      ),
+    )
+      .then((configs) => {
+        const first = configs[0] || [];
+
+        const res = first
+          .filter((c) => configs.find((cc) => cc.find((ccc) => ccc.id[0] == c.id[0])))
+          .map((c) => c.id[0]!);
+
+        return res;
+      })
+      .then(setFilterConfigs);
+  }, []);
 
   const settings: EditorSettings<CreateVotingRequest> = useMemo(
     () => ({
@@ -66,6 +106,7 @@ export function CreateVotingForm({
                     onChange={field.onChange}
                     value={field.value}
                     helperText={error?.message}
+                    allowOnly={filterConfigs}
                   />
                 )}
               />
@@ -74,7 +115,7 @@ export function CreateVotingForm({
         },
       },
     }),
-    [],
+    [filterConfigs],
   );
 
   return (

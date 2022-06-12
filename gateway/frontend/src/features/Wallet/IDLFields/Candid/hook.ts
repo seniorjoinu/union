@@ -4,6 +4,9 @@ import { Principal } from '@dfinity/principal';
 import { TId, TProg } from '@union/candid-parser';
 import { useRender } from '../../../IDLRenderer';
 
+// @ts-expect-error
+window.IDL = IDL; // FIXME
+
 export interface UseCandidArgsProps {
   canisterId: Principal;
   methodName: string;

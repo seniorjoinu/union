@@ -1,8 +1,5 @@
 import { Principal } from '@dfinity/principal';
-
-export type OpenerOptions = {
-  after?: 'close';
-};
+import { Message, OpenerOptions } from './types';
 export interface UnionWindowOpenerOptions {
   gateway?: Principal;
   providerUrl?: string;
@@ -13,14 +10,6 @@ export interface OpenProps<R = any, P = any> {
   payload?: P | null;
   options?: OpenerOptions;
   handleResponse?(data: R): void;
-}
-
-export interface MessageData {
-  origin: string;
-  target: string;
-  type: string;
-  payload: any;
-  options: OpenerOptions;
 }
 
 interface Cache<R, P> {
@@ -101,7 +90,7 @@ export class UnionWindowOpener {
     return url;
   };
 
-  private messageHandler = (e: MessageEvent<MessageData>) => {
+  private messageHandler = (e: MessageEvent<Message>) => {
     if (!e.data || e.data.target != 'union-client' || e.data.origin != 'union') {
       return;
     }
@@ -133,7 +122,7 @@ export class UnionWindowOpener {
     }
 
     const url = this.buildURL();
-    const data: MessageData = {
+    const data: Message = {
       target: 'union',
       origin: 'union-client',
       type: 'send-data',

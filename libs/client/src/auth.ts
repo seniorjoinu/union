@@ -1,5 +1,6 @@
 import { Principal } from '@dfinity/principal';
-import { UnionWindowOpener, UnionWindowOpenerOptions, OpenerOptions } from './opener';
+import { UnionWindowOpener, UnionWindowOpenerOptions } from './opener';
+import { OpenerOptions } from './types';
 
 export interface UnionWindowAuthorizerOptions extends UnionWindowOpenerOptions {}
 

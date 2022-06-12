@@ -40,7 +40,11 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
   const state = ctx.getFieldState(path);
   const enabled = !!ctx.getValues(path)?.length;
 
-  const disabled = p.disabled || settings.disabled;
+  const disabled = useMemo(() => p.disabled || settings.disabled, [p.disabled, settings.disabled]);
+  const name = useMemo(() => (typeof settings.label == 'string' ? settings.label : p.name), [
+    settings.label,
+    p.name,
+  ]);
 
   const component = useMemo(
     () =>
@@ -54,10 +58,14 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
       ),
     [type, path, absolutePath, settings, disabled],
   );
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
-  const defaultValue = !ctx.settings.defaultValue
-    ? type.accept(new Empty(), null)
-    : get(ctx.settings.defaultValue, `${path}${path ? '.' : ''}0`);
+
+  const defaultValue = useMemo(
+    () =>
+      (!ctx.settings.defaultValue
+        ? type.accept(new Empty(), null)
+        : get(ctx.settings.defaultValue, `${path}${path ? '.' : ''}0`)),
+    [ctx.settings.defaultValue, path, type],
+  );
 
   useEffect(() => {
     if (enabled) {
@@ -95,8 +103,9 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
 
-  useWatch({ name: path, control: ctx.control });
+  // useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
+  // const state = {} as any;
 
   const fieldOrders = useMemo(
     () =>
@@ -121,9 +130,12 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
     [fields, fieldOrders],
   );
 
-  const Wrapper = path ? ShiftedColumn : Column;
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
-  const disabled = p.disabled || settings.disabled;
+  const Wrapper = useMemo(() => (path ? ShiftedColumn : Column), [path]);
+  const name = useMemo(() => (typeof settings.label == 'string' ? settings.label : p.name), [
+    settings.label,
+    p.name,
+  ]);
+  const disabled = useMemo(() => p.disabled || settings.disabled, [p.disabled, settings.disabled]);
 
   // TODO upgrade order to indexed
   return (
@@ -173,7 +185,12 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
     return fields.find(([key]) => key == keys[0]) || null;
   }, [value, fields]);
 
-  const disabled = p.disabled || settings.disabled;
+  const Wrapper = useMemo(() => (path ? ShiftedColumn : Column), [path]);
+  const disabled = useMemo(() => p.disabled || settings.disabled, [p.disabled, settings.disabled]);
+  const name = useMemo(() => (typeof settings.label == 'string' ? settings.label : p.name), [
+    settings.label,
+    p.name,
+  ]);
 
   const selectedItem = useMemo(() => {
     if (!selected) {
@@ -201,9 +218,6 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
     },
     [ctx.setValue],
   );
-
-  const Wrapper = path ? ShiftedColumn : Column;
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <Column>
@@ -264,21 +278,23 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const settings = useSettings(path, absolutePath);
   const { append, remove } = useFieldArray({ name: path, control: ctx.control });
 
-  useWatch({ name: path, control: ctx.control });
+  // useWatch({ name: path, control: ctx.control });
   const items = ctx.getValues(path) || [];
   const state = ctx.getFieldState(path);
 
   // const Wrapper = path ? ShiftedColumn : Column;
   const Wrapper = ShiftedColumn;
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
+  const disabled = useMemo(() => p.disabled || settings.disabled, [p.disabled, settings.disabled]);
+  const name = useMemo(() => (typeof settings.label == 'string' ? settings.label : p.name), [
+    settings.label,
+    p.name,
+  ]);
 
   const handleAppend = useCallback(() => {
     const item = type.accept(new Empty(), null);
 
     append(Array.isArray(item) ? [item] : item);
   }, [append, type]);
-
-  const disabled = p.disabled || settings.disabled;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
@@ -325,10 +341,14 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
   const ctx = useContext(context);
   const settings = useSettings(path, absolutePath);
 
-  useWatch({ name: path, control: ctx.control });
+  // useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
 
-  const disabled = p.disabled || settings.disabled;
+  const disabled = useMemo(() => p.disabled || settings.disabled, [p.disabled, settings.disabled]);
+  const name = useMemo(() => (typeof settings.label == 'string' ? settings.label : p.name), [
+    settings.label,
+    p.name,
+  ]);
 
   const children = useMemo(
     () =>
@@ -345,7 +365,6 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
       ),
     [fields, path, settings],
   );
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>

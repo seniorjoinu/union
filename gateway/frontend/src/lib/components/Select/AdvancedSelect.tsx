@@ -14,7 +14,7 @@ const Tooltip = withBorder(
     background-color: ${({ theme }) => theme.colors.light};
   `,
   {
-    quadFillColor: 'rgba(0, 0,0, 0)',
+    quadFillColor: 'white',
   },
 );
 
@@ -105,7 +105,7 @@ const Container = styled.div<{ $disabled: boolean; $opened: boolean }>`
     & > div {
       max-height: 400px;
       overflow: auto;
-      z-index: 100;
+      /* z-index: 100; */
     }
   }
 

@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import styled from 'styled-components';
 import { get } from 'react-hook-form';
 import { NestedVotingConfig } from 'union-ts';
-import { ViewProps, ViewerSettings } from '../../../IDLRenderer';
+import { ViewProps, ViewerSettings, defaultFieldProps } from '../../../IDLRenderer';
 import { GroupInfo } from '../../Groups';
 import { VotingConfigInfo } from '../VotingConfigInfo';
 
@@ -63,7 +63,7 @@ export const NestedVotingConfigItem = styled(
             adornment: {
               kind: 'replace',
               render: (ctx, path) => (
-                <Field title='Parent config' weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
+                <Field title='Parent config' {...defaultFieldProps}>
                   <VotingConfigInfo
                     votingConfigId={get(ctx.value, path)?.Common}
                     nestedVotingConfigId={get(ctx.value, path)?.Nested}

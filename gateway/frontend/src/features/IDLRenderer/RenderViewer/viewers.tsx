@@ -3,7 +3,7 @@ import { IDL } from '@dfinity/candid';
 import { get } from 'react-hook-form';
 import { Field } from '@union/components';
 import { checkPrincipal } from 'toolkit';
-import { SettingsWrapper } from '../utils';
+import { SettingsWrapper, defaultFieldProps } from '../utils';
 import { RenderProps, context, useSettings } from './utils';
 
 export interface TypeFormProps extends RenderProps {
@@ -26,12 +26,7 @@ export const TypeForm = ({
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <Field
-        title={name}
-        weight={{ title: 'medium' }}
-        variant={{ title: 'p3', value: 'p3' }}
-        align='row'
-      >
+      <Field {...defaultFieldProps} title={name} align='row'>
         {transformValue(value)}
       </Field>
     </SettingsWrapper>

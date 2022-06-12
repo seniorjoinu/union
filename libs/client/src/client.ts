@@ -1,12 +1,11 @@
 import { Actor, HttpAgent } from '@dfinity/agent';
 import { IDL } from '@dfinity/candid';
-import { UnionWindowOpener, OpenerOptions, UnionWindowOpenerOptions } from './opener';
+import { UnionWindowOpener, UnionWindowOpenerOptions } from './opener';
 import { UnionWindowAuthorizer } from './auth';
-import { ExecuteRequest, _SERVICE } from './assets/union-wallet.did';
+import { _SERVICE } from './assets/union-wallet.did';
 // @ts-expect-error
 import { idlFactory as idl } from './assets/union-wallet.did.js';
-
-export type ExecuteRequestData = Partial<ExecuteRequest>;
+import { OpenerOptions, MessageData } from './types';
 
 export interface UnionClientOptions extends UnionWindowOpenerOptions {}
 
@@ -31,21 +30,32 @@ export class UnionClient {
 
   login = (...args: Parameters<UnionWindowAuthorizer['login']>) => this.auth.login(...args);
 
-  logout = (...args: Parameters<UnionWindowAuthorizer['logout']>) =>
-    this.auth.logout(...args);
+  logout = (...args: Parameters<UnionWindowAuthorizer['logout']>) => this.auth.logout(...args);
 
   view = () => {
     const opener = new UnionWindowOpener(this.options);
     opener.view(this.auth.union ? `/wallet/${this.auth.union.toString()}` : '/wallets');
   };
 
-  execute = (payload: ExecuteRequestData, options?: OpenerOptions) => {
+  execute = (payload: MessageData, options?: OpenerOptions) => {
     if (!this.auth.union) {
       throw 'Not authorized';
     }
     const opener = new UnionWindowOpener(this.options);
     opener.open({
-      path: `/wallet/${this.auth.union.toString()}/external-execute`,
+      path: `/wallet/${this.auth.union.toString()}/execution-history/external-execute`,
+      payload,
+      options,
+    });
+  };
+
+  createVoting = (payload: MessageData, options?: OpenerOptions) => {
+    if (!this.auth.union) {
+      throw 'Not authorized';
+    }
+    const opener = new UnionWindowOpener(this.options);
+    opener.open({
+      path: `/wallet/${this.auth.union.toString()}/votings/crud/external-execute`,
       payload,
       options,
     });

@@ -14,12 +14,13 @@ export interface TypeFormProps extends Omit<TextFieldProps & TextAreaProps, 'nam
   controlled?: boolean;
   rules?: ControllerProps['rules'];
 }
+
 export const TypeForm = ({
   idl,
   path,
   absolutePath,
-  transformValue = (v) => v,
-  parseValue = (v) => String(v),
+  transformValue: transform,
+  parseValue: parse,
   controlled = true,
   rules,
   ...p
@@ -27,6 +28,9 @@ export const TypeForm = ({
   const ctx = useContext(context);
   const { getValues, control } = ctx;
   const settings = useSettings(path, absolutePath);
+
+  const transformValue = useMemo(() => transform || ((v: string) => v), [transform]);
+  const parseValue = useMemo(() => parse || ((v: any) => String(v)), [parse]);
 
   const defaultValue = parseValue(getValues(path));
   const name = useMemo(
@@ -106,8 +110,11 @@ export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
   const ctx = useContext(context);
   const { control } = ctx;
   const settings = useSettings(path, absolutePath);
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
-  const disabled = p.disabled || settings.disabled;
+  const disabled = useMemo(() => p.disabled || settings.disabled, [p.disabled, settings.disabled]);
+  const name = useMemo(() => (typeof settings.label == 'string' ? settings.label : p.name), [
+    settings.label,
+    p.name,
+  ]);
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>

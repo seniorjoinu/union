@@ -127,7 +127,7 @@ export const Pager = <T extends {}, R extends FetchResponse<T> = FetchResponse<T
     () =>
       (data || [])
         .map((item, i) => {
-          const page = Math.ceil((i + 1) / 5) - 1;
+          const page = Math.ceil((i + 1) / size) - 1;
 
           return renderItem(item, extra[page]);
         })

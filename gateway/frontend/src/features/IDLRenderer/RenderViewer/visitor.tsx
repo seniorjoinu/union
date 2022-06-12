@@ -1,8 +1,8 @@
 import React, { useContext, useMemo } from 'react';
 import { IDL } from '@dfinity/candid';
-import { Field, Column, ShiftedColumn } from '@union/components';
+import { Field, Column, ShiftedColumn, Row } from '@union/components';
 import { get } from 'react-hook-form';
-import { SettingsWrapper, getSettings } from '../utils';
+import { SettingsWrapper, getSettings, defaultFieldProps } from '../utils';
 import { RenderProps, context, transformName, useSettings } from './utils';
 import { Viewer } from './viewers';
 
@@ -33,9 +33,8 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
       <Field
+        {...defaultFieldProps}
         title={name}
-        weight={{ title: 'medium' }}
-        variant={{ title: 'p3', value: 'p3' }}
         align={enabled ? 'column' : 'row'}
         color={enabled ? 'dark' : 'grey'}
       >
@@ -81,8 +80,8 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <Field title={name} weight={{ title: 'medium' }} variant={{ title: 'p3', value: 'p3' }}>
-        <Wrapper margin={16}>
+      <Field {...defaultFieldProps} title={name}>
+        <Wrapper margin={8}>
           {orderedFields.map(([key, field]) => {
             const currentPath = `${path}${path ? '.' : ''}${key}`;
 
@@ -137,11 +136,10 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
       <Field
+        {...defaultFieldProps}
         title={`${name || ''}${name && selected ? ': ' : ''}${
           selected ? ctx.transformLabel(selected[0], transformName) : ''
         }`}
-        variant={{ title: 'p3', value: 'p3' }}
-        weight={{ title: 'medium' }}
         align='column'
       >
         <Column>{selectedItem}</Column>
@@ -161,20 +159,26 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const value = path ? get(ctx.value, path) : ctx.value;
   const items = value || [];
 
-  // const Wrapper = path ? ShiftedColumn : Column;
-  const Wrapper = ShiftedColumn;
+  // const isSimpleValues = useMemo(
+  //   () => !items.find((i: any) => i !== null || ['function', 'object'].includes(typeof i)),
+  //   [items],
+  // );
+  const isSimpleValues = false;
+  const align = useMemo(() => {
+    if (isSimpleValues) {
+      return 'row';
+    }
+    return items.length ? 'column' : 'row';
+  }, [items, isSimpleValues]);
+
+  const VecWrapper = align == 'row' ? Row : Column;
   const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <Field
-        title={name}
-        weight={{ title: 'medium' }}
-        variant={{ title: 'p3', value: 'p3' }}
-        align={items?.length ? 'column' : 'row'}
-      >
+      <Field {...defaultFieldProps} title={name} align={align}>
         {items?.length ? (
-          <Column margin={16}>
+          <VecWrapper margin={8} style={{ flexWrap: 'wrap' }}>
             {items.map((_: any, i: number) => {
               const component = type.accept(
                 new RenderViewer({
@@ -185,12 +189,12 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
               );
 
               return (
-                <Wrapper withSeparator={false} key={String(i)}>
+                <ShiftedColumn withSeparator={false} key={String(i)}>
                   {component}
-                </Wrapper>
+                </ShiftedColumn>
               );
             })}
-          </Column>
+          </VecWrapper>
         ) : (
           'empty'
         )}
@@ -225,12 +229,7 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
-      <Field
-        title={name}
-        weight={{ title: 'medium' }}
-        variant={{ title: 'p3', value: 'p3' }}
-        align='column'
-      >
+      <Field {...defaultFieldProps} title={name} align='column'>
         {children}
       </Field>
     </SettingsWrapper>

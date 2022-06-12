@@ -7,7 +7,7 @@ import styled from 'styled-components';
 import { Voting } from 'union-ts';
 import { useUnion } from 'services';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
-import { ViewerSettings, useRender } from '../../IDLRenderer';
+import { ViewerSettings, useRender, defaultFieldProps } from '../../IDLRenderer';
 import { ProfileInfo } from '../Profile';
 import { VotingConfigInfo } from '../VotingConfigs';
 import { useUnionSubmit } from '../../../components/UnionSubmit';
@@ -72,13 +72,13 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
         id: { hide: true },
         task_id: { hide: true },
         description: { hide: true, order: 9, multiline: true },
-        status: { hide: true },
+        status: { order: 11 },
         proposer: {
           order: 12,
           adornment: {
             kind: 'replace',
             render: (ctx, path, name) => (
-              <Field title={name} weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
+              <Field title={name} {...defaultFieldProps}>
                 <ProfileInfo profileId={ctx.value.proposer} />
               </Field>
             ),
@@ -89,12 +89,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
           adornment: {
             kind: 'replace',
             render: (ctx, path, name) => (
-              <Field
-                title={name}
-                weight={{ title: 'medium' }}
-                variant={{ title: 'p3', value: 'p3' }}
-                align='row'
-              >
+              <Field title={name} {...defaultFieldProps} align='row'>
                 {moment(Number(ctx.value.created_at) / 10 ** 6).format("DD MMM'YY HH:mm:SS")}
               </Field>
             ),
@@ -110,7 +105,7 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
           adornment: {
             kind: 'replace',
             render: (ctx, path, name) => (
-              <Field title={name} weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
+              <Field title={name} {...defaultFieldProps}>
                 <VotingConfigInfo
                   votingConfigId={get(ctx.value, path)}
                   to={`../voting-configs/${get(ctx.value, path)}`}
@@ -177,13 +172,13 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
       <Chipses>
         <StatusChips variant='caption' weight='medium' status={voting.status} />
       </Chipses>
-      <Field>{voting.description}</Field>
+      <Field {...defaultFieldProps}>{voting.description}</Field>
       <Accordeon title='Details'>
         <View style={{ padding: '8px 0' }} value={voting} settings={settings} />
       </Accordeon>
       <WinnersChoicesInfo voting={voting} unionId={unionId} variant='h5' />
       <CastVote unionId={unionId} voting={voting} onVoted={() => nav('', { replace: true })} />
-      {/* <Field title='Nested votings' weight={{ title: 'medium' }} variant={{ title: 'p3' }}>
+      {/* <Field title='Nested votings' {...defaultFieldProps}>
         <NestedVotingConfigs parentVotingConfig={votingConfig.id[0]} />
       </Field> */}
     </Container>

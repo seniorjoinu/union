@@ -26,7 +26,7 @@ export const UserProfileModal = ({ visible, onClose, onSubmit, ...p }: UserProfi
     refresh();
   }, [refresh]);
 
-  const computedVisible = (!!data.get_profile && !data.get_profile.name) || visible;
+  const computedVisible = (!!data.get_profile && !data.get_profile.name.length) || visible;
 
   const handleSubmit = useCallback(
     async (data: ProfileModalData) => {
@@ -37,7 +37,7 @@ export const UserProfileModal = ({ visible, onClose, onSubmit, ...p }: UserProfi
       await canister.edit_profile({
         name: data.name,
         union_group_id: data.unionGroupId,
-        union_access_config_id: data.unionAccessConfigId
+        union_access_config_id: data.unionAccessConfigId,
       });
       refresh();
       onSubmit();

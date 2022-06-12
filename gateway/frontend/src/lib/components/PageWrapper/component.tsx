@@ -38,7 +38,7 @@ const Container = styled.div`
 
   ${BackButton} {
     position: absolute;
-    top: 12px;
+    top: 8px;
     left: -24px;
     transform: translateX(-100%);
   }

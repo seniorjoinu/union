@@ -68,7 +68,7 @@ export const GroupInfo = styled(
     to,
     shares,
     mode = 'short',
-    variant,
+    variant = 'p3',
     chips = [],
     verbose,
     children,

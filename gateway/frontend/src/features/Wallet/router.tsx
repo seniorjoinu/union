@@ -21,7 +21,7 @@ import {
 import { Permissions, CreatePermissionForm, UpdatePermissionForm } from './Permissions';
 import { AccessConfigs, CreateAccessConfigForm, UpdateAccessConfigForm } from './AccessConfigs';
 import { Votings, VotingPage, VotingRouter } from './Votings';
-import { ExecutionHistory, CreateExecution } from './ExecutionHistory';
+import { ExecutionRouter } from './ExecutionHistory';
 import {
   VotingConfigs,
   CreateVotingConfigForm,
@@ -90,9 +90,7 @@ export const Wallet = () => {
             element={<UpdateNestedVotingConfigForm />}
           />
 
-          <Route path='/execution-history' element={<ExecutionHistory />} />
-          <Route path='/execution-history/:executionId' element={<ExecutionHistory />} />
-          <Route path='/execution-history/create' element={<CreateExecution />} />
+          <Route path='/execution-history/*' element={<ExecutionRouter unionId={principal} />} />
 
           <Route path='/profile' element={<Profile />} />
           <Route path='/profile/invite' element={<InviteForm />} />

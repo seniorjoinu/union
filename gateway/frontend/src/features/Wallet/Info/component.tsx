@@ -5,6 +5,7 @@ import { useGateway, useUnion } from 'services';
 import { NavLink } from 'react-router-dom';
 import moment from 'moment';
 import { useCurrentUnion } from '../context';
+import { defaultFieldProps } from '../../IDLRenderer';
 
 const Field = styled(F)``;
 const Button = styled(SB)``;
@@ -85,22 +86,22 @@ export const Info = ({ ...p }: InfoProps) => {
       {!!fetching.get_settings && <Text>fetching...</Text>}
       {settings && (
         <>
-          <Field title='ID' align='row'>
+          <Field title='ID' align='row' {...defaultFieldProps}>
             {principal.toString()}
           </Field>
-          <Field title='Name' align='row'>
+          <Field title='Name' align='row' {...defaultFieldProps}>
             {settings.name}
           </Field>
-          <Field title='Description' align='row'>
+          <Field title='Description' align='row' {...defaultFieldProps}>
             {settings.description}
           </Field>
-          <Field title='Version' align='row'>
+          <Field title='Version' align='row' {...defaultFieldProps}>
             ?
           </Field>
-          <Field title='Balance' align='row'>
+          <Field title='Balance' align='row' {...defaultFieldProps}>
             ?
           </Field>
-          <Field title='Storage' align='row'>
+          <Field title='Storage' align='row' {...defaultFieldProps}>
             ?
           </Field>
           {settings.history_ledgers.map((ledger, i) => {
@@ -109,15 +110,25 @@ export const Info = ({ ...p }: InfoProps) => {
             );
 
             return (
-              <Field key={String(i)} title={`Ledger #${i}`}>
+              <Field
+                key={String(i)}
+                title={`Ledger #${i}`}
+                {...defaultFieldProps}
+                weight={{ title: 'medium' }}
+              >
                 {ledger.records.map((r, j) => (
-                  <Field key={r.toString()} title={`Record #${j}`} align='row'>
+                  <Field
+                    key={r.toString()}
+                    title={`Canister id #${j}`}
+                    align='row'
+                    {...defaultFieldProps}
+                  >
                     {r.toString()}
                   </Field>
                 ))}
 
-                <Field title='Timestamp' align='row'>
-                  Timestamp: {timestamp}
+                <Field title='Timestamp' align='row' {...defaultFieldProps}>
+                  {timestamp}
                 </Field>
               </Field>
             );

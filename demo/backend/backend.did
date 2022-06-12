@@ -132,8 +132,10 @@ service: {
     content: blob; // may be the entirety of the content, or just chunk index 0
     content_type: text;
     content_encoding: text;
-    sha256: opt blob; // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
-    total_length: nat; // all chunks except last have size == content.size()
+    // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
+    sha256: opt blob;
+    // all chunks except last have size == content.size()
+    total_length: nat;
   }) query;
 
   // if get() returned chunks > 1, call this to retrieve them.
@@ -142,8 +144,9 @@ service: {
     key: Key;
     content_encoding: text;
     index: nat;
-    sha256: opt blob;  // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
-  }) -> (record { content: blob }) query;
+    // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
+    sha256: opt blob;
+  }) -> (record { content: blob; }) query;
 
   list : (record {}) -> (vec record {
     key: Key;
@@ -156,12 +159,12 @@ service: {
     };
   }) query;
 
-  create_batch : (record {}) -> (record { batch_id: BatchId });
+  create_batch : (record {}) -> (record { batch_id: BatchId; });
 
-  create_chunk: (record { batch_id: BatchId; content: blob; sha256: opt blob }) -> (record { chunk_id: ChunkId });
+  create_chunk: (record { batch_id: BatchId; content: blob; sha256: opt blob; }) -> (record { chunk_id: ChunkId; });
 
   // Perform all operations successfully, or reject
-  commit_batch: (record { batch_id: BatchId; operations: vec BatchOperationKind }) -> ();
+  commit_batch: (record { batch_id: BatchId; operations: vec BatchOperationKind; }) -> ();
 
   create_asset: (CreateAssetArguments) -> ();
   set_asset_content: (SetAssetContentArguments) -> ();
@@ -178,7 +181,7 @@ service: {
     content_type: text;
     content_encoding: text;
     content: blob;
-    sha256: opt blob
+    sha256: opt blob;
   }) -> ();
 
   http_request: (request: HttpRequest) -> (HttpResponse) query;

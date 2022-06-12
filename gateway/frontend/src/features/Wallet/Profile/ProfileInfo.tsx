@@ -42,7 +42,7 @@ export interface ProfileInfoProps {
 }
 
 export const ProfileInfo = styled(
-  ({ profileId, to, variant = 'p2', mode = 'short', chips = [], ...p }: ProfileInfoProps) => {
+  ({ profileId, to, variant = 'p3', mode = 'short', chips = [], ...p }: ProfileInfoProps) => {
     const { principal } = useCurrentUnion();
     const { canister, data, fetching } = useUnion(principal);
 

@@ -2,6 +2,7 @@ import { Accordeon, Column as C, Field, Text } from '@union/components';
 import React, { useEffect, useMemo, useRef } from 'react';
 import styled from 'styled-components';
 import { AccessConfig, GroupCondition, ProfileId } from 'union-ts';
+import { defaultFieldProps } from '../../IDLRenderer';
 import { GroupInfo } from '../Groups';
 import { ProfileInfo } from '../Profile';
 import { PermissionInfo } from '../Permissions';
@@ -72,15 +73,25 @@ export const AccessConfigItem = styled(
       <Accordeon title={accessConfig.name} ref={ref} isDefaultOpened={opened} {...p}>
         <Container>
           {children}
-          <Field variant={{ value: 'p3' }}>{accessConfig.description}</Field>
-          <Field title='Allowees' weight={{ title: 'medium' }}>
+          <Field {...defaultFieldProps}>{accessConfig.description}</Field>
+          <Field title='Allowees' {...defaultFieldProps} weight={{ title: 'medium' }}>
             {!accessConfig.allowees.length && (
               <Zeroscreen variant='p3'>Allowees are not attached</Zeroscreen>
             )}
-            {!!everyones.length && <Field title='Everyone' variant={{ value: 'p3' }} />}
+            {!!everyones.length && (
+              <Field
+                title='Everyone'
+                variant={{ title: 'p3', value: 'p3' }}
+                weight={{ title: 'medium' }}
+              />
+            )}
             {/* {!!everyones.length && <Field title='Everyone' variant={{ value: 'p3' }} />} */}
             {!!groups.length && (
-              <Field title='Groups' variant={{ value: 'p3' }}>
+              <Field
+                title='Groups'
+                variant={{ title: 'p3', value: 'p3' }}
+                weight={{ title: 'medium' }}
+              >
                 <Column>
                   {groups.map((g) => (
                     <GroupInfo
@@ -95,7 +106,11 @@ export const AccessConfigItem = styled(
               </Field>
             )}
             {!!profiles.length && (
-              <Field title='Profiles' variant={{ value: 'p3' }}>
+              <Field
+                title='Profiles'
+                variant={{ title: 'p3', value: 'p3' }}
+                weight={{ title: 'medium' }}
+              >
                 <Column>
                   {profiles.map((p, i) => (
                     <ProfileInfo key={`${p.toString()}${i}`} profileId={p} />
@@ -104,7 +119,7 @@ export const AccessConfigItem = styled(
               </Field>
             )}
           </Field>
-          <Field title='Permissions' weight={{ title: 'medium' }}>
+          <Field title='Permissions' {...defaultFieldProps} weight={{ title: 'medium' }}>
             {!accessConfig.permissions.length && (
               <Zeroscreen variant='p3'>Permissions are not attached</Zeroscreen>
             )}

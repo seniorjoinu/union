@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { authClient, Canister, CanisterProps, useCanister } from 'toolkit';
 import { buildSerializer, buildEncoder, buildDecoder } from '@union/serialize';
-import { AccessConfig, _SERVICE } from 'union-ts';
+import { AccessConfig, VotingConfig, _SERVICE } from 'union-ts';
 // @ts-expect-error
 import { idlFactory as idl } from 'union-idl';
 import { Principal } from '@dfinity/principal';
@@ -70,6 +70,7 @@ const getMethodAccessConfig = async ({
     query_delegation_proof_opt: [],
   });
 
+  // TODO optimize
   let accessConfigs: AccessConfig[] = [];
   for (const permission of permissions) {
     if (typeof permission.id[0] == 'undefined') {
@@ -98,6 +99,53 @@ const getMethodAccessConfig = async ({
   }
 
   return accessConfigs;
+};
+
+export const getMethodAccessVotingConfig = async ({
+  canister,
+  methodName,
+  canisterId,
+}: Omit<GetMethodAccessConfigProps, 'profile'>) => {
+  const {
+    page: { data: permissions },
+  } = await canister.list_permissions({
+    page_req: {
+      page_index: 0,
+      page_size: 100, // FIXME resolve paging
+      sort: null,
+      filter: { target: [{ Endpoint: { canister_id: canisterId, method_name: methodName } }] },
+    },
+    query_delegation_proof_opt: [],
+  });
+
+  // TODO optimize
+  let configs: VotingConfig[] = [];
+  for (const permission of permissions) {
+    if (typeof permission.id[0] == 'undefined') {
+      continue;
+    }
+
+    const {
+      page: { data },
+    } = await canister.list_voting_configs({
+      page_req: {
+        page_index: 0,
+        page_size: 10,
+        sort: null,
+        filter: {
+          permission: [permission.id[0]],
+          group: [],
+        },
+      },
+      query_delegation_proof_opt: [],
+    });
+    if (!!data.length) {
+      configs = data;
+      break;
+    }
+  }
+
+  return configs;
 };
 
 export const unionSerializer = buildSerializer<_SERVICE>(idl);

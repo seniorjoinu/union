@@ -85,8 +85,7 @@ export const NestedVotingConfigs = styled(
                   // endAdornment={
                   //   <Field
                   //     title='Nested voting configs'
-                  //     weight={{ title: 'medium' }}
-                  //     variant={{ title: 'p3' }}
+                  //     {...defaultFieldProps}
                   //   >
                   //     <NestedVotingConfigs parentNestedVotingConfig={item.id[0]} />
                   //   </Field>

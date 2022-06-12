@@ -9,6 +9,8 @@ yarn build
 # yarn build
 cd ../candid-parser
 yarn build
+cd ../client
+yarn build
 cd ../../gateway/frontend
 
 cp ../../deployer-backend/canister/.dfx/local/canisters/union-deployer/union-deployer.did.d.ts ./src/assets/union-deployer.did.d.ts

@@ -73,11 +73,11 @@ export const VotingConfigInfo = styled(
     return (
       <Container {...p}>
         {to ? (
-          <Text variant='p2' as={NavLink} to={to}>
+          <Text variant='p3' as={NavLink} to={to}>
             {config.name}
           </Text>
         ) : (
-          <Text variant='p2'>{config.name}</Text>
+          <Text variant='p3'>{config.name}</Text>
         )}
         <Text variant='p3'>{config.description}</Text>
       </Container>

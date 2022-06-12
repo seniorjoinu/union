@@ -1,10 +1,9 @@
 import React from 'react';
 import { Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { Principal } from '@dfinity/principal';
+import { ExternalForm, InternalForm } from '../../../useClient';
 import { CreateVotingForm, UpdateVotingForm } from './VotingForm';
 import { MultipleChoicesForm, CreateChoiceForm, UpdateChoiceForm } from './ChoicesForm';
-import { ExternalVotingForm } from './External';
-import { InternalVotingForm } from './Internal';
 
 export const VotingRouter = ({ unionId }: { unionId: Principal }) => {
   const nav = useNavigate();
@@ -14,33 +13,32 @@ export const VotingRouter = ({ unionId }: { unionId: Principal }) => {
       <Route
         path='/execute'
         element={
-          <InternalVotingForm
-            required
-            unionId={unionId}
-            onSuccess={() => nav('../votings', { replace: true })}
-          >
-            {(props, data) => <CreateVotingForm {...props} unionId={unionId} data={data} />}
-          </InternalVotingForm>
+          <InternalForm required>
+            {(data) => (
+              <CreateVotingForm
+                unionId={unionId}
+                onSuccess={() => nav('../votings', { replace: true })}
+                data={data}
+              />
+            )}
+          </InternalForm>
         }
       />
       <Route
         path='/external-execute'
         element={
-          <ExternalVotingForm
-            unionId={unionId}
-            redirectToHistory={() => nav('../votings', { replace: true })}
-          >
-            {(props, data, onSuccess) => (
-              <CreateVotingForm {...props} data={data} onSuccess={onSuccess} />
+          <ExternalForm redirectToHistory={() => nav('../votings', { replace: true })}>
+            {(data, onSuccess) => (
+              <CreateVotingForm unionId={unionId} data={data} onSuccess={onSuccess} />
             )}
-          </ExternalVotingForm>
+          </ExternalForm>
         }
       />
       <Route
         path='/choices/:votingId'
         element={
-          <InternalVotingForm required={false} unionId={unionId}>
-            {(props, data) => {
+          <InternalForm required={false}>
+            {(data) => {
               const { votingId } = useParams();
 
               return (
@@ -51,14 +49,14 @@ export const VotingRouter = ({ unionId }: { unionId: Principal }) => {
                 />
               );
             }}
-          </InternalVotingForm>
+          </InternalForm>
         }
       />
-      <Route
+      {/* <Route
         path='/nested-choices/:votingId'
         element={
-          <InternalVotingForm required={false} unionId={unionId}>
-            {(props, data) => {
+          <InternalForm required={false}>
+            {(data) => {
               const { votingId } = useParams();
 
               return (
@@ -69,9 +67,9 @@ export const VotingRouter = ({ unionId }: { unionId: Principal }) => {
                 />
               );
             }}
-          </InternalVotingForm>
+          </InternalForm>
         }
-      />
+      /> */}
       <Route
         path='/choice/create/:votingId'
         element={<CreateChoiceForm unionId={unionId} onSuccess={() => nav(-1)} />}

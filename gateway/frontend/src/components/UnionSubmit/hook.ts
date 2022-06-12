@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Unpromise } from 'toolkit';
 import { Principal } from '@dfinity/principal';
 import { buildDecoder, buildEncoder } from '@union/serialize';
+import { MessageData } from '@union/client';
 
 export interface AnyService {
   [key: string]: (...args: any[]) => any;
@@ -141,15 +142,52 @@ export const useUnionSubmit = <
   );
 
   const createVoting = useCallback(
-    (payload: P) => {
-      const state = {
-        methodName,
-        payload,
+    async (payload: P) => {
+      const principal = identity?.getPrincipal();
+      let name = principal ? principal.toString() : '';
+      if (principal) {
+        try {
+          const profileName = (
+            await canister.get_profile({ id: principal, query_delegation_proof_opt: [] })
+          )?.profile.name;
+          name = `${profileName} (${name})`;
+        } catch (e) {}
+      }
+
+      const encoder = buildEncoder(unionIdl) as Encoder;
+
+      console.log(`\x1b[33mcreate voting [${methodName}]`, payload);
+      const encoded = encode ? encode(payload) : encoder[methodName](...(payload || []));
+
+      const state: MessageData = {
+        voting: {
+          name: `Execution of ${methodName}`,
+          description: `User "${name}" propose to execute "${methodName}". This is automatic messsage.`,
+          winners_need: 1,
+        },
+        choices: [
+          {
+            name: `Approve method execution`,
+            description: `I agree with execution of "${methodName}"`,
+            program: {
+              RemoteCallSequence: [
+                {
+                  endpoint: {
+                    canister_id: canisterId,
+                    method_name: methodName,
+                  },
+                  cycles: BigInt(0),
+                  args: { Encoded: [...new Uint8Array(encoded)] },
+                },
+              ],
+            },
+          },
+        ],
       };
 
-      nav(`/wallet/${unionId}/execute`, { state });
+      nav(`/wallet/${unionId}/votings/crud/execute`, { state });
     },
-    [methodName, unionId, canisterId],
+    [methodName, unionId, canisterId, identity, encode],
   );
 
   const isAllowed = !!methodAccess[methodName]?.length;

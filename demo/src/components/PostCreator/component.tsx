@@ -91,7 +91,7 @@ export interface PostCreatorProps {
 export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) => {
   const [mode, setMode] = useState('write');
   const { canister, fetching } = useBackend();
-  const { authorized, execute } = useUnion();
+  const { authorized, client, getProgram } = useUnion();
   const {
     control,
     setValue,
@@ -114,13 +114,26 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
   const handlePublishFrom = useCallback(async () => {
     const { content } = getValues();
 
-    await execute('add_post', [{ content }], {
-      title: 'Publish post on Thoughter',
+    const program = getProgram([['add_post', [{ content }]]]);
+
+    await client.createVoting({
+      voting: {
+        name: 'Posting on Thoughter',
+        description: 'We want to tell the world our thoughts on behalf of our union',
+        winners_need: 1,
+      },
+      choices: [
+        {
+          name: 'Publish content',
+          description: content,
+          program,
+        },
+      ],
     });
 
     setValue('content', '', { shouldValidate: true });
     onSuccess();
-  }, [execute, getValues, setValue, onSuccess]);
+  }, [client, getProgram, getValues, setValue, onSuccess]);
 
   return (
     <Container {...p}>
@@ -162,10 +175,7 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
           Publish
         </SubmitButton>
         {authorized && (
-          <SubmitButton
-            disabled={!isValid || !!fetching.add_post}
-            onClick={handlePublishFrom}
-          >
+          <SubmitButton disabled={!isValid || !!fetching.add_post} onClick={handlePublishFrom}>
             Publish from union
           </SubmitButton>
         )}

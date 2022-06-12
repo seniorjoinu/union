@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
+import { useTrigger } from '../toolkit/useTrigger';
 import { AdvancedSelect as AS, AdvancedSelectProps, AdvancedOption } from './Select';
 import { Pager, PagerProps, pagerLayout } from './Pager';
 
@@ -29,6 +30,7 @@ export interface EntitySelectProps<T>
     Omit<PagerProps<T>, 'renderItem'> {
   valueGetter(item: T): string;
   value: string[] | ((entities: T[]) => string[]);
+  renderItem?: (item: T, origin: React.ReactNode) => React.ReactNode;
 }
 
 export const EntitySelect = <T extends {}>({
@@ -37,6 +39,7 @@ export const EntitySelect = <T extends {}>({
   verbose,
   valueGetter,
   value: propValue,
+  renderItem = (_, origin) => origin,
   ...p
 }: EntitySelectProps<T>) => {
   // FIXME bad practice
@@ -49,12 +52,26 @@ export const EntitySelect = <T extends {}>({
     return propValue(entities);
   }, [entities, propValue]);
 
+  useTrigger(
+    () => {
+      if (entities.length != 1 || size == 1) {
+        return;
+      }
+
+      p.onChange(valueGetter(entities[0]), entities[0]);
+    },
+    entities[0],
+    [entities, size, p.onChange, valueGetter],
+  );
+
   return (
     <AdvancedSelect {...p} value={value}>
       <Pager
         size={size}
         fetch={fetch}
-        renderItem={(item: T) => <AdvancedOption value={valueGetter(item)} obj={item} />}
+        renderItem={(item: T) =>
+          renderItem(item, <AdvancedOption value={valueGetter(item)} obj={item} />)
+        }
         onEntitiesChanged={setEntities}
       />
     </AdvancedSelect>

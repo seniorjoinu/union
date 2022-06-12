@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import styled from 'styled-components';
 import { get } from 'react-hook-form';
 import { VotingConfig } from 'union-ts';
-import { ViewProps, ViewerSettings } from '../../IDLRenderer';
+import { ViewProps, ViewerSettings, defaultFieldProps } from '../../IDLRenderer';
 import { PermissionInfo } from '../Permissions';
 import { GroupInfo } from '../Groups';
 import { computeTime } from '../IDLFields';
@@ -103,12 +103,7 @@ export const VotingConfigItem = styled(
                 const value = get(ctx.value, path);
 
                 return (
-                  <Field
-                    title={name}
-                    weight={{ title: 'medium' }}
-                    variant={{ title: 'p3', value: 'p3' }}
-                    align='row'
-                  >
+                  <Field title={name} {...defaultFieldProps} align='row'>
                     {computeTime(value)}
                   </Field>
                 );
@@ -122,12 +117,7 @@ export const VotingConfigItem = styled(
                 const value = get(ctx.value, path);
 
                 return (
-                  <Field
-                    title={name}
-                    weight={{ title: 'medium' }}
-                    variant={{ title: 'p3', value: 'p3' }}
-                    align='row'
-                  >
+                  <Field title={name} {...defaultFieldProps} align='row'>
                     {computeTime(value)}
                   </Field>
                 );
@@ -146,8 +136,7 @@ export const VotingConfigItem = styled(
           <View value={votingConfig} settings={settings} />
           {/* <Field
             title='Nested voting configs'
-            weight={{ title: 'medium' }}
-            variant={{ title: 'p3' }}
+            {...defaultFieldProps}
           >
             <NestedVotingConfigs parentVotingConfig={votingConfig.id[0]} />
           </Field> */}

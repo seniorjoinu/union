@@ -16,6 +16,7 @@
   "dependencies": {
     "@union/serialize": "*",
     "@union/candid-parser": "*",
+    "@union/client": "*",
     "@dfinity/agent": "^0.10.4",
     "@dfinity/auth-client": "^0.10.4",
     "@dfinity/authentication": "^0.10.4",

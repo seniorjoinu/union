@@ -94,7 +94,7 @@ export const PostView = ({ post, ...p }: PostViewProps) => {
     canister.get_profile(post.author);
   }, []);
 
-  const profileName = useMemo(() => data.get_profile?.name, [!!data.get_profile?.name]);
+  const profileName = useMemo(() => data.get_profile?.name[0], [!!data.get_profile?.name]);
 
   const heartDisabled =
     !principal || principal.isAnonymous() || !data.get_activity || !!fetching.get_activity;
@@ -121,15 +121,16 @@ export const PostView = ({ post, ...p }: PostViewProps) => {
 
     setOptimisticHeart(!liked);
 
-    canister.set_activity({
-      post_id: post.id,
-      heart: [!liked],
+    canister
+      .set_activity({
+        post_id: post.id,
+        heart: [!liked],
 
-      // FIXME: login to union and put here your principal from there OR create a field, where the user can prompt this principal by themself;
-      //  only required when you want to receive shares by liking posts
-      alias_principal: [],
-    }).then(refreshActivity);
-
+        // FIXME: login to union and put here your principal from there OR create a field, where the user can prompt this principal by themself;
+        //  only required when you want to receive shares by liking posts
+        alias_principal: [],
+      })
+      .then(refreshActivity);
   }, [heartDisabled, liked, canister, post, refreshActivity, setOptimisticHeart]);
 
   const createdAt = useMemo(

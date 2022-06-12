@@ -5,12 +5,11 @@ import moment from 'moment';
 import React, { useEffect, useMemo } from 'react';
 import { useHistoryLedger } from 'services';
 import styled from 'styled-components';
-import { useRender, ViewerSettings } from '../../IDLRenderer';
+import { defaultFieldProps, useRender, ViewerSettings } from '../../IDLRenderer';
 import { AccessConfigInfo } from '../AccessConfigs';
 import { ProfileInfo } from '../Profile';
 import { VotingConfigInfo } from '../VotingConfigs';
 import { ExecutionItemProgram } from './ExecutionItemProgram';
-import { ExecutionItemResults } from './ExecutionItemResults';
 
 const Header = styled(Row)`
   & > ${Text}:first-child {
@@ -59,12 +58,7 @@ export const ExecutionItem = styled(({ id, ledger, children, ...p }: ExecutionIt
           adornment: {
             kind: 'replace',
             render: (ctx) => (
-              <Field
-                title='Initiator'
-                weight={{ title: 'medium' }}
-                variant={{ title: 'p3', value: 'p3' }}
-                align='row'
-              >
+              <Field {...defaultFieldProps} title='Initiator' align='row'>
                 <ProfileInfo profileId={ctx.value.initiator} variant='p3' />
               </Field>
             ),
@@ -93,12 +87,7 @@ export const ExecutionItem = styled(({ id, ledger, children, ...p }: ExecutionIt
               }
 
               return (
-                <Field
-                  title='Program executed with'
-                  weight={{ title: 'medium' }}
-                  variant={{ title: 'p3', value: 'p3' }}
-                  align='column'
-                >
+                <Field {...defaultFieldProps} title='Program executed with' align='column'>
                   {info}
                 </Field>
               );
@@ -127,13 +116,6 @@ export const ExecutionItem = styled(({ id, ledger, children, ...p }: ExecutionIt
     [id],
   );
 
-  const endpoints = useMemo(() => {
-    if (!program || 'Empty' in program) {
-      return [];
-    }
-    return program.RemoteCallSequence.map((p) => p.endpoint);
-  }, [program]);
-
   if (!meta) {
     return (
       <Container {...p}>
@@ -157,27 +139,18 @@ export const ExecutionItem = styled(({ id, ledger, children, ...p }: ExecutionIt
       <Accordeon
         title={
           <Text variant='p3' weight='medium'>
-            Program
+            Program and results
           </Text>
         }
         {...p}
       >
         <ExecutionItemProgram
+          id={id}
           meta={meta}
           program={program}
           fetching={!!fetching.get_program_execution_entry_program}
           ledger={ledger}
         />
-      </Accordeon>
-      <Accordeon
-        title={
-          <Text variant='p3' weight='medium'>
-            Results
-          </Text>
-        }
-        {...p}
-      >
-        <ExecutionItemResults id={id} meta={meta} ledger={ledger} endpoints={endpoints} />
       </Accordeon>
     </Container>
   );

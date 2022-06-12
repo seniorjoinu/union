@@ -4,6 +4,7 @@ import { PageWrapper, SubmitButton as B, Field as F, Column, Text } from '@union
 import { useGateway, useUnion } from 'services';
 import { useNavigate } from 'react-router-dom';
 import { HAS_PROFILE_GROUP_ID } from 'envs';
+import { defaultFieldProps } from '../../IDLRenderer';
 import { useCurrentUnion } from '../context';
 import { ProfileGroupInfo } from './ProfileGroupInfo';
 
@@ -26,7 +27,7 @@ const Container = styled(PageWrapper)`
   }
 
   ${Field} {
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 `;
 
@@ -95,10 +96,10 @@ export const Profile = ({ ...p }: ProfileProps) => {
           </>
         )}
       </Controls>
-      <Field title='Profile name' align='row'>
+      <Field title='Profile name' align='row' {...defaultFieldProps}>
         {current.profile?.name}
       </Field>
-      <Field title='Description' align='row'>
+      <Field title='Description' align='row' {...defaultFieldProps}>
         {current.profile?.description}
       </Field>
       <Column {...p}>

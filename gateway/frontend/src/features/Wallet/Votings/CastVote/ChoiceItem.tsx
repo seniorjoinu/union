@@ -242,7 +242,7 @@ export const ChoiceItem = styled(
                 return (
                   <GroupInfo
                     key={String(power[0])}
-                    variant='caption'
+                    variant='p3'
                     groupId={power[0]}
                     shares={power[1]}
                     chips={twp ? [`of ${String(twp[1])}`] : []}

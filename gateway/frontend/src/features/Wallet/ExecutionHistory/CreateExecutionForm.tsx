@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react';
 import styled from 'styled-components';
-import { Principal } from '@dfinity/principal';
 import { PageWrapper, SubmitButton as SB } from '@union/components';
-import { CreateVotingChoiceRequest, _SERVICE } from 'union-ts';
-import { useParams } from 'react-router-dom';
+import { ExecuteRequest, ExecuteResponse, _SERVICE } from 'union-ts';
 import { Controller, useWatch } from 'react-hook-form';
-import { EditorSettings, useRender } from '../../../../IDLRenderer';
-import { useUnionSubmit } from '../../../../../components/UnionSubmit';
-import { CanisterMethods, CandidPayload } from '../../../IDLFields';
-import { MessageData } from '../../../../useClient';
+import { useUnion } from 'services';
+import { useNavigate } from 'react-router-dom';
+import { MessageData } from '@union/client';
+import { EditorSettings, useRender } from '../../IDLRenderer';
+import { CanisterMethods, CandidPayload, AccessConfigListField } from '../IDLFields';
+import { useCurrentUnion } from '../context';
 
 const SubmitButton = styled(SB)``;
 const Container = styled(PageWrapper)`
@@ -17,43 +17,48 @@ const Container = styled(PageWrapper)`
   }
 `;
 
-export interface CreateChoiceFormProps extends IClassName {
-  unionId: Principal;
-  nested?: boolean;
-  onSuccess?(response: any): void;
+export interface CreateExecutionFormProps extends IClassName {
+  data?: MessageData;
+  onSuccess?(response: ExecuteResponse): void;
 }
 
-export function CreateChoiceForm({
-  unionId,
+export function CreateExecutionForm({
   onSuccess = () => undefined,
-  nested,
+  data,
   ...p
-}: CreateChoiceFormProps) {
-  const { votingId } = useParams();
-  const submitProps = useUnionSubmit({
-    unionId,
+}: CreateExecutionFormProps) {
+  const { principal: unionId } = useCurrentUnion();
+  const { canister } = useUnion(unionId);
+  const nav = useNavigate();
+
+  const { Form } = useRender<ExecuteRequest>({
     canisterId: unionId,
-    methodName: 'create_voting_choice',
-    onExecuted: (p, res) => onSuccess(res),
+    type: 'ExecuteRequest',
   });
 
-  const { Form } = useRender<CreateVotingChoiceRequest>({
-    canisterId: unionId,
-    type: 'CreateVotingChoiceRequest',
-  });
-
-  const settings: EditorSettings<CreateVotingChoiceRequest> = useMemo(() => {
-    const defaultVotingId = votingId
-      ? nested
-        ? { Nested: BigInt(votingId) }
-        : { Common: BigInt(votingId) }
-      : null;
-
-    return {
+  const settings: EditorSettings<ExecuteRequest> = useMemo(
+    () => ({
       fields: {
-        name: { order: 1, options: { required: 'Field is required' } },
-        description: { order: 2, options: { required: 'Field is required' }, multiline: true },
-        voting_id: { hide: true, disabled: true, defaultValue: defaultVotingId },
+        access_config_id: {
+          adornment: {
+            kind: 'replace',
+            render: (ctx, path, name) => (
+              <Controller
+                name={path as 'access_config_id'}
+                control={ctx.control}
+                render={({ field, fieldState: { error } }) => (
+                  <AccessConfigListField
+                    unionId={unionId}
+                    label={name}
+                    onChange={field.onChange}
+                    value={field.value}
+                    helperText={error?.message}
+                  />
+                )}
+              />
+            ),
+          },
+        },
         'program.RemoteCallSequence.-1.endpoint.canister_id': {
           label: 'Canister Id',
         },
@@ -129,18 +134,29 @@ export function CreateChoiceForm({
           },
         },
       },
-    };
-  }, [votingId, nested]);
+    }),
+    [],
+  );
 
   return (
-    <Container title='Create choice' withBack {...p}>
-      <Form settings={settings}>
+    <Container title='Create arbitrary execution' withBack {...p}>
+      <Form
+        settings={settings}
+        defaultValue={
+          data?.choices?.[0]?.program ? { program: data.choices[0].program } : undefined
+        }
+      >
         {(ctx) => (
           <SubmitButton
-            disabled={!ctx.isValid || !submitProps.isAllowed}
-            onClick={(e) => submitProps.submit(e, [ctx.getValues()])}
+            disabled={!ctx.isValid}
+            onClick={async (e) => {
+              const res = await canister.execute(ctx.getValues() as ExecuteRequest);
+
+              nav(-1);
+              return onSuccess(res);
+            }}
           >
-            Create
+            Execute
           </SubmitButton>
         )}
       </Form>

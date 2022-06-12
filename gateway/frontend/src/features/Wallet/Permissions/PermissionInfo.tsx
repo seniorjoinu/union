@@ -55,11 +55,11 @@ export const PermissionInfo = styled(({ permissionId, to, ...p }: PermissionInfo
   return (
     <Container {...p}>
       {to ? (
-        <Text variant='p2' as={NavLink} to={to}>
+        <Text variant='p3' as={NavLink} to={to}>
           {permission.name}
         </Text>
       ) : (
-        <Text variant='p2'>{permission.name}</Text>
+        <Text variant='p3'>{permission.name}</Text>
       )}
       <Text variant='p3'>{permission.description}</Text>
     </Container>

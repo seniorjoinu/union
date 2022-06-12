@@ -2,6 +2,7 @@ import { Accordeon, Field, Text, Row as R, Chips } from '@union/components';
 import React, { useEffect, useMemo, useRef } from 'react';
 import styled from 'styled-components';
 import { Permission } from 'union-ts';
+import { defaultFieldProps } from '../../IDLRenderer';
 
 const Zeroscreen = styled(Text)`
   color: ${({ theme }) => theme.colors.grey};
@@ -73,8 +74,10 @@ export const PermissionItem = styled(
       <Accordeon title={permission.name} ref={ref} isDefaultOpened={opened} {...p}>
         <Container>
           {children}
-          <Field variant={{ value: 'p3' }}>{permission.description}</Field>
-          <Field title='Targets' weight={{ title: 'medium' }}>
+          <Field {...defaultFieldProps} weight={{ title: 'medium' }}>
+            {permission.description}
+          </Field>
+          <Field title='Targets' {...defaultFieldProps} weight={{ title: 'medium' }}>
             {!Object.keys(targets).length && (
               <Zeroscreen variant='p3'>Targets are not attached</Zeroscreen>
             )}

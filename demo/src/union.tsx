@@ -1,11 +1,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { UnionClient, ExecuteRequestData } from '@union/client';
+import { UnionClient } from '@union/client';
 import { Principal } from '@dfinity/principal';
 import { getAgent } from './agent';
-import { _SERVICE, canisterId, backendSerializer } from './backend';
+import { _SERVICE, canisterId, backendEncoder } from './backend';
 import { AuthReadyState, useAuth } from './auth';
 
-export const unionClient = new UnionClient({});
+export const unionClient = new UnionClient({
+  providerUrl: 'http://localhost:3000',
+});
 
 export const context = createContext({
   authorized: false,
@@ -44,40 +46,28 @@ export const useUnion = () => {
     setAuthorized(unionClient.isAuthorized());
   }, [setAuthorized]);
 
-  const execute = useCallback(
-    <M extends keyof _SERVICE>(
-      methodName: M,
-      args: Parameters<_SERVICE[M]>,
-      extra?: Partial<ExecuteRequestData & { title: string; description: string }>,
-    ) => {
+  const getProgram = useCallback(
+    <M extends keyof _SERVICE>(data: [M, Parameters<_SERVICE[M]>][]) => {
       if (!authorized) {
         throw new Error('Union is not authorized');
       }
 
-      const candidArgs = backendSerializer[methodName](...args);
+      return {
+        RemoteCallSequence: data.map(([methodName, args]) => {
+          const buffer = backendEncoder[methodName](...args);
 
-      // TODO send choices
-      return unionClient.execute(
-        {
-          // title: 'Demo canister operation',
-          // description: `Call "${methodName}" in "${canisterId.toString()}" canister`,
-          // authorization_delay_nano: BigInt(60 * 60 * 10 ** 9), // 1 hour
-          ...extra,
-          program: {
-            RemoteCallSequence: [
-              {
-                endpoint: {
-                  canister_id: Principal.from(canisterId),
-                  method_name: methodName,
-                },
-                args: { CandidString: candidArgs },
-                cycles: BigInt(10 * 6),
-              },
-            ],
-          },
-        },
-        { after: 'close' },
-      );
+          // console.log('BUFFA', Array.from(new Uint8Array(buffer)));
+
+          return {
+            endpoint: {
+              canister_id: Principal.from(canisterId),
+              method_name: methodName,
+            },
+            args: { Encoded: Array.from(new Uint8Array(buffer)) },
+            cycles: BigInt(0),
+          };
+        }),
+      };
     },
     [authorized],
   );
@@ -87,6 +77,6 @@ export const useUnion = () => {
     refresh,
     client: unionClient,
     canister: unionClient.getActor(getAgent()),
-    execute,
+    getProgram,
   };
 };

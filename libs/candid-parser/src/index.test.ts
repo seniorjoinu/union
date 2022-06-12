@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { lexer } from './lexer';
 import { Parser } from './parser';
-import {TId, TProg} from './cst';
+import { TId, TProg } from './cst';
 
 const candid = fs.readFileSync('../../wallet-backend/can.did').toString();
 
@@ -22,7 +22,11 @@ export function parseCandid(candid: string): TProg {
 }
 
 let prog = parseCandid(candid);
-// let actor: IDL.ServiceClass | null = prog.getIdlActor();
+console.log('actor', prog.getIdlActor());
 
-// @ts-ignore
-console.log(/*JSON.stringify*/(prog.traverseIdlType(new TId('CreateNestedVotingConfigRequest')))._fields.find(it => it[0] == 'allowee_groups')[1]._type._fields)
+console.log(
+  /*JSON.stringify*/ prog
+    .traverseIdlType(new TId('CreateNestedVotingConfigRequest'))
+    // @ts-ignore
+    ._fields.find((it) => it[0] == 'allowee_groups')[1]._type._fields,
+);

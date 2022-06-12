@@ -9,7 +9,7 @@ import { TId, TProg } from '@union/candid-parser';
 import { Controller, useWatch } from 'react-hook-form';
 import { EditorSettings, useRender } from '../../../../IDLRenderer';
 import { useUnionRepeatSubmit } from '../../../../../components/UnionSubmit';
-import { MessageData } from '../types';
+import { MessageData } from '../../../../useClient';
 import { CandidPayload, CanisterMethods } from '../../../IDLFields';
 
 const SubmitButton = styled(SB)``;
@@ -140,6 +140,7 @@ export function MultipleChoicesForm({
                           buffer ? { Encoded: [...new Uint8Array(buffer)] } : undefined,
                         )
                       }
+                      value={'Encoded' in field.value ? Buffer.from(field.value.Encoded) : null}
                     />
                   );
                 }}
@@ -151,10 +152,15 @@ export function MultipleChoicesForm({
     };
   }, [votingId, nested]);
 
-  const defaultValue: MultipleChoicesFormType = {
-    // @ts-expect-error
-    choices: [{ name: '', description: '', program: { Empty: null } }],
-  };
+  // @ts-expect-error
+  const defaultValue: MultipleChoicesFormType = useMemo(
+    () => ({
+      choices: data?.choices
+        ? data?.choices
+        : [{ name: '', description: '', program: { Empty: null } }],
+    }),
+    [data],
+  );
 
   return (
     <Container title='Add choices to voting' withBack {...p}>

@@ -1,6 +1,12 @@
 import React, { useContext, useMemo } from 'react';
 import { IDL } from '@dfinity/candid';
 import { FieldValues, FieldPath, RegisterOptions, DefaultValues } from 'react-hook-form';
+import { FieldProps } from '@union/components';
+
+export const defaultFieldProps: Partial<FieldProps> = {
+  weight: { title: 'regular' },
+  variant: { title: 'p3', value: 'p3' },
+};
 
 export class Empty extends IDL.Visitor<null, any> {
   visitBool = () => false;

@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const authBtn = document.querySelector('#auth') as HTMLInputElement;
   const executeBtn = document.querySelector('#execute') as HTMLInputElement;
   const executeCloseBtn = document.querySelector('#execute-close') as HTMLInputElement;
+  const createVotingBtn = document.querySelector('#createVoting') as HTMLInputElement;
 
   provider.value = localStorage.getItem('_provider') || '';
 
@@ -17,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   executeBtn.addEventListener('click', execute);
   executeCloseBtn.addEventListener('click', executeClose);
+  createVotingBtn.addEventListener('click', createVoting);
   authBtn.addEventListener('click', auth);
 
   getAuth();
@@ -29,10 +31,24 @@ const executeClose = () => {
 
   client.execute(
     {
-      title: 'Sample empty program',
-      description: 'Make sample empty program from example page',
-      authorization_delay_nano: BigInt(100),
-      program: { Empty: null },
+      choices: [
+        {
+          name: 'Sample empty program',
+          description: 'Make sample empty program from example page',
+          program: {
+            RemoteCallSequence: [
+              {
+                endpoint: {
+                  canister_id: Principal.from('aaaaa-aa'),
+                  method_name: 'create_canister',
+                },
+                cycles: BigInt(0),
+                args: { Encoded: [] },
+              },
+            ],
+          },
+        },
+      ],
     },
     { after: 'close' },
   );
@@ -44,10 +60,56 @@ const execute = () => {
   });
 
   client.execute({
-    title: 'Sample empty program',
-    description: 'Make sample empty program from example page',
-    authorization_delay_nano: BigInt(100),
-    program: { Empty: null },
+    choices: [
+      {
+        name: 'Sample empty program',
+        description: 'Make sample empty program from example page',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: Principal.from('aaaaa-aa'),
+                method_name: 'create_canister',
+              },
+              cycles: BigInt(0),
+              args: { Encoded: [] },
+            },
+          ],
+        },
+      },
+    ],
+  });
+};
+
+const createVoting = () => {
+  client = new UnionClient({
+    ...getData(),
+  });
+
+  client.createVoting({
+    voting: {
+      name: 'Sample voting',
+      description: 'Sample voting description',
+      winners_need: 1,
+    },
+    choices: [
+      {
+        name: 'Sample voting choice',
+        description: 'Make sample empty program from example page',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: Principal.from('aaaaa-aa'),
+                method_name: 'create_canister',
+              },
+              cycles: BigInt(0),
+              args: { Encoded: [] },
+            },
+          ],
+        },
+      },
+    ],
   });
 };
 

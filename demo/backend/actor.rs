@@ -202,7 +202,8 @@ fn set_activity(req: SetActivityRequest) {
                     || union_profile.union_access_config_id.is_none()
                     || req.alias_principal.is_none()
                 {
-                    trap("Unable to mint shares on like - some info is missing");
+                    return;
+                    // trap("Unable to mint shares on like - some info is missing");
                 }
 
                 // WARNING: this canister doesn't memorize if you already received your reward liking this post
@@ -217,9 +218,9 @@ fn set_activity(req: SetActivityRequest) {
                         Shares::from(10),
                     ),
                     0,
-                )
-                .await
-                .expect("Unable to mint shares on like - remote call failed");
+                );
+                // .await
+                // .expect("Unable to mint shares on like - remote call failed");
             })
         }
         None => {}
@@ -269,22 +270,26 @@ fn init() {
 
 #[pre_upgrade]
 fn pre_upgrade() {
-    ic_cdk::storage::stable_save((ic_certified_assets::pre_upgrade(),))
+    ic_cdk::storage::stable_save((ic_certified_assets::pre_upgrade(), get_state()))
         .expect("failed to save stable state");
 }
 
 #[post_upgrade]
 fn post_upgrade() {
-    let (stable_state,): (ic_certified_assets::StableState,) =
+    let (stable_state, state): (ic_certified_assets::StableState, State) =
         ic_cdk::storage::stable_restore().expect("failed to restore stable state");
     ic_certified_assets::post_upgrade(stable_state);
+
+    unsafe {
+        STATE = Some(state);
+    }
 }
 
 export_service!();
 
 #[query(name = "__get_candid_interface_tmp_hack")]
 fn export_candid() -> String {
-    __export_service()
+    include_str!("./backend.did").to_string()
 }
 
 static mut STATE: Option<State> = None;

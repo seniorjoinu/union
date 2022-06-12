@@ -1,12 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import type { Message, MessageData } from '@union/client';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { normalizeValues } from './IDLRenderer';
 
-export interface MessageData {
-  origin: string;
-  target: string;
-  type: string;
-  payload: any;
-  options: { after?: 'close' };
-}
+export type { MessageData, Message } from '@union/client';
 
 export interface UseClientProps<T> {
   parser(payload: any): T;
@@ -16,7 +13,7 @@ export function useClient<T = any>({ parser }: UseClientProps<T>) {
   const [data, setData] = useState<T | undefined>(undefined);
   const [opts, setOpts] = useState<{ after?: 'close' } | undefined>(undefined);
 
-  const handler = useCallback((e: MessageEvent<MessageData>) => {
+  const handler = useCallback((e: MessageEvent<Message>) => {
     if (
       !e.data ||
       e.data.origin != 'union-client' ||
@@ -36,7 +33,7 @@ export function useClient<T = any>({ parser }: UseClientProps<T>) {
 
   const success = useCallback(
     async (payload: any) => {
-      const data: MessageData = {
+      const data: Message = {
         origin: 'union',
         target: 'union-client',
         type: 'done',
@@ -57,7 +54,7 @@ export function useClient<T = any>({ parser }: UseClientProps<T>) {
   );
 
   useEffect(() => {
-    const data: MessageData = {
+    const data: Message = {
       origin: 'union',
       target: 'union-client',
       type: 'ready',
@@ -80,3 +77,68 @@ export function useClient<T = any>({ parser }: UseClientProps<T>) {
     success,
   };
 }
+
+export type ExternalFormProps = {
+  redirectToHistory?(): void;
+  children(data: MessageData, onSuccess: (p: any) => void): JSX.Element;
+};
+
+export const ExternalForm = ({ redirectToHistory, children }: ExternalFormProps) => {
+  const { data, success } = useClient({ parser: parseMessage });
+
+  const handleSuccess = useCallback(
+    (payload: any) => {
+      success(payload).then(() => {
+        redirectToHistory && redirectToHistory();
+      });
+    },
+    [success, redirectToHistory],
+  );
+
+  if (!data) {
+    return <span>Waiting data...</span>;
+  }
+
+  return children(data, handleSuccess);
+};
+
+export type InternalFormProps = {
+  required?: boolean;
+  children(data?: MessageData): JSX.Element;
+};
+
+export const InternalForm = ({ children, required }: InternalFormProps) => {
+  const location = useLocation();
+  const nav = useNavigate();
+  const [data, setData] = useState<MessageData | undefined>(undefined);
+
+  useEffect(() => {
+    if (!location.state) {
+      return;
+    }
+
+    const data = parseMessage(location.state);
+
+    if (data) {
+      setData(data);
+    }
+    // location.state = null;
+    nav(location.pathname, { replace: true, state: null });
+  }, []);
+
+  if (!data && required) {
+    return <span>Waiting data...</span>;
+  }
+
+  return children(data);
+};
+
+export const parseMessage = (data: any): MessageData | null => {
+  console.log('Received data', data);
+
+  if (!data) {
+    return null;
+  }
+
+  return normalizeValues(data as MessageData);
+};
