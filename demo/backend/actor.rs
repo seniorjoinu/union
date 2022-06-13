@@ -1,6 +1,7 @@
 use crate::utils::{create_execute_request, AccessConfigId, GroupId, Shares};
 use ic_cdk::api::call::call_raw;
 use ic_cdk::api::time;
+use ic_cdk::print;
 use ic_cdk::export::candid::{export_service, CandidType, Deserialize, Principal};
 use ic_cdk::{caller, spawn, trap};
 use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
@@ -202,12 +203,13 @@ fn set_activity(req: SetActivityRequest) {
                     || union_profile.union_access_config_id.is_none()
                     || req.alias_principal.is_none()
                 {
+                    print("Unable to mint shares on like - some info is missing");
                     return;
-                    // trap("Unable to mint shares on like - some info is missing");
                 }
-
+                
+                print("Lets mint shares...");
                 // WARNING: this canister doesn't memorize if you already received your reward liking this post
-                call_raw(
+                let res = call_raw(
                     post.author,
                     "mint_group_shares",
                     &create_execute_request(
@@ -218,9 +220,13 @@ fn set_activity(req: SetActivityRequest) {
                         Shares::from(10),
                     ),
                     0,
-                );
-                // .await
-                // .expect("Unable to mint shares on like - remote call failed");
+                )
+                .await
+                .unwrap_or_else(|err| {
+                    print(format!("Unable to mint shares on like - remote call failed - {:?}", err));
+                    vec![]
+                });
+                print(format!("{:?}", res))
             })
         }
         None => {}

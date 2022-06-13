@@ -22,6 +22,10 @@ export class UnionClient {
     return this.auth.union;
   }
 
+  get profile() {
+    return this.auth.profile;
+  }
+
   get idl() {
     return idl as IDL.InterfaceFactory;
   }

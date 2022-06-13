@@ -11,6 +11,7 @@ export interface LoginProps {
 export type Proof = number[];
 
 export interface AuthData {
+  profile: string;
   proof: Proof;
   union: string;
 }
@@ -29,6 +30,10 @@ export class UnionWindowAuthorizer {
 
   get proof(): Proof | null {
     return this.data?.proof || null;
+  }
+
+  get profile(): Principal | null {
+    return this.data?.profile ? Principal.from(this.data?.profile) : null;
   }
 
   get union(): Principal | null {
@@ -99,7 +104,11 @@ const parseData = (data: any): AuthData | null => {
     return null;
   }
 
-  return { proof: data.proof, union: data.union };
+  return {
+    profile: data.profile,
+    proof: data.proof,
+    union: data.union,
+  };
 };
 
 const checkPrincipal = (canisterId: string | Principal | undefined): Principal | null => {

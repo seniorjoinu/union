@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import moment from 'moment';
 import { Post } from 'backend-ts';
+import { useUnion } from '../../union';
 import { useAuth } from '../../auth';
 import { Markdown, Principal } from '../atoms';
 import { useBackend } from '../../backend';
@@ -82,6 +83,7 @@ export interface PostViewProps {
 export const PostView = ({ post, ...p }: PostViewProps) => {
   const { principal } = useAuth();
   const { canister, data, fetching } = useBackend();
+  const { client } = useUnion();
   const [optimisticHeart, setOptimisticHeart] = useState<boolean | null>(null);
 
   const refreshActivity = useCallback(() => {
@@ -128,10 +130,10 @@ export const PostView = ({ post, ...p }: PostViewProps) => {
 
         // FIXME: login to union and put here your principal from there OR create a field, where the user can prompt this principal by themself;
         //  only required when you want to receive shares by liking posts
-        alias_principal: [],
+        alias_principal: client.profile && !client.profile.isAnonymous() ? [client.profile] : [],
       })
       .then(refreshActivity);
-  }, [heartDisabled, liked, canister, post, refreshActivity, setOptimisticHeart]);
+  }, [heartDisabled, liked, canister, post, refreshActivity, setOptimisticHeart, client]);
 
   const createdAt = useMemo(
     () => moment(Math.floor(Number(post.created_at) / 10 ** 6)).format("DD MMMM'YY HH:mm"),

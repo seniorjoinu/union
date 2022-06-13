@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Principal } from '@dfinity/principal';
 import { useNavigate } from 'react-router-dom';
 import { PageWrapper, Text, SubmitButton as B } from '@union/components';
-import { useGateway } from 'services';
+import { useAuth, useGateway } from 'services';
 import { checkPrincipal } from 'toolkit';
 import { useClient } from '../useClient';
 import { WalletItem } from './WalletItem';
@@ -27,6 +27,7 @@ const Container = styled(PageWrapper)`
 
 export const AuthorizeWallet = () => {
   const nav = useNavigate();
+  const { identity } = useAuth();
   const client = useClient({ parser });
   const [wallets, setWallets] = useState<Principal[]>([]);
   const { canister, fetching, data } = useGateway(process.env.GATEWAY_CANISTER_ID);
@@ -41,7 +42,11 @@ export const AuthorizeWallet = () => {
       e.stopPropagation();
 
       // TODO make call to wallet to get proof for principal
-      const payload = { proof: [1, 2, 3], union: wallet.toString() };
+      const payload = {
+        profile: identity?.getPrincipal().toString(),
+        proof: [],
+        union: wallet.toString(),
+      };
       const principal = client.data;
 
       if (!principal) {
@@ -51,7 +56,7 @@ export const AuthorizeWallet = () => {
 
       await client.success(payload);
     },
-    [client.data, client.success],
+    [client.data, client.success, identity],
   );
 
   const rootWallet = data.get_controller;
