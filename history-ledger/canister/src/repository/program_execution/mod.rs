@@ -73,8 +73,12 @@ impl Repository<ProgramExecutionEntry, ProgramExecutionEntryId, ProgramExecution
                     Page::empty()
                 }
             } else {
-                let (has_next, iter) = self.entries.iter().get_page(page_req);
-                let data = iter.map(|(_, it)| it.clone()).collect();
+                // FIXME: make it better, use iters
+                let mut sorted = self.sorted_by_timestamp.get_all();
+                sorted.reverse();
+
+                let (has_next, iter) = sorted.iter().get_page(page_req);
+                let data = iter.map(|id| self.get(id).unwrap()).collect();
 
                 Page::new(data, has_next)
             };
