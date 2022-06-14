@@ -6,7 +6,7 @@ use shared::mvc::{Model, Repository};
 use shared::pageable::{Page, PageRequest, Pageable};
 use shared::remote_call::{Program, RemoteCallEndpoint};
 use shared::sorted_by_timestamp::SortedByTimestamp;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, HashMap};
 
 pub mod model;
 pub mod types;
@@ -16,7 +16,7 @@ pub struct ProgramExecutionRepository {
     entries: HashMap<ProgramExecutionEntryId, ProgramExecutionEntry>,
 
     sorted_by_timestamp: SortedByTimestamp<ProgramExecutionEntryId>,
-    entries_by_endpoint_index: BTreeMap<RemoteCallEndpoint, BTreeSet<ProgramExecutionEntryId>>,
+    entries_by_endpoint_index: BTreeMap<RemoteCallEndpoint, Vec<ProgramExecutionEntryId>>,
 }
 
 impl Repository<ProgramExecutionEntry, ProgramExecutionEntryId, ProgramExecutionFilter, ()>
@@ -35,11 +35,11 @@ impl Repository<ProgramExecutionEntry, ProgramExecutionEntryId, ProgramExecution
                     self.entries_by_endpoint_index
                         .entry(call.endpoint.clone())
                         .or_default()
-                        .insert(id);
+                        .push(id);
                     self.entries_by_endpoint_index
                         .entry(call.endpoint.to_wildcard())
                         .or_default()
-                        .insert(id);
+                        .push(id);
                 }
             }
         }
@@ -65,7 +65,7 @@ impl Repository<ProgramExecutionEntry, ProgramExecutionEntryId, ProgramExecution
         if page_req.filter.from_timestamp.is_none() && page_req.filter.to_timestamp.is_none() {
             return if let Some(endpoint) = &page_req.filter.endpoint {
                 if let Some(index) = self.entries_by_endpoint_index.get(endpoint) {
-                    let (has_next, iter) = index.iter().get_page(page_req);
+                    let (has_next, iter) = index.iter().rev().get_page(page_req);
                     let data = iter.map(|id| self.get(id).unwrap()).collect();
 
                     Page::new(data, has_next)
@@ -96,7 +96,9 @@ impl Repository<ProgramExecutionEntry, ProgramExecutionEntryId, ProgramExecution
             self.sorted_by_timestamp.get_last_timestamp()
         };
 
-        let ids = self.sorted_by_timestamp.get_by_interval(&from, &to);
+        // FIXME: make if better, use iters
+        let mut ids = self.sorted_by_timestamp.get_by_interval(&from, &to);
+        ids.reverse();
 
         if let Some(endpoint) = &page_req.filter.endpoint {
             if let Some(index) = self.entries_by_endpoint_index.get(endpoint) {
