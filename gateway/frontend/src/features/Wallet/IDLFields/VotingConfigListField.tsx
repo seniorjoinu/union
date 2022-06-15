@@ -46,6 +46,7 @@ export const VotingConfigListField = styled(
             query_delegation_proof_opt: [],
           })
         }
+        verbose={{ zeroscreen: 'Matching config not found' }}
         renderItem={(item, origin) => {
           if (!allowOnly) {
             return origin;

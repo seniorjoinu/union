@@ -1,4 +1,4 @@
-import { Accordeon, Column as C, Field, Text } from '@union/components';
+import { Accordeon, Chips, Column as C, Field, Row, Text } from '@union/components';
 import React, { useEffect, useMemo, useRef } from 'react';
 import styled from 'styled-components';
 import { AccessConfig, GroupCondition, ProfileId } from 'union-ts';
@@ -10,6 +10,15 @@ import { PermissionInfo } from '../Permissions';
 const Column = styled(C)`
   border-left: 1px solid ${({ theme }) => theme.colors.grey};
   margin-left: 8px;
+`;
+
+const Controls = styled(Row)`
+  align-items: center;
+`;
+
+const Children = styled(Row)`
+  flex-grow: 1;
+  justify-content: flex-end;
 `;
 
 const Zeroscreen = styled(Text)`
@@ -72,7 +81,10 @@ export const AccessConfigItem = styled(
     return (
       <Accordeon title={accessConfig.name} ref={ref} isDefaultOpened={opened} {...p}>
         <Container>
-          {children}
+          <Controls>
+            <Chips variant='caption'>id: {String(accessConfig.id[0])}</Chips>
+            <Children>{children}</Children>
+          </Controls>
           <Field {...defaultFieldProps}>{accessConfig.description}</Field>
           <Field title='Allowees' {...defaultFieldProps} weight={{ title: 'medium' }}>
             {!accessConfig.allowees.length && (

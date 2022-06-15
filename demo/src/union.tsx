@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { UnionClient } from '@union/client';
+import { UnionClient, AuthorizationStatus } from '@union/client';
 import { Principal } from '@dfinity/principal';
 import { getAgent } from './agent';
 import { _SERVICE, canisterId, backendEncoder } from './backend';
@@ -10,12 +10,12 @@ export const unionClient = new UnionClient({
 });
 
 export const context = createContext({
-  authorized: false,
-  setAuthorized: (_: boolean) => {},
+  authorized: false as AuthorizationStatus,
+  setAuthorized: (_: AuthorizationStatus) => {},
 });
 
 export const UnionProvider = ({ children }: { children: any }) => {
-  const [authorized, setAuthorized] = useState(false);
+  const [authorized, setAuthorized] = useState<AuthorizationStatus>(false);
   const { isAuthReady, isAuthentificated } = useAuth();
 
   const value = {

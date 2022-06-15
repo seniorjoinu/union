@@ -11,7 +11,7 @@ import { get } from 'react-hook-form';
 import { useHistoryLedger } from 'services';
 import styled from 'styled-components';
 import { defaultFieldProps, useRender, ViewerSettings } from '../../IDLRenderer';
-import { CandidEncodedArgs, CandidEncodedResult } from '../IDLFields';
+import { CandidEncodedArgs, CandidEncodedResult, getRules } from '../IDLFields';
 
 const Container = styled(Column)``;
 
@@ -95,8 +95,8 @@ export const ExecutionItemProgram = styled(
       [result, endpoints, historyLedger.fetching.get_program_execution_entry_result],
     );
 
-    const progSettings: ViewerSettings<Program> = useMemo(
-      () => ({
+    const progSettings: ViewerSettings<Program> = useMemo(() => ({
+        rules: getRules(),
         fields: {
           'RemoteCallSequence.-1.endpoint': {
             order: 11,
@@ -108,25 +108,12 @@ export const ExecutionItemProgram = styled(
             order: 13,
             adornment: {
               kind: 'replace',
-              render: (ctx, path, name) => {
-                const args = get(ctx.value, path) as RemoteCallArgs;
-                const canisterId = get(
-                  ctx.value,
-                  path.replace('.args', '.endpoint.canister_id'),
-                ) as Principal;
-                const methodName = get(
-                  ctx.value,
-                  path.replace('.args', '.endpoint.method_name'),
-                ) as string;
+              render: (ctx, path, name, origin) => {
                 const index = Number(path.replace('.args', '').replace('RemoteCallSequence.', ''));
 
                 return (
                   <>
-                    <CandidEncodedArgs
-                      args={args}
-                      canisterId={canisterId}
-                      methodName={methodName}
-                    />
+                    {origin}
                     {getResult(index)}
                   </>
                 );
@@ -134,9 +121,7 @@ export const ExecutionItemProgram = styled(
             },
           },
         },
-      }),
-      [getResult],
-    );
+      }), [getResult]);
 
     return (
       <Container {...p}>

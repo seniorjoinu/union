@@ -74,14 +74,14 @@ export const ExecutionItem = styled(({ id, ledger, children, ...p }: ExecutionIt
                 info = (
                   <AccessConfigInfo
                     accessConfigId={ctx.value.program_executed_with.WithAccessConfig}
-                    to={`../access-configs/${ctx.value.program_executed_with.WithAccessConfig}`}
+                    to={`../../access-configs/${ctx.value.program_executed_with.WithAccessConfig}`}
                   />
                 );
               } else {
                 info = (
                   <VotingConfigInfo
                     votingConfigId={ctx.value.program_executed_with.WithVotingConfig}
-                    to={`../voting-configs/${ctx.value.program_executed_with.WithVotingConfig}`}
+                    to={`../../voting-configs/${ctx.value.program_executed_with.WithVotingConfig}`}
                   />
                 );
               }

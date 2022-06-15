@@ -40,6 +40,7 @@ export function CreateExecutionForm({
     () => ({
       fields: {
         access_config_id: {
+          order: 1,
           adornment: {
             kind: 'replace',
             render: (ctx, path, name) => (
@@ -58,6 +59,9 @@ export function CreateExecutionForm({
               />
             ),
           },
+        },
+        program: {
+          order: 2,
         },
         'program.RemoteCallSequence.-1.endpoint.canister_id': {
           label: 'Canister Id',
@@ -138,14 +142,25 @@ export function CreateExecutionForm({
     [],
   );
 
+  const defaultValue = useMemo(
+    () =>
+      (data?.choices?.length
+        ? {
+            program: {
+              RemoteCallSequence: data.choices
+                .filter((c) => c.program && 'RemoteCallSequence' in c.program)
+                // @ts-expect-error
+                .map((c) => c.program?.RemoteCallSequence || [])
+                .flat(),
+            },
+          }
+        : undefined),
+    [data],
+  );
+
   return (
-    <Container title='Create arbitrary execution' withBack {...p}>
-      <Form
-        settings={settings}
-        defaultValue={
-          data?.choices?.[0]?.program ? { program: data.choices[0].program } : undefined
-        }
-      >
+    <Container title='Create random call' withBack {...p}>
+      <Form settings={settings} defaultValue={defaultValue}>
         {(ctx) => (
           <SubmitButton
             disabled={!ctx.isValid}

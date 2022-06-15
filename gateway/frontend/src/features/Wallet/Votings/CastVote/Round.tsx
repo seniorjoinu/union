@@ -25,10 +25,12 @@ import {
   VotingConfig,
 } from 'union-ts';
 import { Controller, useForm } from 'react-hook-form';
+import { round } from 'toolkit';
 import { normalizeValues } from '../../../IDLRenderer';
 import { useChoices } from './hook';
 import { ChoiceItem } from './ChoiceItem';
 
+const ShareTextField = styled(TextField)``;
 const OptionContent = styled(Row)`
   align-items: center;
 `;
@@ -43,6 +45,10 @@ const Container = styled(Column)`
   & > ${Button} {
     align-self: flex-start;
     margin-left: 8px;
+  }
+
+  ${ShareTextField} {
+    align-self: flex-start;
   }
 `;
 
@@ -264,7 +270,7 @@ export const Round = styled(
                           }}
                           render={(p) =>
                             (choice.id[0] !== voting.rejection_choice[0] ? (
-                              <TextField
+                              <ShareTextField
                                 label='Share %'
                                 value={p.field.value == null ? '' : Number(p.field.value)}
                                 onChange={(e) =>
@@ -332,8 +338,19 @@ export const Round = styled(
                       <OptionContent>
                         <span>{field.value.group.name}</span>
                         <Chips variant='caption'>
-                          {String(field.value.shares_info.balance)} shares of{' '}
-                          {String(field.value.shares_info.total_supply)}
+                          {`${String(
+                            round(
+                              Number(
+                                (BigInt(100) * field.value.shares_info.balance) /
+                                  field.value.shares_info.total_supply,
+                              ),
+                            ),
+                          )} voting power`}
+                        </Chips>
+                        <Chips variant='caption'>
+                          {`${String(field.value.shares_info.balance)} of ${String(
+                            field.value.shares_info.total_supply,
+                          )} shares`}
                         </Chips>
                       </OptionContent>
                     ) : null)
@@ -344,8 +361,19 @@ export const Round = styled(
                       <OptionContent>
                         <span>{info.group.name}</span>
                         <Chips variant='caption'>
-                          {String(info.shares_info.balance)} shares of{' '}
-                          {String(info.shares_info.total_supply)}
+                          {`${String(
+                            round(
+                              Number(
+                                (BigInt(100) * field.value.shares_info.balance) /
+                                  field.value.shares_info.total_supply,
+                              ),
+                            ),
+                          )} voting power`}
+                        </Chips>
+                        <Chips variant='caption'>
+                          {`${String(info.shares_info.balance)} of ${String(
+                            info.shares_info.total_supply,
+                          )} shares`}
                         </Chips>
                       </OptionContent>
                     </AdvancedOption>

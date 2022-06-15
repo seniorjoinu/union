@@ -72,8 +72,12 @@ export const useUnionSubmit = <
     }
 
     getMethodAccess({
-      canisterId,
-      methodName,
+      program: [
+        {
+          canisterId,
+          methodName,
+        },
+      ],
       profile: identity.getPrincipal(),
     });
   }, []);

@@ -1,4 +1,4 @@
-use crate::utils::{create_execute_request, AccessConfigId, GroupId, Shares};
+use crate::utils::{mint_group_shares, burn_group_shares, AccessConfigId, GroupId, Shares};
 use ic_cdk::api::call::call_raw;
 use ic_cdk::api::time;
 use ic_cdk::export::candid::{export_service, CandidType, Deserialize, Principal};
@@ -207,28 +207,51 @@ fn set_activity(req: SetActivityRequest) {
                     return;
                 }
 
-                print("Lets mint shares...");
-                // WARNING: this canister doesn't memorize if you already received your reward liking this post
-                let res = call_raw(
-                    post.author,
-                    "execute",
-                    &create_execute_request(
+                let res = if !heart {
+                    call_raw(
                         post.author,
-                        union_profile.union_group_id.unwrap(),
-                        union_profile.union_access_config_id.unwrap(),
-                        req.alias_principal.unwrap(),
-                        Shares::from(10),
-                    ),
-                    0,
-                )
-                .await
-                .unwrap_or_else(|err| {
-                    print(format!(
-                        "Unable to mint shares on like - remote call failed - {:?}",
-                        err
-                    ));
-                    vec![]
-                });
+                        "execute",
+                        &burn_group_shares(
+                            post.author,
+                            union_profile.union_group_id.unwrap(),
+                            union_profile.union_access_config_id.unwrap(),
+                            req.alias_principal.unwrap(),
+                            Shares::from(10),
+                        ),
+                        0,
+                    )
+                    .await
+                    .unwrap_or_else(|err| {
+                        print(format!(
+                            "Unable to mint shares on like - remote call failed - {:?}",
+                            err
+                        ));
+                        vec![]
+                    })
+                } else {
+                    call_raw(
+                        post.author,
+                        "execute",
+                        &mint_group_shares(
+                            post.author,
+                            union_profile.union_group_id.unwrap(),
+                            union_profile.union_access_config_id.unwrap(),
+                            req.alias_principal.unwrap(),
+                            Shares::from(10),
+                        ),
+                        0,
+                    )
+                    .await
+                    .unwrap_or_else(|err| {
+                        print(format!(
+                            "Unable to mint shares on like - remote call failed - {:?}",
+                            err
+                        ));
+                        vec![]
+                    })
+                };
+
+                // WARNING: this canister doesn't memorize if you already received your reward liking this post
                 print(format!("{:?}", res))
             })
         }

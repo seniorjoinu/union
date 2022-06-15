@@ -21,7 +21,7 @@ const Input = withBorder(
 
     ${getFontStyles('p3', 'regular')}
   `,
-  { quadFillColor: 'rgba(0, 0,0,0)' },
+  { quadFillColor: 'rgba(0, 0, 0, 0)' },
 );
 const Area = withBorder(
   styled.textarea`
@@ -39,7 +39,7 @@ const Area = withBorder(
       display: none;
     }
   `,
-  { quadFillColor: 'rgba(0, 0,0,0)' },
+  { quadFillColor: 'rgba(0, 0, 0, 0)' },
 );
 
 const RowInputWrapper = styled(Row)`

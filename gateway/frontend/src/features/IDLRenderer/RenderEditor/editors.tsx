@@ -27,7 +27,7 @@ export const TypeForm = ({
 }: TypeFormProps) => {
   const ctx = useContext(context);
   const { getValues, control } = ctx;
-  const settings = useSettings(path, absolutePath);
+  const { settings, ...s } = useSettings(path, absolutePath);
 
   const transformValue = useMemo(() => transform || ((v: string) => v), [transform]);
   const parseValue = useMemo(() => parse || ((v: any) => String(v)), [parse]);
@@ -54,7 +54,7 @@ export const TypeForm = ({
   ]);
 
   return (
-    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={{ settings, ...s }} ctx={ctx} path={path} name={name}>
       <Controller
         name={path}
         control={control}
@@ -109,7 +109,7 @@ export const PrincipalForm = (p: TypeFormProps) => (
 export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
   const ctx = useContext(context);
   const { control } = ctx;
-  const settings = useSettings(path, absolutePath);
+  const { settings, ...s } = useSettings(path, absolutePath);
   const disabled = useMemo(() => p.disabled || settings.disabled, [p.disabled, settings.disabled]);
   const name = useMemo(() => (typeof settings.label == 'string' ? settings.label : p.name), [
     settings.label,
@@ -117,7 +117,7 @@ export const BoolForm = ({ path, absolutePath, ...p }: TypeFormProps) => {
   ]);
 
   return (
-    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={{ settings, ...s }} ctx={ctx} path={path} name={name}>
       <Controller
         name={path}
         control={control}

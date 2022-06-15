@@ -34,7 +34,7 @@ export interface OptFormProps extends RenderProps {
 }
 export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
   const ctx = useContext(context);
-  const settings = useSettings(path, absolutePath);
+  const { settings, ...s } = useSettings(path, absolutePath);
 
   useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
@@ -76,7 +76,7 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
 
   return (
     <Column>
-      <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+      <SettingsWrapper settings={{ settings, ...s }} ctx={ctx} path={path} name={name}>
         <Checkbox
           onChange={() =>
             ctx.setValue(path, !enabled ? [defaultValue] : [], {
@@ -101,7 +101,7 @@ export interface RecordFormProps extends RenderProps {
 }
 export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps) => {
   const ctx = useContext(context);
-  const settings = useSettings(path, absolutePath);
+  const { settings, ...s } = useSettings(path, absolutePath);
 
   // useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
@@ -112,9 +112,9 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
       fields.reduce((acc, f) => {
         const fieldPath = `${path}${path ? '.' : ''}${f[0]}`;
         const fieldAbsPath = `${absolutePath}${absolutePath ? '.' : ''}-1`;
-        const s = getSettings(fieldPath, fieldAbsPath, ctx.settings);
+        const { settings } = getSettings(fieldPath, fieldAbsPath, ctx.settings);
 
-        return { ...acc, [fieldPath]: s?.order || 100 };
+        return { ...acc, [fieldPath]: settings?.order || 100 };
       }, {} as Record<string, number>),
     [absolutePath, path, ctx.settings, fields],
   );
@@ -139,7 +139,7 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
 
   // TODO upgrade order to indexed
   return (
-    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={{ settings, ...s }} ctx={ctx} path={path} name={name}>
       <Field
         title={name}
         weight={{ title: 'medium' }}
@@ -173,7 +173,7 @@ export interface VariantFormProps extends RenderProps {
 }
 export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormProps) => {
   const ctx = useContext(context);
-  const settings = useSettings(path, absolutePath);
+  const { settings, ...s } = useSettings(path, absolutePath);
 
   useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
@@ -221,7 +221,7 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
 
   return (
     <Column>
-      <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+      <SettingsWrapper settings={{ settings, ...s }} ctx={ctx} path={path} name={name}>
         <AdvancedSelect
           label={name}
           onChange={handleChange}
@@ -275,7 +275,7 @@ export interface VecFormProps extends RenderProps {
 }
 export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   const ctx = useContext(context);
-  const settings = useSettings(path, absolutePath);
+  const { settings, ...s } = useSettings(path, absolutePath);
   const { append, remove } = useFieldArray({ name: path, control: ctx.control });
 
   // useWatch({ name: path, control: ctx.control });
@@ -297,7 +297,7 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   }, [append, type]);
 
   return (
-    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={{ settings, ...s }} ctx={ctx} path={path} name={name}>
       <VecContainer>
         <VecTitle variant='p2' weight='medium' $error={state.error?.message}>
           {name}
@@ -339,7 +339,7 @@ export interface TupleFormProps extends RenderProps {
 }
 export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) => {
   const ctx = useContext(context);
-  const settings = useSettings(path, absolutePath);
+  const { settings, ...s } = useSettings(path, absolutePath);
 
   // useWatch({ name: path, control: ctx.control });
   const state = ctx.getFieldState(path);
@@ -367,9 +367,9 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
   );
 
   return (
-    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={{ settings, ...s }} ctx={ctx} path={path} name={name}>
       <VecContainer margin={16} $disabled={disabled}>
-        <VecTitle variant='p2' $error={state.error?.message}>
+        <VecTitle variant='p2' weight='medium' $error={state.error?.message}>
           {name}
         </VecTitle>
         {children}

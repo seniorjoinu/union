@@ -47,7 +47,7 @@ const Footer = styled.div`
 `;
 
 const Heart = styled(H)<{ $selected: boolean; $disabled: boolean }>`
-  width: 24px;
+  width: 16px;
   height: 16px;
   color: ${({ $selected }) => ($selected ? 'red' : 'black')};
   transition: color 0.2s ease;

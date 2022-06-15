@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Message, MessageData } from '@union/client';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { normalizeValues } from './IDLRenderer';
 
 export type { MessageData, Message } from '@union/client';
@@ -11,7 +11,7 @@ export interface UseClientProps<T> {
 
 export function useClient<T = any>({ parser }: UseClientProps<T>) {
   const [data, setData] = useState<T | undefined>(undefined);
-  const [opts, setOpts] = useState<{ after?: 'close' } | undefined>(undefined);
+  const [opts, setOpts] = useState<{ after?: 'close' | 'keep' } | undefined>(undefined);
 
   const handler = useCallback((e: MessageEvent<Message>) => {
     if (
@@ -109,22 +109,7 @@ export type InternalFormProps = {
 
 export const InternalForm = ({ children, required }: InternalFormProps) => {
   const location = useLocation();
-  const nav = useNavigate();
-  const [data, setData] = useState<MessageData | undefined>(undefined);
-
-  useEffect(() => {
-    if (!location.state) {
-      return;
-    }
-
-    const data = parseMessage(location.state);
-
-    if (data) {
-      setData(data);
-    }
-    // location.state = null;
-    nav(location.pathname, { replace: true, state: null });
-  }, []);
+  const data = useMemo(() => parseMessage(location.state) || undefined, [location.state]);
 
   if (!data && required) {
     return <span>Waiting data...</span>;

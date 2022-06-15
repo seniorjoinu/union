@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { useTrigger } from '../toolkit/useTrigger';
 import { AdvancedSelect as AS, AdvancedSelectProps, AdvancedOption } from './Select';
@@ -72,6 +72,7 @@ export const EntitySelect = <T extends {}>({
         renderItem={(item: T) =>
           renderItem(item, <AdvancedOption value={valueGetter(item)} obj={item} />)
         }
+        verbose={verbose}
         onEntitiesChanged={setEntities}
       />
     </AdvancedSelect>
