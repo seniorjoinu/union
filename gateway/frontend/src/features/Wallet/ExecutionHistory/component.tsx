@@ -23,8 +23,7 @@ const Container = styled(PageWrapper)`
     margin-bottom: 16px;
   }
   ${ExecutionFilter} {
-    margin-bottom: 16px;
-    width: 100%;
+    margin-bottom: 32px;
   }
 `;
 

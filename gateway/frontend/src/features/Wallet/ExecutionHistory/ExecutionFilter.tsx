@@ -48,8 +48,6 @@ export const ExecutionFilter = styled(({ filter, onChange, ...p }: ExecutionFilt
     }
 
     onChange(newFilter);
-
-    console.log('!!!VALUES', getValues());
   }, [onChange, getValues]);
 
   return (
@@ -69,6 +67,7 @@ export const ExecutionFilter = styled(({ filter, onChange, ...p }: ExecutionFilt
             defaultValue={filter.endpoint[0]?.canister_id.toString()}
             onKeyDown={(e) => e.key == 'Enter' && handleSubmit()}
             helperText={error?.message}
+            placeholder='Type and press Enter'
           />
         )}
       />
@@ -83,6 +82,7 @@ export const ExecutionFilter = styled(({ filter, onChange, ...p }: ExecutionFilt
             defaultValue={filter.endpoint[0]?.method_name}
             onKeyDown={(e) => e.key == 'Enter' && handleSubmit()}
             helperText={error?.message}
+            placeholder='Type and press Enter'
           />
         )}
       />
@@ -92,7 +92,11 @@ export const ExecutionFilter = styled(({ filter, onChange, ...p }: ExecutionFilt
         render={({ field: { value, ...field }, fieldState: { error } }) => (
           <TextField
             label='From'
-            onChange={(e) => field.onChange(BigInt(e.target.valueAsNumber * 10 ** 6))}
+            onChange={(e) => {
+              const time = new Date(e.target.value).getTime();
+
+              field.onChange(!isNaN(time) ? BigInt(time * 10 ** 6) : null);
+            }}
             type='datetime-local'
             defaultValue={bigintToTimestamp(filter.from_timestamp[0])}
             onKeyDown={(e) => e.key == 'Enter' && handleSubmit()}
@@ -105,8 +109,12 @@ export const ExecutionFilter = styled(({ filter, onChange, ...p }: ExecutionFilt
         control={control}
         render={({ field: { value, ...field }, fieldState: { error } }) => (
           <TextField
-            label='From'
-            onChange={(e) => field.onChange(BigInt(e.target.valueAsNumber * 10 ** 6))}
+            label='To'
+            onChange={(e) => {
+              const time = new Date(e.target.value).getTime();
+
+              field.onChange(!isNaN(time) ? BigInt(time * 10 ** 6) : null);
+            }}
             type='datetime-local'
             defaultValue={bigintToTimestamp(filter.from_timestamp[0])}
             onKeyDown={(e) => e.key == 'Enter' && handleSubmit()}

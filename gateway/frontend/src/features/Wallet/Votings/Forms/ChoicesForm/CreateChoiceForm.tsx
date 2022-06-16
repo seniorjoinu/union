@@ -121,6 +121,7 @@ export function CreateChoiceForm({
                           buffer ? { Encoded: [...new Uint8Array(buffer)] } : undefined,
                         )
                       }
+                      value={'Encoded' in field.value ? Buffer.from(field.value.Encoded) : null}
                     />
                   );
                 }}
