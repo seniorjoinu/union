@@ -87,12 +87,18 @@ impl<T: Ord> SortedByTimestamp<T> {
 
         let to_idx = match self.0.binary_search_by(|it| it.timestamp.cmp(to)) {
             Ok(idx) => idx,
-            Err(idx) => idx,
+            Err(idx) => {
+                if idx == self.0.len() {
+                    idx - 1
+                } else {
+                    idx
+                }
+            }
         };
 
         let mut result = vec![];
 
-        for i in from_idx..to_idx {
+        for i in from_idx..(to_idx + 1) {
             if let Some(entry) = self.0.get(i) {
                 for record in &entry.records {
                     result.push(record);
