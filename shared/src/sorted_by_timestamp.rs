@@ -76,7 +76,13 @@ impl<T: Ord> SortedByTimestamp<T> {
 
         let from_idx = match self.0.binary_search_by(|it| it.timestamp.cmp(from)) {
             Ok(idx) => idx,
-            Err(idx) => idx,
+            Err(idx) => {
+                if idx == 0 {
+                    0
+                } else {
+                    idx - 1
+                }
+            }
         };
 
         let to_idx = match self.0.binary_search_by(|it| it.timestamp.cmp(to)) {
