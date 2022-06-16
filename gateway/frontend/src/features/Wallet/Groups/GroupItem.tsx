@@ -8,6 +8,9 @@ import { Group, Shares } from 'union-ts';
 import { useCurrentUnion } from '../context';
 import { ProfileInfo } from '../Profile';
 
+const Controls = styled(Row)`
+  align-items: center;
+`;
 const Children = styled(Row)`
   flex-grow: 1;
   justify-content: flex-end;
@@ -68,13 +71,16 @@ export const GroupItem = styled(
         {...p}
       >
         <Container>
-          <Row>
-            {group.private && <Chips variant='p3'>private</Chips>}
+          <Controls>
+            <Chips variant='caption'>id: {String(group.id[0])}</Chips>
+            {group.private && <Chips variant='caption'>private</Chips>}
             {!fetching.get_total_group_shares && (
-              <Chips variant='p3'>total shares {String(data.get_total_group_shares?.total)}</Chips>
+              <Chips variant='caption'>
+                total shares {String(data.get_total_group_shares?.total)}
+              </Chips>
             )}
             <Children>{children}</Children>
-          </Row>
+          </Controls>
           <Field variant={{ value: 'p3' }}>{group.description}</Field>
 
           <Pager

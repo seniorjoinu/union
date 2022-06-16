@@ -6,3 +6,4 @@ export * from './VotingConfigListField';
 export * from './NestedVotingConfigListField';
 export * from './TimestampField';
 export * from './Candid';
+export * from './rules';

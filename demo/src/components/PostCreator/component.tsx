@@ -116,7 +116,7 @@ export const PostCreator = ({ onSuccess = () => {}, ...p }: PostCreatorProps) =>
 
     const program = getProgram([['add_post', [{ content }]]]);
 
-    await client.createVoting({
+    await client.submit({
       voting: {
         name: 'Posting on Thoughter',
         description: 'We want to tell the world our thoughts on behalf of our union',

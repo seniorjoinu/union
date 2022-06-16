@@ -28,7 +28,7 @@ export const OptForm = ({ type, path, absolutePath, ...p }: OptFormProps) => {
       ),
     [type, path, absolutePath],
   );
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
+  const name = typeof settings.settings.label == 'string' ? settings.settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
@@ -59,7 +59,7 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
         const fieldAbsPath = `${absolutePath}${absolutePath ? '.' : ''}${f[0]}`;
         const s = getSettings(fieldPath, fieldAbsPath, ctx.settings);
 
-        return { ...acc, [fieldPath]: s?.order || 100 };
+        return { ...acc, [fieldPath]: s.settings?.order || 100 };
       }, {} as Record<string, number>),
     [absolutePath, path, ctx.settings, fields],
   );
@@ -75,7 +75,7 @@ export const RecordForm = ({ fields, path, absolutePath, ...p }: RecordFormProps
     [fields, fieldOrders],
   );
 
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
+  const name = typeof settings.settings.label == 'string' ? settings.settings.label : p.name;
   const Wrapper = path ? ShiftedColumn : Column;
 
   return (
@@ -131,7 +131,7 @@ export const VariantForm = ({ fields, path, absolutePath, ...p }: VariantFormPro
     );
   }, [selected, fields, ctx.transformLabel, path, absolutePath]);
 
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
+  const name = typeof settings.settings.label == 'string' ? settings.settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
@@ -172,7 +172,7 @@ export const VecForm = ({ path, type, absolutePath, ...p }: VecFormProps) => {
   }, [items, isSimpleValues]);
 
   const VecWrapper = align == 'row' ? Row : Column;
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
+  const name = typeof settings.settings.label == 'string' ? settings.settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
@@ -225,7 +225,7 @@ export const TupleForm = ({ fields, path, absolutePath, ...p }: TupleFormProps) 
       ),
     [fields, path],
   );
-  const name = typeof settings.label == 'string' ? settings.label : p.name;
+  const name = typeof settings.settings.label == 'string' ? settings.settings.label : p.name;
 
   return (
     <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>

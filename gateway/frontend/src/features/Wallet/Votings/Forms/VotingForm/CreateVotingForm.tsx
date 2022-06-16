@@ -62,21 +62,15 @@ export function CreateVotingForm({
     if (!endpoints.length) {
       return;
     }
-
-    Promise.all(
-      endpoints.map(async (e) =>
-        getMethodAccessVotingConfig({
-          canisterId: e.canister_id,
-          methodName: e.method_name,
-          canister,
-        }),
-      ),
-    )
+    getMethodAccessVotingConfig({
+      program: endpoints.map((e) => ({ canisterId: e.canister_id, methodName: e.method_name })),
+      canister,
+    })
       .then((configs) => {
-        const first = configs[0] || [];
+        const first = configs[0]?.votingConfigs || [];
 
         const res = first
-          .filter((c) => configs.find((cc) => cc.find((ccc) => ccc.id[0] == c.id[0])))
+          .filter((c) => configs.find((cc) => cc.votingConfigs.find((vc) => vc.id[0] == c.id[0])))
           .map((c) => c.id[0]!);
 
         return res;
@@ -119,7 +113,7 @@ export function CreateVotingForm({
   );
 
   return (
-    <Container title='Create new voting' withBack {...p}>
+    <Container title='Create random voting' withBack {...p}>
       <Form settings={settings} defaultValue={data?.voting}>
         {(ctx) => (
           <SubmitButton

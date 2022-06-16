@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Text as T, TextProps } from '../Text';
-import { theme } from '../theme';
 import { withBorder } from '../withBorder';
 
 const Text = styled(T)`
@@ -68,6 +67,6 @@ export const PureButton = ({
 export const Button = withBorder(PureButton, {
   withQuad: false,
   size: 6,
-  color: theme.colors.dark,
-  hoverColor: theme.colors.grey,
+  color: 'dark',
+  hoverColor: 'grey',
 });

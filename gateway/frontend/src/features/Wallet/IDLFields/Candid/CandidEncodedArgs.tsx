@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
+import { ViewerSettings } from 'src/features/IDLRenderer';
 import styled from 'styled-components';
 import { RemoteCallArgs } from 'union-ts';
+import { getRules } from '../rules';
 import { useCandidArgs, UseCandidArgsProps } from './hook';
 
 const Container = styled.div`
@@ -30,6 +32,13 @@ export const CandidEncodedArgs = styled(
       return decode(Buffer.from(args.Encoded), type?.argTypes);
     }, [decode, args, type]);
 
+    const settings = useMemo(
+      (): ViewerSettings<any> => ({
+        rules: getRules(),
+      }),
+      [],
+    );
+
     if (!type?.argTypes.length || !decoded) {
       return null;
     }
@@ -40,7 +49,7 @@ export const CandidEncodedArgs = styled(
 
     return (
       <Container {...p}>
-        <view.View value={{ arguments: decoded }} />
+        <view.View value={{ arguments: decoded }} settings={settings} />
       </Container>
     );
   },

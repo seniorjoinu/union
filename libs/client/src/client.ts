@@ -41,25 +41,25 @@ export class UnionClient {
     opener.view(this.auth.union ? `/wallet/${this.auth.union.toString()}` : '/wallets');
   };
 
+  submit = (payload: MessageData, options?: OpenerOptions) => {
+    this.open(payload, 'submit/external', options);
+  };
+
   execute = (payload: MessageData, options?: OpenerOptions) => {
-    if (!this.auth.union) {
-      throw 'Not authorized';
-    }
-    const opener = new UnionWindowOpener(this.options);
-    opener.open({
-      path: `/wallet/${this.auth.union.toString()}/execution-history/external-execute`,
-      payload,
-      options,
-    });
+    this.open(payload, 'execution-history/external-execute', options);
   };
 
   createVoting = (payload: MessageData, options?: OpenerOptions) => {
+    this.open(payload, 'votings/crud/external-execute', options);
+  };
+
+  private open = (payload: MessageData, path: string, options?: OpenerOptions) => {
     if (!this.auth.union) {
       throw 'Not authorized';
     }
     const opener = new UnionWindowOpener(this.options);
     opener.open({
-      path: `/wallet/${this.auth.union.toString()}/votings/crud/external-execute`,
+      path: `/wallet/${this.auth.union.toString()}/${path}`,
       payload,
       options,
     });
@@ -68,7 +68,7 @@ export class UnionClient {
   // executeDirectly = async (payload: ExecuteRequest, agent: HttpAgent) => {
   //   // TODO call with proof from union to direct execution
   //   // Take it from authorizer
-  //   // this.auth.proof;
+  //   // this.auth.getProof;
   //   return this.getActor(agent).execute(payload);
   // };
 

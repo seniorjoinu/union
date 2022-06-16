@@ -22,6 +22,7 @@ import { Permissions, CreatePermissionForm, UpdatePermissionForm } from './Permi
 import { AccessConfigs, CreateAccessConfigForm, UpdateAccessConfigForm } from './AccessConfigs';
 import { Votings, VotingPage, VotingRouter } from './Votings';
 import { ExecutionRouter } from './ExecutionHistory';
+import { SubmitWizzardRouter } from './SubmitWizzard';
 import {
   VotingConfigs,
   CreateVotingConfigForm,
@@ -113,6 +114,8 @@ export const Wallet = () => {
           <Route path='/votings/voting/:votingId' element={<VotingPage unionId={principal} />} />
           <Route path='/votings/:votingId' element={<Votings />} />
           <Route path='/votings/crud/*' element={<VotingRouter unionId={principal} />} />
+
+          <Route path='/submit/*' element={<SubmitWizzardRouter unionId={principal} />} />
 
           {/* <Route path='/history' element={<History createLink='execute' />} />
           <Route

@@ -8,6 +8,8 @@ import {
   Text,
   AdvancedSelect,
   AdvancedOption,
+  Chips,
+  Row,
 } from '@union/components';
 import { useUnion } from 'services';
 import styled from 'styled-components';
@@ -22,6 +24,7 @@ import {
   VotingConfig,
 } from 'union-ts';
 import { Controller, useForm } from 'react-hook-form';
+import { round } from 'toolkit';
 import { normalizeValues } from '../../../IDLRenderer';
 import { useChoices } from './hook';
 import { ChoiceItem } from './ChoiceItem';
@@ -29,6 +32,9 @@ import { ChoiceItem } from './ChoiceItem';
 const Button = styled(SubmitButton)``;
 const ShareBlock = styled(Column)`
   padding: 8px;
+`;
+const OptionContent = styled(Row)`
+  align-items: center;
 `;
 const Container = styled(Column)`
   & > ${Spinner} {
@@ -208,13 +214,50 @@ export const Round0 = styled(
                   value={field.value?.group.name ? [field.value?.group.name] : []}
                   multiselect={false}
                   helperText={error?.message}
+                  renderSelectedValue={() =>
+                    (field.value ? (
+                      <OptionContent>
+                        <span>{field.value.group.name}</span>
+                        <Chips variant='caption'>
+                          {`${String(
+                            round(
+                              Number(
+                                (BigInt(100) * field.value.shares_info.balance) /
+                                  field.value.shares_info.total_supply,
+                              ),
+                            ),
+                          )}% voting power`}
+                        </Chips>
+                        <Chips variant='caption'>
+                          {`${String(field.value.shares_info.balance)} of ${String(
+                            field.value.shares_info.total_supply,
+                          )} shares`}
+                        </Chips>
+                      </OptionContent>
+                    ) : null)
+                  }
                 >
                   {choiceShareInfos.map((info) => (
-                    <AdvancedOption
-                      key={Number(info.group_id)}
-                      value={info.group.name}
-                      obj={info}
-                    />
+                    <AdvancedOption key={Number(info.group_id)} value={info.group.name} obj={info}>
+                      <OptionContent>
+                        <span>{info.group.name}</span>
+                        <Chips variant='caption'>
+                          {`${String(
+                            round(
+                              Number(
+                                (BigInt(100) * info.shares_info.balance) /
+                                  info.shares_info.total_supply,
+                              ),
+                            ),
+                          )}% voting power`}
+                        </Chips>
+                        <Chips variant='caption'>
+                          {`${String(info.shares_info.balance)} of ${String(
+                            info.shares_info.total_supply,
+                          )} shares`}
+                        </Chips>
+                      </OptionContent>
+                    </AdvancedOption>
                   ))}
                 </AdvancedSelect>
               </ShareBlock>

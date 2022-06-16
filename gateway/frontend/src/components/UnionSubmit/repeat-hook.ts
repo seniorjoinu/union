@@ -20,7 +20,7 @@ export interface UnionRepeatSubmitResult {
   isAllowed: boolean;
   submitting: boolean;
   submit(e: React.MouseEvent<HTMLButtonElement>, payloads: any[]): Promise<any[]>;
-  createVoting(payloads: any[]): void;
+  // createVoting(payloads: any[]): void;
 }
 
 export const useUnionRepeatSubmit = ({
@@ -40,7 +40,12 @@ export const useUnionRepeatSubmit = ({
     }
 
     getMethodAccess({
-      ...program,
+      program: [
+        {
+          canisterId: program.canisterId,
+          methodName: program.methodName,
+        },
+      ],
       profile: identity.getPrincipal(),
     });
   }, []);
@@ -120,17 +125,17 @@ export const useUnionRepeatSubmit = ({
     [program, methodAccess, onClick, onExecuted, setSubmitting],
   );
 
-  const createVoting = useCallback(
-    (payloads: any[]) => {
-      const state = {
-        voting: null,
-        choices: [], // TODO
-      };
+  // const createVoting = useCallback(
+  //   (payloads: any[]) => {
+  //     const state = {
+  //       voting: null,
+  //       choices: [], // TODO
+  //     };
 
-      nav(`/wallet/${unionId}/execute`, { state });
-    },
-    [program, unionId],
-  );
+  //     nav(`/wallet/${unionId}/execute`, { state });
+  //   },
+  //   [program, unionId],
+  // );
 
   const isAllowed = !!methodAccess[program.methodName]?.length;
 
@@ -138,6 +143,6 @@ export const useUnionRepeatSubmit = ({
     isAllowed,
     submitting,
     submit,
-    createVoting,
+    // createVoting,
   };
 };

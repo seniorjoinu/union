@@ -1,20 +1,23 @@
 import { Principal } from '@dfinity/principal';
 import { UnionWindowOpener, UnionWindowOpenerOptions } from './opener';
-import { OpenerOptions } from './types';
+import {
+  GetMyQueryDelegationProofRequest,
+  QueryDelegationProof,
+  _SERVICE,
+} from './assets/union-wallet.did';
+// @ts-expect-error
+import { idlFactory as idl } from './assets/union-wallet.did.js';
+import { OpenerOptions, AuthData, Proof } from './types';
+import { buildDecoder } from '@union/serialize';
 
 export interface UnionWindowAuthorizerOptions extends UnionWindowOpenerOptions {}
 
 export interface LoginProps {
   principal: Principal;
+  request?: GetMyQueryDelegationProofRequest;
 }
 
-export type Proof = number[];
-
-export interface AuthData {
-  profile: string;
-  proof: Proof;
-  union: string;
-}
+export type AuthorizationStatus = false | 'authorized' | 'delegated';
 
 const STORAGE_KEY = 'union-data';
 export class UnionWindowAuthorizer {
@@ -32,6 +35,24 @@ export class UnionWindowAuthorizer {
     return this.data?.proof || null;
   }
 
+  getProof = () => {
+    let proof: QueryDelegationProof | null = null;
+    if (Array.isArray(this.data?.proof) && typeof this.data?.proof[0] == 'number') {
+      try {
+        const decoder = buildDecoder<_SERVICE>(idl, 'retTypes');
+        const decoded = decoder.get_my_query_delegation_proof(
+          new Uint8Array(this.data.proof).buffer,
+        );
+
+        proof = decoded[0]?.proof || null;
+      } catch (e) {
+        console.error('Unable to parse proof', e);
+      }
+    }
+    console.log('Decoded proof', proof);
+    return proof;
+  };
+
   get profile(): Principal | null {
     return this.data?.profile ? Principal.from(this.data?.profile) : null;
   }
@@ -40,24 +61,29 @@ export class UnionWindowAuthorizer {
     return checkPrincipal(this.data?.union);
   }
 
-  isAuthorized = () => {
-    // TODO check proof here (not async!)
-    return !!this.data;
+  isAuthorized = (): AuthorizationStatus => {
+    if (this.data?.union && this.data.proof) {
+      return 'delegated';
+    }
+    if (this.data?.union || this.data?.profile) {
+      return 'authorized';
+    }
+    return false;
   };
 
-  login = ({ principal }: LoginProps, opts?: OpenerOptions) => {
+  login = ({ principal, request }: LoginProps, opts?: OpenerOptions) => {
     return new Promise<Proof | null>((resolve, reject) => {
       const timeout = setTimeout(() => reject('Time is over'), 5 * 60 * 1000);
 
       this.opener.open({
         path: `/wallets/authorize`,
-        payload: { principal },
+        payload: { principal, request },
         options: { after: 'close', ...opts },
-        handleResponse: (data) => {
+        handleResponse: async (data) => {
           if (timeout) {
             clearTimeout(timeout);
           }
-          this.data = parseData(data);
+          this.data = await parseData(data);
           this.store();
           resolve(this.proof);
         },
@@ -93,25 +119,18 @@ export class UnionWindowAuthorizer {
 }
 
 const parseData = (data: any): AuthData | null => {
-  if (
-    !data ||
-    !('proof' in data) ||
-    !Array.isArray(data.proof) ||
-    Number.isNaN(data.proof[0]) ||
-    !('union' in data) ||
-    typeof data.union !== 'string'
-  ) {
+  if (!data) {
     return null;
   }
 
   return {
-    profile: data.profile,
-    proof: data.proof,
-    union: data.union,
+    profile: data.profile ? String(data.profile) : null,
+    proof: data.proof && Array.isArray(data.proof) ? data.proof : null,
+    union: typeof data.union == 'string' ? data.union : null,
   };
 };
 
-const checkPrincipal = (canisterId: string | Principal | undefined): Principal | null => {
+const checkPrincipal = (canisterId: string | Principal | undefined | null): Principal | null => {
   let principal: Principal;
 
   try {

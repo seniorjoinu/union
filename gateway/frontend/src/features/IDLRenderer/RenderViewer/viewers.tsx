@@ -19,13 +19,13 @@ export const TypeForm = ({
   ...p
 }: TypeFormProps) => {
   const ctx = useContext(context);
-  const settings = useSettings(path, absolutePath);
+  const { settings, ...s } = useSettings(path, absolutePath);
 
   const value = path ? get(ctx.value, path) : ctx.value;
   const name = typeof settings.label == 'string' ? settings.label : p.name;
 
   return (
-    <SettingsWrapper settings={settings} ctx={ctx} path={path} name={name}>
+    <SettingsWrapper settings={{ settings, ...s }} ctx={ctx} path={path} name={name}>
       <Field {...defaultFieldProps} title={name} align='row'>
         {transformValue(value)}
       </Field>

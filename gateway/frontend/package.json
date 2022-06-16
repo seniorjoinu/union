@@ -31,6 +31,7 @@
     "react": "^18.0.9",
     "react-dom": "^18.0.9",
     "react-hook-form": "^7.31.2",
+    "react-markdown": "^8.0.3",
     "react-router-dom": "6.2.2",
     "react-transition-group": "^4.4.2",
     "styled-components": "^5.3.5"

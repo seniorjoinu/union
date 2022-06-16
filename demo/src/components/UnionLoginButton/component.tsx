@@ -136,7 +136,7 @@ export const UnionLoginButton = ({
   return (
     <Container {...props}>
       <UnionProfileModal visible={modalVisible} onClose={() => setModalVisible(false)} />
-      <UButton $authorized={authorized} onClick={!authorized ? handleLogin : undefined}>
+      <UButton $authorized={!!authorized} onClick={!authorized ? handleLogin : undefined}>
         <Logo />
       </UButton>
       {authorized && (

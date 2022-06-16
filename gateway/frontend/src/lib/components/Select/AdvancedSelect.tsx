@@ -14,7 +14,7 @@ const Tooltip = withBorder(
     background-color: ${({ theme }) => theme.colors.light};
   `,
   {
-    quadFillColor: 'white',
+    quadFillColor: 'rgb(255, 255, 255)',
   },
 );
 

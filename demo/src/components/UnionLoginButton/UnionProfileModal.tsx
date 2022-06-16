@@ -31,7 +31,7 @@ export const UnionProfileModal = ({ visible, onClose, ...p }: UnionProfileModalP
         ],
       ]);
 
-      client.createVoting({
+      client.submit({
         voting: {
           name: 'Changing our name on Thoughter',
           description: 'We want to change our public name',

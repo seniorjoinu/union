@@ -55,7 +55,7 @@ export type FieldSetting<T, CTX> = {
       path: string,
       name: React.ReactNode,
       origin: React.ReactNode,
-    ) => JSX.Element | null | void | false;
+    ) => JSX.Element | null | false;
   };
 };
 
@@ -71,11 +71,18 @@ export type Settings<T extends FieldValues, CTX> = {
   rules?: Record<string, FieldSetting<T, CTX>>;
 };
 
+export interface GetSettingsResult<T, CTX> {
+  settings: FieldSetting<T, CTX>;
+  rule: FieldSetting<T, CTX>;
+  abs: FieldSetting<T, CTX>;
+  field: FieldSetting<T, CTX>;
+}
+
 export const getSettings = <T extends FieldValues, CTX>(
   path: FieldPath<T>,
   absolutePath: FieldPath<T>,
   settings: Settings<T, CTX>,
-) => {
+): GetSettingsResult<T, CTX> => {
   const fields = settings.fields || ({} as FieldSettings<T, CTX>);
   const rules = settings.rules || ({} as Record<string, FieldSetting<T, CTX>>);
   const recEntry = Object.entries(rules).find(([key, s]) => {
@@ -86,12 +93,11 @@ export const getSettings = <T extends FieldValues, CTX>(
     return absolutePath.endsWith(key) || path.endsWith(key);
   }) || ['', {}];
 
-  const recConfig = recEntry ? recEntry[1] || {} : {};
+  const rule = (recEntry ? recEntry[1] || {} : {}) as FieldSetting<T, CTX>;
+  const abs = (absolutePath !== path ? fields[absolutePath] || {} : {}) as FieldSetting<T, CTX>;
+  const field = (fields[path] || {}) as FieldSetting<T, CTX>;
 
-  const absConfig = fields[absolutePath] || {};
-  const config = fields[path] || {};
-
-  return { ...recConfig, ...absConfig, ...config } as FieldSetting<T, CTX>;
+  return { settings: { ...rule, ...abs, ...field }, rule, abs, field };
 };
 
 export const SettingsWrapper = <T extends FieldValues, CTX>({
@@ -104,10 +110,25 @@ export const SettingsWrapper = <T extends FieldValues, CTX>({
   children: React.ReactNode;
   ctx: CTX;
   path: FieldPath<T>;
-  settings: FieldSetting<T, CTX>;
+  settings: GetSettingsResult<T, CTX>;
   name?: React.ReactNode;
 }): JSX.Element | null => {
-  const { hide, adornment } = settings;
+  const { hide, adornment } = settings.settings;
+
+  const origin = useMemo(() => {
+    let origin = settings.rule.adornment?.render
+      ? settings.rule.adornment.render(ctx, path, name, children)
+      : children;
+
+    origin = settings.abs.adornment?.render
+      ? settings.abs.adornment.render(ctx, path, name, origin)
+      : origin;
+
+    origin = settings.field.adornment?.render
+      ? settings.field.adornment.render(ctx, path, name, origin)
+      : origin;
+    return origin;
+  }, [settings, children]);
 
   if (hide) {
     return null;
@@ -116,13 +137,12 @@ export const SettingsWrapper = <T extends FieldValues, CTX>({
   if (!adornment) {
     return <>{children}</>;
   }
+
   return (
     <>
-      {adornment.kind == 'start' && adornment.render && adornment.render(ctx, path, name, children)}
-      {adornment.kind == 'replace' && adornment.render
-        ? adornment.render(ctx, path, name || '', children)
-        : children}
-      {adornment.kind == 'end' && adornment.render && adornment.render(ctx, path, name, children)}
+      {adornment.kind == 'start' && adornment.render && origin}
+      {adornment.kind == 'replace' && adornment.render ? origin : children}
+      {adornment.kind == 'end' && adornment.render && origin}
     </>
   );
 };

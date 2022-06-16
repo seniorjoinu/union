@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const executeBtn = document.querySelector('#execute') as HTMLInputElement;
   const executeCloseBtn = document.querySelector('#execute-close') as HTMLInputElement;
   const createVotingBtn = document.querySelector('#createVoting') as HTMLInputElement;
+  const submitBtn = document.querySelector('#submit') as HTMLInputElement;
 
   provider.value = localStorage.getItem('_provider') || '';
 
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   executeBtn.addEventListener('click', execute);
   executeCloseBtn.addEventListener('click', executeClose);
   createVotingBtn.addEventListener('click', createVoting);
+  submitBtn.addEventListener('click', submit);
   authBtn.addEventListener('click', auth);
 
   getAuth();
@@ -113,12 +115,56 @@ const createVoting = () => {
   });
 };
 
+const submit = () => {
+  client = new UnionClient({
+    ...getData(),
+  });
+
+  client.submit({
+    voting: {
+      name: 'Sample voting',
+      description: 'Sample voting description',
+      winners_need: 1,
+    },
+    choices: [
+      {
+        name: 'Sample voting choice',
+        description: 'Make sample empty program from example page',
+        program: {
+          RemoteCallSequence: [
+            {
+              endpoint: {
+                canister_id: Principal.from('aaaaa-aa'),
+                method_name: 'create_canister',
+              },
+              cycles: BigInt(0),
+              args: { Encoded: [] },
+            },
+          ],
+        },
+      },
+    ],
+  });
+};
+
 const auth = async () => {
   client = new UnionClient({
     ...getData(),
   });
 
-  const result = await client.login({ principal: Principal.from('aaaaa-aa') }, { after: 'close' });
+  const result = await client.login(
+    {
+      principal: Principal.from('aaaaa-aa'),
+      request: {
+        requested_targets: [
+          {
+            Endpoint: { canister_id: Principal.from('aaaaa-aa'), method_name: 'test' },
+          },
+        ],
+      },
+    },
+    { after: 'close' },
+  );
   console.log('result', result);
 
   getAuth();

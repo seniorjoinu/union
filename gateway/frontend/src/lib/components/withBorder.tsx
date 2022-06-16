@@ -1,29 +1,29 @@
 import * as React from 'react';
 import styled, { css } from 'styled-components';
-import { Color } from './Text';
-import { ComponentsTheme, theme } from './theme';
+import { TextProps } from './Text';
+import { ComponentsTheme } from './theme';
 
 interface WithBorderProps {
   className?: string;
   style?: React.CSSProperties;
   as?: any;
   noBorder?: boolean;
-  borderColor?: Color;
+  borderColor?: TextProps['color'];
 }
 export interface WithBorderOptions {
-  color?: string;
-  hoverColor?: string;
+  color?: TextProps['color'];
+  hoverColor?: TextProps['color'];
   size?: number;
   withQuad?: boolean;
-  quadFillColor?: string;
-  hoverQuadFillColor?: string;
+  quadFillColor?: TextProps['color'];
+  hoverQuadFillColor?: TextProps['color'];
 }
 
 const defaultOptions: WithBorderOptions = {
-  color: theme.colors.grey,
+  color: 'grey',
   size: 8,
   withQuad: true,
-  quadFillColor: theme.colors.dark,
+  quadFillColor: 'dark',
 };
 
 export const withBorder = <
@@ -43,12 +43,25 @@ export const withBorder = <
   const BorderWrapper = styled.div<{
     $disabled: boolean;
     $noBorder: boolean;
-    $borderColor?: Color;
+    $borderColor?: TextProps['color'];
   }>`
     --color: ${({ theme, $borderColor }) =>
       theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
       $borderColor ||
+      theme.colors[options.color as keyof ComponentsTheme['colors']] ||
       options.color};
+    --hover-color: ${({ theme }) =>
+      theme.colors[options.hoverColor as keyof ComponentsTheme['colors']] ||
+      options.hoverColor ||
+      'var(--color)'};
+    --quad-fill-color: ${({ theme }) =>
+      theme.colors[options.quadFillColor as keyof ComponentsTheme['colors']] ||
+      options.quadFillColor};
+    --bg-color: ${({ theme }) =>
+      theme.colors[options.hoverQuadFillColor as keyof ComponentsTheme['colors']] ||
+      options.hoverQuadFillColor ||
+      'var(--quad-fill-color)'};
+
     --slice: ${options.size}px;
 
     position: relative;
@@ -66,36 +79,20 @@ export const withBorder = <
         : '')}
 
     &:hover {
-      border-color: ${({ theme, $borderColor }) =>
-        options.hoverColor ||
-        theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
-        $borderColor ||
-        options.color};
+      border-color: var(--hover-color);
 
       &::before,
       &::after {
-        border-color: ${({ $borderColor }) =>
-          options.hoverColor ||
-          theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
-          $borderColor ||
-          options.color};
+        border-color: var(--hover-color);
       }
     }
     &:hover ${BorderSlice} {
       &::before {
-        border-color: ${({ $borderColor }) =>
-          options.hoverColor ||
-          theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
-          $borderColor ||
-          options.color};
+        border-color: var(--hover-color);
       }
       &::after {
-        border-color: ${({ $borderColor }) =>
-          options.hoverColor ||
-          theme.colors[$borderColor as keyof ComponentsTheme['colors']] ||
-          $borderColor ||
-          options.color};
-        background-color: ${options.hoverQuadFillColor || options.quadFillColor};
+        border-color: var(--hover-color);
+        background-color: var(--bg-color);
       }
     }
 
@@ -150,7 +147,7 @@ export const withBorder = <
         right: -1px;
         bottom: calc(-1 * var(--slice) - 1px);
         border: 1px solid var(--color);
-        background-color: ${options.quadFillColor};
+        background-color: var(--quad-fill-color);
       }
     }
 

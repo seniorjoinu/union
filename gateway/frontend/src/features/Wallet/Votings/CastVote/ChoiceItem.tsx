@@ -1,5 +1,14 @@
 import { Principal } from '@dfinity/principal';
-import { Accordeon, Button as B, Chips, Column, Row, Spinner, Text } from '@union/components';
+import {
+  Accordeon,
+  Button as B,
+  Chips,
+  Column,
+  Markdown,
+  Row,
+  Spinner,
+  Text,
+} from '@union/components';
 import React, { useEffect, useMemo } from 'react';
 import { get } from 'react-hook-form';
 import styled from 'styled-components';
@@ -12,7 +21,7 @@ import {
   UnionTooltipButtonComponent as UTB,
   useUnionSubmit,
 } from '../../../../components/UnionSubmit';
-import { CandidEncodedArgs } from '../../IDLFields';
+import { CandidEncodedArgs, getRules } from '../../IDLFields';
 
 const UnionTooltipButtonComponent = styled(UTB)``;
 const Button = styled(B)``;
@@ -101,6 +110,7 @@ export const ChoiceItem = styled(
         return {};
       }
       return {
+        rules: getRules(),
         fields: {
           id: { hide: true },
           voting_id: { hide: true },
@@ -163,8 +173,8 @@ export const ChoiceItem = styled(
             adornment: {
               kind: 'replace',
               render: (ctx) => (
-                <Text variant='p3' color='grey'>
-                  {ctx.value.description}
+                <Text variant='p3'>
+                  <Markdown>{ctx.value.description}</Markdown>
                 </Text>
               ),
             },
@@ -188,26 +198,6 @@ export const ChoiceItem = styled(
                     {origin}
                   </Accordeon>
                 )),
-            },
-          },
-          'program.RemoteCallSequence.-1.args': {
-            adornment: {
-              kind: 'replace',
-              render: (ctx, path, name) => {
-                const args = get(ctx.value, path) as RemoteCallArgs;
-                const canisterId = get(
-                  ctx.value,
-                  path.replace('.args', '.endpoint.canister_id'),
-                ) as Principal;
-                const methodName = get(
-                  ctx.value,
-                  path.replace('.args', '.endpoint.method_name'),
-                ) as string;
-
-                return (
-                  <CandidEncodedArgs args={args} canisterId={canisterId} methodName={methodName} />
-                );
-              },
             },
           },
         },

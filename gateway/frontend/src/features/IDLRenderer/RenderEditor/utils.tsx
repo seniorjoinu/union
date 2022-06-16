@@ -102,8 +102,8 @@ export const useSettings = <T extends FieldValues>(
   );
 
   useEffect(() => {
-    if (typeof currentSettings.defaultValue !== 'undefined') {
-      setValue(path, currentSettings.defaultValue);
+    if (typeof currentSettings.settings.defaultValue !== 'undefined') {
+      setValue(path, currentSettings.settings.defaultValue);
     }
   }, []);
 

@@ -6,6 +6,7 @@ import { Principal } from '@dfinity/principal';
 import { buildDecoder, buildEncoder } from '@union/serialize';
 import { AnyService, EncDec, Encoder, Decoder } from './hook';
 import { RemoteCallPayload } from 'union-ts';
+import { MessageData } from '@union/client';
 
 export interface UnionMultipleSubmitProps extends Pick<SubmitButtonProps, 'onClick'> {
   unionId: Principal;
@@ -20,7 +21,7 @@ export interface UnionMultipleSubmitResult {
   isAllowed: boolean;
   submitting: boolean;
   submit(e: React.MouseEvent<HTMLButtonElement>, payloads: any[]): Promise<any[]>;
-  createVoting(payloads: any[]): void;
+  createVoting(payloads: any[], verbose?: { title?: string; description?: string }): void;
 }
 
 export const useUnionMultipleSubmit = ({
@@ -39,15 +40,10 @@ export const useUnionMultipleSubmit = ({
       return;
     }
 
-    (async () => {
-      for (const { canisterId, methodName } of program) {
-        await getMethodAccess({
-          canisterId,
-          methodName,
-          profile: identity.getPrincipal(),
-        });
-      }
-    })();
+    getMethodAccess({
+      program,
+      profile: identity.getPrincipal(),
+    });
   }, []);
 
   const accessConfigId = useMemo(() => {
@@ -138,13 +134,56 @@ export const useUnionMultipleSubmit = ({
   );
 
   const createVoting = useCallback(
-    (payloads: any[]) => {
-      const state = {
-        voting: null,
-        choices: [], // TODO
+    async (payloads: any[], verbose?: { title?: string; description?: string }) => {
+      const principal = identity?.getPrincipal();
+      let name = principal ? principal.toString() : '';
+
+      if (principal) {
+        try {
+          const profileName = (
+            await canister.get_profile({ id: principal, query_delegation_proof_opt: [] })
+          )?.profile.name;
+          name = `${profileName} (${name})`;
+        } catch (e) {}
+      }
+
+      console.log(`\x1b[33mcreate voting`, payloads);
+      const encoder = buildEncoder(unionIdl) as Encoder;
+
+      const programPayload: RemoteCallPayload[] = program.map(
+        ({ canisterId, methodName, encode }, i) => {
+          const payload = payloads[i];
+          const encoded = encode ? encode(payload) : encoder[methodName](...(payload || []));
+          return {
+            endpoint: { canister_id: canisterId, method_name: methodName },
+            cycles: BigInt(0),
+            args: { Encoded: [...new Uint8Array(encoded)] },
+          };
+        },
+      );
+
+      const methodName = program.map((p) => p.methodName).join();
+
+      const state: MessageData = {
+        voting: {
+          name: verbose?.title || `Execution of ${methodName}`,
+          description:
+            verbose?.description ||
+            `User "${name}" propose to execute "${methodName}". This is automatic messsage.`,
+          winners_need: 1,
+        },
+        choices: [
+          {
+            name: `Approve method execution`,
+            description: `I agree with execution of "${methodName}"`,
+            program: {
+              RemoteCallSequence: programPayload,
+            },
+          },
+        ],
       };
 
-      nav(`/wallet/${unionId}/execute`, { state });
+      nav(`/wallet/${unionId}/votings/crud/execute`, { state });
     },
     [program, unionId],
   );

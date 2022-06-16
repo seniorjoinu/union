@@ -16,5 +16,12 @@ export interface Message {
 }
 
 export type OpenerOptions = {
-  after?: 'close';
+  after?: 'close' | 'keep';
 };
+
+export type Proof = number[];
+export interface AuthData<P = Proof> {
+  profile: string | null;
+  proof: P | null;
+  union: string | null;
+}
