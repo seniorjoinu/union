@@ -41,7 +41,7 @@ export const useUpdateCanister = ({ getValues }: UseUpdateCanisterProps) => {
     const walletCanisterId = checkPrincipal(principal);
 
     if (!walletCanisterId) {
-      return Promise.reject('Wrong wallet canister id');
+      return Promise.reject('Wrong organization canister id');
     }
 
     const { canisterId: rawCanisterId, file, args, mode } = getValues();

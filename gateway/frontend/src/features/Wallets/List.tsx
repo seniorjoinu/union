@@ -47,7 +47,7 @@ export const WalletsList = () => {
   const loading = !!fetching.get_controller || !!fetching.get_attached_union_wallets;
 
   return (
-    <Container title='Union-wallets'>
+    <Container title='Union organizations'>
       <Panel>
         <Button forwardedAs={NavLink} to='/wallets/create'>
           + Create wallet

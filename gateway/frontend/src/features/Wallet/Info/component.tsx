@@ -71,10 +71,10 @@ export const Info = ({ ...p }: InfoProps) => {
   }, [principal, attached, gateway]);
 
   return (
-    <Container {...p} title='Wallet info'>
+    <Container {...p} title='Organization info'>
       <Controls>
         {!gateway.fetching.get_attached_union_wallets && (
-          <Button onClick={toggleAttach}>{attached ? 'Detach wallet' : 'Attach wallet'}</Button>
+          <Button onClick={toggleAttach}>{attached ? 'Detach organization' : 'Attach organization'}</Button>
         )}
         <Button forwardedAs={NavLink} to='edit-info'>
           Edit info

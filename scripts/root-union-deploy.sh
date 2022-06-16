@@ -38,8 +38,8 @@ rm ./install_code_execute_args.txt 2> /dev/null || echo ""
 rm ./candid_string.txt 2> /dev/null || echo ""
 union_wasm_bytes=$(./uc did encode --mode blob $union_wasm_path)
 execute_args=$(./uc did encode --mode=content --type=string '(record {
-	union_name = "Root union wallet" : text;
-	union_description = "Root union wallet" : text;
+	union_name = "Acme.it" : text;
+	union_description = "We are building a project and promote it on Thoughter" : text;
 	wallet_creator = principal "'$identity'";
 	history_ledger = principal "'$history_ledger'";
 })')
@@ -72,7 +72,7 @@ log "[root-union-deploy] ledger install response" $(./uc canister --wallet="${wa
 rm ./install_code_execute_args.txt 2> /dev/null || echo ""
 rm ./candid_string.txt 2> /dev/null || echo ""
 
-log "[root-union-deploy] Waiting until ledger subscribes to wallet events 10s..."
+log "[root-union-deploy] Waiting until ledger subscribes to organization events 10s..."
 sleep 10
 
 

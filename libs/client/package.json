@@ -6,8 +6,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "dev": "npm run copy && source .env && cd ./example && vite",
-    "build": "npm run clean && npm run copy && source .env && tsup-node",
+    "dev": "./build_scripts/dev.sh",
+    "build": "./build_scripts/build.sh",
     "clean": "rimraf dist",
     "test": "npm run lint",
     "lint": "eslint ./src",

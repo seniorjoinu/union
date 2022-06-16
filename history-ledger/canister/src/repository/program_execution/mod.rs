@@ -26,22 +26,25 @@ impl Repository<ProgramExecutionEntry, ProgramExecutionEntryId, ProgramExecution
         if it.is_transient() {
             let id = it.get_timestamp();
             it._init_id(id);
+            self.sorted_by_timestamp.push(id, id);
+        } else if let Some(prev_it) = self.get(&it.get_id().unwrap()) {
+            if prev_it.program.is_none() {
+                if let Some(Program::RemoteCallSequence(seq)) = &it.program {
+                    let id = it.get_timestamp();
 
-            if let Some(Program::RemoteCallSequence(seq)) = &it.program {
-                for call in seq {
-                    self.entries_by_endpoint_index
-                        .entry(call.endpoint.clone())
-                        .or_default()
-                        .push(id);
+                    for call in seq {
+                        self.entries_by_endpoint_index
+                            .entry(call.endpoint.clone())
+                            .or_default()
+                            .push(id);
 
-                    self.entries_by_endpoint_index
-                        .entry(call.endpoint.to_wildcard())
-                        .or_default()
-                        .push(id);
+                        self.entries_by_endpoint_index
+                            .entry(call.endpoint.to_wildcard())
+                            .or_default()
+                            .push(id);
+                    }
                 }
             }
-
-            self.sorted_by_timestamp.push(id, id);
         }
 
         let id = it.get_id().unwrap();

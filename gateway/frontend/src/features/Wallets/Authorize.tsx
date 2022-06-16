@@ -124,7 +124,7 @@ export const AuthorizeWallet = () => {
   );
 
   return (
-    <Container title='Authorize with wallet'>
+    <Container title='Authorize with Union organization'>
       <Column>
         <Checkbox
           checked={opts.sharePrincipal}
