@@ -24,27 +24,27 @@ impl Repository<ProgramExecutionEntry, ProgramExecutionEntryId, ProgramExecution
 {
     fn save(&mut self, mut it: ProgramExecutionEntry) -> ProgramExecutionEntryId {
         if it.is_transient() {
-            it._init_id(it.get_timestamp());
-        }
+            let id = it.get_timestamp();
+            it._init_id(id);
 
-        let id = it.get_id().unwrap();
-
-        if let Some(p) = &it.program {
-            if let Program::RemoteCallSequence(seq) = p {
+            if let Some(Program::RemoteCallSequence(seq)) = &it.program {
                 for call in seq {
                     self.entries_by_endpoint_index
                         .entry(call.endpoint.clone())
                         .or_default()
                         .push(id);
+
                     self.entries_by_endpoint_index
                         .entry(call.endpoint.to_wildcard())
                         .or_default()
                         .push(id);
                 }
             }
+
+            self.sorted_by_timestamp.push(id, id);
         }
 
-        self.sorted_by_timestamp.push(id, id);
+        let id = it.get_id().unwrap();
         self.entries.insert(id, it);
 
         id

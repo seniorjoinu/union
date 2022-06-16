@@ -1,4 +1,5 @@
 use candid::{CandidType, Deserialize};
+use ic_cdk::print;
 use std::collections::vec_deque::Iter;
 use std::collections::BTreeSet;
 
@@ -65,7 +66,13 @@ impl<T: Ord> SortedByTimestamp<T> {
     }
 
     pub fn get_by_interval(&self, from: &u64, to: &u64) -> Vec<&T> {
-        assert!(from <= to);
+        if from > to {
+            print(format!(
+                "'From' timestamp ({}) is bigger than 'To' timestamp ({}), returning empty list...",
+                from, to
+            ));
+            return Vec::new();
+        }
 
         let from_idx = match self.0.binary_search_by(|it| it.timestamp.cmp(from)) {
             Ok(idx) => idx,
@@ -93,11 +100,11 @@ impl<T: Ord> SortedByTimestamp<T> {
     pub fn get_last_timestamp(&self) -> u64 {
         self.0.last().map(|it| it.timestamp).unwrap_or(u64::MAX)
     }
-    
+
     pub fn get_first_timestamp(&self) -> u64 {
         self.0.first().map(|it| it.timestamp).unwrap_or_default()
     }
-    
+
     #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
