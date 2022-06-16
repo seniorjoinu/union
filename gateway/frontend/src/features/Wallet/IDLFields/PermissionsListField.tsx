@@ -6,7 +6,7 @@ import { Permission, PermissionFilter } from 'union-ts';
 import { useCurrentUnion } from '../context';
 
 export interface PermissionsListFieldProps
-  extends Omit<Partial<EntitySelectProps<Permission>>, 'value' | 'onChange'> {
+  extends Omit<Partial<EntitySelectProps<Permission, {}>>, 'value' | 'onChange'> {
   value: bigint[];
   onChange(v: bigint[]): void;
   helperText?: string;

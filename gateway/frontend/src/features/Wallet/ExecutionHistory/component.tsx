@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { PageWrapper, Pager, Button as B, Row as R, Text } from '@union/components';
 import { useUnion } from 'services';
-import { NavLink, useParams } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Principal } from '@dfinity/principal';
+import { ProgramExecutionFilter } from 'union-ts';
 import { useCurrentUnion } from '../context';
 import { ExecutionItem } from './ExecutionItem';
+import { ExecutionFilter, defaultFilter } from './ExecutionFilter';
 
 const Button = styled(B)``;
 const Controls = styled(R)`
@@ -20,6 +22,10 @@ const Container = styled(PageWrapper)`
   ${Controls} {
     margin-bottom: 16px;
   }
+  ${ExecutionFilter} {
+    margin-bottom: 16px;
+    width: 100%;
+  }
 `;
 
 export interface ExecutionHistoryProps {
@@ -30,6 +36,7 @@ export interface ExecutionHistoryProps {
 export const ExecutionHistory = styled(({ ...p }: ExecutionHistoryProps) => {
   const { principal } = useCurrentUnion();
   const { canister } = useUnion(principal);
+  const [filter, setFilter] = useState<ProgramExecutionFilter>(defaultFilter);
 
   return (
     <Container {...p} title='Execution history'>
@@ -38,19 +45,17 @@ export const ExecutionHistory = styled(({ ...p }: ExecutionHistoryProps) => {
           +
         </Button>
       </Controls>
+      <ExecutionFilter filter={filter} onChange={setFilter} />
       <Pager
         size={5}
-        fetch={({ index, size }) =>
+        filter={filter}
+        fetch={({ index, size, filter }) =>
           canister.list_program_execution_entry_ids({
             page_req: {
               page_index: index,
               page_size: size,
               sort: null,
-              filter: {
-                from_timestamp: [],
-                to_timestamp: [],
-                endpoint: [],
-              },
+              filter,
             },
             query_delegation_proof_opt: [],
           })

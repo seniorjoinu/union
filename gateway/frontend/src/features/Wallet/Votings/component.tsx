@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { PageWrapper, Pager, Button as B, Row as R } from '@union/components';
+import { PageWrapper, Pager, Button as B, Row as R, Chips } from '@union/components';
 import { useUnion } from 'services';
 import { Voting } from 'union-ts';
 import { NavLink, useParams } from 'react-router-dom';
@@ -9,9 +9,14 @@ import { useUnionSubmit } from '../../../components/UnionSubmit';
 import { useCurrentUnion } from '../context';
 import { VotingControls } from './VotingControls';
 import { VotingItem } from './VotingItem';
+import { Timer } from './Timer';
 
 const Button = styled(B)``;
 const StartItemControls = styled(R)`
+  align-items: center;
+  justify-content: flex-start;
+`;
+const EndItemControls = styled(R)`
   justify-content: flex-end;
 `;
 const Controls = styled(R)`
@@ -87,6 +92,13 @@ export const Votings = styled(({ ...p }: VotingsProps) => {
               <VotingItem voting={item} opened={votingId == id} View={View} unionId={principal}>
                 <ItemControls>
                   <StartItemControls>
+                    {'Round' in item.status && (
+                      <Chips variant='caption' weight='medium'>
+                        <Timer votingConfigId={item.voting_config_id} createdAt={item.created_at} />
+                      </Chips>
+                    )}
+                  </StartItemControls>
+                  <EndItemControls>
                     <Button
                       forwardedAs={NavLink}
                       to={votingId ? `../votings/voting/${id}` : `voting/${id}`}
@@ -94,7 +106,7 @@ export const Votings = styled(({ ...p }: VotingsProps) => {
                     >
                       More info
                     </Button>
-                  </StartItemControls>
+                  </EndItemControls>
                   {'Round' in item.status && item.status.Round == 0 && (
                     <VotingControls
                       voting={item}

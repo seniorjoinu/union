@@ -58,13 +58,14 @@ export interface FetchResponse<T> {
   };
 }
 
-export interface PagerProps<T, R extends FetchResponse<T> = FetchResponse<T>> {
+export interface PagerProps<T, F extends {}, R extends FetchResponse<T> = FetchResponse<T>> {
   className?: string;
   style?: React.CSSProperties;
   size?: number;
   title?: React.ReactNode;
+  filter?: F;
   renderItem(item: T, extra: Omit<R, 'page'> | undefined): React.ReactNode | null | false;
-  fetch(p: { index: number; size: number }): Promise<R>;
+  fetch(p: { index: number; size: number; filter: F }): Promise<R>;
   onEntitiesChanged?(data: T[]): void;
   buttonVariant?: TextVariant;
   verbose?: {
@@ -77,17 +78,18 @@ export interface PagerProps<T, R extends FetchResponse<T> = FetchResponse<T>> {
 
 export const DEFAULT_PAGE_SIZE = 10;
 
-export const Pager = <T extends {}, R extends FetchResponse<T> = FetchResponse<T>>({
+export const Pager = <T extends {}, F extends {}, R extends FetchResponse<T> = FetchResponse<T>>({
   size = DEFAULT_PAGE_SIZE,
   fetch,
   renderItem,
   title,
+  filter,
   verbose: verboseProps,
   onEntitiesChanged = () => {},
   buttonVariant,
   renderIfEmpty = true,
   ...p
-}: PagerProps<T, R>) => {
+}: PagerProps<T, F, R>) => {
   const [index, setIndex] = useState(0);
   const [complete, setComplete] = useState(false);
   const [data, setData] = useState<T[] | null>(null);
@@ -103,16 +105,21 @@ export const Pager = <T extends {}, R extends FetchResponse<T> = FetchResponse<T
   };
 
   useEffect(() => {
-    fetchPageData();
-  }, []);
+    setData(null);
+    setIndex(0);
+    setComplete(false);
+    setExtra({});
+    fetchPageData(0, size, filter as F);
+  }, [filter]);
+
   useEffect(() => {
     onEntitiesChanged(data || []);
   }, [data, onEntitiesChanged]);
 
-  const fetchPageData = () => {
+  const fetchPageData = (index: number, size: number, filter: F) => {
     setFetching(true);
     setError('');
-    fetch({ index, size })
+    fetch({ index, size, filter })
       .then(({ page, ...extra }) => {
         setExtra((e) => ({ ...e, [index]: extra }));
         setData((data) => [...(data || []), ...page.data]);
@@ -157,7 +164,11 @@ export const Pager = <T extends {}, R extends FetchResponse<T> = FetchResponse<T
       )}
       {!data && <Spinner size={20} $fetching={fetching} />}
       {!!data && !complete && (
-        <SubmitButton loading={fetching} onClick={fetchPageData} variant={buttonVariant}>
+        <SubmitButton
+          loading={fetching}
+          onClick={() => fetchPageData(index, size, filter as F)}
+          variant={buttonVariant}
+        >
           {verbose.loadMore}
         </SubmitButton>
       )}

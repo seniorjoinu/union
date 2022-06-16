@@ -15,6 +15,7 @@ import { CastVote } from './CastVote';
 import { VotingControls as VC } from './VotingControls';
 import { StatusChips } from './atoms';
 import { WinnersChoicesInfo } from './WinnersChoicesInfo';
+import { Timer } from './Timer';
 
 const Chipses = styled(Row)`
   margin-bottom: 16px;
@@ -171,6 +172,11 @@ export const VotingPage = styled(({ unionId, ...p }: VotingProps) => {
       )}
       <Chipses>
         <StatusChips variant='caption' weight='medium' status={voting.status} />
+        {'Round' in voting.status && (
+          <Chips variant='caption' weight='medium'>
+            <Timer votingConfigId={voting.voting_config_id} createdAt={voting.created_at} />
+          </Chips>
+        )}
       </Chipses>
       <Field {...defaultFieldProps}>{voting.description}</Field>
       <Accordeon title='Details'>

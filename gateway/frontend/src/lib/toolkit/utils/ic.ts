@@ -1,8 +1,11 @@
 import { Principal } from '@dfinity/principal';
 
 export const checkPrincipal = (
-  canisterId: string | Principal | ArrayLike<number>,
+  canisterId: string | Principal | ArrayLike<number> | undefined,
 ): Principal | null => {
+  if (!canisterId) {
+    return null;
+  }
   let principal: Principal;
 
   try {

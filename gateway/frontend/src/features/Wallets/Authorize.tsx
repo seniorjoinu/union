@@ -37,7 +37,7 @@ const List = styled.div`
   flex-direction: column;
 
   & > *:not(:last-child) {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
 `;
 

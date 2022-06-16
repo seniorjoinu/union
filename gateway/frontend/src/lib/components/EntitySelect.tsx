@@ -25,15 +25,15 @@ const AdvancedSelect = styled(AS)`
   }
 `;
 
-export interface EntitySelectProps<T>
+export interface EntitySelectProps<T, F = {}>
   extends Omit<AdvancedSelectProps, 'children' | 'value'>,
-    Omit<PagerProps<T>, 'renderItem'> {
+    Omit<PagerProps<T, F>, 'renderItem'> {
   valueGetter(item: T): string;
   value: string[] | ((entities: T[]) => string[]);
   renderItem?: (item: T, origin: React.ReactNode) => React.ReactNode;
 }
 
-export const EntitySelect = <T extends {}>({
+export const EntitySelect = <T extends {}, F extends {} = {}>({
   size,
   fetch,
   verbose,
@@ -41,7 +41,7 @@ export const EntitySelect = <T extends {}>({
   value: propValue,
   renderItem = (_, origin) => origin,
   ...p
-}: EntitySelectProps<T>) => {
+}: EntitySelectProps<T, F>) => {
   // FIXME bad practice
   const [entities, setEntities] = useState<T[]>([]);
 

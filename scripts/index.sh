@@ -39,3 +39,5 @@ echo "export gateway_frontend=$(parse_principal $frontend_canister_id_did)" >> $
 # ./batches-send.sh
 
 # ./batches-delete.sh
+
+./demo-deploy.sh

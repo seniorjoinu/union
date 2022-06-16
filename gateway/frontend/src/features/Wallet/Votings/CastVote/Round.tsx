@@ -345,7 +345,7 @@ export const Round = styled(
                                   field.value.shares_info.total_supply,
                               ),
                             ),
-                          )} voting power`}
+                          )}% voting power`}
                         </Chips>
                         <Chips variant='caption'>
                           {`${String(field.value.shares_info.balance)} of ${String(
@@ -368,7 +368,7 @@ export const Round = styled(
                                   field.value.shares_info.total_supply,
                               ),
                             ),
-                          )} voting power`}
+                          )}% voting power`}
                         </Chips>
                         <Chips variant='caption'>
                           {`${String(info.shares_info.balance)} of ${String(
