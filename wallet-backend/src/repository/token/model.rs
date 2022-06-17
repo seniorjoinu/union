@@ -56,6 +56,8 @@ impl Token {
     }
 
     pub fn burn(&mut self, from: Principal, qty: Shares) -> Result<(), ValidationError> {
+        assert!(self.transferable);
+
         let balance = self.balance_of(&from);
         if balance < qty {
             Err(ValidationError(String::from("Insufficient balance")))

@@ -4,7 +4,7 @@ set -e
 . $ROOT_FOLDER/.env
 
 identity=
-profile_name="Agent"
+profile_name="Organization creator"
 
 while getopts ":-:" optchar; do
     case "${optchar}" in
@@ -45,7 +45,7 @@ log "[add-profile] Add internet-identity principal to root union"
 create_profile_program_args='(record {
 	id = principal "'$identity'";
 	name = "'$profile_name'";
-	description = "'$profile_name' profile created by add-profile.sh";
+	description = "A person who created this digital organization";
 })'
 
 response=$(dfx canister call --query $root_union get_access_config "(record { id = ${UNLIMITED_ACCESS_CONFIG_ID} : nat64 })")

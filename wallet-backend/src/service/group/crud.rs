@@ -1,3 +1,4 @@
+use crate::controller::group::api::GroupExt;
 use crate::repository::access_config::model::AccessConfig;
 use crate::repository::group::model::Group;
 use crate::repository::token::model::Token;
@@ -37,7 +38,7 @@ impl GroupService {
         }
 
         // TODO: check for existing nested voting configs
-        
+
         let group = Group::repo()
             .delete(&group_id)
             .ok_or(GroupError::GroupNotFound(group_id))?;
@@ -55,22 +56,47 @@ impl GroupService {
         let mut group = GroupService::get_group(group_id)?;
 
         group
+            .it
             .update(new_name, new_description)
             .map_err(GroupError::ValidationError)?;
-        Group::repo().save(group);
+
+        Group::repo().save(group.it);
 
         Ok(())
     }
 
     #[inline(always)]
-    pub fn get_group(group_id: GroupId) -> Result<Group, GroupError> {
-        Group::repo()
+    pub fn get_group(group_id: GroupId) -> Result<GroupExt, GroupError> {
+        let it = Group::repo()
             .get(&group_id)
-            .ok_or(GroupError::GroupNotFound(group_id))
+            .ok_or(GroupError::GroupNotFound(group_id))?;
+
+        // FIXME: this is not optimal - queries for token each time
+
+        Ok(GroupExt {
+            it,
+            transferable: Token::repo()
+                .get(&it.get_token())
+                .unwrap()
+                .is_transferable(),
+        })
     }
 
     #[inline(always)]
-    pub fn list_groups(page_req: &PageRequest<(), ()>) -> Page<Group> {
-        Group::repo().list(page_req)
+    pub fn list_groups(page_req: &PageRequest<(), ()>) -> Page<GroupExt> {
+        let page = Group::repo().list(page_req);
+        let new_data = page
+            .data
+            .into_iter()
+            .map(|it| GroupExt {
+                it,
+                transferable: Token::repo()
+                    .get(&it.get_token())
+                    .unwrap()
+                    .is_transferable(),
+            })
+            .collect::<Vec<_>>();
+
+        Page::new(new_data, page.has_next)
     }
 }

@@ -1,3 +1,4 @@
+use crate::controller::group::api::GroupExt;
 use crate::repository::group::model::Group;
 use crate::repository::token::model::Token;
 use crate::repository::token::types::ChoiceOrGroup;
@@ -39,7 +40,7 @@ impl GroupService {
     ) -> Result<(), GroupError> {
         GroupService::assert_not_has_profile_group(group_id)?;
 
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let mut token = GroupService::get_token(&group);
 
         let zero = Shares::default();
@@ -80,7 +81,7 @@ impl GroupService {
     ) -> Result<(), GroupError> {
         GroupService::assert_not_has_profile_group(group_id)?;
 
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let mut token = GroupService::get_token(&group);
 
         if group.is_private() {
@@ -121,7 +122,7 @@ impl GroupService {
     ) -> Result<(), GroupError> {
         GroupService::assert_not_has_profile_group(group_id)?;
 
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let mut token = GroupService::get_token(&group);
 
         GroupService::assert_transferable(&group, &token)?;
@@ -173,7 +174,7 @@ impl GroupService {
     ) -> Result<(), GroupError> {
         GroupService::assert_profile_exists(owner)?;
 
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let mut token = GroupService::get_token(&group);
 
         GroupService::assert_acceptable(&group, &token)?;
@@ -208,7 +209,7 @@ impl GroupService {
         owner: Principal,
         qty: Shares,
     ) -> Result<(), GroupError> {
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let mut token = GroupService::get_token(&group);
 
         GroupService::assert_acceptable(&group, &token)?;
@@ -226,7 +227,7 @@ impl GroupService {
         Ok(())
     }
 
-    pub fn get_groups_of(caller: &Principal) -> Vec<Group> {
+    pub fn get_groups_of(caller: &Principal) -> Vec<GroupExt> {
         Token::repo()
             .get_tokens_by_principal(caller)
             .into_iter()
@@ -234,7 +235,15 @@ impl GroupService {
                 let it = Token::repo().get(&id).unwrap();
 
                 match it.is_choice_or_group() {
-                    ChoiceOrGroup::Group(id) => Some(Group::repo().get(&id).unwrap()),
+                    ChoiceOrGroup::Group(id) => {
+                        let group = Group::repo().get(&id).unwrap();
+                        let transferable = it.is_transferable();
+
+                        Some(GroupExt {
+                            it: group,
+                            transferable,
+                        })
+                    }
                     _ => None,
                 }
             })
@@ -245,7 +254,7 @@ impl GroupService {
         group_id: GroupId,
         owner: &Principal,
     ) -> Result<Shares, GroupError> {
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let token = GroupService::get_token(&group);
 
         Ok(token.balance_of(owner))
@@ -255,7 +264,7 @@ impl GroupService {
         group_id: GroupId,
         owner: &Principal,
     ) -> Result<Shares, GroupError> {
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let token = GroupService::get_token(&group);
 
         GroupService::assert_acceptable(&group, &token)?;
@@ -264,14 +273,14 @@ impl GroupService {
     }
 
     pub fn get_total_group_shares(group_id: GroupId) -> Result<Shares, GroupError> {
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let token = GroupService::get_token(&group);
 
         Ok(token.total_supply())
     }
 
     pub fn get_total_unaccepted_group_shares(group_id: GroupId) -> Result<Shares, GroupError> {
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let token = GroupService::get_token(&group);
 
         GroupService::assert_acceptable(&group, &token)?;
@@ -283,7 +292,7 @@ impl GroupService {
         group_id: GroupId,
         page_req: &PageRequest<(), ()>,
     ) -> Result<Page<(Principal, Shares)>, GroupError> {
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let token = GroupService::get_token(&group);
 
         Ok(token.balances(page_req))
@@ -293,7 +302,7 @@ impl GroupService {
         group_id: GroupId,
         page_req: &PageRequest<(), ()>,
     ) -> Result<Page<(Principal, Shares)>, GroupError> {
-        let group = GroupService::get_group(group_id)?;
+        let group = GroupService::get_group(group_id)?.it;
         let token = GroupService::get_token(&group);
 
         GroupService::assert_acceptable(&group, &token)?;

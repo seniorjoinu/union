@@ -5,6 +5,12 @@ use shared::pageable::{Page, PageRequest};
 use shared::types::wallet::{GroupId, Shares};
 
 #[derive(CandidType, Deserialize)]
+pub struct GroupExt {
+    pub it: Group,
+    pub transferable: bool,
+}
+
+#[derive(CandidType, Deserialize)]
 pub struct CreateGroupRequest {
     pub name: String,
     pub description: String,
@@ -37,7 +43,7 @@ pub struct GetGroupRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct GetGroupResponse {
-    pub group: Group,
+    pub group: GroupExt,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -48,7 +54,7 @@ pub struct ListGroupsRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct ListGroupsResponse {
-    pub page: Page<Group>,
+    pub page: Page<GroupExt>,
 }
 
 #[derive(CandidType, Deserialize)]
@@ -151,5 +157,5 @@ pub struct GetGroupsOfRequest {
 
 #[derive(CandidType, Deserialize)]
 pub struct GetGroupsResponse {
-    pub groups: Vec<Group>,
+    pub groups: Vec<GroupExt>,
 }

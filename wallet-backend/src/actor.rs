@@ -46,10 +46,10 @@ fn init(req: InitRequest) {
 
     ProfileService::create_profile(
         req.wallet_creator,
-        String::from("Wallet creator"),
-        String::from("A person, who created this wallet"),
+        String::from("Agent"), // TODO: change to organization creator
+        String::from(""),
     )
-    .expect("Unable to create wallet creator profile");
+    .expect("Unable to create an organization creator's profile");
 
     PermissionService::init_allow_write_permissions(id());
     VotingConfigService::init_default_voting_configs();

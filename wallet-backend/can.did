@@ -374,6 +374,11 @@ type Group = record {
     token : opt TokenId;
 };
 
+type GroupExt = record {
+    it : Group;
+    transferable : bool;
+};
+
 type CreateGroupRequest = record {
     // The name of the group
     name : text;
@@ -412,7 +417,7 @@ type GetGroupRequest = record {
 };
 
 type GetGroupResponse = record {
-    group : Group;
+    group : GroupExt;
 };
 
 type ListGroupsRequest = record {
@@ -421,7 +426,7 @@ type ListGroupsRequest = record {
 };
 
 type ListGroupsPage = record {
-    data : vec Group;
+    data : vec GroupExt;
     has_next : bool;
 };
 
@@ -558,7 +563,7 @@ type GetGroupsOfRequest = record {
 
 type GetGroupsResponse = record {
     // Groups of the user
-    groups : vec Group;
+    groups : vec GroupExt;
 };
 
 // ----------- HISTORY LEDGER -----------
