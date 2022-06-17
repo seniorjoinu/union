@@ -38,7 +38,7 @@ impl NestedVotingService {
             .map_err(|(c, m)| NestedVotingError::NetworkingError(c, m))?;
         resp.groups
             .iter()
-            .map(|it| it.get_id().unwrap())
+            .map(|it| it.it.get_id().unwrap())
             .find(|it| *it == remote_group_id)
             .ok_or(NestedVotingError::InvalidGroupProvided(remote_group_id))?;
 

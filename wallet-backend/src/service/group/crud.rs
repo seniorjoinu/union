@@ -71,14 +71,13 @@ impl GroupService {
             .get(&group_id)
             .ok_or(GroupError::GroupNotFound(group_id))?;
 
+        let token_id = it.get_token();
+
         // FIXME: this is not optimal - queries for token each time
 
         Ok(GroupExt {
             it,
-            transferable: Token::repo()
-                .get(&it.get_token())
-                .unwrap()
-                .is_transferable(),
+            transferable: Token::repo().get(&token_id).unwrap().is_transferable(),
         })
     }
 
@@ -88,12 +87,13 @@ impl GroupService {
         let new_data = page
             .data
             .into_iter()
-            .map(|it| GroupExt {
-                it,
-                transferable: Token::repo()
-                    .get(&it.get_token())
-                    .unwrap()
-                    .is_transferable(),
+            .map(|it| {
+                let token_id = it.get_token();
+
+                GroupExt {
+                    it,
+                    transferable: Token::repo().get(&token_id).unwrap().is_transferable(),
+                }
             })
             .collect::<Vec<_>>();
 
