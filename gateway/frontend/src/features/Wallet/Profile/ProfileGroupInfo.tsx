@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { SubmitButton as B, Row, Text } from '@union/components';
-import { Group } from 'union-ts';
+import { GroupExt } from 'union-ts';
 import { useUnion } from 'services';
 import { caseByCount } from 'toolkit';
 import { NavLink } from 'react-router-dom';
-import { DEFAULT_GROUP_IDS } from 'envs';
+import { DEFAULT_GROUP_IDS, HAS_PROFILE_GROUP_ID } from 'envs';
 import { GroupInfo } from '../Groups';
 import { useCurrentUnion } from '../context';
 
@@ -18,19 +18,28 @@ const Button = styled(B)``;
 export interface ProfileGroupInfoProps {
   className?: string;
   style?: React.CSSProperties;
-  group: Group;
+  ext: GroupExt;
 }
 
-export const ProfileGroupInfo = styled(({ group, ...p }: ProfileGroupInfoProps) => {
+export const ProfileGroupInfo = styled(({ ext, ...p }: ProfileGroupInfoProps) => {
   const { principal } = useCurrentUnion();
   const { canister, data } = useUnion(principal);
 
+  const group = ext.it;
+
   useEffect(() => {
-    canister.get_my_group_shares_balance({ group_id: group.id[0]! });
-    canister.get_my_unaccepted_group_shares_balance({
-      group_id: group.id[0]!,
-    });
+    fetchData();
   }, []);
+
+  const fetchData = useCallback(() => {
+    canister.get_my_group_shares_balance({ group_id: group.id[0]! });
+
+    if (group.id[0] !== HAS_PROFILE_GROUP_ID) {
+      canister.get_my_unaccepted_group_shares_balance({
+        group_id: group.id[0]!,
+      });
+    }
+  }, [group]);
 
   const handleAccept = useCallback(
     async (accept: boolean) => {
@@ -46,9 +55,7 @@ export const ProfileGroupInfo = styled(({ group, ...p }: ProfileGroupInfoProps) 
         await canister.decline_my_group_shares({ group_id: group.id[0]!, qty });
       }
 
-      await canister.get_my_unaccepted_group_shares_balance({
-        group_id: group.id[0]!,
-      });
+      await fetchData();
     },
     [group, data],
   );
@@ -81,7 +88,8 @@ export const ProfileGroupInfo = styled(({ group, ...p }: ProfileGroupInfoProps) 
           </>
         )}
         {!DEFAULT_GROUP_IDS.includes(group.id[0]!) &&
-          typeof data.get_my_group_shares_balance?.balance !== 'undefined' && (
+          ext.transferable &&
+          !!data.get_my_group_shares_balance?.balance && (
             <>
               <Button
                 variant='caption'

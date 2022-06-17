@@ -1,11 +1,11 @@
 import React, { useEffect, createContext, useContext, useMemo, useCallback } from 'react';
 import { useUnion, _SERVICE } from 'services';
 import { Principal } from '@dfinity/principal';
-import { Group, Profile } from 'union-ts';
+import { GroupExt, Profile } from 'union-ts';
 
 export interface CurrentWalletContext {
   principal: Principal;
-  groups: Group[];
+  groups: GroupExt[];
   canister: _SERVICE;
   profile: Profile | null;
   fetching: ReturnType<typeof useUnion>['fetching'];

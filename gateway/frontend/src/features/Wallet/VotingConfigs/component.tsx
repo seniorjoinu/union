@@ -95,7 +95,7 @@ export const VotingConfigs = styled(({ ...p }: VotingConfigsProps) => {
                         variant='caption'
                         color='red'
                         buttonContent='Delete'
-                        submitVotingVerbose='Create voting'
+                        submitVotingVerbose='Start voting'
                         getPayload={() => [{ id: item.id[0]! }]}
                         unionId={principal}
                         canisterId={principal}

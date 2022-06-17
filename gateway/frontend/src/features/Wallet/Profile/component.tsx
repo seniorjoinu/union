@@ -109,7 +109,7 @@ export const Profile = ({ ...p }: ProfileProps) => {
           <Text>You are have no groups</Text>
         )}
         {current.groups.map((g) => (
-          <ProfileGroupInfo key={String(g.id[0])} group={g} />
+          <ProfileGroupInfo key={String(g.it.id[0])} ext={g} />
         ))}
       </Column>
     </Container>

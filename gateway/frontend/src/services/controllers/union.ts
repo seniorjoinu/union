@@ -67,8 +67,8 @@ const getMethodAccessConfig = async ({
   const { groups } = await canister.get_my_groups();
   const myGroupShares = await Promise.all(
     groups.map(async (g) => {
-      const { balance } = await canister.get_my_group_shares_balance({ group_id: g.id[0]! });
-      return { id: String(g.id[0]!), balance };
+      const { balance } = await canister.get_my_group_shares_balance({ group_id: g.it.id[0]! });
+      return { id: String(g.it.id[0]!), balance };
     }),
   );
   const groupShares = myGroupShares.reduce(

@@ -30,7 +30,7 @@ export const UnionExternalSubmitButton = <
   methodName,
   getPayload,
   children,
-  submitVotingVerbose = 'Create voting',
+  submitVotingVerbose = 'Start voting',
   ...p
 }: UnionExternalSubmitButtonProps<S, T> & EncDec) => {
   const { isAllowed, submitting, submit, createVoting } = useUnionSubmit<S>({

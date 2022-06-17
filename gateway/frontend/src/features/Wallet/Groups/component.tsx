@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { PageWrapper, Pager, Row as R, Button as B } from '@union/components';
-import { Group } from 'union-ts';
+import { Group, GroupExt } from 'union-ts';
 import { useUnion } from 'services';
 import { NavLink, useParams } from 'react-router-dom';
 import { DEFAULT_GROUP_IDS } from 'envs';
@@ -65,7 +65,7 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
             query_delegation_proof_opt: [],
           })
         }
-        renderItem={(group: Group) => {
+        renderItem={({ it: group, transferable }: GroupExt) => {
           const id = String(group.id[0]);
 
           return (
@@ -75,7 +75,7 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
                 opened={groupId == id}
                 acceptedAdornment={
                   <ItemControls>
-                    {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && (
+                    {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && transferable && (
                       <>
                         <Button
                           forwardedAs={NavLink}
@@ -91,7 +91,7 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
                 }
                 unacceptedAdornment={
                   <ItemControls>
-                    {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && (
+                    {!DEFAULT_GROUP_IDS.includes(group.id[0]!) && transferable && (
                       <>
                         <Button
                           forwardedAs={NavLink}
@@ -116,13 +116,15 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
                       >
                         Mint shares
                       </Button>
-                      <Button
-                        forwardedAs={NavLink}
-                        to={groupId ? `../groups/transfer/${id}` : `transfer/${id}`}
-                        variant='caption'
-                      >
-                        Transfer shares
-                      </Button>
+                      {transferable && (
+                        <Button
+                          forwardedAs={NavLink}
+                          to={groupId ? `../groups/transfer/${id}` : `transfer/${id}`}
+                          variant='caption'
+                        >
+                          Transfer shares
+                        </Button>
+                      )}
                       <Button
                         forwardedAs={NavLink}
                         to={groupId ? `../groups/edit/${id}` : `edit/${id}`}
@@ -134,7 +136,7 @@ export const Groups = styled(({ ...p }: GroupsProps) => {
                         variant='caption'
                         color='red'
                         buttonContent='Delete'
-                        submitVotingVerbose='Create voting'
+                        submitVotingVerbose='Start voting'
                         getPayload={() => [{ group_id: group.id[0]! }]}
                         methodName='delete_group'
                         unionId={principal}

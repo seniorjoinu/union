@@ -2,11 +2,11 @@ import { EntitySelect, EntitySelectProps } from '@union/components';
 import React from 'react';
 import { useUnion } from 'services';
 import styled from 'styled-components';
-import { Group } from 'union-ts';
+import { GroupExt } from 'union-ts';
 import { useCurrentUnion } from '../context';
 
 export interface GroupListFieldProps
-  extends Omit<Partial<EntitySelectProps<Group>>, 'value' | 'onChange'> {
+  extends Omit<Partial<EntitySelectProps<GroupExt>>, 'value' | 'onChange'> {
   value: bigint | null | void;
   onChange(v: bigint): void;
   helperText?: string;
@@ -19,11 +19,11 @@ export const GroupListField = styled(
 
     return (
       <EntitySelect
-        onChange={(_, group: Group) => onChange(group.id[0]!)}
+        onChange={(_, group: GroupExt) => onChange(group.it.id[0]!)}
         placeholder='Select group'
         multiselect={false}
-        value={(groups) => groups.filter((g) => g.id[0]! == value).map((g) => g.name)}
-        valueGetter={(group: Group) => group.name}
+        value={(groups) => groups.filter((g) => g.it.id[0]! == value).map((g) => g.it.name)}
+        valueGetter={(group: GroupExt) => group.it.name}
         size={5}
         fetch={({ index, size }) =>
           canister.list_groups({

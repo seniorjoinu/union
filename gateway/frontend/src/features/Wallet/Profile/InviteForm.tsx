@@ -39,6 +39,7 @@ export const InviteForm = styled(({ ...p }: InviteFormProps) => {
           },
         },
         description: {
+          multiline: true,
           options: {
             validate: { length: (v) => (v && String(v).length > 1) || 'This field is required' },
           },

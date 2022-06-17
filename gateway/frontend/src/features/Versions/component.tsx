@@ -109,14 +109,14 @@ export const Versions = ({ ...p }: VersionsProps) => {
 
   return (
     <Container {...p} title='Union-wallet versions'>
-      {!!versionControllerCanister && (
+      {/* {!!versionControllerCanister && (
         <AddButton
           forwardedAs={NavLink}
           to={`/wallet/${versionControllerCanister}/versions/create`}
         >
           Create version
         </AddButton>
-      )}
+      )} */}
       {progress && <Text>fetching</Text>}
       {!progress && !versions.length && <Text>Versions list is empty</Text>}
       {versions.map((v) => (

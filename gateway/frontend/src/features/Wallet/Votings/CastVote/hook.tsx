@@ -59,7 +59,7 @@ export const useChoices = ({ unionId, choiceInfos, votingId, at }: UseChoicesPro
           at,
         });
 
-        return { group, group_id, shares_info: shares_info[0] };
+        return { group: group.it, group_id, shares_info: shares_info[0] };
       }),
     )
       .then((shareInfos) => shareInfos.filter((s): s is Info => !!s.shares_info))

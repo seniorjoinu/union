@@ -30,7 +30,7 @@ export const UpdateGroupForm = styled(({ ...p }: UpdateGroupFormProps) => {
   }, [groupId]);
 
   const defaultValue: UpdateGroupRequest | null = useMemo(() => {
-    const group = data.get_group?.group;
+    const group = data.get_group?.group.it;
 
     if (!groupId || !group) {
       return null;

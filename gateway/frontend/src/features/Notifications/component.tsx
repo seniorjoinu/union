@@ -46,7 +46,7 @@ export const Notifications = ({ ...p }: NotificationsProps) => {
       const groups = await canister.get_my_groups();
 
       const responses = await Promise.all(
-        groups.groups.map(async (group) => {
+        groups.groups.map(async ({ it: group }) => {
           if (!group.id[0]) {
             return;
           }

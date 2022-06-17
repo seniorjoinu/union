@@ -95,7 +95,7 @@ export const SubmitWizzard = styled(({ data, unionId, onSuccess, ...p }: SubmitW
           }
         >
           <Text variant='h5' weight='medium'>
-            Create random voting
+            Start random voting
           </Text>
         </Item>
       </Row>

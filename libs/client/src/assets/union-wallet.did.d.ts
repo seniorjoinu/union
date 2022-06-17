@@ -184,7 +184,7 @@ export interface GetGroupRequest {
   'group_id' : GroupId,
   'query_delegation_proof_opt' : [] | [QueryDelegationProof],
 }
-export interface GetGroupResponse { 'group' : Group }
+export interface GetGroupResponse { 'group' : GroupExt }
 export interface GetGroupSharesBalanceOfRequest {
   'owner' : Principal,
   'group_id' : GroupId,
@@ -195,7 +195,7 @@ export interface GetGroupsOfRequest {
   'principal_id' : Principal,
   'query_delegation_proof_opt' : [] | [QueryDelegationProof],
 }
-export interface GetGroupsResponse { 'groups' : Array<Group> }
+export interface GetGroupsResponse { 'groups' : Array<GroupExt> }
 export interface GetMyGroupSharesBalanceRequest { 'group_id' : GroupId }
 export interface GetMyGroupSharesBalanceResponse { 'balance' : Shares }
 export interface GetMyNestedVoteRequest {
@@ -289,6 +289,7 @@ export interface Group {
   'private' : boolean,
 }
 export interface GroupCondition { 'id' : GroupId, 'min_shares' : Shares }
+export interface GroupExt { 'it' : Group, 'transferable' : boolean }
 export type GroupId = Id;
 export type Id = bigint;
 export interface InitRequest {
@@ -342,7 +343,10 @@ export interface ListGroupSharesRequest {
   'query_delegation_proof_opt' : [] | [QueryDelegationProof],
 }
 export interface ListGroupSharesResponse { 'page' : ListGroupSharesPage }
-export interface ListGroupsPage { 'data' : Array<Group>, 'has_next' : boolean }
+export interface ListGroupsPage {
+  'data' : Array<GroupExt>,
+  'has_next' : boolean,
+}
 export interface ListGroupsRequest {
   'page_req' : PageRequest,
   'query_delegation_proof_opt' : [] | [QueryDelegationProof],

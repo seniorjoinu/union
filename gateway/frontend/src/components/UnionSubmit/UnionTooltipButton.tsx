@@ -63,7 +63,7 @@ export const UnionTooltipButtonComponent = <
   getPayload,
   children,
   buttonContent,
-  submitVotingVerbose = 'Create voting',
+  submitVotingVerbose = 'Start voting',
   isAllowed,
   submitting,
   submit,

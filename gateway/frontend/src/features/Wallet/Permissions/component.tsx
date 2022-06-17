@@ -80,7 +80,7 @@ export const Permissions = styled(({ ...p }: PermissionsProps) => {
                         buttonContent='Delete'
                         variant='caption'
                         color='red'
-                        submitVotingVerbose='Create voting'
+                        submitVotingVerbose='Start voting'
                         getPayload={() => [{ id: item.id[0]! }]}
                         unionId={principal}
                         canisterId={principal}

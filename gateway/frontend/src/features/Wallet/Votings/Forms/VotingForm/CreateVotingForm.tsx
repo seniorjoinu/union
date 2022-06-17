@@ -113,14 +113,14 @@ export function CreateVotingForm({
   );
 
   return (
-    <Container title='Create random voting' withBack {...p}>
+    <Container title='Start random voting' withBack {...p}>
       <Form settings={settings} defaultValue={data?.voting}>
         {(ctx) => (
           <SubmitButton
             disabled={!ctx.isValid || !submitProps.isAllowed}
             onClick={(e) => submitProps.submit(e, [ctx.getValues()])}
           >
-            Create voting
+            Start voting
           </SubmitButton>
         )}
       </Form>

@@ -285,7 +285,8 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
     'private' : IDL.Bool,
   });
-  const GetGroupResponse = IDL.Record({ 'group' : Group });
+  const GroupExt = IDL.Record({ 'it' : Group, 'transferable' : IDL.Bool });
+  const GetGroupResponse = IDL.Record({ 'group' : GroupExt });
   const GetGroupSharesBalanceOfRequest = IDL.Record({
     'owner' : IDL.Principal,
     'group_id' : GroupId,
@@ -296,7 +297,7 @@ export const idlFactory = ({ IDL }) => {
     'principal_id' : IDL.Principal,
     'query_delegation_proof_opt' : IDL.Opt(QueryDelegationProof),
   });
-  const GetGroupsResponse = IDL.Record({ 'groups' : IDL.Vec(Group) });
+  const GetGroupsResponse = IDL.Record({ 'groups' : IDL.Vec(GroupExt) });
   const GetMyGroupSharesBalanceRequest = IDL.Record({ 'group_id' : GroupId });
   const GetMyGroupSharesBalanceResponse = IDL.Record({ 'balance' : Shares });
   const GetMyNestedVoteRequest = IDL.Record({
@@ -554,7 +555,7 @@ export const idlFactory = ({ IDL }) => {
     'query_delegation_proof_opt' : IDL.Opt(QueryDelegationProof),
   });
   const ListGroupsPage = IDL.Record({
-    'data' : IDL.Vec(Group),
+    'data' : IDL.Vec(GroupExt),
     'has_next' : IDL.Bool,
   });
   const ListGroupsResponse = IDL.Record({ 'page' : ListGroupsPage });

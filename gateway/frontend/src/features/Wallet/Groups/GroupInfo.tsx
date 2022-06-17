@@ -87,7 +87,7 @@ export const GroupInfo = styled(
       return <Spinner size={20} {...p} />;
     }
 
-    const group = propGroup || data.get_group?.group;
+    const group = propGroup || data.get_group?.group.it;
 
     if (!group) {
       return (

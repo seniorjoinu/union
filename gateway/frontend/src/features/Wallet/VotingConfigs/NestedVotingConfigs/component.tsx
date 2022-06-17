@@ -117,7 +117,7 @@ export const NestedVotingConfigs = styled(
                       variant='caption'
                       color='red'
                       buttonContent='Delete'
-                      submitVotingVerbose='Create voting'
+                      submitVotingVerbose='Start voting'
                       getPayload={() => [{ id: item.id[0] }]}
                     >
                       Delete

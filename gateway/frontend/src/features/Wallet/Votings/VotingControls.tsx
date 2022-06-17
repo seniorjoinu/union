@@ -42,7 +42,7 @@ export const VotingControls = styled(
           variant='caption'
           color='red'
           buttonContent='Delete'
-          submitVotingVerbose='Create voting'
+          submitVotingVerbose='Start voting'
           getPayload={() => [{ id: voting.id[0] }]}
         >
           Delete
