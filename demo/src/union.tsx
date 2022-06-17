@@ -6,7 +6,7 @@ import { _SERVICE, canisterId, backendEncoder } from './backend';
 import { AuthReadyState, useAuth } from './auth';
 
 export const unionClient = new UnionClient({
-  providerUrl: 'http://localhost:3000',
+  // providerUrl: 'http://localhost:3000',
 });
 
 export const context = createContext({
