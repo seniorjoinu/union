@@ -50,7 +50,7 @@ export const WalletsList = () => {
     <Container title='Union organizations'>
       <Panel>
         <Button forwardedAs={NavLink} to='/wallets/create'>
-          + Create wallet
+          + Create new digital organization
         </Button>
       </Panel>
       <List>
@@ -64,7 +64,7 @@ export const WalletsList = () => {
         ))}
         {!!fetching.get_attached_union_wallets && <Spinner size={20} />}
         {!wallets.length && !loading && (
-          <Text>There are no union wallets. You can create new wallet</Text>
+          <Text>There are no digital organizations. You can create new wallet</Text>
         )}
         {loading && <Text>Fetching...</Text>}
       </List>

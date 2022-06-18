@@ -28,7 +28,7 @@ impl AccessConfigService {
     pub fn init_default_access_configs(wallet_creator_profile_id: Principal) {
         let allow_vote_access_config_id = AccessConfigService::create_access_config(
             String::from("Voting access"),
-            String::from("Non-deletable default access config. Allows 'Has profile' group members to call to any voting related method of this union."),
+            String::from("Non-deletable default access config. Allows 'Has profile' group members to call to any voting related method of this digital organization."),
             vec![ALLOW_VOTE_PERMISSION_ID].into_iter().collect(),
             vec![AlloweeConstraint::Group(GroupCondition { id: HAS_PROFILE_GROUP_ID, min_shares: Shares::from(1) })].into_iter().collect(),
         ).unwrap();
@@ -37,14 +37,14 @@ impl AccessConfigService {
 
         AccessConfigService::create_access_config(
             String::from("Unlimited access"),
-            String::from("Allows calling to any method (including query methods) of this union. Be very careful editing or deleting this access config."),
+            String::from("Allows calling to any method (including query methods) of this digital organization. Be very careful editing or deleting this access config."),
             vec![ALLOW_WRITE_PERMISSION_ID, ALLOW_READ_PERMISSION_ID].into_iter().collect(),
             vec![AlloweeConstraint::Profile(wallet_creator_profile_id)].into_iter().collect(),
         ).unwrap();
 
         AccessConfigService::create_access_config(
             String::from("Read-only"),
-            String::from("Allows to call any query method of this union. Be very careful editing or deleting this access config."),
+            String::from("Allows to call any query method of this digital organization. Be very careful editing or deleting this access config."),
             vec![ALLOW_READ_PERMISSION_ID].into_iter().collect(),
             vec![AlloweeConstraint::Group(GroupCondition { min_shares: Shares::from(1), id: HAS_PROFILE_GROUP_ID })].into_iter().collect(),
         ).unwrap();

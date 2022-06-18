@@ -167,7 +167,7 @@ export const ProfileModal = ({
           disabled={loading}
         />
         <TextField
-          placeholder='(for unions) Set group id'
+          placeholder='(optional) Set group id'
           onChange={(e) => {
             const groupIdStr = e.target.value.trim();
 
@@ -183,7 +183,7 @@ export const ProfileModal = ({
           disabled={loading}
         />
         <TextField
-          placeholder='(for unions) Set access config id'
+          placeholder='(optional) Set access config id'
           onChange={(e) => {
             const accessConfigIdStr = e.target.value.trim();
 
