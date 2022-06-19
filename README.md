@@ -2,38 +2,57 @@
 
 Sovereign organizations software
 
-```shell
-dfx deploy union-wallet --argument '(principal "6xqad-ivesr-pbpu5-3g5ka-3piah-uvuk2-buwfp-enqaa-p64lr-y7sdi-sqe")'
-
-dfx canister call union-wallet get_my_roles '()'
-
-dfx canister call union-wallet get_my_permissions '()'
-
-dfx canister call union-wallet execute '(record { title = "Add new role"; description = "Test"; authorization_delay_nano = 100 : nat64; rnp = record { role_id = 1 : nat32; permission_id = 0 : nat16 }; program = variant { RemoteCallSequence = vec { record { endpoint = record { canister_id = principal "rrkah-fqaaa-aaaaa-aaaaq-cai"; method_name = "create_role" }; cycles = 0 : nat64; args_candid = vec { "record { role_type = variant { Profile = record { principal_id = principal \"aaaaa-aa\"; name = \"Test\"; description = \"Test role\" } } }" } : vec text } } : vec record { endpoint : record { canister_id : principal; method_name : text; }; args_candid : vec text; cycles : nat64 } } })'
-
-dfx canister call union-wallet get_history_entries '(record { ids = vec { 0 }; rnp = record { role_id = 1 : nat32; permission_id = 0 : nat16 } })'
-
-dfx canister call union-wallet get_roles '(record { ids = vec { 3 } : vec nat32; rnp = record { role_id = 1 : nat32; permission_id = 0 : nat16 } })'
-```
-
 ## Quickstart
 
-```
+### 1. Start replica and deploy
+
+```shell
 dfx start --clean
 ./deploy.sh
+```
 
-# Register via Internet Identity and get principal on frontend gateway
+### 2. Register via local Internet Identity and get principal on frontend gateway
+
+Open [link of organization frontend gateway](http://qaa6y-5yaaa-aaaaa-aaafa-cai.localhost:8000) in the browser, login via local Internet Identity and copy principal by click on your principal in the top right corner.
+
+### 3. Invite yourself: add your Internet Identity principal as profile in root organization
+
+```shell
 cd ./scripts
-./add-profile.sh --ii=*identity* --name=*name (default is Agent)*
-
-# deploy demo project
-cd ./demo
-./deploy.sh
+./add-profile.sh --ii=YOUR_COPIED_PRINCIPAL_FROM_FRONTEND_GATEWAY
 ```
 
-## didc
+### 4. Go to link and click "Accept shares"
+
+Check terminal output. You will receive a link that you need to open in the browser or pass to the invitee.
+
+Example output:
 
 ```
-curl -fsSL https://github.com/dfinity/candid/releases/download/2022-03-30/didc-macos > ./didc
-chmod -R 777 ./didc
+Go to http://qaa6y-5yaaa-aaaaa-aaafa-cai.localhost:8000/wallet/qoctq-giaaa-aaaaa-aaaea-cai/profile and accept your shares
+Or production http://qaa6y-5yaaa-aaaaa-aaafa-cai.ic0.app/wallet/qoctq-giaaa-aaaaa-aaaea-cai/profile
+Or local http://localhost:3000/wallet/qoctq-giaaa-aaaaa-aaaea-cai/profile
 ```
+
+### 5. Profit! Now you can start configure the organization
+
+## Infrastructure
+
+You will find all the necessary variables in the `.env` file after deploy. On a clean deployment, the canisters are located here:
+
+- [Internet Identity](http://rrkah-fqaaa-aaaaa-aaaaq-cai.localhost:8000/)
+- [Union gateway frontend](http://qaa6y-5yaaa-aaaaa-aaafa-cai.localhost:8000)
+- [Thoughter demo project](http://qvhpv-4qaaa-aaaaa-aaagq-cai.localhost:8000)
+
+## Project structure
+
+- [Gateway](./gateway) contains frontend and backend implementation of gateway entrypoint. To get into the digital organization, the user must go to the gateway and select the organization. In the future, it is planned to implement the possibility of separate front-ends on organizations. The backend performs the discovery function, notification management and much more.
+- [Wallet-backend](./wallet-backend/) is digital organization implementation and is the central point of the whole repository.
+- [History-ledger](./history-ledger/) is dynamic histroy ledger implementation for digital organization needs. It stores execution history and execution results. Several ledgers can be deployed and connected to one organization.
+- [Deployer-backend](./deployer-backend/) is black-holed canister (in theory) and is required for organization deployments, upgrades and delete. It also stores organization wasm versions and allows you to update versions of existing organizations.
+- [Demo](./demo) folder contains `Thoughter` project, kind of like twitter. This is standalone TS + Rust canister with digital organization intergration through `union client`
+- [Scripts](./scripts) folder contains shell-scripts and TODOs for proper infrastructure deployment. Also it contains [union caller utility](./scripts/util/README.md).
+- [Libs](./libs) folder contains frontend libraries. These 2 libraries are the most important:
+  - `candid-parser` allows to parse `.did` files on frontend and transform types to IDL classes in runtime.
+  - `client` is integration library that allows to interact with organizations in your custom frontend application. Check example in [demo](./demo/src/union.tsx) folder.
+- [Shared](./shared) folder contains necessary rust functions and code utilities.

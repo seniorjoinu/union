@@ -31,6 +31,7 @@ echo "export history_ledger=${history_ledger}" >> $ROOT_FOLDER/.env
 echo "export frontend_canister_id_did='${frontend_canister_id_did}'" >> $ROOT_FOLDER/.env
 echo "export gateway_frontend=$(parse_principal $frontend_canister_id_did)" >> $ROOT_FOLDER/.env
 
+# TODO
 # . ./frontend-install-wasm.sh
 
 # . ./batches-create.sh
@@ -40,4 +41,4 @@ echo "export gateway_frontend=$(parse_principal $frontend_canister_id_did)" >> $
 
 # ./batches-delete.sh
 
-./demo-deploy.sh
+. ./demo-deploy.sh
