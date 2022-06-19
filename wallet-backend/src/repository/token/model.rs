@@ -56,7 +56,7 @@ impl Token {
     }
 
     pub fn burn(&mut self, from: Principal, qty: Shares) -> Result<(), ValidationError> {
-        assert!(self.transferable);
+        assert!(self.transferable || matches!(self.cog, ChoiceOrGroup::Choice(_, _)));
 
         let balance = self.balance_of(&from);
         if balance < qty {
