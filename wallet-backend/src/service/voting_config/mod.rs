@@ -25,7 +25,7 @@ impl VotingConfigService {
     pub fn init_default_voting_configs() {
         let emergency_voting_config_id = VotingConfigService::create_voting_config(
             String::from("Emergency"),
-            String::from("Non-deletable voting config. Allows to call ANY method of this union if 100% of 'Has Profile' group wants it."),
+            String::from("Non-deletable voting config. Allows to call ANY method of this digital organization if 100% of 'Has Profile' group wants it."),
             None,
             None,
             vec![ALLOW_WRITE_PERMISSION_ID].into_iter().collect(),

@@ -80,7 +80,7 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
         <>
           <Items>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/wallet`}>
-              Wallet
+              Organization
             </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/groups`}>
               Groups
@@ -89,7 +89,7 @@ export const WalletHeader = ({ ...p }: WalletHeaderProps) => {
               Permissions
             </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/access-configs`}>
-              Access
+              Access configs
             </Item>
             <Item variant='p2' as={NavLink} to={`wallet/${walletId}/voting-configs`}>
               Voting configs

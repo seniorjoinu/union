@@ -43,7 +43,7 @@ export function Header(p: HeaderProps) {
     <Container {...p}>
       <Items>
         <Item variant='p1' as={NavLink} to='/wallets'>
-          Wallets
+          Organizations
         </Item>
         {/* <Item variant='p1' as={NavLink} to='/notifications'>
           Notifications
