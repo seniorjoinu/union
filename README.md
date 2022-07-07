@@ -37,15 +37,8 @@ Or production http://qaa6y-5yaaa-aaaaa-aaafa-cai.ic0.app/wallet/qoctq-giaaa-aaaa
 Or local http://localhost:3000/wallet/qoctq-giaaa-aaaaa-aaaea-cai/profile
 ```
 
-### 5. Profit! Now you can start configuring your organization
-
-## Infrastructure
-
-You will find all the necessary variables in the `.env` file after deploy. On a clean deployment, the canisters are located here:
-
-- [Internet Identity](http://rrkah-fqaaa-aaaaa-aaaaq-cai.localhost:8000/)
-- [Union gateway frontend](http://qaa6y-5yaaa-aaaaa-aaafa-cai.localhost:8000)
-- [Thoughter demo project](http://qvhpv-4qaaa-aaaaa-aaagq-cai.localhost:8000)
+### 5. Profit! 
+Now you can start configuring your organization
 
 ## Project structure
 
