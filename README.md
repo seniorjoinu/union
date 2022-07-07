@@ -2,6 +2,10 @@
 
 Digital organizations for the real world
 
+[Explainer video](https://youtu.be/ZUFiRJo60-g)
+
+[Explainer text](https://quirky-country-945.notion.site/Union-Supernova-Demo-d0b788a8634f4de68f42fc7a54887648)
+
 ## Quickstart
 
 ### 1. Start the replica and deploy
